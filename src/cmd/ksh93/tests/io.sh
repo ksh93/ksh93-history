@@ -75,7 +75,7 @@ FDFS=(
 	( dir=/dev/fd		semantics='dup'	)
 )
 for ((fdfs=0; fdfs<${#FDFS[@]}-1; fdfs++))
-do	[[ -e ${FDFS[fdfs].dir} ]] && { command : > ${FDFS[fdfs].dir}/1; } 2>/dev/null && break
+do	[[ -e ${FDFS[fdfs].dir} ]] && { command : > ${FDFS[fdfs].dir}/1; } 2>/dev/null >&2 && break
 done
 
 exec 3<> file1

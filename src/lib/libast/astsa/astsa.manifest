@@ -29,6 +29,7 @@
 ../string/fmtbuf.c
 ../string/fmtip4.c
 ../string/fmtip6.c
+../string/strcopy.c
 ../string/strtoip4.c
 ../string/strtoip6.c
 README-astsa

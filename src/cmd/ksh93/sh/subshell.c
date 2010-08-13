@@ -340,7 +340,7 @@ static void nv_restore(struct subshell *sp)
 		if(nv_isattr(mp,NV_EXPORT))
 		{
 			char *name = nv_name(mp);
-			sh_envput(sh.env,mp);
+			sh_envput(sp->shp->env,mp);
 			if(*name=='_' && strcmp(name,"_AST_FEATURES")==0)
 				astconf(NiL, NiL, NiL);
 		}
@@ -366,13 +366,13 @@ static void nv_restore(struct subshell *sp)
 Dt_t *sh_subaliastree(int create)
 {
 	register struct subshell *sp = subshell_data;
-	if(!sp || sh.curenv==0)
+	if(!sp || sp->shp->curenv==0)
 		return(sh.alias_tree);
 	if(!sp->salias && create)
 	{
 		sp->salias = dtopen(&_Nvdisc,Dtoset);
-		dtview(sp->salias,sh.alias_tree);
-		sh.alias_tree = sp->salias;
+		dtview(sp->salias,sp->shp->alias_tree);
+		sp->shp->alias_tree = sp->salias;
 	}
 	return(sp->salias);
 }
@@ -384,15 +384,15 @@ Dt_t *sh_subaliastree(int create)
 Dt_t *sh_subfuntree(int create)
 {
 	register struct subshell *sp = subshell_data;
-	if(!sp || sh.curenv==0)
+	if(!sp || sp->shp->curenv==0)
 		return(sh.fun_tree);
 	if(!sp->sfun && create)
 	{
 		sp->sfun = dtopen(&_Nvdisc,Dtoset);
-		dtview(sp->sfun,sh.fun_tree);
-		sh.fun_tree = sp->sfun;
+		dtview(sp->sfun,sp->shp->fun_tree);
+		sp->shp->fun_tree = sp->sfun;
 	}
-	return(sh.fun_tree);
+	return(sp->shp->fun_tree);
 }
 
 static void table_unset(register Dt_t *root,int fun)

@@ -182,8 +182,9 @@ static char *setdisc(Namval_t *np, const char *event, Namval_t* action, Namfun_t
  */
 static void putval(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 {
-	register struct tevent *tp;
+	register struct tevent	*tp = (struct tevent*)fp;
 	register double d;
+	Shell_t		*shp = tp->sh;
 	if(val)
 	{
 		double now;
@@ -196,24 +197,23 @@ static void putval(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 #endif /* timeofday */
 		nv_putv(np,val,flag,fp);
 		d = nv_getnum(np);
-		tp = (struct tevent*)fp;
 		if(*val=='+')
 		{
 			double x = d + now;
-			nv_putv(np,(char*)&x,NV_INTEGER,fp);
+			nv_putv(np,(char*)&x,NV_INTEGER|NV_DOUBLE,fp);
 		}
 		else
 			d -= now;
 		tp->milli = 1000*(d+.0005);
 		if(tp->timeout)
-			sh.st.timetrap = time_delete(tp,sh.st.timetrap);
+			shp->st.timetrap = time_delete(tp,shp->st.timetrap);
 		if(tp->milli > 0)
-			sh.st.timetrap = time_add(tp,sh.st.timetrap);
+			shp->st.timetrap = time_add(tp,shp->st.timetrap);
 	}
 	else
 	{
 		tp = (struct tevent*)nv_stack(np, (Namfun_t*)0);
-		sh.st.timetrap = time_delete(tp,sh.st.timetrap);
+		shp->st.timetrap = time_delete(tp,shp->st.timetrap);
 		if(tp->action)
 			nv_close(tp->action);
 		nv_unset(np);

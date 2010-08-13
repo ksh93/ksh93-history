@@ -93,6 +93,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+10-08-11 mktest.sh: add "DO command ..."
+10-07-27 rt.sh: handle "rt X=Y ..."
 10-06-29 ratz.c: non-option sear args passed to sear_exec()
 10-06-25 iffe.sh: "api" op chanegd to not do "map-libc" type mappings
 10-06-25 package.sh: "force admin ditto" => no ditto --update option

@@ -53,8 +53,6 @@ static struct lconv	debug_lconv =
 	CHAR_MAX,
 };
 
-#if !_lib_localeconv
-
 static struct lconv	default_lconv =
 {
 	".",
@@ -77,6 +75,8 @@ static struct lconv	default_lconv =
 	CHAR_MAX,
 };
 
+#if !_lib_localeconv
+
 struct lconv*
 localeconv(void)
 {
@@ -92,5 +92,9 @@ localeconv(void)
 struct lconv*
 _ast_localeconv(void)
 {
-	return ((locales[AST_LC_MONETARY]->flags | locales[AST_LC_NUMERIC]->flags) & LC_debug) || (locales[AST_LC_NUMERIC]->flags & (LC_default|LC_local)) == LC_local ? &debug_lconv : localeconv();
+	if ((locales[AST_LC_MONETARY]->flags | locales[AST_LC_NUMERIC]->flags) & LC_debug)
+		return &debug_lconv;
+	if ((locales[AST_LC_NUMERIC]->flags & (LC_default|LC_local)) == LC_local)
+		return locales[AST_LC_NUMERIC]->territory == &lc_territories[0] ? &default_lconv : &debug_lconv;
+	return localeconv();
 }

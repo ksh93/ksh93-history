@@ -90,10 +90,9 @@ alias test_case='test_case $LINENO'
 
 unset undefined
 
-export LC_ALL=C
-
 cd $tmp || { err_exit "cd $tmp failed"; exit 1; }
 
+export LC_COLLATE=C
 touch B b
 set -- *
 case $* in

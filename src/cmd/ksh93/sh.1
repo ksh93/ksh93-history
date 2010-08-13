@@ -1567,10 +1567,17 @@ the new type is derived from the type of the first variable (See
 below.).
 .TP
 .B !
-The process number of the last background command invoked or
-the most recent job put in the background with the
+The process id or the pool name and job number of the last background command
+invoked or the most recent job put in the background with the
 .B bg
 built-in command.
+Background jobs started in a named pool will be in the form
+.IB pool . number
+where
+.I pool\^
+is the pool name and
+.I number\^
+is the job number within that pool.
 .TP
 .B .sh.command
 When processing a
@@ -4040,6 +4047,16 @@ or by one of the following:
 .BI % number
 The job with the given number.
 .TP
+.I  pool\^
+All the jobs in the job pool named by
+.IR pool .
+.TP
+.IB  pool . number
+The job number
+.I number\^
+in the job pool named by
+.IR pool .
+.TP
 .BI % string
 Any job whose command line begins with
 .IR string .
@@ -4057,10 +4074,6 @@ Equivalent to
 .TP
 .BI %\-
 Previous job.
-.TP
-.IR name .
-Refers to all jobs in the job pool give by
-.IR name .
 .PD
 In addition, unless noted otherwise, wherever a job can be specified,
 the name of a background job pool can be used to represet all the
@@ -6393,6 +6406,17 @@ and
 .B %s
 formats to treat 
 precision as character width instead of byte count.
+.TP
+The format modifier
+.B ,
+can be used with the
+.B %d
+and
+.B %f
+formats to treat 
+separate groups of digits with the grouping delimiter which is
+.B %d
+in the C locale.
 .TP
 .B %R
 A

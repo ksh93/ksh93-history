@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -150,13 +150,19 @@ extern void fcrestore(Fcin_t *fp)
 	_Fcin = *fp;
 }
 
+/* for testing purposes with small buffers */
+#if defined(IOBSIZE) && (IOBSIZE < 2*MB_LEN_MAX)
+#   undef MB_LEN_MAX
+#   define MB_LEN_MAX	(IOBSIZE/2)
+#endif
+
 struct Extra
 {
 	unsigned char	buff[2*MB_LEN_MAX];
 	unsigned char	*next;
 };
 
-int fcmbstate(const char *state, int *s, int *len)
+int _fcmbget(short *len)
 {
 	static struct Extra	extra;
 	register int		i, c, n;
@@ -171,14 +177,11 @@ int fcmbstate(const char *state, int *s, int *len)
 		}
 		*len = c;
 		if(c==1)
-			*s = state[*extra.next++];
+			c = *extra.next++;
 		else if(c==0)
 			_Fcin.fcleft = 0;
 		else
-		{
 			c = mbchar(extra.next);
-			*s = state['a'];
-		}
 		return(c);
 	}
 	switch(*len = mbsize(_Fcin.fcptr))
@@ -195,17 +198,16 @@ int fcmbstate(const char *state, int *s, int *len)
 			}
 			_Fcin.fcleft = n;
 			extra.next = extra.buff;
-			return(fcmbstate(state,s,len));
+			return(fcmbget(len));
 		}
 		*len = 1;
 		/* fall through */
 	    case 0:
 	    case 1:
-		*s = state[c=fcget()];
+		c=fcget();
 		break;
 	    default:
 		c = mbchar(_Fcin.fcptr);
-		*s = state['a'];
 	}
 	return(c);
 } 

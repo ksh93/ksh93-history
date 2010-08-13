@@ -238,8 +238,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		np = nv_open(name,shp->var_tree,oflags);
 		if(np && nv_isarray(np) && (mp=nv_opensub(np)))
 			np = mp;
-		if((flags&V_FLAG) && shp->ed_context)
-			((struct edit*)shp->ed_context)->e_default = np;
+		if((flags&V_FLAG) && shp->gd->ed_context)
+			((struct edit*)shp->gd->ed_context)->e_default = np;
 		if(flags&A_FLAG)
 		{
 			flags &= ~A_FLAG;
@@ -457,10 +457,10 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		c = sfvalue(iop)+1;
 	if(timeslot)
 		timerdel(timeslot);
-	if((flags&S_FLAG) && !shp->hist_ptr)
+	if((flags&S_FLAG) && !shp->gd->hist_ptr)
 	{
 		sh_histinit((void*)shp);
-		if(!shp->hist_ptr)
+		if(!shp->gd->hist_ptr)
 			flags &= ~S_FLAG;
 	}
 	if(cp)
@@ -473,7 +473,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		if(*(cpmax-1) != delim)
 			*(cpmax-1) = delim;
 		if(flags&S_FLAG)
-			sfwrite(shp->hist_ptr->histfp,(char*)cp,c);
+			sfwrite(shp->gd->hist_ptr->histfp,(char*)cp,c);
 		c = shp->ifstable[*cp++];
 #if !SHOPT_MULTIBYTE
 		if(!name && (flags&R_FLAG)) /* special case single argument */
@@ -574,7 +574,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				if(cp)
 				{
 					if(flags&S_FLAG)
-						sfwrite(shp->hist_ptr->histfp,(char*)cp,c);
+						sfwrite(shp->gd->hist_ptr->histfp,(char*)cp,c);
 					cpmax = cp + c;
 					c = shp->ifstable[*cp++];
 					val=0;
@@ -728,7 +728,7 @@ done:
 	if((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY))
 		tty_cooked(fd);
 	if(flags&S_FLAG)
-		hist_flush(shp->hist_ptr);
+		hist_flush(shp->gd->hist_ptr);
 	if(jmpval > 1)
 		siglongjmp(*shp->jmplist,jmpval);
 	return(jmpval);

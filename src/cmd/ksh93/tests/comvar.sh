@@ -573,6 +573,26 @@ printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l[4]
 
 unset x
 compound x=( z="a=b c")
-[[ $(typeset -p x) == $'typeset -C x=(z=\'a=b c\';)' ]] || err_exit "incorrect output x -- $(typeset -p x)"
+exp=$'typeset -C x=(z=a\\=\'b c\';)'
+got=$(typeset -p x)
+[[ $got == "$exp" ]] || err_exit "typeset -p failed -- expected '$exp', got '$got'"
+
+x=(typeset -C -a y;float z=2)
+got=$(print -C x)
+expected='(typeset -C -a y;typeset -l -E z=2;)'
+[[ $expected == "$got" ]] || err_exit "print -C x exects '$expected' got '$got'"
+
+unset vx vy
+compound vx=(
+	compound -a va=(
+		[3][17]=(
+			integer -A ar=( [aa]=4 [bb]=9 )
+		)
+	)
+)
+eval "vy=$(print -C vx)"
+[[ $vx == "$vy" ]] || err_exit 'print -C with multi-dimensional array not working'
+eval "vy=$(print -v vx)"
+[[ $vx == "$vy" ]] || err_exit 'print -v with multi-dimensional array not working'
 
 exit $((Errors))

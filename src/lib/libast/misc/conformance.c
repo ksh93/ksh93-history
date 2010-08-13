@@ -24,7 +24,9 @@
 #include <ast.h>
 #include <ctype.h>
 
-static char**	ids;
+static char**		ids;
+
+static const char*	dflt[] = { "ast", "standard", 0 };
 
 /*
  * initialize the conformance() id list
@@ -43,7 +45,6 @@ initconformance(void)
 	Sfio_t*			sp;
 
 	static const char*	conf[] = { "CONFORMANCE", "HOSTTYPE", "UNIVERSE" };
-	static const char*	dflt[] = { "ast", "standard", 0 };
 
 	p = 0;
 	if (sp = sfstropen())
@@ -96,8 +97,9 @@ initconformance(void)
 }
 
 /*
- * return 1 if s size n is in conformance
+ * return conformance id if s size n is in conformance
  * prefix match of s on the conformance id table
+ * s==0 => "standard"
  */
 
 char*
@@ -109,8 +111,21 @@ conformance(const char* s, size_t n)
 	const char*	e;
 	const char*	t;
 
-	if (!(p = ids))
+	static uint32_t	serial = ~(uint32_t)0;
+
+	if (!(p = ids) || serial != ast.env_serial)
+	{
+		serial = ast.env_serial;
+		if (ids)
+		{
+			if (ids != (char**)dflt)
+				free(ids);
+			ids = 0;
+		}
 		p = initconformance();
+	}
+	if (!s)
+		s = dflt[1];
 	if (!n)
 		n = strlen(s);
 	e = s + n;

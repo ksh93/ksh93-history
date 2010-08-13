@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Research) 2010-04-01 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2010-08-11 $\n]"
 USAGE_LICENSE
 ;
 
@@ -688,7 +688,7 @@ b_cp(int argc, register char** argv, void* context)
 	if (!state->tmp && !(state->tmp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space [tmp string]");
 	sfputr(state->tmp, usage_head, -1);
-	standard = !strcmp(astconf("CONFORMANCE", NiL, NiL), "standard");
+	standard = !!conformance("standard", 0);
 	switch (error_info.id[0])
 	{
 	case 'c':

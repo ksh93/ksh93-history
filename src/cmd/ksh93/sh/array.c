@@ -410,7 +410,7 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		mq = 0;
 		if(nq=nv_opensub(np))
 			mq = nv_search(name,ap->table,NV_ADD);
-		if(nq && (flags&NV_COMVAR) && nv_isvtree(nq))
+		if(nq && (((flags&NV_COMVAR) && nv_isvtree(nq)) || nv_isarray(nq)))
 		{
 			mq->nvalue.cp = 0;
 			if(!is_associative(ap))
@@ -458,6 +458,7 @@ static char *array_getval(Namval_t *np, Namfun_t *disc)
 {
 	register Namarr_t *aq,*ap = (Namarr_t*)disc;
 	register Namval_t *mp;
+	register char	  *cp=0;
 	if((mp=array_find(np,ap,ARRAY_LOOKUP))!=np)
 	{
 		if(!mp && !is_associative(ap) && (aq=(Namarr_t*)ap->scope))
@@ -466,7 +467,12 @@ static char *array_getval(Namval_t *np, Namfun_t *disc)
 			if((mp=array_find(np,aq,ARRAY_LOOKUP))==np)
 				return(nv_getv(np,&aq->hdr));
 		}
-		return(mp?nv_getval(mp):0);
+		if(mp)
+		{
+			cp = nv_getval(mp);
+			nv_offattr(mp,NV_EXPORT);
+		}
+		return(cp);
 	}
 	return(nv_getv(np,&ap->hdr));
 }
@@ -667,7 +673,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		ap->header.hdr.dsize = sizeof(*ap) + i;
 		i = 0;
 		ap->header.fun = 0;
-		if(nv_isnull(np) && nv_isattr(np,NV_NOFREE))
+		if((nv_isnull(np)||np->nvalue.cp==Empty) && nv_isattr(np,NV_NOFREE))
 		{
 			i = ARRAY_TREE;
 			nv_offattr(np,NV_NOFREE);

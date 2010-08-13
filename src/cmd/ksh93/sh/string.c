@@ -312,17 +312,17 @@ char	*sh_fmtq(const char *string)
 		while((c=mbchar(cp)),isaname(c));
 		if(c==0)
 			return((char*)string);
-#if 0
 		if(c=='=')
 		{
 			if(*cp==0)
 				return((char*)string);
+			if(*cp=='=')
+				cp++;
 			c = cp - string;
 			stakwrite(string,c);
 			string = cp;
 			c = mbchar(cp);
 		}
-#endif
 	}
 	if(c==0 || c=='#' || c=='~')
 		state = 1;

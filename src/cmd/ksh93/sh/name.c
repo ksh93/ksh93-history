@@ -488,7 +488,7 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 						if(!nv_isnull(np) && np->nvalue.cp!=Empty && !nv_isvtree(np))
 							sub=1;
 					}
-					else if(np->nvalue.cp && np->nvalue.cp!=Empty && !nv_type(np))
+					else if(((np->nvalue.cp && np->nvalue.cp!=Empty)||nv_isvtree(np)) && !nv_type(np))
 						_nv_unset(np,NV_EXPORT);
 				}
 				else

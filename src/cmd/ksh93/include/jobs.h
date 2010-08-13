@@ -36,6 +36,7 @@
 
 #if SHOPT_COSHELL
 #   include	<coshell.h>
+#   define	COPID_BIT	(1L<<30)
     struct cosh
     {
 	struct cosh	*next;
@@ -45,7 +46,8 @@
 	short		id;
     };
 
-    extern pid_t sh_copid(struct cosh*);
+    extern pid_t	sh_copid(struct cosh*);
+    extern char  	*sh_pid2str(Shell_t*,pid_t);
 #endif /* SHOPT_COSHELL */
 
 #undef JOBS
@@ -73,6 +75,7 @@ struct process
 {
 	struct process *p_nxtjob;	/* next job structure */
 	struct process *p_nxtproc;	/* next process in current job */
+	Shell_t		*p_shp;		/* shell that posted the job */
 #if SHOPT_COSHELL
 	Cojob_t		*p_cojob;	/* coshell job */
 #endif /* SHOPT_COSHELL */
@@ -181,7 +184,7 @@ extern void	job_bwait(char**);
 extern int	job_walk(Sfio_t*,int(*)(struct process*,int),int,char*[]);
 extern int	job_kill(struct process*,int);
 extern int	job_wait(pid_t);
-extern int	job_post(pid_t,pid_t);
+extern int	job_post(Shell_t*,pid_t,pid_t);
 extern void	*job_subsave(void);
 extern void	job_subrestore(void*);
 #ifdef SHOPT_BGX

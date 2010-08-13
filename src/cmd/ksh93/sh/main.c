@@ -169,9 +169,9 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	shp->fn_depth = shp->dot_depth = 0;
 	command = error_info.id;
 	/* set pidname '$$' */
-	shp->pid = getpid();
-	srand(shp->pid&0x7fff);
-	shp->ppid = getppid();
+	shp->gd->pid = getpid();
+	srand(shp->gd->pid&0x7fff);
+	shp->gd->ppid = getppid();
 	if(nv_isnull(PS4NOD))
 		nv_putval(PS4NOD,e_traceprompt,NV_RDONLY);
 	path_pwd(shp,1);
@@ -183,7 +183,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	{
 		sh_onstate(SH_PROFILE);
 		((Lex_t*)shp->lex_context)->nonstandard = 0;
-		if(shp->ppid==1)
+		if(shp->gd->ppid==1)
 			shp->login_sh++;
 		if(shp->login_sh >= 2)
 			sh_onoption(SH_LOGIN_SHELL);
@@ -221,7 +221,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 			sh_source(shp, iop, e_sysprofile);
 			if(!sh_isoption(SH_NOUSRPROFILE) && !sh_isoption(SH_PRIVILEGED))
 			{
-				char **files = shp->login_files;
+				char **files = shp->gd->login_files;
 				while ((name = *files++) && !sh_source(shp, iop, sh_mactry(shp,name)));
 			}
 		}
@@ -237,7 +237,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 #if SHOPT_SYSRC
 					sh_source(shp, iop, e_bash_sysrc);
 #endif
-					sh_source(shp, iop, shp->rcfile ? shp->rcfile : sh_mactry(shp,(char*)e_bash_rc));
+					sh_source(shp, iop, shp->gd->rcfile ? shp->gd->rcfile : sh_mactry(shp,(char*)e_bash_rc));
 				}
 				else
 #endif
@@ -414,7 +414,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 	if(sh_isstate(SH_INTERACTIVE))
 	{
 		if(nv_isnull(PS1NOD))
-			nv_putval(PS1NOD,(sh.euserid?e_stdprompt:e_supprompt),NV_RDONLY);
+			nv_putval(PS1NOD,(shp->gd->euserid?e_stdprompt:e_supprompt),NV_RDONLY);
 		sh_sigdone();
 		if(sh_histinit((void*)shp))
 			sh_onoption(SH_HISTORY);
@@ -438,7 +438,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 	{
 		Sfio_t *top;
 		sh_iorestore((void*)shp,0,jmpval);
-		hist_flush(shp->hist_ptr);
+		hist_flush(shp->gd->hist_ptr);
 		sfsync(shp->outpool);
 		shp->st.execbrk = shp->st.breakcnt = 0;
 		/* check for return from profile or env file */
@@ -463,7 +463,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		}
 		/* make sure that we own the terminal */
 #ifdef SIGTSTP
-		tcsetpgrp(job.fd,shp->pid);
+		tcsetpgrp(job.fd,shp->gd->pid);
 #endif /* SIGTSTP */
 	}
 	/* error return here */
@@ -524,8 +524,8 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 					mailtime = curtime;
 				}
 			}
-			if(shp->hist_ptr)
-				hist_eof(shp->hist_ptr);
+			if(shp->gd->hist_ptr)
+				hist_eof(shp->gd->hist_ptr);
 			/* sets timeout for command entry */
 			shp->timeout = shp->st.tmout;
 #if SHOPT_TIMEOUT
@@ -569,10 +569,10 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 			goto done;
 		}
 		maxtry = IOMAXTRY;
-		if(sh_isstate(SH_INTERACTIVE) && shp->hist_ptr)
+		if(sh_isstate(SH_INTERACTIVE) && shp->gd->hist_ptr)
 		{
 			job_wait((pid_t)0);
-			hist_eof(shp->hist_ptr);
+			hist_eof(shp->gd->hist_ptr);
 			sfsync(sfstderr);
 		}
 		if(sh_isoption(SH_HISTORY))
@@ -583,8 +583,8 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		if(!sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_CFLAG))
 			error_info.flags &= ~ERROR_INTERACTIVE;
 		shp->readscript = 0;
-		if(sh_isstate(SH_INTERACTIVE) && shp->hist_ptr)
-			hist_flush(shp->hist_ptr);
+		if(sh_isstate(SH_INTERACTIVE) && shp->gd->hist_ptr)
+			hist_flush(shp->gd->hist_ptr);
 		sh_offstate(SH_HISTORY);
 		if(t)
 		{

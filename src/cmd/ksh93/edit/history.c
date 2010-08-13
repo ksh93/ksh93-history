@@ -177,7 +177,6 @@ static History_t *hist_ptr;
 #if SHOPT_AUDIT
 static int sh_checkaudit(History_t *hp, const char *name, char *logbuf, size_t len)
 {
-	Shell_t	*shp = (Shell_t*)hp->histshell;
 	char	*buff, *cp, *last;
 	int	id1, id2, r=0, n, fd;
 	if((fd=open(name, O_RDONLY)) < 0)
@@ -196,9 +195,9 @@ static int sh_checkaudit(History_t *hp, const char *name, char *logbuf, size_t l
 		id1 = id2 = strtol(cp,&last,10);
 		if(*last=='-')
 			id1 = strtol(last+1,&last,10);
-		if(sh.euserid >=id1 && sh.euserid <= id2)
+		if(shgd->euserid >=id1 && shgd->euserid <= id2)
 			r |= 1;
-		if(sh.userid >=id1 && sh.userid <= id2)
+		if(shgd->userid >=id1 && shgd->userid <= id2)
 			r |= 2;
 		cp = last;
 	}
@@ -236,7 +235,7 @@ int  sh_histinit(void *sh_context)
 	register char *cp;
 	register off_t hsize = 0;
 
-	if(shp->hist_ptr=hist_ptr)
+	if(shgd->hist_ptr=hist_ptr)
 		return(1);
 	if(!(histname = nv_getval(HISTFILE)))
 	{
@@ -253,7 +252,7 @@ int  sh_histinit(void *sh_context)
 	{
 		/* reuse history file if same name */
 		wasopen = 0;
-		shp->hist_ptr = hist_ptr = hp;
+		shgd->hist_ptr = hist_ptr = hp;
 		if(strcmp(histname,hp->histname)==0)
 			return(1);
 		else
@@ -290,7 +289,7 @@ retry:
 	{
 #if KSHELL
 		/* don't allow root a history_file in /tmp */
-		if(sh.userid)
+		if(shgd->userid)
 #endif	/* KSHELL */
 		{
 			if(!(fname = pathtmp(NIL(char*),0,0,NIL(int*))))
@@ -312,7 +311,7 @@ retry:
 		close(fd);
 		return(0);
 	}
-	shp->hist_ptr = hist_ptr = hp;
+	shgd->hist_ptr = hist_ptr = hp;
 	hp->histshell = (void*)shp;
 	hp->histsize = maxlines;
 	hp->histmask = histmask;
@@ -409,7 +408,6 @@ retry:
 
 void hist_close(register History_t *hp)
 {
-	Shell_t	*shp = (Shell_t*)hp->histshell;
 	sfclose(hp->histfp);
 #if SHOPT_AUDIT
 	if(hp->auditfp)
@@ -421,7 +419,7 @@ void hist_close(register History_t *hp)
 #endif /* SHOPT_AUDIT */
 	free((char*)hp);
 	hist_ptr = 0;
-	shp->hist_ptr = 0;
+	shgd->hist_ptr = 0;
 #if SHOPT_ACCTFILE
 	if(acctfd)
 	{
@@ -624,7 +622,17 @@ void hist_eof(register History_t *hp)
 	register char *cp,*first,*endbuff;
 	register int incmd = 0;
 	register off_t count = hp->histcnt;
-	int n,skip=0;
+	int oldind,n,skip=0;
+	off_t last = sfseek(hp->histfp,(off_t)0,SEEK_END);
+	if(last < count)
+	{
+		last = -1;
+		count = 2+HIST_MARKSZ;
+		oldind = hp->histind;
+		if((hp->histind -= hp->histsize) < 0)
+			hp->histind = 1;
+	}
+again:
 	sfseek(hp->histfp,count,SEEK_SET);
         while(cp=(char*)sfreserve(hp->histfp,SF_UNBOUND,0))
 	{
@@ -662,16 +670,11 @@ void hist_eof(register History_t *hp)
 							hp->histmarker=count+2;
 							cp += (HIST_MARKSZ-1);
 							hp->histind--;
-#ifdef future
 							if(cp <= endbuff)
 							{
 								unsigned char *marker = (unsigned char*)(cp-4);
-								int n = ((marker[0]<<16)
-|(marker[1]<<8)|marker[2]);
-								if((n<count/2) && n !=  (hp->histind+1))
-									errormsg(SH_DICT,2,"index=%d marker=%d", hp->histind, n);
+								hp->histind = ((marker[0]<<16)|(marker[1]<<8)|marker[2]);
 							}
-#endif
 						}
 						break;
 					case HIST_UNDO:
@@ -709,6 +712,31 @@ void hist_eof(register History_t *hp)
 			hp->histcmds[hist_ind(hp,++hp->histind)] = count;
 	}
 	hp->histcnt = count;
+	if(incmd && last)
+	{
+		sfputc(hp->histfp,0);
+		hist_cancel(hp);
+		count = 2;
+		skip = 0;
+		oldind -= hp->histind;
+		hp->histind = hp->histind-hp->histsize + oldind +2;
+		if(hp->histind<0)
+			hp->histind = 1;
+		if(last<0)
+		{
+			char	buff[HIST_MARKSZ];
+			int	fd = open(hp->histname,O_RDWR);
+			if(fd>=0)
+			{
+				hist_marker(buff,hp->histind);
+				write(fd,(char*)hist_stamp,2);
+				write(fd,buff,HIST_MARKSZ);
+				close(fd);
+			}
+		}
+		last = 0;
+		goto again;
+	}
 }
 
 /*
@@ -800,9 +828,8 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 #if	 SHOPT_AUDIT
 	if(hp->auditfp)
 	{
-		Shell_t *shp = (Shell_t*)hp->histshell;
 		time_t	t=time((time_t*)0);
-		sfprintf(hp->auditfp,"%u;%u;%s;%*s%c",sh_isoption(SH_PRIVILEGED)?sh.euserid:sh.userid,t,hp->tty,size,buff,0);
+		sfprintf(hp->auditfp,"%u;%u;%s;%*s%c",sh_isoption(SH_PRIVILEGED)?shgd->euserid:shgd->userid,t,hp->tty,size,buff,0);
 		sfsync(hp->auditfp);
 	}
 #endif	/* SHOPT_AUDIT */
@@ -1025,7 +1052,7 @@ int hist_match(register History_t *hp,off_t offset,char *string,int *coffset)
 int hist_copy(char *s1,int size,int command,int line)
 {
 	register int c;
-	register History_t *hp = sh_getinterp()->hist_ptr;
+	register History_t *hp = shgd->hist_ptr;
 	register int count = 0;
 	register char *s1max = s1+size;
 	if(!hp)

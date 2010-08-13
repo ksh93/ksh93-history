@@ -565,4 +565,16 @@ do	i=$1
 	shift 4
 done
 
+#multibyte locale tests
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:0:1}" == a || err_exit ${x:0:1} should be a'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:1:1}" == "<2b|>" || err_exit ${x:1:1} should be <2b|>'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:3:1}" == "<3d|\\>" || err_exit ${x:3:1} should be <3d|\>'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:4:1}" == e || err_exit ${x:4:1} should bee'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:1}" == "<2b|>c<3d|\\>e" || print -u2   ${x:1}" should be <2b|>c<3d|\>e'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x: -1:1}" == e || err_exit ${x: -1:1} should be e'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x: -2:1}" == "<3d|\\>" || err_exit ${x: -2:1} == <3d|\>'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:1:3}" == "<2b|>c<3d|\\>" || err_exit ${x:1:3} should be <2b|>c<3d|\>'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:1:20}" == "<2b|>c<3d|\\>e" || err_exit ${x:1:20} should be <2b|>c<3d|\>e'
+x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x#??}" == "c<3d|\\>e" || err_exit "${x#??} should be c<3d|\>e'
+
 exit $((Errors))

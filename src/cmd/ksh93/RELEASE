@@ -1,4 +1,47 @@
-10-06-25  --- Release ksh93u-  ---
+10-08-11  --- Release ksh93u  ---
+10-08-11  Restored sh_fmtq() quoting to not quote NAME= in NAME=VALUE.
+10-08-09 +Modified the expansion of message strings, $"...", so that they
+	  are expanded each time they are referenced rather than expanding
+	  them when the script is compiled or read in.
+10-08-06 +The process id for jobs in job pools is now of the form poolname.n
+	  where n is the jobid in that pool.  Commands that accept job names
+	  or numbers now understand names in this format.
+10-08-05  A bug in which an assignment from within an arithmetic expression
+	  inside a function would create a local variable has been fixed.
+10-08-04  A bug in the expanding of variables whose names contain multibyte
+	  characters has been fixed.
+10-08-04  A bug which caused an exception when processing scripts compiled
+	  with shcomp -n has been fixed.
+10-08-02  Tests using very small buffer sizes uncovered a number of bug most
+	  connected with here documents which have been fixed.
+10-07-27  The format modifier , used for digit grouping with d and f formats
+	  has been documented.
+10-07-26  cd '' now produces and error rather than changing to the current
+	  directory.
+10-07-26  A bug in multi-byte locales which the last character of a
+	  multi-byte character is a \ or pattern character which could occur
+	  when the character was the last character of a command substitution
+	  has been fixed.
+10-07-23  Another bug in the processing of ${var:offset;len} in multi-byte
+	  locales when len is larger than the number of characters has been
+	  fixed.
+10-07-23  Many coding changes have been made to eliminate most of the uses
+	  of global variables in the shell code.
+10-07-22  Fixed a bug in which discipline functions were not being invoked
+	  when it was invoked as ref.discipline where ref was a name reference
+	  to an array instance.
+10-07-22  Fixed a bug in which discipline functions were not being invoked it
+	  was invoked on a two dimensional array, i.e., arr[5][9].discipline.
+10-07-19  Fixed a buffering problem which occured when running a script with
+	  ssh and the parent ssh process is killed.
+10-07-14  Modifed the parser to treat ((...)) inside [[...]] as ( (...) ) to
+	  that it is a nested (...).
+10-07-09  A bug in the handling of process substitution inside command
+	  substitution as part of a pipeline has been fixed.
+10-07-07  A bug in the output for compound variables containing
+	  multi-dimensional arrays has been fixed.
+10-07-06  ksh now recovers from changes made by bash to the history file without
+	  loosing history commands.
 10-06-25  A bug in which a large here document containing command substitutions
 	  of a dynamically loaded function that contained a here document
 	  could get truncated has been fixed.

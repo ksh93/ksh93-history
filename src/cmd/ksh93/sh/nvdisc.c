@@ -1073,8 +1073,6 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 			return(0);
 		if(*sp=='[')
 		{
-			if(sp[-1]!='.')
-				dname = sp;
 			while(*sp=='[')
 			{
 				sp = nv_endsubscript((Namval_t*)0,(char*)sp,0);
@@ -1085,11 +1083,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 				break;
 			if(*sp!='.')
 				return(0);
-			if(dname)
-			{
-				cp = dname;
-				dname = sp+1;
-			}
+			cp = sp;
 		}
 		else if(*sp=='.')
 			cp = sp; 
@@ -1098,8 +1092,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 		return(var?nv_search(name,root,0):0);
 	stakputs(name);
 	stakputc(0);
-	if(!dname)
-		dname = cp+1;
+	dname = cp+1;
 	cp = stakptr(offset) + (cp-name); 
 	if(last)
 		*last = cp;
@@ -1122,6 +1115,8 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 		nv_endsubscript(nq, cp,NV_NOADD);
 	if(nq==shp->namespace)
 		return(nv_search(name,root,0));
+	while(nv_isarray(nq) && !nv_isattr(nq,NV_MINIMAL|NV_EXPORT) && nq->nvenv && nv_isarray((Namval_t*)nq->nvenv))
+		nq = (Namval_t*)nq->nvenv;
 	return((Namval_t*)nv_setdisc(nq,dname,nq,(Namfun_t*)nq));
 done:
 	stakseek(offset);

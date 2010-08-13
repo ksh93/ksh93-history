@@ -1,3 +1,4 @@
+10-08-02 dllplug.c: fix local path dllcheck() call
 10-05-28 dllplug.c: add dllplugin() with dllcheck() version check
 10-05-28 dllcheck.c: add dllcheck() to do plugin_version() checks
 10-05-28 dllerror.c: add dllerror(int retain) for dll*() and dl*() messages

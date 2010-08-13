@@ -1142,7 +1142,7 @@ init(register char* s, Optpass_t* p)
 		s += n;
 	}
 	p->opts = s;
-	message((-1, "version=%d prefix=%d section=%s flags=%04x id=%s catalog=%s", p->version, p->prefix, p->section, p->flags, p->id, p->catalog));
+	message((-1, "version=%d prefix=%d section=%s flags=%04x id=%s catalog=%s oopts=%p", p->version, p->prefix, p->section, p->flags, p->id, p->catalog, p->oopts));
 	return 0;
 }
 
@@ -2338,6 +2338,7 @@ opthelp(const char* oopts, const char* what)
 	Optpass_t*		q;
 	Optpass_t*		e;
 	Optpass_t		one;
+	Optpass_t		top;
 	Help_t*			hp;
 	short			ptstk[elementsof(indent) + 2];
 	short*			pt;
@@ -2389,6 +2390,15 @@ opthelp(const char* oopts, const char* what)
 		if (!(opts = sfstruse(sp_help)))
 			goto nospace;
 	}
+
+	/*
+	 * this is a workaround for static optjoin() data
+	 * clobbered by plugins/builtins that may be called
+	 * evaluating \f...\f -- it would be good to hide
+	 * optjoin() interactions a bit more ...
+	 */
+
+	top = state.pass[0];
  again:
 	if (opts)
 	{
@@ -2406,18 +2416,22 @@ opthelp(const char* oopts, const char* what)
 		}
 		e = o + 1;
 	}
-	else if (state.npass > 0)
-	{
-		o = state.pass;
-		e = o + state.npass;
-	}
-	else if (state.npass < 0)
-	{
-		o = &state.cache->pass;
-		e = o + 1;
-	}
 	else
-		return T(NiL, ID, "[* call optget() before opthelp() *]");
+	{
+		if (state.npass > 0)
+		{
+			o = state.pass;
+			e = o + state.npass;
+		}
+		else if (state.npass < 0)
+		{
+			o = &state.cache->pass;
+			e = o + 1;
+		}
+		else
+			return T(NiL, ID, "[* call optget() before opthelp() *]");
+		oopts = (const char*)state.pass[0].oopts;
+	}
 	if (style <= STYLE_usage)
 	{
 		if (!(sp_text = sfstropen()) || !(sp_info = sfstropen()))
@@ -3422,6 +3436,8 @@ opthelp(const char* oopts, const char* what)
 			}
 		}
 	}
+	if (oopts != o->oopts && oopts == top.oopts)
+		state.pass[0] = top;
 	version = o->version;
 	id = o->id;
 	catalog = o->catalog;

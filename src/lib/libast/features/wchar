@@ -59,6 +59,10 @@ cat <<!
 	#define wprintf		_ast_wprintf
 	#define wscanf		_ast_wscanf
 
+	#undef	iswalpha
+
+	#define iswalpha(w)	(ast.mb_alpha?(*ast.mb_alpha)(w):isalpha(w))
+
 	#if !_typ_mbstate_t
 	#undef	_typ_mbstate_t
 	#define _typ_mbstate_t	1

@@ -58,7 +58,7 @@ int	b_hist(int argc,char *argv[], void *extra)
 	NOT_USED(argc);
 	if(!sh_histinit((void*)shp))
 		errormsg(SH_DICT,ERROR_system(1),e_histopen);
-	hp = shp->hist_ptr;
+	hp = shp->gd->hist_ptr;
 	while((flag = optget(argv,sh_opthist))) switch(flag)
 	{
 	    case 'e':
@@ -202,7 +202,7 @@ int	b_hist(int argc,char *argv[], void *extra)
 			sfprintf(outfile,"%d\t",range[flag]);
 		else if(lflag)
 			sfputc(outfile,'\t');
-		hist_list(shp->hist_ptr,outfile,hist_tell(shp->hist_ptr,range[flag]),0,arg);
+		hist_list(shp->gd->hist_ptr,outfile,hist_tell(shp->gd->hist_ptr,range[flag]),0,arg);
 		if(lflag)
 			sh_sigcheck(shp);
 		if(range[flag] == range[1-flag])

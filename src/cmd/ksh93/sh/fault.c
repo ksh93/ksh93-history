@@ -142,7 +142,7 @@ void	sh_fault(register int sig)
 			}
 			/* mark signal and continue */
 			shp->trapnote |= SH_SIGSET;
-			if(sig <= shp->sigmax)
+			if(sig <= shp->gd->sigmax)
 				shp->sigflag[sig] |= SH_SIGSET;
 #if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
 			if(abortsig(sig))
@@ -198,7 +198,7 @@ void	sh_fault(register int sig)
 		return;
 	}
 	shp->trapnote |= flag;
-	if(sig <= shp->sigmax)
+	if(sig <= shp->gd->sigmax)
 		shp->sigflag[sig] |= flag;
 	if(pp->mode==SH_JMPCMD && sh_isstate(SH_STOPOK))
 	{
@@ -222,8 +222,8 @@ void sh_siginit(void *ptr)
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
 	if ((n = SIGRTMIN) > 0 && (sig = SIGRTMAX) > n && sig < SH_TRAP)
 	{
-		shp->sigruntime[SH_SIGRTMIN] = n;
-		shp->sigruntime[SH_SIGRTMAX] = sig;
+		shp->gd->sigruntime[SH_SIGRTMIN] = n;
+		shp->gd->sigruntime[SH_SIGRTMAX] = sig;
 	}
 #endif /* SIGRTMIN && SIGRTMAX */
 	n = SIGTERM;
@@ -233,29 +233,29 @@ void sh_siginit(void *ptr)
 		if (!(sig-- & SH_TRAP))
 		{
 			if ((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME)
-				sig = shp->sigruntime[sig];
+				sig = shp->gd->sigruntime[sig];
 			if(sig>n && sig<SH_TRAP)
 				n = sig;
 		}
 		tp++;
 	}
-	shp->sigmax = n++;
+	shp->gd->sigmax = n++;
 	shp->st.trapcom = (char**)calloc(n,sizeof(char*));
 	shp->sigflag = (unsigned char*)calloc(n,1);
-	shp->sigmsg = (char**)calloc(n,sizeof(char*));
+	shp->gd->sigmsg = (char**)calloc(n,sizeof(char*));
 	for(tp=shtab_signals; sig=tp->sh_number; tp++)
 	{
 		n = (sig>>SH_SIGBITS);
-		if((sig &= ((1<<SH_SIGBITS)-1)) > (shp->sigmax+1))
+		if((sig &= ((1<<SH_SIGBITS)-1)) > (shp->gd->sigmax+1))
 			continue;
 		sig--;
 		if(n&SH_SIGRUNTIME)
-			sig = shp->sigruntime[sig];
+			sig = shp->gd->sigruntime[sig];
 		if(sig>=0)
 		{
 			shp->sigflag[sig] = n;
 			if(*tp->sh_name)
-				shp->sigmsg[sig] = (char*)tp->sh_value;
+				shp->gd->sigmsg[sig] = (char*)tp->sh_value;
 		}
 	}
 }
@@ -294,9 +294,9 @@ void	sh_sigtrap(register int sig)
  */
 void	sh_sigdone(void)
 {
-	register int 	flag, sig = sh.sigmax;
+	register int 	flag, sig = shgd->sigmax;
 	sh.sigflag[0] |= SH_SIGFAULT;
-	for(sig=sh.sigmax; sig>0; sig--)
+	for(sig=shgd->sigmax; sig>0; sig--)
 	{
 		flag = sh.sigflag[sig];
 		if((flag&(SH_SIGDONE|SH_SIGIGNORE|SH_SIGINTERACTIVE)) && !(flag&(SH_SIGFAULT|SH_SIGOFF)))
@@ -420,7 +420,6 @@ void	sh_chktrap(Shell_t* shp)
 			shp->sigflag[sig] &= ~SH_SIGTRAP;
 			if(trap=shp->st.trapcom[sig])
 			{
- 				shp->oldexit = SH_EXITSIG|sig;
 				cursig = sig;
  				sh_trap(trap,0);
 				cursig = -1;

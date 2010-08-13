@@ -37,7 +37,7 @@ static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 {
 	Shell_t	*shp = *(Shell_t**)(dp+1);
 	Stk_t	*stkp = shp->stk;
-	if(nv_search(s,sh.fun_tree,0))
+	if(nv_search(s,shp->fun_tree,0))
 	{
 		int savtop = stktell(stkp);
 		char *savptr = stkfreeze(stkp,0);

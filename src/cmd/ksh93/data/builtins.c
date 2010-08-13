@@ -145,6 +145,30 @@ const struct shtable3 shtab_builtins[] =
 	"",		0, 0 
 };
 
+#if SHOPT_COSHELL
+#  define _JOB_	"[+?Each \ajob\a can be specified as one of the following:]{" \
+        "[+\anumber\a?\anumber\a refers to a process id.]" \
+        "[+-\anumber\a?\anumber\a refers to a process group id.]" \
+        "[+\apool\a.\anum\a?refers to job \anum\a in background pool named \apool\a.]" \
+        "[+\apool\a?refers to all jobs in background pool named \apool\a.]" \
+        "[+%\anumber\a?\anumber\a refer to a job number.]" \
+        "[+%\astring\a?Refers to a job whose name begins with \astring\a.]" \
+        "[+%??\astring\a?Refers to a job whose name contains \astring\a.]" \
+        "[+%+ \bor\b %%?Refers to the current job.]" \
+        "[+%-?Refers to the previous job.]" \
+	"}"
+#else
+#  define _JOB_	"[+?Each \ajob\a can be specified as one of the following:]{" \
+        "[+\anumber\a?\anumber\a refers to a process id.]" \
+        "[+-\anumber\a?\anumber\a refers to a process group id.]" \
+        "[+%\anumber\a?\anumber\a refer to a job number.]" \
+        "[+%\astring\a?Refers to a job whose name begins with \astring\a.]" \
+        "[+%??\astring\a?Refers to a job whose name contains \astring\a.]" \
+        "[+%+ \bor\b %%?Refers to the current job.]" \
+        "[+%-?Refers to the previous job.]" \
+	"}"
+#endif
+
 
 const char sh_set[] =
 "[a?Set the export attribute for each variable whose name does not "
@@ -348,7 +372,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optbuiltin[] =
-"[-1c?\n@(#)$Id: builtin (AT&T Research) 1999-07-10 $\n]"
+"[-1c?\n@(#)$Id: builtin (AT&T Research) 2010-08-04 $\n]"
 USAGE_LICENSE
 "[+NAME?builtin - add, delete, or display shell built-ins]"
 "[+DESCRIPTION?\bbuiltin\b can be used to add, delete, or display "
@@ -381,13 +405,16 @@ USAGE_LICENSE
 "[d?Deletes each of the specified built-ins. Special built-ins cannot be "
     "deleted.]"
 "[f]:[lib?On systems with dynamic linking, \alib\a names a shared "
-    "library to load and search for built-ins. Libraries are search for in "
-    "\b$PATH\b and system dependent library directories. The system "
+    "library to load and search for built-ins. Libraries are searched for "
+    "in \b../lib/ksh\b and \b../lib\b on \b$PATH\b and in system dependent "
+    "library directories. The system "
     "dependent shared library prefix and/or suffix may be omitted. Once a "
     "library is loaded, its symbols become available for the current and "
     "subsequent invocations of \bbuiltin\b. Multiple libraries can be "
     "specified with separate invocations of \bbuiltin\b. Libraries are "
     "searched in the reverse order in which they are specified.]"
+"[l?List the library base name, plugin YYYYMMDD version stamp, and full "
+    "path for \b-f\b\alib\a on one line on the standard output.]"
 "[s?Display only the special built-ins.]"
 "\n"
 "\n[pathname ...]\n"
@@ -800,15 +827,7 @@ USAGE_LICENSE
 	"and sends them a \bCONT\b signal to start them running.]"
 "[+?If \ajob\a is omitted, the most recently started or stopped "
 	"background job is resumed or continued in the background.]"
-"[+?Each \ajob\a can be specified as one of the following:]{"
-	"[+\anumber\a?\anumber\a refers to a process id.]"
-	"[+-\anumber\a?\anumber\a refers to a process group id.]"
-	"[+%\anumber\a?\anumber\a refer to a job number.]"
-	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
-	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
-	"[+%+ \bor\b %%?Refers to the current job.]"
-	"[+%-?Refers to the previous job.]"
-"}"
+_JOB_
 "\n"
 "\n[job ...]\n"
 "\n"
@@ -829,15 +848,7 @@ USAGE_LICENSE
 	"in sequence and sends them a \bCONT\b signal to start each running.]"
 "[+?If \ajob\a is omitted, the most recently started or stopped "
 	"background job is moved to the foreground.]"
-"[+?Each \ajob\a can be specified as one of the following:]{"
-	"[+\anumber\a?\anumber\a refers to a process id.]"
-	"[+-\anumber\a?\anumber\a refers to a process group id.]"
-	"[+%\anumber\a?\anumber\a refer to a job number.]"
-	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
-	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
-	"[+%+ \bor\b %%?Refers to the current job.]"
-	"[+%-?Refers to the previous job.]"
-"}"
+_JOB_
 "\n"
 "\n[job ...]\n"
 "\n"
@@ -859,15 +870,7 @@ USAGE_LICENSE
 	"the current shell terminates a login session.]"
 "[+?If \ajob\a is omitted, the most recently started or stopped "
 	"background job is used.]"
-"[+?Each \ajob\a can be specified as one of the following:]{"
-	"[+\anumber\a?\anumber\a refers to a process id.]"
-	"[+-\anumber\a?\anumber\a refers to a process group id.]"
-	"[+%\anumber\a?\anumber\a refer to a job number.]"
-	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
-	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
-	"[+%+ \bor\b %%?Refers to the current job.]"
-	"[+%-?Refers to the previous job.]"
-"}"
+_JOB_
 "\n"
 "\n[job ...]\n"
 "\n"
@@ -893,16 +896,7 @@ USAGE_LICENSE
 "[+?When \bjobs\b reports the termination status of a job, the "
 	"shell removes the jobs from the list of known jobs in "
 	"the current shell environment.]"
-"[+?Each \ajob\a can be specified as one of the following:]{"
-	"[+\anumber\a?\anumber\a refers to a process id.]"
-	"[+-\anumber\a?\anumber\a refers to a process group id.]"
-	"[+\aname\a?refers to all jobs in the background pool \aname\a.]"
-	"[+%\anumber\a?\anumber\a refer to a job number.]"
-	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
-	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
-	"[+%+ \bor\b %%?Refers to the current job.]"
-	"[+%-?Refers to the previous job.]"
-"}"
+_JOB_
 "[l?\bjobs\b displays process id's after the job number in addition "
 	"to the usual information]"
 "[n?Only the jobs whose status has changed since the last prompt "
@@ -995,16 +989,7 @@ USAGE_LICENSE
 	"\bkill\b sends a signal to one or more processes specified by "
 	"\ajob\a.  This normally terminates the processes unless the signal "
 	"is being caught or ignored.]"
-"[+?A \ajob\a can be specified as one of the following:]{"
-	"[+\anumber\a?\anumber\a refers to a process id.]"
-	"[+-\anumber\a?\anumber\a refers to a process group id.]"
-	"[+\aname\a?refers to all jobs in the background pool \aname\a.]"
-	"[+%\anumber\a?\anumber\a refer to a job number.]"
-	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
-	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
-	"[+%+ \bor\b %%?Refers to the current job.]"
-	"[+%-?Refers to the previous job.]"
-"}"
+_JOB_
 "[+?If the signal is not specified with either the \b-n\b or the \b-s\b  "
 	"option, the \bSIGTERM\b signal is used.]"
 "[+?If \b-l\b is specified, and no \aarg\a is specified, then \bkill\b "
@@ -1189,6 +1174,8 @@ USAGE_LICENSE
 	"[+-?The format modifier flag \bL\b can be used with the \bc\b and "
 		"\bs\b formats to treat precision as character width instead "
 		"of byte count.]"
+	"[+-?The format modifier flag \b,\b can be used with \bd\b and \bf\f "
+		"formats to cause group of digits.]"
 	"[+-?Each of the integral format specifiers can have a third "
 		"modifier after width and precision that specifies the "
 		"base of the conversion from 2 to 64.  In this case the "
@@ -1820,16 +1807,7 @@ USAGE_LICENSE
 	"known to the invoking shell have terminated.  If one or more "
 	"\ajob\a operands are specified, \bwait\b waits until all of them "
 	"have completed.]"
-"[+?Each \ajob\a can be specified as one of the following:]{"
-	"[+\anumber\a?\anumber\a refers to a process id.]"
-	"[+-\anumber\a?\anumber\a refers to a process group id.]"
-	"[+\aname\a?refers to all jobs in the background pool \aname\a.]"
-	"[+%\anumber\a?\anumber\a refer to a job number.]"
-	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
-	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
-	"[+%+ \bor\b %%?Refers to the current job.]"
-	"[+%-?Refers to the previous job.]"
-"}"
+_JOB_
 "[+?If one ore more \ajob\a operands is a process id or process group id "
 	"not known by the current shell environment, \bwait\b treats each "
 	"of them as if it were a process that exited with status 127.]"

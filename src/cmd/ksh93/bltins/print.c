@@ -181,7 +181,7 @@ int    b_print(int argc, char *argv[], void *extra)
 			/* print to history file */
 			if(!sh_histinit((void*)shp))
 				errormsg(SH_DICT,ERROR_system(1),e_history);
-			fd = sffileno(shp->hist_ptr->histfp);
+			fd = sffileno(shp->gd->hist_ptr->histfp);
 			sh_onstate(SH_HISTORY);
 			sflag++;
 			break;
@@ -197,7 +197,7 @@ int    b_print(int argc, char *argv[], void *extra)
 				fd = -1;
 			else if(!sh_iovalidfd(shp,fd))
 				fd = -1;
-			else if(!(shp->inuse_bits&(1<<fd)) && (sh_inuse(shp,fd) || (shp->hist_ptr && fd==sffileno(shp->hist_ptr->histfp))))
+			else if(!(shp->inuse_bits&(1<<fd)) && (sh_inuse(shp,fd) || (shp->gd->hist_ptr && fd==sffileno(shp->gd->hist_ptr->histfp))))
 
 				fd = -1;
 			break;
@@ -319,7 +319,7 @@ skip2:
 	}
 	if(sflag)
 	{
-		hist_flush(shp->hist_ptr);
+		hist_flush(shp->gd->hist_ptr);
 		sh_offstate(SH_HISTORY);
 	}
 	else if(n&SF_SHARE)
@@ -552,7 +552,12 @@ static void *fmtbase64(char *string, ssize_t *sz, int alt)
 	{
 		if(alt && nv_isvtree(np))
 			nv_onattr(np,NV_EXPORT);
-		if(!(cp = nv_getval(np)))
+		else
+			alt = 0;
+		cp = nv_getval(np);
+		if(alt)
+			nv_offattr(np,NV_EXPORT);
+		if(!cp)
 			return(0);
 		size = strlen(cp);
 		return(sfwrite(iop,cp,size));

@@ -216,7 +216,7 @@ fi
 if	[[ $( trap 'print done' EXIT; trap - EXIT) == done ]]
 then	err_exit 'trap on EXIT not being cleared'
 fi
-if	[[ $(type test) != 'test is a shell builtin' ]]
+if	[[ $(LC_MESSAGES=C type test) != 'test is a shell builtin' ]]
 then	err_exit 'whence -v test not a builtin'
 fi
 builtin -d test
@@ -530,5 +530,8 @@ n=$(printf "%b" 'a\0b\0c' | wc -c)
 
 t=$(ulimit -t)
 [[ $($SHELL -c 'ulimit -v 15000; ulimit -t') == "$t" ]] || err_exit 'ulimit -v changes ulimit -t'
+
+$SHELL 2> /dev/null -c 'cd ""' && err_exit 'cd "" not producing an error'
+[[ $($SHELL 2> /dev/null -c 'cd "";print hi') != hi ]] && err_exit 'cd "" should not terminate script'
 
 exit $((Errors))

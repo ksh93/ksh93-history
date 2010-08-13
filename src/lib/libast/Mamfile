@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-06-01
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-08-11
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -167,7 +167,7 @@ make conftab.h
 done conftab.h generated
 make conftab.c
 done conftab.c generated
-done joint.conflim.h virtual
+done joint.conflim.h generated virtual
 prev FEATURE/param implicit
 make comp/getopt.h implicit
 make include/ast_getopt.h implicit
@@ -994,7 +994,7 @@ done ${INSTALLROOT}/include/prototyped.h dontcare
 done lc.h dontcare generated
 make lctab.c
 done lctab.c generated
-done joint.lc.h virtual
+done joint.lc.h generated virtual
 prev include/error.h implicit
 prev include/ast.h implicit
 done port/lclib.h
@@ -1710,6 +1710,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done fmterror.o generated
 make fmtesc.o
 make string/fmtesc.c
+prev ast_wchar.h implicit
 prev include/ccode.h implicit
 prev include/ast.h implicit
 done string/fmtesc.c

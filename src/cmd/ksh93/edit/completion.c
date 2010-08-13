@@ -49,7 +49,7 @@ static char *fmtx(const char *string)
 	stakwrite(string,--cp-string);
 	while(c=mbchar(cp))
 	{
-		if(state[c])
+		if(c<UCHAR_MAX && state[c])
 			stakputc('\\');
 		stakputc(c);
 	}
@@ -290,7 +290,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		register 	int size='x';
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
-		if(!var && !strchr(ap->argval,'/') && (((cp==outbuff&&sh.nextprompt==1) || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
+		if(!var && !strchr(ap->argval,'/') && (((cp==outbuff&&ep->sh->nextprompt==1) || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
 		{
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);
@@ -311,7 +311,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		}
 		sh_offstate(SH_COMPLETE);
                 /* allow a search to be aborted */
-		if(sh.trapnote&SH_SIGSET)
+		if(ep->sh->trapnote&SH_SIGSET)
 		{
 			rval = -1;
 			goto done;
@@ -414,7 +414,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 					Namval_t *np;
 					/* add as tracked alias */
 					Pathcomp_t *pp;
-					if(*cp=='/' && (pp=path_dirfind(sh.pathlist,cp,'/')) && (np=nv_search(begin,sh.track_tree,NV_ADD)))
+					if(*cp=='/' && (pp=path_dirfind(ep->sh->pathlist,cp,'/')) && (np=nv_search(begin,ep->sh->track_tree,NV_ADD)))
 						path_alias(np,pp);
 					out = strcopy(begin,cp);
 				}
@@ -504,7 +504,7 @@ int ed_macro(Edit_t *ep, register int i)
 		ep->e_macro[2] = ed_getchar(ep,1);
 	else
 		ep->e_macro[2] = 0;
-	if (isalnum(i)&&(np=nv_search(ep->e_macro,sh.alias_tree,HASH_SCOPE))&&(out=nv_getval(np)))
+	if (isalnum(i)&&(np=nv_search(ep->e_macro,ep->sh->alias_tree,HASH_SCOPE))&&(out=nv_getval(np)))
 	{
 #if SHOPT_MULTIBYTE
 		/* copy to buff in internal representation */
@@ -535,7 +535,7 @@ int ed_macro(Edit_t *ep, register int i)
 int ed_fulledit(Edit_t *ep)
 {
 	register char *cp;
-	if(!sh.hist_ptr)
+	if(!shgd->hist_ptr)
 		return(-1);
 	/* use EDITOR on current command */
 	if(ep->e_hline == ep->e_hismax)
@@ -546,9 +546,9 @@ int ed_fulledit(Edit_t *ep)
 		ep->e_inbuf[ep->e_eol+1] = 0;
 		ed_external(ep->e_inbuf, (char *)ep->e_inbuf);
 #endif /* SHOPT_MULTIBYTE */
-		sfwrite(sh.hist_ptr->histfp,(char*)ep->e_inbuf,ep->e_eol+1);
+		sfwrite(shgd->hist_ptr->histfp,(char*)ep->e_inbuf,ep->e_eol+1);
 		sh_onstate(SH_HISTORY);
-		hist_flush(sh.hist_ptr);
+		hist_flush(shgd->hist_ptr);
 	}
 	cp = strcopy((char*)ep->e_inbuf,e_runvi);
 	cp = strcopy(cp, fmtbase((long)ep->e_hline,10,0));

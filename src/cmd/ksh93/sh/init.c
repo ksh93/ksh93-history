@@ -243,7 +243,7 @@ done:
 static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shell_t *shp = nv_shell(np);
-	void 	*histopen = shp->hist_ptr;
+	void 	*histopen = shp->gd->hist_ptr;
 	char	*cp;
 	if(val && histopen)
 	{
@@ -251,7 +251,7 @@ static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t
 			return;
 		if(np==HISTSIZE && sh_arith(shp,val)==nv_getnum(HISTSIZE))
 			return;
-		hist_close(shp->hist_ptr);
+		hist_close(shp->gd->hist_ptr);
 	}
 	nv_putv(np, val, flags, fp);
 	if(histopen)
@@ -541,7 +541,7 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 #   define dtime(tp) ((double)((tp)->tv_sec)+1e-6*((double)((tp)->tv_usec)))
 #   define tms	timeval
 #else
-#   define dtime(tp)	(((double)times(tp))/sh.lim.clk_tck)
+#   define dtime(tp)	(((double)times(tp))/shgd->lim.clk_tck)
 #   define timeofday(a)
 #endif
 
@@ -811,7 +811,7 @@ static const Namdisc_t SH_VERSION_disc	= {  0, 0, get_version, nget_version };
     static void vpath_set(char *str, int mode)
     {
 	register char *lastp, *oldp=str, *newp=strchr(oldp,':');
-	if(!sh.lim.fs3d)
+	if(!shgd->lim.fs3d)
 		return;
 	while(newp)
 	{
@@ -985,7 +985,7 @@ static int newconf(const char *name, const char *path, const char *value)
 		setenviron(value);
 	else if(strcmp(name,"UNIVERSE")==0 && strcmp(astconf(name,0,0),value))
 	{
-		sh.universe = 0;
+		shp->universe = 0;
 		/* set directory in new universe */
 		if(*(arg = path_pwd(shp,0))=='/')
 			chdir(arg);
@@ -1140,7 +1140,8 @@ static const Namdisc_t modedisc =
  */
 Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 {
-	Shell_t	*shp = &sh;
+	static int beenhere;
+	Shell_t	*shp;
 	register int n;
 	int type;
 	long v;
@@ -1154,17 +1155,48 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 #else
 	init_ebcdic();
 #endif
+	if(!beenhere)
+	{
+		beenhere = 1;
+		shp = &sh;
+		shgd = newof(0,struct shared,1,0);
+		shgd->pid = getpid();
+		shgd->ppid = getppid();
+		shgd->userid=getuid();
+		shgd->euserid=geteuid();
+		shgd->groupid=getgid();
+		shgd->egroupid=getegid();
+		shgd->lim.clk_tck = getconf("CLK_TCK");
+		shgd->lim.arg_max = getconf("ARG_MAX");
+		shgd->lim.child_max = getconf("CHILD_MAX");
+		shgd->lim.ngroups_max = getconf("NGROUPS_MAX");
+		shgd->lim.posix_version = getconf("VERSION");
+		shgd->lim.posix_jobcontrol = getconf("JOB_CONTROL");
+		if(shgd->lim.arg_max <=0)
+			shgd->lim.arg_max = ARG_MAX;
+		if(shgd->lim.child_max <=0)
+			shgd->lim.child_max = CHILD_MAX;
+		if(shgd->lim.clk_tck <=0)
+			shgd->lim.clk_tck = CLK_TCK;
+#if SHOPT_FS_3D
+		if(fs3d(FS3D_TEST))
+			shgd->lim.fs3d = 1;
+#endif /* SHOPT_FS_3D */
+		shgd->ed_context = (void*)ed_open(shp);
+		error_info.exit = sh_exit;
+		error_info.id = path_basename(argv[0]);
+	}
+	else
+		newof(0,Shell_t,1,0);
 	umask(shp->mask=umask(0));
+	shp->gd = shgd;
 	shp->mac_context = sh_macopen(shp);
 	shp->arg_context = sh_argopen(shp);
 	shp->lex_context = (void*)sh_lexopen(0,shp,1);
-	shp->ed_context = (void*)ed_open(shp);
 	shp->strbuf = sfstropen();
 	shp->stk = stkstd;
 	sfsetbuf(shp->strbuf,(char*)0,64);
 	sh_onstate(SH_INIT);
-	error_info.exit = sh_exit;
-	error_info.id = path_basename(argv[0]);
 #if ERROR_VERSION >= 20000102L
 	error_info.catalog = e_dict;
 #endif
@@ -1205,11 +1237,6 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 #endif
 	shp->cpipe[0] = -1;
 	shp->coutpipe = -1;
-	shp->pid = getpid();
-	sh.userid=getuid();
-	sh.euserid=geteuid();
-	sh.groupid=getgid();
-	sh.egroupid=getegid();
 	for(n=0;n < 10; n++)
 	{
 		/* don't use lower bits when rand() generates large numbers */
@@ -1219,35 +1246,6 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 			break;
 		}
 	}
-	sh.lim.clk_tck = getconf("CLK_TCK");
-	sh.lim.arg_max = getconf("ARG_MAX");
-	sh.lim.child_max = getconf("CHILD_MAX");
-	sh.lim.ngroups_max = getconf("NGROUPS_MAX");
-	sh.lim.posix_version = getconf("VERSION");
-	sh.lim.posix_jobcontrol = getconf("JOB_CONTROL");
-	if(sh.lim.arg_max <=0)
-		sh.lim.arg_max = ARG_MAX;
-	if(sh.lim.child_max <=0)
-		sh.lim.child_max = CHILD_MAX;
-	if((v = getconf("PID_MAX")) > 0 && sh.lim.child_max > v)
-		sh.lim.child_max = v;
-	else
-		v= 1<<17;
-	while(shp->pid >v)
-	{
-		if((v<<=1) < 0)
-		{
-			v = 1 << (8*sizeof(pid_t)-2);
-			break;
-		}
-	}
-	sh.lim.pid_max = v;
-	if(sh.lim.clk_tck <=0)
-		sh.lim.clk_tck = CLK_TCK;
-#if SHOPT_FS_3D
-	if(fs3d(FS3D_TEST))
-		sh.lim.fs3d = 1;
-#endif /* SHOPT_FS_3D */
 	sh_ioinit(shp);
 	/* initialize signal handling */
 	sh_siginit(shp);
@@ -1277,22 +1275,22 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		 */
 		char *cp=nv_getval(L_ARGNOD);
 		char buff[PATH_MAX+1];
-		shp->shpath = 0;
+		shp->gd->shpath = 0;
 #if _AST_VERSION >= 20090202L
 		if((n = pathprog(NiL, buff, sizeof(buff))) > 0 && n <= sizeof(buff))
-			shp->shpath = strdup(buff);
+			shp->gd->shpath = strdup(buff);
 #else
 		sfprintf(shp->strbuf,"/proc/%d/exe",getpid());
 		if((n=readlink(sfstruse(shp->strbuf),buff,sizeof(buff)-1))>0)
 		{
 			buff[n] = 0;
-			shp->shpath = strdup(buff);
+			shp->gd->shpath = strdup(buff);
 		}
 #endif
 		else if((cp && (sh_type(cp)&SH_TYPE_SH)) || (argc>0 && strchr(cp= *argv,'/')))
 		{
 			if(*cp=='/')
-				shp->shpath = strdup(cp);
+				shp->gd->shpath = strdup(cp);
 			else if(cp = nv_getval(PWDNOD))
 			{
 				int offset = staktell();
@@ -1300,7 +1298,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 				stakputc('/');
 				stakputs(argv[0]);
 				pathcanon(stakptr(offset),PATH_DOTDOT);
-				shp->shpath = strdup(stakptr(offset));
+				shp->gd->shpath = strdup(stakptr(offset));
 				stakseek(offset);
 			}
 		}
@@ -1381,21 +1379,21 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 #if SHOPT_PFSH
 	if (sh_isoption(SH_PFSH))
 	{
-		struct passwd *pw = getpwuid(sh.userid);
+		struct passwd *pw = getpwuid(shp->gd->userid);
 		if(pw)
-			shp->user = strdup(pw->pw_name);
+			shp->gd->user = strdup(pw->pw_name);
 		
 	}
 #endif
 	/* set[ug]id scripts require the -p flag */
-	if(sh.userid!=sh.euserid || sh.groupid!=sh.egroupid)
+	if(shp->gd->userid!=shp->gd->euserid || shp->gd->groupid!=shp->gd->egroupid)
 	{
 #ifdef SHOPT_P_SUID
 		/* require sh -p to run setuid and/or setgid */
-		if(!sh_isoption(SH_PRIVILEGED) && sh.userid >= SHOPT_P_SUID)
+		if(!sh_isoption(SH_PRIVILEGED) && shp->gd->userid >= SHOPT_P_SUID)
 		{
-			setuid(sh.euserid=sh.userid);
-			setgid(sh.egroupid=sh.groupid);
+			setuid(shp->gd->euserid=shp->gd->userid);
+			setgid(shp->gd->egroupid=shp->gd->groupid);
 		}
 		else
 #endif /* SHOPT_P_SUID */
@@ -1425,7 +1423,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	sh_offstate(SH_INIT);
 	login_files[0] = (char*)e_profile;
 	login_files[1] = ".profile";
-	shp->login_files = login_files;
+	shp->gd->login_files = login_files;
 	shp->bltindata.version = SH_VERSION;
 	shp->bltindata.shp = shp;
 	shp->bltindata.shrun = sh_run;
@@ -1453,7 +1451,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	NV_MKINTTYPE(time_t,"seconds since the epoch",0);
 	nv_mkstat();
 #endif
-	if(sh.userinit=userinit)
+	if(shp->userinit=userinit)
 		(*userinit)(shp, 0);
 	return(shp);
 }
@@ -1477,7 +1475,7 @@ int sh_reinit(char *argv[])
 		if((dp=shp->fun_tree)->walk)
 			dp = dp->walk;
 		npnext = (Namval_t*)dtnext(shp->fun_tree,np);
-		if(np>= shp->bltin_cmds && np < &shp->bltin_cmds[nbltins])
+		if(np>= shgd->bltin_cmds && np < &shgd->bltin_cmds[nbltins])
 			continue;
 		if(is_abuiltin(np) && nv_isattr(np,NV_EXPORT))
 			continue;
@@ -1636,7 +1634,7 @@ static void stat_init(Shell_t *shp)
 	Namval_t	*np;
 	sp->numnodes = nstat;
 	sp->nodes = (char*)(sp+1);
-	shp->stats = (int*)calloc(sizeof(int*),nstat);
+	shgd->stats = (int*)calloc(sizeof(int*),nstat);
 	sp->sh = shp;
 	for(i=0; i < nstat; i++)
 	{
@@ -1645,7 +1643,7 @@ static void stat_init(Shell_t *shp)
 		np->nvname = (char*)shtab_stats[i].sh_name;
 		nv_onattr(np,NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER);
 		nv_setsize(np,10);
-		np->nvalue.ip = &shp->stats[i];
+		np->nvalue.ip = &shgd->stats[i];
 	}
 	sp->hdr.dsize = sizeof(struct Stats) + nstat*(sizeof(int)+NV_MINSZ);
 	sp->hdr.disc = &stat_disc;
@@ -1744,7 +1742,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(L_ARGNOD, &ip->L_ARG_init);
 	nv_putval(SECONDS, (char*)&d, NV_DOUBLE);
 	nv_stack(RANDNOD, &ip->RAND_init.hdr);
-	d = (shp->pid&RANDMASK);
+	d = (shp->gd->pid&RANDMASK);
 	nv_putval(RANDNOD, (char*)&d, NV_DOUBLE);
 	nv_stack(LINENO, &ip->LINENO_init);
 	nv_putsub(SH_MATCHNOD,(char*)0,10);
@@ -1759,7 +1757,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(LCNUMNOD, &ip->LC_NUM_init);
 	nv_stack(LANGNOD, &ip->LANG_init);
 #endif /* _hdr_locale */
-	(PPIDNOD)->nvalue.lp = (&shp->ppid);
+	(PPIDNOD)->nvalue.lp = (&shp->gd->ppid);
 	(TMOUTNOD)->nvalue.lp = (&shp->st.tmout);
 	(MCHKNOD)->nvalue.lp = (&sh_mailchk);
 	(OPTINDNOD)->nvalue.lp = (&shp->st.optindex);
@@ -1779,7 +1777,8 @@ static Init_t *nv_init(Shell_t *shp)
         VERSIONNOD->nvalue.nrp->table = DOTSHNOD;
 	nv_onattr(VERSIONNOD,NV_REF);
 	math_init(shp);
-	stat_init(shp);
+	if(!shgd->stats)
+		stat_init(shp);
 	return(ip);
 }
 
@@ -1797,14 +1796,14 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 	for(tp=name_vals;*tp->sh_name;tp++)
 		n++;
 	np = (Namval_t*)calloc(n,sizeof(Namval_t));
-	if(!shp->bltin_nodes)
+	if(!shgd->bltin_nodes)
 	{
-		shp->bltin_nodes = np;
-		shp->bltin_nnodes = n;
+		shgd->bltin_nodes = np;
+		shgd->bltin_nnodes = n;
 	}
 	else if(name_vals==(const struct shtable2*)shtab_builtins)
 	{
-		shp->bltin_cmds = np;
+		shgd->bltin_cmds = np;
 		nbltins = n;
 	}
 	base_treep = treep = dtopen(&_Nvdisc,Dtoset);

@@ -49,9 +49,12 @@
 #   define STR_GROUP	0
 #endif
 
-#if !SHOPT_MULTIBYTE
-#define mbchar(p)       (*(unsigned char*)p++)
-#endif
+#if SHOPT_MULTIBYTE
+#   undef isascii
+#   define isacii(c)	((c)<=UCHAR_MAX)
+#else
+#   define mbchar(p)       (*(unsigned char*)p++)
+#endif /* SHOPT_MULTIBYTE */
 
 static int	_c_;
 typedef struct  _mac_
@@ -203,7 +206,7 @@ int sh_macexpand(Shell_t* shp, register struct argnod *argp, struct argnod **arg
 		mp->ifs = *mp->ifsp;
 	else
 		mp->ifs = ' ';
-	if((flag&ARG_OPTIMIZE) && !shp->indebug)
+	if((flag&ARG_OPTIMIZE) && !shp->indebug && !(flags&ARG_MESSAGE))
 		shp->argaddr = (char**)&argp->argchn.ap;
 	else
 		shp->argaddr = 0;
@@ -584,7 +587,44 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			c = mp->pattern;
 			if(n==S_GRAVE)
 				comsubst(mp,(Shnode_t*)0,0);
-			else if((n= *cp)==0 || !varsub(mp))
+			else if((n= *cp) == '"' && !mp->quote)
+			{
+				int off = stktell(stkp);
+				char	*dp;
+				cp = first = fcseek(1);
+				mp->quote = 1;
+				if(!ERROR_translating())
+					break;
+				while(1)
+				{
+					while((c = *++cp) && c!='"');
+					n = cp-first;
+					sfwrite(stkp,first,n);
+					fcseek(n);
+					if(c)
+					{
+						fcseek(1);
+						break;
+					}
+					if((c=fcfill()) <= 0)
+						break;
+					first = cp = fcseek(-1);
+				}
+				sfputc(stkp,0);
+				cp = stkptr(stkp,off);
+				dp = (char*)sh_translate(cp);
+				if(dp == cp)
+					dp = strdup(cp);
+				else
+					cp = dp;
+				stkseek(stkp,off);
+				mac_copy(mp,dp,strlen(dp));
+				if(dp!=cp)
+					free(dp);
+				mp->quote = 0;
+				cp = first;
+			}
+			else if(n==0 || !varsub(mp))
 			{
 				if(n=='\'' && !mp->quote)
 					ansi_c = 1;
@@ -592,7 +632,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					sfputc(stkp,'$');
 			}
 			cp = first = fcseek(0);
-			if(*cp)
+			if(mp->quote && cp)
 				mp->pattern = c;
 			break;
 		    case S_ENDCH:
@@ -1043,7 +1083,7 @@ retry1:
 	mp->zeros = 0;
 	idbuff[0] = 0;
 	idbuff[1] = 0;
-	c = fcget();
+	c = fcmbget(&LEN);
 	switch(isascii(c)?sh_lexstates[ST_DOL][c]:S_ALP)
 	{
 	    case S_RBRA:
@@ -1146,18 +1186,23 @@ retry1:
 		{
 			np = 0;
 			do
-				sfputc(stkp,c);
-			while(((c=fcget()),(!isascii(c)||isaname(c)))||type && c=='.');
+			{
+				if(LEN==1)
+					sfputc(stkp,c);
+				else
+					sfwrite(stkp,fcseek(0)-LEN,LEN);
+			}
+			while(((c=fcmbget(&LEN)),isaname(c))||type && c=='.');
 			while(c==LBRACT && (type||mp->arrayok))
 			{
 				mp->shp->argaddr=0;
-				if((c=fcget(),isastchar(c)) && fcpeek(0)==RBRACT)
+				if((c=fcmbget(&LEN),isastchar(c)) && fcpeek(0)==RBRACT)
 				{
 					if(type==M_VNAME)
 						type = M_SUBNAME;
 					idbuff[0] = mode = c;
 					fcget();
-					c = fcget();
+					c = fcmbget(&LEN);
 					if(c=='.' || c==LBRACT)
 					{
 						sfputc(stkp,LBRACT);
@@ -1170,7 +1215,7 @@ retry1:
 				}
 				else
 				{
-					fcseek(-1);
+					fcseek(-LEN);
 					c = stktell(stkp);
 					sfputc(stkp,LBRACT);
 					v = stkptr(stkp,subcopy(mp,1));
@@ -1185,7 +1230,7 @@ retry1:
 					}
 					else
 						sfputc(stkp,RBRACT);
-					c = fcget();
+					c = fcmbget(&LEN);
 					if(c==0 && type==M_VNAME)
 						type = M_SUBNAME;
 				}
@@ -1249,7 +1294,7 @@ retry1:
 		{
 			if(sh_macfun(mp->shp,id,offset))
 			{
-				fcget();
+				fcmbget(&LEN);
 				return(1);
 			}
 		}
@@ -1288,21 +1333,21 @@ retry1:
 			if(!isbracechar(c))
 				goto nosub;
 			else
-				fcseek(-1);
+				fcseek(-LEN);
 		}
 		else
 			fcseek(-1);
 		if(type<=1 && np && nv_isvtree(np) && mp->pattern==1 && !mp->split)
 		{
-			int peek=1,cc=fcget();
+			int cc=fcmbget(&LEN),peek=LEN;
 			if(type && cc=='}')
 			{
-				cc = fcget();
-				peek = 2;
+				cc = fcmbget(&LEN);
+				peek++;
 			}
 			if(mp->quote && cc=='"')
 			{
-				cc = fcget();
+				cc = fcmbget(&LEN);
 				peek++;
 			}
 			fcseek(-peek);
@@ -1391,7 +1436,7 @@ retry1:
 	    default:
 		goto nosub;
 	}
-	c = fcget();
+	c = fcmbget(&LEN);
 	if(type>M_TREE)
 	{
 		if(c!=RBRACE)
@@ -1457,12 +1502,12 @@ retry1:
 	nulflg = 0;
 	if(type && c==':')
 	{
-		c = fcget();
-		if(sh_lexstates[ST_BRACE][c]==S_MOD1 && c!='*' && c!= ':')
+		c = fcmbget(&LEN);
+		if(isascii(c) &&sh_lexstates[ST_BRACE][c]==S_MOD1 && c!='*' && c!= ':')
 			nulflg=1;
 		else if(c!='%' && c!='#')
 		{
-			fcseek(-1);
+			fcseek(-LEN);
 			c = ':';
 		}
 	}
@@ -1472,7 +1517,7 @@ retry1:
 		{
 			if(!nulflg)
 				mac_error(np);
-			fcseek(-1);
+			fcseek(-LEN);
 			c = ':';
 		}
 		if(c!=RBRACE)
@@ -1492,8 +1537,8 @@ retry1:
 					type = fcget();
 					if(type=='%' || type=='#')
 					{
-						int d = fcget();
-						fcseek(-1);
+						int d = fcmbget(&LEN);
+						fcseek(-LEN);
 						if(d=='(')
 							type = 0;
 					}
@@ -1594,18 +1639,14 @@ retry1:
 			else if(mbwide())
 			{
 				mbinit();
-				while(type-->0)
-				{
-					if((c=mbsize(v))<1)
-						c = 1;
-					v += c;
-				}
+				for(c=type;c;c--)
+					mbchar(v);
 				c = ':';
 			}
 #endif /* SHOPT_MULTIBYTE */
 			else
 				v += type;
-			vsize -= type;
+			vsize = strlen(v);
 		}
 		if(*ptr==':')
 		{
@@ -1640,6 +1681,8 @@ retry1:
 #endif /* SHOPT_MULTIBYTE */
 				vsize = type;
 			}
+			else
+				vsize = strlen(v);
 		}
 		if(*ptr)
 			mac_error(np);
@@ -2084,7 +2127,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			lastc = 0;
 		}
 		newlines = nextnewlines;
-		if(++c < bufsize)
+		if(c++ < bufsize)
 			str[c] = 0;
 		else
 		{
@@ -2476,7 +2519,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	av[0] = ".sh.tilde";
 	av[1] = &ptr[offset];
 	av[2] = 0;
-	iop = sftmp(IOBSIZE+1);;
+	iop = sftmp((IOBSIZE>PATH_MAX?IOBSIZE:PATH_MAX)+1);
 	sfset(iop,SF_READ,0);
 	sfstdout = iop;
 	if(np)
@@ -2568,11 +2611,15 @@ static char *special(Shell_t *shp,register int c)
 		return(ltos(shp->st.dolc));
 	    case '!':
 		if(shp->bckpid)
+#if SHOPT_COSHELL
+			return(sh_pid2str(shp,shp->bckpid));
+#else
 			return(ltos(shp->bckpid));
+#endif /* SHOPT_COSHELL */
 		break;
 	    case '$':
 		if(nv_isnull(SH_DOLLARNOD))
-			return(ltos(shp->pid));
+			return(ltos(shp->gd->pid));
 		return(nv_getval(SH_DOLLARNOD));
 	    case '-':
 		return(sh_argdolminus(shp->arg_context));

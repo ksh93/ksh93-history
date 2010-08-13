@@ -231,7 +231,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 #if SHOPT_RAWONLY
 #   define viraw	1
 #else
-	int viraw = (sh_isoption(SH_VIRAW) || sh.st.trap[SH_KEYTRAP]);
+	int viraw = (sh_isoption(SH_VIRAW) || ed->sh->st.trap[SH_KEYTRAP]);
 #   ifndef FIORDCHK
 	clock_t oldtime, newtime;
 	struct tms dummy;
@@ -267,7 +267,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 #endif /* FIORDCHK */
 #if KSHELL
 		/* abort of interrupt has occurred */
-		if(sh.trapnote&SH_SIGSET)
+		if(ed->sh->trapnote&SH_SIGSET)
 			i = -1;
 		else
 #endif /* KSHELL */
@@ -2263,7 +2263,7 @@ static int search(register Vi_t* vp,register int mode)
 		i = INVALID;
 		if( new_direction==1 && curhline >= histmax )
 			curhline = histmin + 1;
-		location = hist_find(sh.hist_ptr,((char*)virtual)+1, curhline, 1, new_direction);
+		location = hist_find(shgd->hist_ptr,((char*)virtual)+1, curhline, 1, new_direction);
 	}
 	cur_virt = i;
 	strncpy(lsearch, ((char*)virtual)+1, SEARCHSIZE);

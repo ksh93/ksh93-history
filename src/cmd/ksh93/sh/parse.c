@@ -759,8 +759,8 @@ static Shnode_t *funct(Lex_t *lexp)
 	{
 		if(fcfill() >= 0)
 			fcseek(-1);
-		if(sh_isstate(SH_HISTORY) && shp->hist_ptr)
-			t->funct.functloc = sfseek(shp->hist_ptr->histfp,(off_t)0,SEEK_CUR);
+		if(sh_isstate(SH_HISTORY) && shp->gd->hist_ptr)
+			t->funct.functloc = sfseek(shp->gd->hist_ptr->histfp,(off_t)0,SEEK_CUR);
 		else
 		{
 			/* copy source to temporary file */

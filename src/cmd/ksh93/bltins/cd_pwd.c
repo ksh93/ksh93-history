@@ -86,7 +86,7 @@ int	b_cd(int argc, char *argv[],void *extra)
 	pwdnod = (shp->subshell?sh_assignok(PWDNOD,1):PWDNOD); 
 	if(argc==2)
 		dir = sh_substitute(oldpwd,dir,argv[1]);
-	else if(!dir || *dir==0)
+	else if(!dir)
 		dir = nv_getval(HOME);
 	else if(*dir == '-' && dir[1]==0)
 		dir = nv_getval(opwdnod);
@@ -238,7 +238,7 @@ int	b_pwd(int argc, char *argv[],void *extra)
 	if(flag)
 	{
 #if SHOPT_FS_3D
-		if(sh.lim.fs3d && (flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
+		if(shp->gd->lim.fs3d && (flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
 		{
 			cp = (char*)stakseek(++flag+PATH_MAX);
 			mount(e_dot,cp,FS3D_GET|FS3D_VIEW|FS3D_SIZE(flag),0);

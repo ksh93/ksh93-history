@@ -23,8 +23,8 @@
  * AT&T Labs
  *
  */
-
 #include        "defs.h"
+#include        "io.h"
 #include        "variables.h"
 
 static const char sh_opttype[] =
@@ -315,7 +315,7 @@ static int fixnode(Namtype_t *dp, Namtype_t *pp, int i, struct Namref *nrp,int f
 			if(nv_isarray(nq))
 				nq->nvalue.cp = 0;
 			nq->nvfun = 0;
-			if(nv_isarray(nq) && nv_type(np))
+			if(nv_isarray(nq) && ((flag&NV_IARRAY) || nv_type(np)))
 				clone_all_disc(np,nq,flag&~NV_TYPE);
 			else
 				clone_all_disc(np,nq,flag);
@@ -397,7 +397,7 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 	for(i=dp->numnodes; --i >= 0; )
 	{
 		nq = nv_namptr(dp->nodes,i);
-		if(fixnode(dp,pp,i,nrp,NV_TYPE))
+		if(fixnode(dp,pp,i,nrp,NV_TYPE|(flags&NV_IARRAY)))
 		{
 			nrp++;
 			nq = nq->nvalue.nrp->np;
@@ -545,7 +545,7 @@ static void put_type(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 
 		{
 			_nv_unset(np, flag);
-			nv_clone(nq,np,0);
+			nv_clone(nq,np,NV_IARRAY);
 			return;
 		}
 	}
@@ -1120,14 +1120,6 @@ else sfprintf(sfstderr,"tp==NULL\n");
 			j = nv_isattr(np,NV_NOFREE);
 			nq->nvfun = np->nvfun;
 			np->nvfun = 0;
-			if(nv_isarray(nq) && !nq->nvfun)
-			{
-				nv_putsub(nq, (char*)0, ARRAY_FILL);
-				if(nv_isattr(nq,NV_INTEGER))
-					nv_putval(nq, "0",0);
-				else
-					_nv_unset(nq, NV_RDONLY);
-			}
 			nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(nq->nvfun)
 			{
@@ -1135,7 +1127,7 @@ else sfprintf(sfstderr,"tp==NULL\n");
 					fp->nofree |= 1;
 			}
 			nq->nvalue.cp = np->nvalue.cp;
-			if(dsize)
+			if(dsize  && (np->nvalue.cp || !nv_isarray(np)))
 			{
 				nq->nvalue.cp = pp->data+offset;
 				sp = (char*)np->nvalue.cp;
@@ -1556,7 +1548,7 @@ void nv_mkstat(void)
 	fp->type = tp;
 	fp->disc = &stat_disc;
 	nv_disc(tp,fp,NV_FIRST);
-	nv_putval(tp,"/dev/null",0);
+	nv_putval(tp,e_devnull,0);
 	nv_onattr(tp,NV_RDONLY);
 }
 
@@ -1603,8 +1595,8 @@ int	sh_outtype(Shell_t *shp,Sfio_t *out)
 					iop = shp->heredocs;
 				else if(cp=mp->nvalue.rp->fname)
 					iop = sfopen(iop,cp,"r");
-				else if(shp->hist_ptr)
-					iop = (shp->hist_ptr)->histfp;
+				else if(shp->gd->hist_ptr)
+					iop = (shp->gd->hist_ptr)->histfp;
 				if(iop && sfseek(iop,(Sfoff_t)mp->nvalue.rp->hoffset,SEEK_SET)>=0)
 					sfmove(iop,out, nv_size(mp), -1);
 				else

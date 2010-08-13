@@ -29,7 +29,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: rt (AT&T Research) 2008-09-30 $
+@(#)$Id: rt (AT&T Research) 2010-07-27 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?rt - run "nmake test" and filter output]
@@ -151,7 +151,11 @@ then	shift
 		done
 	else	cat "$@"
 	fi
-else	(( $# )) || set test
+else	if	[[ $1 == *=* ]]
+	then	set test "$@"
+	elif	(( ! $# ))
+	then	set test
+	fi
 	nmake "$@" $flags 2>&1
 fi |
 while	read -r line

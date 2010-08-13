@@ -58,10 +58,10 @@ do	export LC_ALL=$locale
 done
 
 # this locale is supported by ast on all platforms
-# DE for { decimal_point="," thousands_sep="." }
+# EU for { decimal_point="," thousands_sep="." }
 # however wctype is not supported but that's ok for these tests
 
-locale=C_DE.UTF-8
+locale=C_EU.UTF-8
 
 export LC_ALL=C
 
@@ -244,5 +244,24 @@ do	for cmd in "($lc=$locale;cd $dir)" "$lc=$locale;cd $dir;unset $lc" "function 
 		[[ $got == $exp ]] || err_exit "'$tst' failed -- expected '$exp', got '$got'"
 	done
 done
+
+exp=123
+got=$(LC_ALL=debug $SHELL -c "a<2A@>z=$exp; print \$a<2A@>z")
+[[ $got == $exp ]] || err_exit "multibyte debug locale \$a<2A@>z failed -- expected '$exp', got '$got'"
+
+unset LC_ALL LC_MESSAGES
+export LANG=debug
+function message
+{
+        print $"An error occurred."
+}
+exp=$'(libshell,3,46)\nAn error occurred.\n(libshell,3,46)'
+got=$(message; LANG=C message; message)
+[[ $got == "$exp" ]] || {
+	EXP=$(printf %q "$exp")
+	GOT=$(printf %q "$got")
+	err_exit "LANG change not seen by function -- expected $EXP, got $GOT"
+}
+unset LANG
 
 exit $Errors

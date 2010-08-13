@@ -133,7 +133,7 @@ unsigned int sleep(unsigned int sec)
 	tp = (void*)sh_timeradd(1000*sec, 0, completed, (void*)&expired);
 	do
 	{
-		if(!shp->waitevent || (*shp->waitevent)(-1,-1L,0)==0)
+		if(!shp->gd->waitevent || (*shp->gd->waitevent)(-1,-1L,0)==0)
 			pause();
 		if(shp->sigflag[SIGALRM]&SH_SIGTRAP)
 			sh_timetraps(shp);
@@ -175,7 +175,7 @@ void	sh_delay(double t)
 	}
 	if(n=(int)(1000*t))
 	{
-		if(!shp->waitevent || (*shp->waitevent)(-1,(long)n,0)==0)
+		if(!shp->gd->waitevent || (*shp->gd->waitevent)(-1,(long)n,0)==0)
 			poll(&fd,0,n);
 	}
 #else
@@ -183,7 +183,7 @@ void	sh_delay(double t)
 	struct timeval timeloc;
 	if(t<=0)
 		return;
-	if(n=(int)(1000*t) && shp->waitevent && (*shp->waitevent)(-1,(long)n,0))
+	if(n=(int)(1000*t) && shp->gd->waitevent && (*shp->gd->waitevent)(-1,(long)n,0))
 		return;
 	n = (int)t;
 	timeloc.tv_sec = n;
@@ -201,7 +201,7 @@ void	sh_delay(double t)
 		}
 		if(n=(int)(1000*t))
 		{
-			if(!shp->waitevent || (*shp->waitevent)(-1,(long)n,0)==0)
+			if(!shp->gd->waitevent || (*shp->gd->waitevent)(-1,(long)n,0)==0)
 				select(0,(fd_set*)0,(fd_set*)0,n);
 		}
 #	else
@@ -215,7 +215,7 @@ void	sh_delay(double t)
 			clock_t begin = times(&tt);
 			if(begin==0)
 				return;
-			t *= sh.lim.clk_tck;
+			t *= shp->gd->lim.clk_tck;
 			n += (t+.5);
 			while((times(&tt)-begin) < n);
 		}

@@ -541,7 +541,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				continue;
 			}
 			np = nv_open(name,troot,nvflags|NV_ARRAY);
-			if(nv_isnull(np) && nv_isattr(np,NV_NOFREE))
+			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
 			if(tp->pflag)
 			{
@@ -559,8 +559,13 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				if(!comvar && !iarray)
 					continue;
 			}
-			if(shp->last_root==shp->var_tree && ((tp->tp && !nv_isarray(np)) || !shp->st.real_fun && (nvflags&NV_STATIC)) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
-				_nv_unset(np,0);
+			if(!nv_isarray(np) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
+			{
+				if(comvar || (shp->last_root==shp->var_tree && (tp->tp || (!shp->st.real_fun && (nvflags&NV_STATIC)))))
+{
+					_nv_unset(np,0);
+}
+			}
 			if(troot==shp->var_tree)
 			{
 				if(iarray)
@@ -815,6 +820,11 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	Stk_t	*stkp;
 	void *library=0;
 	char *errmsg;
+#ifdef SH_PLUGIN_VERSION
+	unsigned long ver;
+	int list = 0;
+	char path[1024];
+#endif
 	NOT_USED(argc);
 	memset(&tdata,0,sizeof(tdata));
 	tdata.sh = ((Shbltin_t*)extra)->shp;
@@ -837,6 +847,11 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		error_info.errors++;
 #endif /* SHOPT_DYNAMIC */
 		break;
+	    case 'l':
+#ifdef SH_PLUGIN_VERSION
+		list = 1;
+#endif
+	        break;
 	    case ':':
 		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
@@ -860,11 +875,13 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	if(arg)
 	{
 #ifdef SH_PLUGIN_VERSION
-		if(!(library = dllplugin(SH_ID,arg,NIL(char*),SH_PLUGIN_VERSION,RTLD_LAZY,NIL(char*),0)))
+		if(!(library = dllplugin(SH_ID, arg, NiL, SH_PLUGIN_VERSION, &ver, RTLD_LAZY, path, sizeof(path))))
 		{
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",arg,dllerror(0));
 			return(1);
 		}
+		if(list)
+			sfprintf(sfstdout, "%s %08lu %s\n", arg, ver, path);
 #else
 #if (_AST_VERSION>=20040404)
 		if(!(library = dllplug(SH_ID,arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
@@ -1144,8 +1161,8 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 			}
 			else if(fname)
 				iop = sfopen(iop,fname,"r");
-			else if(tp->sh->hist_ptr)
-				iop = (tp->sh->hist_ptr)->histfp;
+			else if(tp->sh->gd->hist_ptr)
+				iop = (tp->sh->gd->hist_ptr)->histfp;
 			if(iop && sfseek(iop,(Sfoff_t)np->nvalue.rp->hoffset,SEEK_SET)>=0)
 				sfmove(iop,file, nv_size(np), -1);
 			else

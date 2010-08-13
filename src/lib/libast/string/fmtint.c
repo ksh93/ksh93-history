@@ -106,7 +106,7 @@ fmtint(intmax_t ll, int unsign)
 	do
 	{
 		k -= 3;
-		if((m=n) > 1000)
+		if((m=n) >= 1000)
 			m = n%1000;
 		memcpy(buff+k,table+3*m,3);
 		n /= 1000;

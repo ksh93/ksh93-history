@@ -337,12 +337,11 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 				*s = 0;
 				if ((p = setlocale(LC_MESSAGES, 0)) && (p = strdup(p)))
 				{
-					*r = 0;
 					if (!setlocale(LC_MESSAGES, buf))
 					{
-						*r = '_';
+						*r = 0;
 						if (!setlocale(LC_MESSAGES, buf))
-							*r = 0;
+							*r = '_';
 					}
 					setlocale(LC_MESSAGES, p);
 					free(p);
@@ -435,7 +434,6 @@ lcmake(const char* name)
 	Lc_attribute_list_t*		ai;
 	Lc_attribute_list_t*		al;
 	int				i;
-	int				j;
 	int				n;
 	int				z;
 	char				buf[PATH_MAX / 2];

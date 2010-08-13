@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Research) 2009-07-02 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Research) 2010-07-28 $\n]"
 USAGE_LICENSE
 ;
 
@@ -452,24 +452,24 @@ b_chgrp(int argc, char** argv, void* context)
 					sfprintf(sfstdout, "%s uid:%05d->%05d gid:%05d->%05d %s\n", op, ent->fts_statp->st_uid, uid, ent->fts_statp->st_gid, gid, ent->fts_path);
 				}
 				if (!(options & OPT_SHOW) && (*chownf)(ent->fts_accpath, uid, gid) && !(options & OPT_FORCE))
-					error(ERROR_system(0), "%s: cannot change%s", ent->fts_accpath, s);
+					error(ERROR_system(0), "%s: cannot change%s", ent->fts_path, s);
 			}
 			break;
 		case FTS_DC:
 			if (!(options & OPT_FORCE))
-				error(ERROR_warn(0), "%s: directory causes cycle", ent->fts_accpath);
+				error(ERROR_warn(0), "%s: directory causes cycle", ent->fts_path);
 			break;
 		case FTS_DNR:
 			if (!(options & OPT_FORCE))
-				error(ERROR_system(0), "%s: cannot read directory", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot read directory", ent->fts_path);
 			goto anyway;
 		case FTS_DNX:
 			if (!(options & OPT_FORCE))
-				error(ERROR_system(0), "%s: cannot search directory", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot search directory", ent->fts_path);
 			goto anyway;
 		case FTS_NS:
 			if (!(options & OPT_FORCE))
-				error(ERROR_system(0), "%s: not found", ent->fts_accpath);
+				error(ERROR_system(0), "%s: not found", ent->fts_path);
 			break;
 		}
 	fts_close(fts);

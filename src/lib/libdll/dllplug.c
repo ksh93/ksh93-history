@@ -33,7 +33,7 @@
  */
 
 extern void*
-dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel, int flags, char* path, size_t size)
+dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel, unsigned long* cur, int flags, char* path, size_t size)
 {
 	void*		dll;
 	int		err;
@@ -51,7 +51,7 @@ dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel,
 				hit = 1;
 				if (dll = dllopen(dle->path, flags|RTLD_GLOBAL|RTLD_PARENT))
 				{
-					if (!dllcheck(dll, dle->path, rel))
+					if (!dllcheck(dll, dle->path, rel, cur))
 					{
 						err = state.error;
 						dlclose(dll);
@@ -79,7 +79,7 @@ dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel,
 	}
 	if (dll = dllopen(name, flags))
 	{
-		if (!dllcheck(dll, dle->path, rel))
+		if (!dllcheck(dll, name, rel, cur))
 		{
 			dlclose(dll);
 			dll = 0;
@@ -93,5 +93,5 @@ dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel,
 extern void*
 dllplug(const char* lib, const char* name, const char* ver, int flags, char* path, size_t size)
 {
-	return dllplugin(lib, name, ver, 0, flags, path, size);
+	return dllplugin(lib, name, ver, 0, NiL, flags, path, size);
 }

@@ -96,7 +96,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	}
 	else if(assign==NV_ASSIGN  && nv_isnull(np) && !nv_isattr(np, ~(NV_MINIMAL|NV_NOFREE)))
 		flags |= NV_ADD;
-	if((lvalue->emode&ARITH_COMP) && dtvnext(root) && ((sdict && (mp=nv_search(cp,sdict,flags&~NV_ADD))) || (mp=nv_search(cp,root,flags))))
+	if((lvalue->emode&ARITH_COMP) && dtvnext(root) && ((sdict && (mp=nv_search(cp,sdict,flags&~NV_ADD))) || (mp=nv_search(cp,root,flags&~NV_ADD))))
 		np = mp;
 	while(nv_isref(np))
 	{

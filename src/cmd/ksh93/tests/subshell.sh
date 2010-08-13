@@ -69,7 +69,6 @@ eval val="$z"
 [[ $z == "$val" ]] || err_exit 'compound variable changes after associative array assignment'
 eval val="$z"
 (
-false
 	z.foo[two]=ok
 	[[ ${z.foo[two]} == ok ]] || err_exit 'associative array assignment to compound variable in subshell not working'
 	z.bar[1]=yes
@@ -102,6 +101,7 @@ TEST_notfound=notfound
 while	whence $TEST_notfound >/dev/null 2>&1
 do	TEST_notfound=notfound-$RANDOM
 done
+
 
 integer BS=1024 nb=64 ss=60 bs no
 for bs in $BS 1
@@ -476,4 +476,6 @@ $SHELL -c 'sleep 5 & pid=$!; { x=$( ( seq 60000 ) );kill -9 $pid;}&;wait $pid'
 
 (.sh.foo=foobar)
 [[ ${.sh.foo} == foobar ]] && err_exit '.sh subvariables in subshells remain set'
+[[ $($SHELL -c 'print 1 | : "$(/bin/cat <(/bin/cat))"') ]] && err_exit 'process substitution not working correctly in subshells'
+
 exit $Errors

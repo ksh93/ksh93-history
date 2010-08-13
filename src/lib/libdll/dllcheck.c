@@ -26,33 +26,60 @@
 #include "dlllib.h"
 
 /*
+ * return plugin version for dll
+ * 0 if there is none
+ * path!=0 enables library level diagnostics
+ */
+
+extern unsigned long
+dllversion(void* dll, const char* path)
+{
+	Dll_plugin_version_f	pvf;
+
+	if (pvf = (Dll_plugin_version_f)dlllook(dll, "plugin_version"))
+		return (*pvf)();
+	if (path)
+	{
+		state.error = 1;
+		sfsprintf(state.errorbuf, sizeof(state.errorbuf), "plugin_version() not found");
+		errorf("dll", NiL, 1, "%s: %s", path, state.errorbuf);
+	}
+	return 0;
+}
+
+/*
  * check if dll on path has plugin version >= ver
  * 1 returned on success, 0 on failure
+ * path!=0 enables library level diagnostics
+ * cur!=0 gets actual version
  */
 
 extern int
-dllcheck(void* dll, const char* path, unsigned long ver)
+dllcheck(void* dll, const char* path, unsigned long ver, unsigned long* cur)
 {
 	unsigned long		v;
 	Dll_plugin_version_f	pvf;
 
 	state.error = 0;
-	if (ver)
+	if (ver || cur)
 	{
-		if (!(pvf = (Dll_plugin_version_f)dlllook(dll, "plugin_version")))
-		{
-			state.error = 1;
-			sfsprintf(state.errorbuf, sizeof(state.errorbuf), "plugin_version() not found");
-			errorf("dll", NiL, 1, "%s: %s", path, state.errorbuf);
-			return 0;
-		}
-		if ((v = (*pvf)()) < ver)
+		v = dllversion(dll, path);
+		if (cur)
+			*cur = v;
+	}
+	if (!ver)
+		return 1;
+	if (!v)
+		return 0;
+	if (v < ver)
+	{
+		if (path)
 		{
 			state.error = 1;
 			sfsprintf(state.errorbuf, sizeof(state.errorbuf), "plugin version %lu older than caller %lu", v, ver);
 			errorf("dll", NiL, 1, "%s: %s", path, state.errorbuf);
-			return 0;
 		}
+		return 0;
 	}
 	return 1;
 }

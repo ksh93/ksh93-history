@@ -77,14 +77,14 @@ static int onstdpath(const char *name)
 int path_xattr(Shell_t *shp, const char *path, char *rpath)
 {
 	char  resolvedpath[PATH_MAX + 1];
-	if (shp->user && *shp->user)
+	if (shp->gd->user && *shp->gd->user)
 	{
 		execattr_t *pf;
 		if(!rpath)
 			rpath = resolvedpath;
 		if (!realpath(path, resolvedpath))
 			return -1;
-		if(pf=getexecuser(shp->user, KV_COMMAND, resolvedpath, GET_ONE))
+		if(pf=getexecuser(shp->gd->user, KV_COMMAND, resolvedpath, GET_ONE))
 		{
 			if (!pf->attr || pf->attr->length == 0)
 			{
@@ -169,7 +169,7 @@ static pid_t path_xargs(Shell_t *shp,const char *path, char *argv[],char *const 
 	pid_t pid;
 	if(shp->xargmin < 0)
 		return((pid_t)-1);
-	size = sh.lim.arg_max-1024;
+	size = shp->gd->lim.arg_max-1024;
 	for(ev=envp; cp= *ev; ev++)
 		size -= strlen(cp)-1;
 	for(av=argv; (cp= *av) && av< &argv[shp->xargmin]; av++)  
@@ -206,7 +206,7 @@ static pid_t path_xargs(Shell_t *shp,const char *path, char *argv[],char *const 
 		{
 			if((pid=_spawnveg(shp,path,argv,envp,0)) < 0)
 				return(-1);
-			job_post(pid,0);
+			job_post(shp,pid,0);
 			job_wait(pid);
 			if(shp->exitval>exitval)
 				exitval = shp->exitval;
@@ -799,7 +799,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 							return(oldpp);
 					}
 #ifdef SH_PLUGIN_VERSION
-					if (oldpp->bltin_lib = dllplugin(SH_ID, oldpp->blib, NiL, SH_PLUGIN_VERSION, RTLD_LAZY, NiL, 0))
+					if (oldpp->bltin_lib = dllplugin(SH_ID, oldpp->blib, NiL, SH_PLUGIN_VERSION, NiL, RTLD_LAZY, NiL, 0))
 						sh_addlib(shp,oldpp->bltin_lib);
 #else
 #if (_AST_VERSION>=20040404)
@@ -1226,6 +1226,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	path = path_relative(shp,path);
 	shp->comdiv=0;
 	shp->bckpid = 0;
+	shp->coshell = 0;
 	shp->st.ioset=0;
 	/* clean up any cooperating processes */
 	if(shp->cpipe[0]>0)
@@ -1256,7 +1257,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 				goto openok;
 			sh_close(n);
 		}
-		if((euserid=geteuid()) != sh.userid)
+		if((euserid=geteuid()) != shp->gd->userid)
 		{
 			strncpy(name+9,fmtbase((long)getpid(),10,0),sizeof(name)-10);
 			/* create a suid open file with owner equal effective uid */
@@ -1301,9 +1302,9 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	/* save name of calling command */
 	shp->readscript = error_info.id;
 	/* close history file if name has changed */
-	if(shp->hist_ptr && (path=nv_getval(HISTFILE)) && strcmp(path,shp->hist_ptr->histname))
+	if(shp->gd->hist_ptr && (path=nv_getval(HISTFILE)) && strcmp(path,shp->gd->hist_ptr->histname))
 	{
-		hist_close(shp->hist_ptr);
+		hist_close(shp->gd->hist_ptr);
 		(HISTCUR)->nvalue.lp = 0;
 	}
 	sh_offstate(SH_FORKED);

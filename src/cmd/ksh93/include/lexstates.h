@@ -106,7 +106,7 @@
 
 #undef LEN
 #if SHOPT_MULTIBYTE
-    static int NXT, LEN;
+#   define LEN		_Fcin.fclen
 #   define isaname(c)	((c)>0xff?isalpha(c): sh_lexstates[ST_NAME][(c)]==0)
 #   define isaletter(c)	((c)>0xff?isalpha(c): sh_lexstates[ST_DOL][(c)]==S_ALP && (c)!='.')
 #else
@@ -116,7 +116,7 @@
 #   define isaname(c)	(sh_lexstates[ST_NAME][c]==0)
 #   define isaletter(c)	(sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
 #endif
-#define STATE(s,c)  	(mbwide()?(c=fcmbstate(s,&NXT,&LEN),NXT):s[c=fcget()])
+#define STATE(s,c)	(s[mbwide()?((c=fcmbget(&LEN)),LEN>1?'a':c):(c=fcget())])
 #define isadigit(c)	(sh_lexstates[ST_DOL][c]==S_DIG)
 #define isastchar(c)	((c)=='@' || (c)=='*')
 #define isexp(c)	(sh_lexstates[ST_MACRO][c]==S_PAT||(c)=='$'||(c)=='`')

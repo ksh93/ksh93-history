@@ -146,10 +146,10 @@ static void     l_time(Sfio_t *outfile,register clock_t t,int p)
 	register int hr;
 	if(p)
 	{
-		frac = t%sh.lim.clk_tck;
-		frac = (frac*100)/sh.lim.clk_tck;
+		frac = t%shgd->lim.clk_tck;
+		frac = (frac*100)/shgd->lim.clk_tck;
 	}
-	t /= sh.lim.clk_tck;
+	t /= shgd->lim.clk_tck;
 	sec = t%60;
 	t /= 60;
 	min = t%60;
@@ -206,7 +206,7 @@ static int p_time(Shell_t *shp, Sfio_t *out, const char *format, clock_t *tm)
 			errormsg(SH_DICT,ERROR_exit(0),e_badtformat,c);
 			return(0);
 		}
-		d = (double)tm[n]/sh.lim.clk_tck;
+		d = (double)tm[n]/shp->gd->lim.clk_tck;
 	skip:
 		if(l)
 			l_time(stkp, tm[n], p);
@@ -563,9 +563,9 @@ int sh_eval(register Sfio_t *iop, int mode)
 		mode &= ~SH_READEVAL;
 		if(!sh_isoption(SH_VERBOSE))
 			sh_offstate(SH_VERBOSE);
-		if((mode&~SH_FUNEVAL) && shp->hist_ptr)
+		if((mode&~SH_FUNEVAL) && shp->gd->hist_ptr)
 		{
-			hist_flush(shp->hist_ptr);
+			hist_flush(shp->gd->hist_ptr);
 			mode = sh_state(SH_INTERACTIVE);
 		}
 		sh_exec(t,sh_isstate(SH_ERREXIT)|sh_isstate(SH_NOFORK)|(mode&~SH_FUNEVAL));
@@ -627,7 +627,7 @@ static int set_instance(Shell_t *shp,Namval_t *nq, Namval_t *node, struct Namref
 	char		*sp=0,*cp;
 	Namarr_t	*ap;
 	Namval_t	*np;
-	if(!nv_isattr(nq,NV_MINIMAL|NV_EXPORT) && (np=(Namval_t*)nq->nvenv) && nv_isarray(np))
+	if(!nv_isattr(nq,NV_MINIMAL|NV_EXPORT|NV_ARRAY) && (np=(Namval_t*)nq->nvenv) && nv_isarray(np))
 		nq = np;
 	cp = nv_name(nq);
 	memset(nr,0,sizeof(*nr));
@@ -815,21 +815,10 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	sfputc(sfstdout,0);
 	sfswap(shp->strbuf,sfstdout);
 	str = sfstruse(shp->strbuf);
-	for(cp=str; *cp; cp++)
-	{
-		if(*cp!='K')
-			continue;
-		if(memcmp(cp,"KSH_VERSION",11))
-		{
-			cp += 10;
-			continue;
-		}
-		*(cp-14)='#';
-		break;
-	}
 	if(cjp=coexec(csp->coshell,str,0,NULL,NULL,NULL))
 	{
 		csp->cojob = cjp;
+		cjp->local = shp->coshell;
 		if(filt)
 		{
 			if(filt>1)
@@ -1239,7 +1228,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						{
 							/* do close-on-exec */
 							int fd;
-							for(fd=0; fd < sh.lim.open_max; fd++)
+							for(fd=0; fd < shp->gd->lim.open_max; fd++)
 								if((shp->fdstatus[fd]&IOCLEX)&&fd!=shp->infd)
 									sh_close(fd);
 						}
@@ -1260,8 +1249,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 							if(item->strm)
 							{
 								sfclrlock(item->strm);
-								if(shp->hist_ptr && item->strm == shp->hist_ptr->histfp)
-									hist_close(shp->hist_ptr);
+								if(shp->gd->hist_ptr && item->strm == shp->gd->hist_ptr->histfp)
+									hist_close(shp->gd->hist_ptr);
 								else
 									sfclose(item->strm);
 							}
@@ -1464,7 +1453,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh_copipe(shp,shp->outpipe=shp->cpipe);
 						sh_copipe(shp,shp->inpipe=pipes);
 						parent = sh_coexec(shp,t,3);
-						job_post(parent,0);
+						jobid = job_post(shp,parent,0);
 						goto skip;
 					}
 #endif /* SHOPT_COSHELL */
@@ -1476,7 +1465,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(shp->coshell)
 					{
 						parent = sh_coexec(shp,t,0);
-						job_post(parent,0);
+						jobid = job_post(shp,parent,0);
 						goto skip;
 					}
 				}
@@ -1558,7 +1547,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 					{
 						/* print job number */
 #ifdef JOBS
+#   if SHOPT_COSHELL
+						sfprintf(sfstderr,"[%d]\t%s\n",jobid,sh_pid2str(shp,parent));
+#   else
 						sfprintf(sfstderr,"[%d]\t%d\n",jobid,parent);
+#   endif /* SHOPT_COSHELL */
 #else
 						sfprintf(sfstderr,"%d\n",parent);
 #endif /* JOBS */
@@ -1630,7 +1623,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(parent)
 					{
 						job_clear();
-						job_post(parent,0);
+						job_post(shp,parent,0);
 						job_wait(parent);
 						sh_iorestore(shp,topfd,SH_JMPCMD);
 						sh_done(shp,(shp->exitval&SH_EXITSIG)?(shp->exitval&SH_EXITMASK):0);
@@ -1846,7 +1839,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						pipejob=1;
 						if(type>0)
 						{
-							job_post(type,0);
+							job_post(shp,type,0);
 							type = 0;
 						}
 						copipe = 1;
@@ -1907,7 +1900,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			pipejob = savepipe;
 #ifdef SIGTSTP
 			if(!pipejob && sh_isstate(SH_MONITOR))
-				tcsetpgrp(JOBTTY,shp->pid);
+				tcsetpgrp(JOBTTY,shp->gd->pid);
 #endif /*SIGTSTP */
 			job.curpgid = savepgid;
 			break;
@@ -2149,7 +2142,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					fd = savein;
 				iop = sfnew(NULL,NULL,SF_UNBOUND,fd,SF_READ);
 				close(0);
-				open("/dev/null",O_RDONLY);
+				open(e_devnull,O_RDONLY);
 				shp->offsets[0] = -1;
 				shp->offsets[1] = 0;
 				if(tt->com.comset)
@@ -2359,8 +2352,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 #ifdef timeofday
 			times(&after);
 			timeofday(&ta);
-			at = sh.lim.clk_tck*(ta.tv_sec-tb.tv_sec);
-			at +=  ((sh.lim.clk_tck*(((1000000L/2)/sh.lim.clk_tck)+(ta.tv_usec-tb.tv_usec)))/1000000L);
+			at = shp->gd->lim.clk_tck*(ta.tv_sec-tb.tv_sec);
+			at +=  ((shp->gd->lim.clk_tck*(((1000000L/2)/shp->gd->lim.clk_tck)+(ta.tv_usec-tb.tv_usec)))/1000000L);
 #else
 			at = times(&after) - bt;
 #endif	/* timeofday */
@@ -2865,7 +2858,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 	if(parent)
 	{
 		int myjob,waitall=job.waitall;
-		shp->nforks++;
+		shp->gd->nforks++;
 		if(job.toclear)
 			job_clear();
 		job.waitall = waitall;
@@ -2893,11 +2886,11 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 #ifdef SHOPT_BGX
 		if(!postid && (flags&(FAMP|FINT)) == (FAMP|FINT))
 			postid = 1;
-		myjob = job_post(parent,postid);
+		myjob = job_post(shp,parent,postid);
 		if(postid==1)
 			postid = 0;
 #else
-		myjob = job_post(parent,postid);
+		myjob = job_post(shp,parent,postid);
 #endif /* SHOPT_BGX */
 		if(flags&FAMP)
 			job.curpgid = curpgid;
@@ -2913,7 +2906,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 	/* This is the child process */
 	if(shp->trapnote&SH_SIGTERM)
 		sh_exit(SH_EXITSIG|SIGTERM);
-	shp->nforks=0;
+	shp->gd->nforks=0;
 	timerdel(NIL(void*));
 #ifdef JOBS
 	if(!job.jobcontrol && !(flags&FAMP))
@@ -3452,8 +3445,8 @@ static int run_subshell(Shell_t *shp,const Shnode_t *t,pid_t grp)
 	*cp = 0;
 	sfclose(sp);
 	sfsync(NIL(Sfio_t*));
-	if(!shp->shpath)
-		shp->shpath = pathshell();
+	if(!shp->gd->shpath)
+		shp->gd->shpath = pathshell();
 	pid = spawnveg(shp->shpath,arglist,envlist,grp);
 	close(fd);
 	for(i=3; i < 10; i++)
@@ -3725,9 +3718,9 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 				if(stat(devfd=sfstruse(shp->strbuf),&statb)>=0)
 					argv[0] =  devfd;
 			}
-			if(!shp->shpath)
-				shp->shpath = pathshell();
-			spawnpid = path_spawn(shp,shp->shpath,&argv[-1],arge,pp,(grp<<1)|1);
+			if(!shp->gd->shpath)
+				shp->gd->shpath = pathshell();
+			spawnpid = path_spawn(shp,shp->gd->shpath,&argv[-1],arge,pp,(grp<<1)|1);
 			if(fd>=0)
 				close(fd);
 			argv[0] = argv[-1];

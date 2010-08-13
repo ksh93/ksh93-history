@@ -252,7 +252,9 @@ typedef struct
 	uint32_t	mb_sync;
 	uint32_t	version;
 
-	char		pad[936];
+	int		(*mb_alpha)(wchar_t);
+
+	char		pad[936 - sizeof(void*)];
 
 } _Ast_info_t;
 

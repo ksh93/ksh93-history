@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Research) 2009-07-02 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Research) 2010-07-28 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -282,23 +282,23 @@ b_chmod(int argc, char** argv, void* context)
 					sfprintf(sfstdout, "%s: mode changed to %0.4o (%s)\n", ent->fts_path, mode, fmtmode(mode, 1)+1);
 			}
 			else if (!force)
-				error(ERROR_system(0), "%s: cannot change mode", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot change mode", ent->fts_path);
 			break;
 		case FTS_DC:
 			if (!force)
-				error(ERROR_warn(0), "%s: directory causes cycle", ent->fts_accpath);
+				error(ERROR_warn(0), "%s: directory causes cycle", ent->fts_path);
 			break;
 		case FTS_DNR:
 			if (!force)
-				error(ERROR_system(0), "%s: cannot read directory", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot read directory", ent->fts_path);
 			goto anyway;
 		case FTS_DNX:
 			if (!force)
-				error(ERROR_system(0), "%s: cannot search directory", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot search directory", ent->fts_path);
 			goto anyway;
 		case FTS_NS:
 			if (!force)
-				error(ERROR_system(0), "%s: not found", ent->fts_accpath);
+				error(ERROR_system(0), "%s: not found", ent->fts_path);
 			break;
 		}
 	fts_close(fts);

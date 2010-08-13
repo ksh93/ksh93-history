@@ -357,6 +357,53 @@ function test2
 			'
 			expected_output=$'a=4, b=5\n;a=4, b=5\n;'
 		)
+		(
+			name='4d_indexed_compound_array_editelement'
+			cmd=$'
+				function ar
+				{
+					compound -S -a s=( 
+						[8][5][0][9]=(
+							integer a=1
+							integer b=2
+						)
+					)
+
+					(( s[8][5][0][9].a++, s[8][5][0][9].b++ ))				
+					$1 && printf "a=%d, b=%d\n" s[8][5][0][9].a s[8][5][0][9].b
+				}
+				(ar false ; ar false ; ar true ; printf ";")
+				(ar false ; ar false ; ar true ; printf ";")
+			'
+			expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+		)
+
+		(
+			name='4d_indexed_compound_array_nameref_editelement'
+			cmd=$'
+				function ar_n
+				{
+					nameref sn=$2
+
+					(( sn.a++, sn.b++ ))				
+					$1 && printf "a=%d, b=%d\n" sn.a sn.b
+				}
+				function ar
+				{
+					compound -S -a s=( 
+						[8][5][0][9]=(
+							integer a=1
+							integer b=2
+						)
+					)
+
+					ar_n $1 s[8][5][0][9]
+				}
+				(ar false ; ar false ; ar true ; printf ";")
+				(ar false ; ar false ; ar true ; printf ";")
+			'
+			expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+		)
 
 		(
 			name='associative_compound_array_editelement'
@@ -405,6 +452,187 @@ function test2
 			'
 			expected_output=$'a=4, b=5\n;a=4, b=5\n;'
 		)
+
+			(
+				name='indexed_type_array_editelement'
+				cmd=$'
+					typeset -T ab_t=(
+						integer a=1
+						integer b=2
+						
+						function increment
+						{
+							(( _.a++, _.b++ ))
+						}
+					)
+
+					function ar
+					{
+						ab_t -S -a s
+						[[ -v s[5] ]] || s[5]=( ) # how do I init an array of types ?
+
+						s[5].increment
+						$1 && printf "a=%d, b=%d\n" s[5].a s[5].b
+					}
+					(ar false ; ar false ; ar true ; printf ";")
+					(ar false ; ar false ; ar true ; printf ";")
+				'
+				expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+			)
+
+			(
+				name='indexed_type_array_nameref_editelement'
+				cmd=$'
+					typeset -T ab_t=(
+						integer a=1
+						integer b=2
+						
+						function increment
+						{
+							(( _.a++, _.b++ ))
+						}
+					)
+
+					function ar_n
+					{
+						nameref sn=$2
+
+						sn.increment
+						$1 && printf "a=%d, b=%d\n" sn.a sn.b
+					}
+					function ar
+					{
+						ab_t -S -a s
+						[[ -v s[5] ]] || s[5]=( ) # how do I init an array of types ?
+
+						ar_n $1 s[5]
+					}
+					(ar false ; ar false ; ar true ; printf ";")
+					(ar false ; ar false ; ar true ; printf ";")
+				'
+				expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+			)
+
+			(
+				name='2d_indexed_type_array_editelement'
+				cmd=$'
+					typeset -T ab_t=(
+						integer a=1
+						integer b=2
+						
+						function increment
+						{
+							(( _.a++, _.b++ ))
+						}
+					)
+
+					function ar
+					{
+						ab_t -S -a s
+						[[ -v s[9][5] ]] || s[9][5]=( ) # how do I init an array of types ?
+
+						s[9][5].increment
+						$1 && printf "a=%d, b=%d\n" s[9][5].a s[9][5].b
+					}
+					(ar false ; ar false ; ar true ; printf ";")
+					(ar false ; ar false ; ar true ; printf ";")
+				'
+				expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+			)
+
+			(
+				name='2d_indexed_type_array_nameref_editelement'
+				cmd=$'
+					typeset -T ab_t=(
+						integer a=1
+						integer b=2
+						
+						function increment
+						{
+							(( _.a++, _.b++ ))
+						}
+					)
+
+					function ar_n
+					{
+						nameref sn=$2
+
+						sn.increment
+						$1 && printf "a=%d, b=%d\n" sn.a sn.b
+					}
+					function ar
+					{
+						ab_t -S -a s
+						[[ -v s[9][5] ]] || s[9][5]=( ) # how do I init an array of types ?
+
+						ar_n $1 s[9][5]
+					}
+					(ar false ; ar false ; ar true ; printf ";")
+					(ar false ; ar false ; ar true ; printf ";")
+				'
+				expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+			)
+
+			(
+				name='associative_type_array_editelement'
+				cmd=$'
+					typeset -T ab_t=(
+						integer a=1
+						integer b=2
+						
+						function increment
+						{
+							(( _.a++, _.b++ ))
+						}
+					)
+
+					function ar
+					{
+						ab_t -S -A s
+						[[ -v s[5] ]] || s[5]=( ) # how do I init an array of types ?
+
+						s[5].increment
+						$1 && printf "a=%d, b=%d\n" s[5].a s[5].b
+					}
+					(ar false ; ar false ; ar true ; printf ";")
+					(ar false ; ar false ; ar true ; printf ";")
+				'
+				expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+			)
+
+			(
+				name='associative_type_array_nameref_editelement'
+				cmd=$'
+					typeset -T ab_t=(
+						integer a=1
+						integer b=2
+						
+						function increment
+						{
+							(( _.a++, _.b++ ))
+						}
+					)
+
+					function ar_n
+					{
+						nameref sn=$2
+
+						sn.increment
+						$1 && printf "a=%d, b=%d\n" sn.a sn.b
+					}
+					function ar
+					{
+						ab_t -S -A s
+						[[ -v s[5] ]] || s[5]=( ) # how do I init an array of types ?
+
+						ar_n $1 s[5]
+					}
+					(ar false ; ar false ; ar true ; printf ";")
+					(ar false ; ar false ; ar true ; printf ";")
+				'
+				expected_output=$'a=4, b=5\n;a=4, b=5\n;'
+			)
+
 	)
 	
 	for (( i=0 ; i < ${#tests[@]} ; i++ )) ; do

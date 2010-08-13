@@ -47,6 +47,7 @@ typedef	struct
 	nl_catd		cat;		/* message catalog handle	*/
 	int		debug;		/* special debug locale		*/
 	const char*	locale;		/* message catalog locale	*/	
+	const char*	nlspath;	/* message catalog NLSPATH	*/	
 	char		name[1];	/* catalog name			*/
 } Catalog_t;
 
@@ -304,6 +305,9 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 	Catalog_t*	cp;
 	Message_t*	mp;
 
+	static uint32_t	serial;
+	static char*	nlspath;
+
 	oerrno = errno;
 	r = (char*)msg;
 
@@ -363,9 +367,15 @@ sfprintf(sfstderr, "AHA#%d:%s cmd %s cat %s:%s id %s msg `%s'\n", __LINE__, __FI
 #if DEBUG_trace
 sfprintf(sfstderr, "AHA#%d:%s cp->locale `%s' %p loc `%s' %p\n", __LINE__, __FILE__, cp->locale, cp->locale, loc, loc);
 #endif
-	if (cp->locale != loc)
+	if (serial != ast.env_serial)
+	{
+		serial = ast.env_serial;
+		nlspath = getenv("NLSPATH");
+	}
+	if (cp->locale != loc || cp->nlspath != nlspath)
 	{
 		cp->locale = loc;
+		cp->nlspath = nlspath;
 		if (cp->cat != NOCAT)
 			catclose(cp->cat);
 		if ((cp->cat = find(cp->locale, cp->name)) == NOCAT)

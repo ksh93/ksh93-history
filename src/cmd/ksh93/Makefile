@@ -229,7 +229,7 @@ test.ksh : $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=1) $(*:O=2) 2>/dev/null ||
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=3:P=L!:D)
-	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(SHTESTSFLAGS) $(*:O=3:B)
+	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B) $(SHTESTSFLAGS)
 
 test.% : %.sh COSHELL_OPTIONS=separate $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=2) $(*:O=3) 2>/dev/null ||

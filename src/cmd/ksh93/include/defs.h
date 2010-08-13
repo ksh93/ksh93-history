@@ -105,16 +105,49 @@ struct limits
 	int		open_max;	/* maximum number of file descriptors */
 	int		clk_tck;	/* number of ticks per second */
 	int		child_max;	/* maxumum number of children */
-	pid_t		pid_max;	/* maxumum pid number */
 	int		ngroups_max;	/* maximum number of process groups */
 	unsigned char	posix_version;	/* posix version number */
 	unsigned char	posix_jobcontrol;/* non-zero for job control systems */
 	unsigned char	fs3d;		/* non-zero for 3-d file system */
 };
 
+#ifndef SH_wait_f_defined
+    typedef int (*Shwait_f)(int, long, int);
+    #define     SH_wait_f_defined
+#endif
+
+
+struct shared
+{
+	struct limits	lim;
+	uid_t		userid;
+	uid_t		euserid;
+	gid_t		groupid;
+	gid_t		egroupid;
+	pid_t		pid;
+	int32_t		ppid;
+	unsigned char	sigruntime[2];
+	Namval_t	*bltin_nodes;
+	Namval_t	*bltin_cmds;
+	History_t	*hist_ptr;
+	char		*shpath;
+	char		*user;
+	char		**sigmsg;
+	char		*rcfile;
+	char		**login_files;
+	void		*ed_context;
+	void		*init_context;
+	void		*job_context;
+	int		*stats;
+	int		bltin_nnodes;	/* number of bltins nodes */ 
+	int		sigmax;
+	int		nforks;
+	Shwait_f	waitevent;
+};
+
 #define _SH_PRIVATE \
+	struct shared	*gd;		/* global data */ \
 	struct sh_scoped st;		/* scoped information */ \
-	struct limits	lim;		/* run time limits */ \
 	Stk_t		*stk;		/* stack poiter */ \
 	Sfio_t		*heredocs;	/* current here-doc temp file */ \
 	Sfio_t		*funlog;	/* for logging function definitions */ \
@@ -135,31 +168,20 @@ struct limits
 	int		infd;		/* input file descriptor */ \
 	short		nextprompt;	/* next prompt is PS<nextprompt> */ \
 	short		poolfiles; \
-	int		bltin_nnodes;	/* number of bltins nodes */ \
-	Namval_t	*bltin_nodes;	/* pointer to built-in variables */ \
-	Namval_t	*bltin_cmds;	/* pointer to built-in commands */ \
 	Namval_t	*posix_fun;	/* points to last name() function */ \
 	char		*outbuff;	/* pointer to output buffer */ \
 	char		*errbuff;	/* pointer to stderr buffer */ \
 	char		*prompt;	/* pointer to prompt string */ \
 	char		*shname;	/* shell name */ \
-	char		*shpath;	/* path name of shell */ \
-	char		*user;		/* name of real user for pfsh */ \
 	char		*comdiv;	/* points to sh -c argument */ \
 	char		*prefix;	/* prefix for compound assignment */ \
 	sigjmp_buf	*jmplist;	/* longjmp return stack */ \
-	char		**sigmsg;	/* points to signal messages */ \
 	int		oldexit; \
-	uid_t 		userid,euserid;	/* real and effective user id */ \
-	gid_t 		groupid,egroupid;/* real and effective group id */ \
-	pid_t		pid;		/* process id of shell */ \
 	pid_t		bckpid;		/* background process id */ \
 	pid_t		cpid; \
 	pid_t		spid; 		/* subshell process id */ \
 	pid_t		pipepid; \
-	int32_t		ppid;		/* parent process id of shell */ \
 	int		topfd; \
-	int		sigmax;		/* maximum number of signals */ \
 	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
 	char		intrap; \
@@ -197,13 +219,11 @@ struct limits
 	int		xargexit; \
 	int		nenv; \
 	mode_t		mask; \
-	long		nforks; \
 	Env_t		*env; \
 	void		*init_context; \
 	void		*mac_context; \
 	void		*lex_context; \
 	void		*arg_context; \
-	void		*ed_context; \
 	void		*job_context; \
 	void		*pathlist; \
 	void		*defpathlist; \
@@ -215,15 +235,11 @@ struct limits
 	Shinit_f	userinit; \
 	Shbltin_f	bltinfun; \
 	Shbltin_t	bltindata; \
-	Shwait_f	waitevent; \
 	char		*cur_line; \
-	char		*rcfile; \
-	char		**login_files; \
 	int		offsets[10]; \
 	Sfio_t		**sftable; \
 	unsigned char	*fdstatus; \
 	const char	*pwd; \
-	History_t	*hist_ptr; \
 	void		*jmpbuffer; \
 	void		*mktype; \
 	Sfio_t		*strbuf; \
@@ -234,12 +250,10 @@ struct limits
 	Dt_t		*typedict; \
 	Dt_t		*inpool; \
 	char		ifstable[256]; \
-	unsigned char	sigruntime[2]; \
 	unsigned long	test; \
 	Shopt_t		offoptions; \
 	Shopt_t		glob_options; \
 	Namval_t	*typeinit; \
-	int		*stats; \
 	Namfun_t	nvfun; \
 	char		*mathnodes; \
 	void		*coshell; \
@@ -359,6 +373,7 @@ struct limits
 #define SH_READEVAL		0x4000	/* for sh_eval */
 #define SH_FUNEVAL		0x10000	/* for sh_eval for function load */
 
+extern struct shared	*shgd;
 extern Shell_t		*nv_shell(Namval_t*);
 extern int		sh_addlib(Shell_t*,void*);
 extern void		sh_applyopts(Shell_t*,Shopt_t);
@@ -473,7 +488,7 @@ extern const char	e_dict[];
 #   define	STAT_SPAWN	12
 #   define	STAT_SUBSHELL	13
     extern const Shtable_t shtab_stats[];
-#   define sh_stats(x)	(sh.stats[(x)]++)
+#   define sh_stats(x)	(shgd->stats[(x)]++)
 #else
 #   define sh_stats(x)
 #endif /* SHOPT_STATS */

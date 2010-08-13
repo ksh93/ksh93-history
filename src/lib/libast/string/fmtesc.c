@@ -31,6 +31,7 @@
 #include <ccode.h>
 #include <ctype.h>
 #if _hdr_wctype
+#include <ast_wchar.h>
 #include <wctype.h>
 #endif
 

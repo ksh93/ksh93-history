@@ -25,6 +25,11 @@
  * return job initialization commands
  */
 
+#if _WIN32
+#undef	_BLD_DLL
+#define _BLD_DLL	1
+#endif
+
 #include "colib.h"
 
 #include <fs3d.h>

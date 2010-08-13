@@ -1878,110 +1878,66 @@ api bar 20050505 joe_d
 #endif
 
 #if ( _BLD_foo || !_API_foo || _API_foo >= 20100601 )
-#if defined(dat)
-#undef  dat
-#define dat	_foo_dat_20100601
-#else
+#undef	dat
 #define dat	dat_20100601
-#endif
 #elif _API_foo >= 19991231
-#if defined(dat)
-#undef  dat
-#define dat	_foo_dat_19991231
-#else
+#undef	dat
 #define dat	dat_19991231
-#endif
 #endif
 
 #if ( _BLD_foo || !_API_foo || _API_foo >= 20100606 )
-#if defined(dis)
-#undef  dis
-#define dis	_foo_dis_20100606
-#else
+#undef	dis
 #define dis	dis_20100606
-#endif
 #elif _API_foo >= 19991231
-#if defined(dis)
-#undef  dis
-#define dis	_foo_dis_19991231
-#else
+#undef	dis
 #define dis	dis_19991231
-#endif
 #endif
 
 #if ( _BLD_foo || !_API_foo || _API_foo >= 19991231 )
-#if defined(tother)
-#undef  tother
-#define tother	_foo_tother_19991231
-#else
+#undef	tother
 #define tother	tother_19991231
 #endif
-#endif
+
+#define _API_foo_MAP	"dat_20100601 dat_19991231 dis_20100606 dis_19991231 tother_19991231"
 
 #if !defined(_API_bar) && defined(_API_DEFAULT)
 #define _API_bar	_API_DEFAULT
 #endif
 
 #if ( _BLD_bar || !_API_bar || _API_bar >= 20020202 )
-#if defined(curly)
-#undef  curly
-#define curly	_bar_curly_20020202
-#else
+#undef	curly
 #define curly	curly_20020202
-#endif
 #endif
 
 #if ( _BLD_bar || !_API_bar || _API_bar >= 20040404 )
-#if defined(joe_b)
-#undef  joe_b
-#define joe_b	_bar_joe_b_20040404
-#else
+#undef	joe_b
 #define joe_b	joe_b_20040404
-#endif
 #endif
 
 #if ( _BLD_bar || !_API_bar || _API_bar >= 20050505 )
-#if defined(joe_d)
-#undef  joe_d
-#define joe_d	_bar_joe_d_20050505
-#else
+#undef	joe_d
 #define joe_d	joe_d_20050505
 #endif
-#endif
 
 #if ( _BLD_bar || !_API_bar || _API_bar >= 19991231 )
-#if defined(larry)
-#undef  larry
-#define larry	_bar_larry_19991231
-#else
+#undef	larry
 #define larry	larry_19991231
 #endif
-#endif
 
 #if ( _BLD_bar || !_API_bar || _API_bar >= 19991231 )
-#if defined(moe)
-#undef  moe
-#define moe	_bar_moe_19991231
-#else
+#undef	moe
 #define moe	moe_19991231
-#endif
 #endif
 
 #if ( _BLD_bar || !_API_bar || _API_bar >= 20030303 )
-#if defined(shemp)
-#undef  shemp
-#define shemp	_bar_shemp_20030303
-#else
+#undef	shemp
 #define shemp	shemp_20030303
-#endif
 #elif _API_bar >= 19991231
-#if defined(shemp)
-#undef  shemp
-#define shemp	_bar_shemp_19991231
-#else
+#undef	shemp
 #define shemp	shemp_19991231
 #endif
-#endif
+
+#define _API_bar_MAP	"curly_20020202 joe_b_20040404 joe_d_20050505 larry_19991231 moe_19991231 shemp_20030303 shemp_19991231"
 
 #endif'
 		ERROR - $'iffe: test: is sys/types.h a header ... yes'

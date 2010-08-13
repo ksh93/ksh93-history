@@ -361,7 +361,7 @@ typeset -i i=x
 (( ${x:0:1} == 0 )) || err_exit 'leading zero should not be stripped for x:a:b'
 c010=3
 (( c$x  == 3 )) || err_exit 'leading zero with variable should not be stripped'
-[[ $( ($SHELL -c '((++1))' 2>&1)2>/dev/null ) == *lvalue* ]] || err_exit "((++1)) not generating error message"
+[[ $( ($SHELL -c '((++1))' 2>&1) 2>/dev/null ) == *++1:* ]] || err_exit "((++1)) not generating error message"
 i=2
 (( "22" == 22 )) || err_exit "double quoted constants fail"
 (( "2$i" == 22 )) || err_exit "double quoted variables fail"
@@ -619,5 +619,21 @@ foobar
 (( foo == 8 )) || err_exit  'arithmetic assignment binding to the wrong scope'
 
 (( tgamma(4)/12 )) || err_exit 'floating point attribute for functions not preserved'  
+
+unset F
+function f
+{
+ ((F=1))
+}
+f
+[[ $F == 1 ]] || err_exit 'scoping bug with arithmetic expression'
+
+F=1
+function f
+{
+ typeset F
+ ((F=2))
+}
+[[ $F == 1 ]] || err_exit 'scoping bug2 with arithmetic expression'
 
 exit $((Errors))

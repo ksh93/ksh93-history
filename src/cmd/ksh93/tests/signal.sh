@@ -237,10 +237,10 @@ expected[---]="3-intr"
 expected[--d]="3-intr"
 expected[-t-]="3-intr 2-intr 1-intr 1-0258"
 expected[-td]="3-intr 2-intr 1-intr 1-0258"
-expected[x--]="3-intr 2-intr"
-expected[x-d]="3-intr 2-intr"
-expected[xt-]="3-intr 2-intr 1-intr 1-0258"
-expected[xtd]="3-intr 2-intr 1-intr 1-0258"
+expected[x--]="3-intr 2-intr 1-0000"
+expected[x-d]="3-intr 2-intr 1-0000"
+expected[xt-]="3-intr 2-intr 1-intr 1-0000"
+expected[xtd]="3-intr 2-intr 1-intr 1-0000"
 expected[z--]="3-intr 2-intr 1-0000"
 expected[z-d]="3-intr 2-intr 1-0000"
 expected[zt-]="3-intr 2-intr 1-intr 1-0000"
@@ -345,5 +345,36 @@ e=$?
 trap '' SIGBUS
 [[ $($SHELL -c 'trap date SIGBUS; trap -p SIGBUS') ]] && err_exit 'SIGBUS should not have a trap'
 trap -- - SIGBUS
+
+{
+    x=$(
+    $SHELL   <<- \++EOF
+	timeout() 
+	{
+		trap 'trap - TERM; return' TERM
+		( sleep $1; kill -TERM $$ ) >/dev/null 2>&1 &
+		sleep 3
+	}
+	timeout 1
+	print ok
+++EOF
+    )
+} 2> /dev/null
+[[ $x == ok ]] || err_exit 'return without arguments in trap not preserving exit status'
+
+x=$(
+    $SHELL  <<- \++EOF
+	set -o pipefail
+        foobar()
+        {
+		for ((i=0; i < 10000; i++))
+		do	print abcdefghijklmnopqrstuvwxyz
+		done | head > /dev/null
+        }
+        foobar
+        print ok
+	++EOF
+)
+[[ $x == ok ]] || err_exit 'SIGPIPE exit status causes PIPE signal to be propogaged'
 
 exit $((Errors))

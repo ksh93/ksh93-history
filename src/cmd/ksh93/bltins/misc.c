@@ -311,8 +311,6 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	memcpy((void*)&shp->st, (void*)prevscope, sizeof(Shscope_t));
 	shp->topscope = (Shscope_t*)prevscope;
 	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
-	if(shp->exitval > SH_EXITSIG)
-		sh_fault(shp->exitval&SH_EXITMASK);
 	if(jmpval && jmpval!=SH_JMPFUN)
 		siglongjmp(*shp->jmplist,jmpval);
 	return(shp->exitval);
@@ -531,7 +529,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if(!sh.lim.fs3d)
+	if(!shp->gd->lim.fs3d)
 		goto failed;
 	argv += opt_info.index;
 	argc -= opt_info.index;
@@ -570,7 +568,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 		/*FALLTHROUGH*/
 	     case 2:
-		if(!sh.lim.fs3d)
+		if(!shp->gd->lim.fs3d)
 			goto failed;
 		if(shp->subshell && !shp->subshare)
 			sh_subfork();

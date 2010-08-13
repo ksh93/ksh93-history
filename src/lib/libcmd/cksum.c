@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: sum (AT&T Research) 2009-11-28 $\n]"
+"[-?\n@(#)$Id: sum (AT&T Research) 2010-07-28 $\n]"
 USAGE_LICENSE
 "[+NAME?cksum,md5sum,sum - print file checksum and block count]"
 "[+DESCRIPTION?\bsum\b lists the checksum, and for most methods the block"
@@ -608,16 +608,16 @@ b_cksum(int argc, register char** argv, void* context)
 				}
 				break;
 			case FTS_DC:
-				error(ERROR_warn(0), "%s: directory causes cycle", ent->fts_accpath);
+				error(ERROR_warn(0), "%s: directory causes cycle", ent->fts_path);
 				break;
 			case FTS_DNR:
-				error(ERROR_system(0), "%s: cannot read directory", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot read directory", ent->fts_path);
 				break;
 			case FTS_DNX:
-				error(ERROR_system(0), "%s: cannot search directory", ent->fts_accpath);
+				error(ERROR_system(0), "%s: cannot search directory", ent->fts_path);
 				break;
 			case FTS_NS:
-				error(ERROR_system(0), "%s: not found", ent->fts_accpath);
+				error(ERROR_system(0), "%s: not found", ent->fts_path);
 				break;
 			}
 		fts_close(fts);

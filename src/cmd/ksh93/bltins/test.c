@@ -405,8 +405,8 @@ int test_unop(Shell_t *shp,register int op,register const char *arg)
 		if(op=='s')
 			return(statb.st_size>0);
 		else if(op=='O')
-			return(statb.st_uid==sh.userid);
-		return(statb.st_gid==sh.groupid);
+			return(statb.st_uid==shp->gd->userid);
+		return(statb.st_gid==shp->gd->groupid);
 	    case 'a':
 	    case 'e':
 		return(permission(arg, F_OK));
@@ -552,34 +552,35 @@ int test_inode(const char *file1,const char *file2)
 
 int sh_access(register const char *name, register int mode)
 {
+	Shell_t	*shp = sh_getinterp();
 	struct stat statb;
 	if(*name==0)
 		return(-1);
 	if(strmatch(name,(char*)e_devfdNN))
 		return(sh_ioaccess((int)strtol(name+8, (char**)0, 10),mode));
 	/* can't use access function for execute permission with root */
-	if(mode==X_OK && sh.euserid==0)
+	if(mode==X_OK && shp->gd->euserid==0)
 		goto skip;
-	if(sh.userid==sh.euserid && sh.groupid==sh.egroupid)
+	if(shp->gd->userid==shp->gd->euserid && shp->gd->groupid==shp->gd->egroupid)
 		return(access(name,mode));
 #ifdef _lib_setreuid
 	/* swap the real uid to effective, check access then restore */
 	/* first swap real and effective gid, if different */
-	if(sh.groupid==sh.euserid || setregid(sh.egroupid,sh.groupid)==0) 
+	if(shp->gd->groupid==shp->gd->euserid || setregid(shp->gd->egroupid,shp->gd->groupid)==0) 
 	{
 		/* next swap real and effective uid, if needed */
-		if(sh.userid==sh.euserid || setreuid(sh.euserid,sh.userid)==0)
+		if(shp->gd->userid==shp->gd->euserid || setreuid(shp->gd->euserid,shp->gd->userid)==0)
 		{
 			mode = access(name,mode);
 			/* restore ids */
-			if(sh.userid!=sh.euserid)
-				setreuid(sh.userid,sh.euserid);
-			if(sh.groupid!=sh.egroupid)
-				setregid(sh.groupid,sh.egroupid);
+			if(shp->gd->userid!=shp->gd->euserid)
+				setreuid(shp->gd->userid,shp->gd->euserid);
+			if(shp->gd->groupid!=shp->gd->egroupid)
+				setregid(shp->gd->groupid,shp->gd->egroupid);
 			return(mode);
 		}
-		else if(sh.groupid!=sh.egroupid)
-			setregid(sh.groupid,sh.egroupid);
+		else if(shp->gd->groupid!=shp->gd->egroupid)
+			setregid(shp->gd->groupid,shp->gd->egroupid);
 	}
 #endif /* _lib_setreuid */
 skip:
@@ -587,16 +588,16 @@ skip:
 	{
 		if(mode == F_OK)
 			return(mode);
-		else if(sh.euserid == 0)
+		else if(shp->gd->euserid == 0)
 		{
 			if(!S_ISREG(statb.st_mode) || mode!=X_OK)
 				return(0);
 		    	/* root needs execute permission for someone */
 			mode = (S_IXUSR|S_IXGRP|S_IXOTH);
 		}
-		else if(sh.euserid == statb.st_uid)
+		else if(shp->gd->euserid == statb.st_uid)
 			mode <<= 6;
-		else if(sh.egroupid == statb.st_gid)
+		else if(shp->gd->egroupid == statb.st_gid)
 			mode <<= 3;
 #ifdef _lib_getgroups
 		/* on some systems you can be in several groups */

@@ -38,6 +38,7 @@ ASTSA_SRCS = \
 	fmtip6.c \
 	optget.c \
 	sfstr.c \
+	strcopy.c \
 	strdup.c \
 	strmatch.c \
 	strtoip4.c \
@@ -69,7 +70,8 @@ ASTSA_MANIFEST = \
 astsa : ast_sa.h libastsa.a
 
 libastsa.a : ast.o chresc.o error.o fmtbuf.o fmtip4.o fmtip6.o optget.o \
-		sfstr.o strmatch.o strtoip4.o strtoip6.o vmalloc.o \
+		sfstr.o strcopy.o strdup.o strmatch.o strtoip4.o strtoip6.o \
+		vmalloc.o \
 		dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o \
 		dtmethod.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o \
 		dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o

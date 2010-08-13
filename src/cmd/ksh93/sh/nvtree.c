@@ -45,6 +45,7 @@ struct nvdir
 	char		data[1];
 };
 
+static int	Indent;
 char *nv_getvtree(Namval_t*, Namfun_t *);
 static void put_tree(Namval_t*, const char*, int,Namfun_t*);
 static char *walk_tree(Namval_t*, Namval_t*, int);
@@ -546,6 +547,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	Namval_t	*mp;
 	Namarr_t	*ap = nv_arrayptr(np);
 	int		tabs=0,c,more,associative = 0;
+	int		saveI = Indent;
+	Indent = indent;
 	if(ap)
 	{
 		if(!(ap->nelem&ARRAY_SCAN))
@@ -593,7 +596,11 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			goto skip;
 		}
 		if(mp && nv_isvtree(mp))
-			nv_onattr(mp,NV_EXPORT);
+		{
+			if(indent<0)
+				nv_onattr(mp,NV_EXPORT);
+			nv_onattr(mp,NV_TABLE);
+		}
 		ep = nv_getval(mp?mp:np);
 		if(ep==Empty)
 			ep = 0;
@@ -636,11 +643,12 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			*xp = ' ';
 	skip:
 		if(!more)
-			return;
+			break;
 		mp = nv_opensub(np);
 		if(indent>0 && !(mp && special && nv_isvtree(mp)))
 			sfnputc(out,'\t',indent);
 	}
+	Indent = saveI;
 }
 
 static void outval(char *name, const char *vname, struct Walk *wp)
@@ -713,7 +721,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			sfputc(wp->out,'\n');
 		return;
 	}
-	if(isarray==0 && nv_isarray(np) && nv_isnull(np))  /* empty array */
+	if(isarray==0 && nv_isarray(np) && (nv_isnull(np)||np->nvalue.cp==Empty))  /* empty array */
 		isarray = 2;
 	special |= wp->nofollow;
 	if(!wp->array && wp->indent>0)
@@ -724,10 +732,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			nv_attribute(np,wp->out,"typeset",'=');
 		nv_outname(wp->out,name,-1);
 		if((np->nvalue.cp && np->nvalue.cp!=Empty) || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)) || nv_isvtree(np))  
-		{
-			if(wp->indent>=0 || isarray!=2)
-				sfputc(wp->out,(isarray==2?'\n':'='));
-		}
+			sfputc(wp->out,(isarray==2?(wp->indent>=0?'\n':';'):'='));
 		if(isarray==2)
 			return;
 	}
@@ -851,7 +856,10 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			}
 			else if(outfile && *cp=='[')
 			{
-				if(wp->indent)
+				/* skip multi-dimensional arrays */
+				if(*nv_endsubscript((Namval_t*)0,cp,0)=='[')
+					continue;
+				if(wp->indent>0)
 					sfnputc(outfile,'\t',wp->indent);
 				sfputr(outfile,cp,'=');
 				argv = genvalue(++argv,cp,cp-arg ,wp);
@@ -899,6 +907,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 	static Sfio_t *out;
 	struct Walk walk;
 	Sfio_t *outfile;
+	Sfoff_t	off = 0;
 	int len, savtop = staktell();
 	char *savptr = stakfreeze(0);
 	register struct argnod *ap=0; 
@@ -990,10 +999,12 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 		outfile = 0;
 	else if(!(outfile=out))
 		outfile = out =  sfnew((Sfio_t*)0,(char*)0,-1,-1,SF_WRITE|SF_STRING);
+	else if(flags&NV_TABLE)
+		off = sftell(outfile);
 	else
 		sfseek(outfile,0L,SEEK_SET);
 	walk.out = outfile;
-	walk.indent = (flags&NV_EXPORT)?-1:0;
+	walk.indent = (flags&NV_EXPORT)?-1:Indent;
 	walk.nofollow = 0;
 	walk.noscope = noscope;
 	walk.array = 0;
@@ -1004,7 +1015,8 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 	if(!outfile)
 		return((char*)0);
 	sfputc(out,0);
-	return((char*)out->_data);
+	sfseek(out,off,SEEK_SET);
+	return((char*)out->_data+off);
 }
 
 Namfun_t *nv_isvtree(Namval_t *np)
@@ -1031,6 +1043,8 @@ char *nv_getvtree(register Namval_t *np, Namfun_t *fp)
 		return(nv_getv(np,fp));
 	if(flags = nv_isattr(np,NV_EXPORT))
 		nv_offattr(np,NV_EXPORT);
+	if(flags |= nv_isattr(np,NV_TABLE))
+		nv_offattr(np,NV_TABLE);
 	if(dsize && (flags&NV_EXPORT))
 		return("()");
 	return(walk_tree(np,(Namval_t*)0,flags));
