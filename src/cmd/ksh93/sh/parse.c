@@ -358,7 +358,18 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 			if(sffileno(iop)==shp->infd || (flag&SH_FUNEVAL))
 				shp->binscript = 1;
 			sfgetc(iop);
-			return((void*)sh_trestore(shp,iop));
+			t = sh_trestore(shp,iop);
+			if(flag&SH_NL)
+			{
+				Shnode_t *tt;
+				while(1)
+				{
+					if(!(tt = sh_trestore(shp,iop)))
+						break;
+					t =makelist(lexp,TLST, t, tt);
+				}
+			}
+			return((void*)t);
 		}
 	}
 	flag &= ~SH_FUNEVAL;

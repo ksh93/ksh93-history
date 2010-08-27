@@ -82,7 +82,7 @@ do
 done
 typeset -T Frame_t=( typeset file lineno )
 Frame_t frame
-[[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno;)' ]] || err_exit 'empty fields in type not displayed'
+[[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno)' ]] || err_exit 'empty fields in type not displayed'
 x=( typeset -a arr=([2]=abc [4]=(x=1 y=def));zz=abc)
 typeset -C y=x
 [[ "$x" == "$y" ]] || print -u2 'y is not equal to x'
@@ -248,7 +248,7 @@ function bar
 }
 bar
 
-expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=3;typeset -C -a text=(line1 line2 line3);typeset -l -i mtime=-1;))'
+expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=3;typeset -C -a text=(line1 line2 line3);typeset -l -i mtime=-1))'
 got=$(typeset -p _Dbg_filenames)
 [[ "$got" == "$expected" ]] || {
 	got=$(printf %q "$got")
@@ -268,7 +268,7 @@ $SHELL > /dev/null  <<- '+++++' || err_exit 'passing _ as nameref arg not workin
 	A_t a
 	[[ ${ a.f ./t1;} == "$a" ]]
 +++++
-expected='A_t b.a=(name=one;)'
+expected='A_t b.a=(name=one)'
 [[ $( $SHELL << \+++
 	typeset -T A_t=(
 	     typeset name=aha
@@ -286,7 +286,7 @@ expected='A_t b.a=(name=one;)'
 	b.f
 +++
 ) ==  "$expected" ]] 2> /dev/null || err_exit  '_.a=(name=one) not expanding correctly'
-expected='A_t x=(name=xxx;)'
+expected='A_t x=(name=xxx)'
 [[ $( $SHELL << \+++
 	typeset -T A_t=(
 		typeset name
@@ -503,5 +503,37 @@ then	$SHELL > junk1 <<- \+++EOF
 else
 	err_exit 'typeset -T not supported'
 fi
+
+[[ $($SHELL -c 'typeset -T x=( typeset -a h ) ; x j; print -v j.h') ]] && err_exit 'type with indexed array without elements inserts element 0' 
+
+[[ $($SHELL  -c 'typeset -T x=( integer -a s ) ; compound c ; x c.i ; c.i.s[4]=666 ; print -v c') == *'[0]'* ]] &&  err_exit 'type with indexed array with non-zero element inserts element 0'
+
+
+{ $SHELL -c '(sleep 3;kill $$)& typeset -T x=( typeset -a s );compound c;x c.i;c.i.s[7][5][3]=hello;x c.j=c.i;[[ ${c.i} == "${c.j}" ]]';} 2> /dev/null
+exitval=$?
+if	[[ $(kill -l $exitval) == TERM ]]
+then	err_exit 'clone of multi-dimensional array timed out'
+elif	((exitval))
+then	err_exit "c.i and c.j are not the same multi-dimensional array"
+fi
+
+typeset -T foobar_t=(
+	float x=1 y=0
+	slen()
+	{
+		print -r -- $((sqrt(_.x**2 + _.y**2)))
+	}
+	typeset -fS slen
+	len()
+	{
+		print -r -- $((sqrt(_.x**2 + _.y**2)))
+	}
+)
+unset z
+foobar_t z=(x=3 y=4)
+(( z.len == 5 )) || err_exit 'z.len should be 5'
+(( z.slen == 1 )) || err_exit 'z.slen should be 1'
+(( .sh.type.foobar_t.slen == 1 )) || err_exit '.sh.type.foobar_t.slen should be 1'
+(( .sh.type.foobar_t.len == 1 )) || err_exit '.sh.type.foobar_t.len should be 1'
 
 exit $Errors

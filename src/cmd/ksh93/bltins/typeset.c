@@ -363,6 +363,12 @@ endargs:
 		error_info.errors++;
 	if(troot==tdata.sh->fun_tree && ((isfloat || flag&~(NV_FUNCT|NV_TAGGED|NV_EXPORT|NV_LTOU))))
 		error_info.errors++;
+	if(sflag && troot==tdata.sh->fun_tree)
+	{
+		/* static function */
+		sflag = 0;
+		flag |= NV_STATICF;
+	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s", optusage(NIL(char*)));
 	if(isfloat)
@@ -381,6 +387,8 @@ endargs:
 	}
 	if(tdata.sh->fn_depth && !tdata.pflag)
 		flag |= NV_NOSCOPE;
+	if(tdata.help)
+		tdata.help = strdup(tdata.help);
 	if(flag&NV_TYPE)
 	{
 		Stk_t *stkp = tdata.sh->stk;
@@ -504,11 +512,19 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						errormsg(SH_DICT,ERROR_exit(1),e_badfun,name);
 					np = nv_open(name,sh_subfuntree(1),NV_NOARRAY|NV_IDENT|NV_NOSCOPE);
 				}
-				else  if((np=nv_search(name,troot,0)) && !is_afunction(np))
-					np = 0;
+				else 
+				{
+					if(shp->prefix)
+					{
+						sfprintf(shp->strbuf,"%s.%s%c",shp->prefix,name,0);
+						name = sfstruse(shp->strbuf);
+					}
+					if((np=nv_search(name,troot,0)) && !is_afunction(np))
+						np = 0;
+				}
 				if(np && ((flag&NV_LTOU) || !nv_isnull(np) || nv_isattr(np,NV_LTOU)))
 				{
-					if(flag==0)
+					if(flag==0 && !tp->help)
 					{
 						print_namval(sfstdout,np,tp->aflag=='+',tp);
 						continue;
@@ -525,11 +541,15 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				if(tp->help)
 				{
 					int offset = stktell(shp->stk);
-					sfputr(shp->stk,shp->prefix,'.');
-					sfputr(shp->stk,name,0);
-					if((np=nv_search(stkptr(shp->stk,offset),troot,0)) && np->nvalue.cp) 
+					if(!np)
+					{
+						sfputr(shp->stk,shp->prefix,'.');
+						sfputr(shp->stk,name,0);
+						np = nv_search(stkptr(shp->stk,offset),troot,0);
+						stkseek(shp->stk,offset);
+					}
+					if(np && np->nvalue.cp) 
 						np->nvalue.rp->help = tp->help;
-					stkseek(shp->stk,offset);
 				}
 				continue;
 			}

@@ -1,4 +1,22 @@
-10-08-11  --- Release ksh93u  ---
+10-08-25  --- Release ksh93u  ---
+10-08-25  Fixed a couple of bugs related to job pools. 
+10-08-24 +[[ -e /dev/xxx/ ]] can be used to check whether special files of
+	  those names are handled by the shell.
+10-08-24  A bug in the running of a compiled dot script in which only the
+	  first command was executed has been fixed.
+10-08-23  A bug which sometimes caused a core dump with a confgire script
+	  has been fixed.
+10-08-20  A bug in command substitution which caused a configure script to
+	  hang has been fixed.
+10-08-19  Eliminated unnecessary ; from output of compound variable with
+	  typeset -p.
+10-08-17  Fixed a bug in command substitution in which under certain
+	  circumstances a file whose size is a power of 2 plus one, and the last
+	  character was not a new-line, could cause memory corruption.
+10-08-13 +Added static discipline functions to type similar to C++ static
+	  class functions.
+10-08-11  A bug in time when applied to a pipeline in which the shell did
+	  not wait for all elements of the pipeline to complete has been fixed.
 10-08-11  Restored sh_fmtq() quoting to not quote NAME= in NAME=VALUE.
 10-08-09 +Modified the expansion of message strings, $"...", so that they
 	  are expanded each time they are referenced rather than expanding

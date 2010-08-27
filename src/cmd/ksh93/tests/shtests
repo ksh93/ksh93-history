@@ -9,7 +9,7 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-08-10 $
+@(#)$Id: shtests (AT&T Research) 2010-08-18 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -17,7 +17,7 @@ USAGE=$'
     none of \b--compile --script\b are specified then \b--compile
     --script\b are assumed.]
 [+INPUT FILES?\bshtests\b regression test files are shell scripts that
-    run in an environment controlled by \bshtests\b. A identification
+    run in an environment controlled by \bshtests\b. An identification
     message is printed before and after each test on the standard output.
     The default environment settings are:]
     {
@@ -54,15 +54,17 @@ function usage
 }
 
 unset DISPLAY ENV FIGNORE HISTFILE
-integer compile=1 locale_accept=0 locale_force=0 locale_one=0 script=1 time=1
+integer compile=1 default=1 locale_accept=0 locale_force=0 locale_one=0 script=1 time=1
 typeset vmalloc_options=abort
 
 while	getopts -a $command "$USAGE" OPT
 do	case $OPT in
-	a)	compile=2
+	a)	default=0
+		compile=2
 		script=2
 		;;
-	c)	compile=2
+	c)	default=0
+		compile=2
 		script=0
 		;;
 	C)	locale_one=$OPTARG
@@ -71,7 +73,8 @@ do	case $OPT in
 		;;
 	l)	locale_accept=$OPTARG
 		;;
-	s)	compile=0
+	s)	default=0
+		compile=0
 		script=2
 		;;
 	t)	time=$OPTARG
@@ -91,6 +94,10 @@ do	eval export "$1"
 	shift
 done
 
+if	(( default ))
+then	compile=1
+	script=1
+fi
 if	(( ! locale_force ))
 then	if	(( ! locale_accept ))
 	then	unset LANG

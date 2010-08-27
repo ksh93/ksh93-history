@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-07-01 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-08-22 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-07-01 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-08-22 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -4532,13 +4532,19 @@ sear_rm_r(char* dir)
  */
 
 static int
-sear_system(const char* command)
+sear_system(const char* command, int detached)
 {
 	PROCESS_INFORMATION	pinfo;
 	STARTUPINFO		sinfo;
+	SECURITY_ATTRIBUTES	sattr;
+	SECURITY_ATTRIBUTES*	sa;
+	SECURITY_DESCRIPTOR	sdesc;
 	char*			cp;
+	char*			lp;
 	char			path[PATH_MAX];
+	char			log[PATH_MAX];
 	int			n = *command == '"';
+	DWORD			flags = NORMAL_PRIORITY_CLASS;
 
 	strncpy(path, &command[n], PATH_MAX - 4);
 	n = n ? '"' : ' ';
@@ -4546,10 +4552,36 @@ sear_system(const char* command)
 		if (*cp == n)
 			break;
 	*cp = 0;
-	if (GetFileAttributes(path)==0xffffffff && GetLastError()==ERROR_FILE_NOT_FOUND)
+	if (GetFileAttributes(path) == 0xffffffff && GetLastError() == ERROR_FILE_NOT_FOUND)
 		strcpy(cp, ".exe");
 	ZeroMemory(&sinfo, sizeof(sinfo));
-	if (CreateProcess(path, (char*)command, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &sinfo, &pinfo))
+	if (detached)
+	{
+		sa = &sattr;
+		InitializeSecurityDescriptor(&sdesc, SECURITY_DESCRIPTOR_REVISION);
+		SetSecurityDescriptorDacl(&sdesc, TRUE, NULL, FALSE);
+		ZeroMemory(sa, sizeof(sattr));
+		sattr.bInheritHandle = TRUE;
+		sattr.lpSecurityDescriptor = &sdesc;
+		sattr.nLength = sizeof(sattr);
+		lp = log;
+		for (cp = "C:\\temp\\"; *lp = *cp++; lp++);
+		for (cp = state.id; (*lp = *cp++) && *lp != '.'; lp++);
+		for (cp = ".log"; *lp = *cp++; lp++);
+		if (!(sinfo.hStdOutput = CreateFile(log, GENERIC_WRITE, FILE_SHARE_WRITE, &sattr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) || sinfo.hStdOutput == INVALID_HANDLE_VALUE)
+		{
+			fprintf(stderr, "%s: %s: cannot create log file\n", state.id, log);
+			exit(1);
+		}
+		sinfo.hStdError = sinfo.hStdOutput;
+		sinfo.dwFlags = STARTF_USESTDHANDLES;
+		flags |= CREATE_NO_WINDOW|DETACHED_PROCESS;
+	}
+	else
+		sa = 0;
+	if (!CreateProcess(path, (char*)command, sa, sa, TRUE, flags, NULL, NULL, &sinfo, &pinfo))
+		n = GetLastError() == ERROR_FILE_NOT_FOUND ? 127 : 126;
+	else if (!detached)
 	{
 		CloseHandle(pinfo.hThread);
 		WaitForSingleObject(pinfo.hProcess, INFINITE);
@@ -4557,8 +4589,6 @@ sear_system(const char* command)
 			n = 1;
 		CloseHandle(pinfo.hProcess);
 	}
-	else
-		n = GetLastError() == ERROR_FILE_NOT_FOUND ? 127 : 126;
 	return n;
 }
 
@@ -4587,6 +4617,7 @@ sear_exec(const char* cmd, char* const* arg)
 	char*		e;
 	int		r;
 	int		sh;
+	int		detached;
 	char		buf[1024];
 
 	fflush(stdout);
@@ -4598,6 +4629,7 @@ sear_exec(const char* cmd, char* const* arg)
 		close(sear_stdin);
 		if (cmd)
 		{
+			detached = arg && arg[0];
 			sh = 0;
 			for (a = cmd; *a && *a != ' '; a++)
 				if (a[0] == '.' && a[1] == 's' && a[2] == 'h' && (!a[3] || a[3] == ' '))
@@ -4605,7 +4637,7 @@ sear_exec(const char* cmd, char* const* arg)
 					sh = 1;
 					break;
 				}
-			if (sh || arg && arg[0])
+			if (sh || detached)
 			{
 				b = buf;
 				e = buf + sizeof(buf) - 1;
@@ -4628,7 +4660,7 @@ sear_exec(const char* cmd, char* const* arg)
 				cmd = (const char*)buf;
 			}
 		}
-		r = cmd ? sear_system(cmd) : 1;
+		r = cmd ? sear_system(cmd, detached) : 1;
 		sear_rm_r(sear_tmp);
 	}
 	else

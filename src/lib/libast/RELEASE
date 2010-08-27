@@ -1,3 +1,6 @@
+10-08-25 port/lc.c: add features/locale check for canonical UTF-8 spelling
+10-08-20 include/ast.h: add export plugin_version() prototype
+10-08-20 comp/conf.tab: add SF_BUFSIZE
 10-08-11 misc/conformance.c: conformance(0,0) => "standard"
 10-08-11 misc/conformance.c: check ast_env_serial for dynamic astconf() changes
 10-08-11 port/lcgen.c: remember to fudge Table_t.count for synthesized entries

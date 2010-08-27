@@ -86,7 +86,7 @@ struct funenv
  * temp file.
  */
 static int	subpipe[3] = {-1};
-static int	subdup;
+static int	subdup,tsetio;
 static void iousepipe(Shell_t *shp)
 {
 	int i;
@@ -135,6 +135,7 @@ static void iounpipe(Shell_t *shp)
 	}
 	sh_close(subpipe[0]);
 	subpipe[0] = -1;
+	tsetio = 0;
 }
 
 /*
@@ -450,7 +451,7 @@ static struct Level *init_level(Shell_t *shp,int level)
 }
 
 /*
- * write the current common on the stack and make it available as .sh.command
+ * write the current command on the stack and make it available as .sh.command
  */
 int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subscript, char *const argv[], int flags)
 {
@@ -759,7 +760,9 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	int		verbose = sh_isoption(SH_VERBOSE);
 	sh_offoption(SH_XTRACE);
 	sh_offoption(SH_VERBOSE);
-	sfswap(shp->strbuf,sfstdout);
+	if(!shp->strbuf2)
+		shp->strbuf2 = sfstropen();
+	sfswap(shp->strbuf2,sfstdout);
 	sh_trap("typeset -p\nprint cd \"$PWD\"\nprint .sh.dollar=$$\nprint umask $(umask)",0);
 	for(sig=shp->st.trapmax;--sig>0;)
 	{
@@ -813,8 +816,8 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	sh_trap("set +o",0);
 	sh_deparse(sfstdout,t,filt==1||filt==2?FALTPIPE:0);
 	sfputc(sfstdout,0);
-	sfswap(shp->strbuf,sfstdout);
-	str = sfstruse(shp->strbuf);
+	sfswap(shp->strbuf2,sfstdout);
+	str = sfstruse(shp->strbuf2);
 	if(cjp=coexec(csp->coshell,str,0,NULL,NULL,NULL))
 	{
 		csp->cojob = cjp;
@@ -1350,6 +1353,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 					staklink(slp->slptr);
 					if(nq)
 					{
+						Namval_t *mp=0;
+						if(nv_isattr(np,NV_STATICF) && (mp=nv_type(nq)))
+							nq = mp;
 						shp->last_table = last_table;
 						mode = set_instance(shp,nq,&node,&nr);
 					}
@@ -1534,6 +1540,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						shp->pipepid = parent;
 					else
 						job_wait(parent);
+					if(tsetio &&  subdup)
+						iounpipe(shp);
 					if(!sh_isoption(SH_MONITOR))
 					{
 						shp->trapnote &= ~SH_SIGIGNORE;
@@ -1697,6 +1705,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			jmpval = sigsetjmp(buff.buff,0);
 			if(jmpval==0)
 			{
+				if(shp->comsub==1)
+					tsetio = 1;
 				sh_redirect(shp,t->fork.forkio,execflg);
 				(t->fork.forktre)->tre.tretyp |= t->tre.tretyp&FSHOWME;
 				sh_exec(t->fork.forktre,flags&~simple);
@@ -1724,6 +1734,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(type || !sh_isoption(SH_PIPEFAIL))
 						shp->exitval = type;
 				}
+				if(shp->comsub==1 && subpipe[0]>=0)
+					iounpipe(shp);
 				shp->pipepid = 0;
 				shp->st.ioset = 0;
 				if(simple && was_errexit)
@@ -2897,7 +2909,10 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 		if(jobid)
 			*jobid = myjob;
 		if(shp->comsub==1 && subpipe[0]>=0)
-			iounpipe(shp);
+		{
+			if(!tsetio || !subdup)
+				iounpipe(shp);
+		}
 		return(parent);
 	}
 #if !_std_malloc

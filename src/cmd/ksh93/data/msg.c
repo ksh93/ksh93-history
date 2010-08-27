@@ -122,6 +122,7 @@ const char e_loop[]		= "%s: would cause loop";
 const char e_overlimit[]	= "%s: limit exceeded";
 const char e_badsyntax[]	= "incorrect syntax";
 const char e_badwrite[]		= "write to %d failed";
+const char e_staticfun[]	= "%s: defined as a static function in type %s and cannot be redefined";
 const char e_on	[]		= "on";
 const char e_off[]		= "off";
 const char is_reserved[]	= " is a keyword";

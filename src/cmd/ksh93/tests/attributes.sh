@@ -254,6 +254,7 @@ eval "$x"
 x=${x//$'\t'}
 x=${x//$'(\n'/'('}
 x=${x//$'\n'/';'}
+x=${x%';)'}')'
 [[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
 [[ $(typeset +p z) == "${x%%=*}" ]] || err_exit "typeset +p for '$x' failed"
 unset z
@@ -276,6 +277,7 @@ Pt_t z
 x=${z//$'\t'}
 x=${x//$'(\n'/'('}
 x=${x//$'\n'/';'}
+x=${x%';)'}')'
 [[ $(typeset -p z) == "Pt_t z=$x" ]] || err_exit "typeset -p for type failed"
 [[ $(typeset +p z) == "Pt_t z" ]] || err_exit "typeset +p for type failed"
 unset z

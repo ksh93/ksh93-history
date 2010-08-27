@@ -27,6 +27,7 @@
 
 #include "lclib.h"
 #include "lclang.h"
+#include "FEATURE/locale"
 
 #include <ctype.h>
 
@@ -351,12 +352,17 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 		if (lp && (!(flags & (LC_abbreviated|LC_default)) || cp != lp->charset) && s < e)
 		{
 			*s++ = '.';
-			for (t = cp->code; s < e && (c = *t++); s++)
-			{
-				if (islower(c))
-					c = toupper(c);
-				*s = c;
-			}
+			t = cp->code;
+			if (streq(cp->code, "utf8") && (t = _locale_utf8_str))
+				for (; s < e && (c = *t++); s++)
+					*s = c;
+			else
+				for (t = cp->code; s < e && (c = *t++); s++)
+				{
+					if (islower(c))
+						c = toupper(c);
+					*s = c;
+				}
 		}
 		for (c = '@'; ap && s < e; ap = ap->next)
 			if (!(flags & (LC_abbreviated|LC_default|LC_verbose)) || !(ap->attribute->flags & LC_default))
@@ -536,7 +542,7 @@ lcmake(const char* name)
 		}
 	}
 	*s = 0;
-#if 0
+#if AHA
 	if ((ast.locale.set & AST_LC_debug) && !(ast.locale.set & AST_LC_internal))
 		sfprintf(sfstderr, "locale make %s language=%s territory=%s charset=%s attributes=%s\n", name, language_name, territory_name, charset_name, attributes_name);
 #endif
@@ -734,6 +740,10 @@ lcmake(const char* name)
 		for (cp = lc_charsets; cp->code; cp++)
 			if (match_charset(s, cp))
 				break;
+#if AHA
+	if ((ast.locale.set & AST_LC_debug) && !(ast.locale.set & AST_LC_internal))
+		sfprintf(sfstderr, "locale make %s charset_name=%s cp=%s ppa=%s lp=%s\n", name, charset_name, cp ? cp->code : 0, ppa, lp->charset);
+#endif
 	if (!cp || !cp->code)
 		cp = ppa ? ppa : lp->charset;
  mapped:

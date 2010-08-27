@@ -121,6 +121,7 @@ struct Ufunction
 #define NV_FUNCTION	(NV_RJUST|NV_FUNCT)	/* value is shell function */
 #define NV_FPOSIX	NV_LJUST		/* posix function semantics */
 #define NV_FTMP		NV_ZFILL		/* function source in tmpfile */
+#define NV_STATICF	NV_INTEGER		/* static class function */
 
 #define NV_NOPRINT	(NV_LTOU|NV_UTOL)	/* do not print */
 #define NV_NOALIAS	(NV_NOPRINT|NV_IMPORT)
@@ -230,6 +231,7 @@ extern const char	e_badref[];
 extern const char	e_badsubscript[];
 extern const char	e_noref[];
 extern const char	e_selfref[];
+extern const char	e_staticfun[];
 extern const char	e_envmarker[];
 extern const char	e_badlocale[];
 extern const char	e_loop[];

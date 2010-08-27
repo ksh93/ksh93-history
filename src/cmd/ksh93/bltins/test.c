@@ -409,6 +409,8 @@ int test_unop(Shell_t *shp,register int op,register const char *arg)
 		return(statb.st_gid==shp->gd->groupid);
 	    case 'a':
 	    case 'e':
+		if(memcmp(arg,"/dev/",5)==0 && sh_open(arg,O_NONBLOCK))
+			return(1);
 		return(permission(arg, F_OK));
 	    case 'o':
 		f=1;

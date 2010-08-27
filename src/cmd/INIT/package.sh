@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2010 AT&T                     #
+#          Copyright (c) 1994-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                               by AT&T                                #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -36,6 +36,7 @@ lib="/usr/local/lib /usr/local/shlib"
 ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
 makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
+env="HOSTTYPE NPROC PACKAGEROOT INSTALLROOT PATH"
 checksum=md5sum
 checksum_commands="$checksum md5"
 checksum_empty="d41d8cd98f00b204e9800998ecf8427e"
@@ -65,7 +66,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-06-25 $
+@(#)$Id: package (AT&T Research) 2010-08-26 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -175,9 +176,10 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
             notice(s) for \apackage\a on the standard output. Note that
             individual components in \apackage\a may contain additional or
             replacement notices.]
-        [+export\b \avariable\a ...?List \aname\a=\avalue\a for
+        [+export\b [ \avariable\a ...]]?List \aname\a=\avalue\a for
             \avariable\a, one per line. If the \bonly\b attribute is
-            specified then only the variable values are listed.]
+            specified then only the variable values are listed. If no
+	    variables are specified then \b'$env$'\b are assumed.]
         [+help\b [ \aaction\a ]]?Display help text on the standard
             error (standard output for \aaction\a).]
         [+host\b [ \aattribute\a ... ]]?List
@@ -541,7 +543,7 @@ HURL=
 PROTOROOT=-
 SHELLMAGIC=-
 
-unset FIGNORE 2>/dev/null || true
+unset FIGNORE BINDIR DLLDIR ETCDIR FUNDIR INCLUDEDIR LIBDIR LOCALEDIR MANDIR SHAREDIR 2>/dev/null || true
 
 while	:
 do	case $# in
@@ -980,10 +982,11 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		List the general copyright notice(s) for PACKAGE on the
 		standard output. Note that individual components in PACKAGE
 		may contain additional or replacement notices.
-	export VARIABLE ...
+	export [ VARIABLE ... ]
 		List NAME=VALUE for each VARIABLE, one per line. If the
 		\"only\" attribute is specified then only the variable
-		values are listed.
+		values are listed. If no variables are specified then
+		$env are assumed.
 	help [ ACTION ]
 		Display help text on the standard error [ standard output
 		for ACTION ].
@@ -3232,7 +3235,7 @@ checkaout()	# cmd ...
 			for i
 			do	onpath $i || {
 					echo "$command: $i: command not found" >&2
-					exit 1
+					return 1
 				}
 			done
 			return 0
@@ -3243,13 +3246,13 @@ checkaout()	# cmd ...
 		*)	_PACKAGE_cc=1
 			test -f $INITROOT/hello.c -a -f $INITROOT/p.c || {
 				echo "$command: $INITROOT: INIT package source not found" >&2
-				exit 1
+				return 1
 			}
 			executable $INSTALLROOT/bin/nmake || {
 				# check for prototyping cc
 				# NOTE: proto.c must be K&R compatible
 
-				checkaout proto
+				checkaout proto || return
 				$CC -c $INITROOT/p.c >/dev/null 2>&1
 				c=$?
 				rm -f p.*
@@ -3287,7 +3290,7 @@ checkaout()	# cmd ...
 				}
 			}
 			for i in arch arch/$HOSTTYPE arch/$HOSTTYPE/bin
-			do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
+			do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || return
 			done
 			;;
 		esac
@@ -3321,17 +3324,17 @@ checkaout()	# cmd ...
 		esac
 		case $k in
 		000)	echo "$command: $i: not found: download the INIT package $HOSTTYPE binary to continue" >&2
-			exit 1
+			return 1
 			;;
 		010)	echo "$command: $i: not found: set CC=C-compiler or download the INIT package $HOSTTYPE binary to continue" >&2
-			exit 1
+			return 1
 			;;
 		100)	echo "$command: $i: not found: download the INIT package source or $HOSTTYPE binary to continue" >&2
-			exit 1
+			return 1
 			;;
 		110)	case $CROSS in
 			1)	echo "$command: $i: not found: make the local $EXECTYPE binary package before $HOSTTYPE" >&2
-				exit 1
+				return 1
 				;;
 			esac
 			;;
@@ -3351,19 +3354,19 @@ checkaout()	# cmd ...
 			note update $INSTALLROOT/bin/$i
 			if	test proto != "$i" && executable $INSTALLROOT/bin/proto
 			then	case $exec in
-				'')	$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c || exit ;;
+				'')	$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c || return ;;
 				*)	$exec "$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c" ;;
 				esac
-				$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $i.c || exit
+				$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $i.c || return
 				$exec rm -f $i.c
 			else	if	test ! -d $INSTALLROOT/bin
 				then	for j in arch arch/$HOSTTYPE arch/$HOSTTYPE/bin
-					do	test -d $PACKAGEROOT/$j || $exec mkdir $PACKAGEROOT/$j || exit
+					do	test -d $PACKAGEROOT/$j || $exec mkdir $PACKAGEROOT/$j || return
 					done
 				fi
 				if	test '' != "$PROTOROOT" -a -f $INITPROTO/$i.c
-				then	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITPROTO/$i.c || exit
-				else	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITROOT/$i.c || exit
+				then	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITPROTO/$i.c || return
+				else	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITROOT/$i.c || return
 				fi
 				case $i:$exec in
 				proto:)	test -d $INSTALLROOT/include || mkdir $INSTALLROOT/include
@@ -4880,7 +4883,7 @@ copyright)
 		esac
 		;;
 	esac
-	checkaout proto
+	checkaout proto || exit
 	for i
 	do	copyright $i
 	done
@@ -4895,8 +4898,17 @@ export)	case $INSTALLROOT in
 	0)	v='$i=' ;;
 	*)	v= ;;
 	esac
-	for i in $target $package
-	do	eval echo ${v}'$'${i}
+	set '' $target $package
+	case $# in
+	1)	set '' $env ;;
+	esac
+	while	:
+	do	case $# in
+		1)	break ;;
+		esac
+		shift
+		i=$1
+		eval echo ${v}'$'${i}
 	done
 	;;
 
@@ -5373,7 +5385,7 @@ cat $j $k
 
 	# initialize a few mamake related commands
 
-	checkaout mamake proto ratz release
+	checkaout mamake proto ratz release || exit
 
 	# execrate if necessary
 
@@ -5427,6 +5439,12 @@ cat $j $k
 		esac
 		;;
 	esac
+ 
+	# list main environment values
+
+	for i in $env
+	do	eval echo $i='$'$i
+	done
 
 	# separate flags from target list
 
@@ -5839,7 +5857,10 @@ read)	case ${PWD:-`pwd`} in
 							continue
 						}
 					fi
-				else	checkaout ratz
+				else	checkaout ratz || {
+						code=1
+						continue
+					}
 					case $exec in
 					'')	echo $f:
 						$exec ratz -lm < "$f"
@@ -6055,7 +6076,7 @@ regress)if	test ! -d $PACKAGEBIN/gen
 
 release)count= lo= hi=
 	checksrc
-	checkaout release
+	checkaout release || exit
 	requirements source $package
 	components $package
 	package=$_components_

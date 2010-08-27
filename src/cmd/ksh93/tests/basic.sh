@@ -474,9 +474,15 @@ do	print foo
 done | { read; $bintrue; end=$SECONDS ;}
 (( (SECONDS-start) < 1 )) && err_exit "pipefail not waiting for pipe to finish"
 set +o pipefail
-(( (SECONDS-start) > 2 )) &&  err_exit "pipefail causing $bintrue to wait for other end of pipe"
+(( (SECONDS-end) > 2 )) &&  err_exit "pipefail causing $bintrue to wait for other end of pipe"
 
 
 { env A__z=C+SHLVL $SHELL -c : ;} 2> /dev/null || err_exit "SHLVL with wrong attribute fails"
+
+if [[ $bintrue ]]
+then	float t0=SECONDS
+	{ time sleep 1.5 | $bintrue ;} 2> /dev/null
+	(( (SECONDS-t0) < 1 )) && err_exit 'time not waiting for pipeline to complete' 
+fi
 
 exit $((Errors))

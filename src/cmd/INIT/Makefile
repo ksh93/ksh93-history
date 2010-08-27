@@ -46,7 +46,7 @@ cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 	cc.specialize cc.pentium4 \
 	ldd.cygwin.i386 \
 	cc.darwin ldd.darwin \
-	cc.hp.pa cc.hp.pa64 ld.hp.pa ldd.hp.pa \
+	cc.hp.ia64 cc.hp.pa cc.hp.pa64 ld.hp.pa ldd.hp.pa \
 	cc.ibm.risc ldd.ibm.risc \
 	cc.linux.ia64-icc \
 	cc.lynxos.i386 cc.lynxos.ppc ldd.lynxos \

@@ -570,7 +570,12 @@ static char *setdisc(register Namval_t* np,register const char *event,Namval_t *
 	if(action==np)
 		action = vp->bltins[type];
 	else if(action)
+	{
+		Namval_t *tp = nv_type(np);
+		if(tp && (np = (Namval_t*)vp->bltins[type]) && nv_isattr(np,NV_STATICF))
+			errormsg(SH_DICT,ERROR_exit(1),e_staticfun,name,tp->nvname);
 		vp->bltins[type] = action;
+	}
 	else
 	{
 		action = vp->bltins[type];

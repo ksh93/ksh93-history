@@ -478,4 +478,19 @@ $SHELL -c 'sleep 5 & pid=$!; { x=$( ( seq 60000 ) );kill -9 $pid;}&;wait $pid'
 [[ ${.sh.foo} == foobar ]] && err_exit '.sh subvariables in subshells remain set'
 [[ $($SHELL -c 'print 1 | : "$(/bin/cat <(/bin/cat))"') ]] && err_exit 'process substitution not working correctly in subshells'
 
+# config hang bug
+integer i
+for ((i=1; i < 1000; i++))
+do	typeset foo$i=$i
+done
+{
+    : $( (ac_space=' '; set | grep ac_space) 2>&1) 
+} < /dev/null | cat > /dev/null &
+sleep  1.5
+if	kill -KILL $! 2> /dev/null
+then	err_exit 'process timed out with hung comsub'
+fi
+wait $! 2> /dev/null
+(( $? > 128 )) && err_exit 'incorrect exit status with comsub' 
+
 exit $Errors

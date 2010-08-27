@@ -534,4 +534,9 @@ t=$(ulimit -t)
 $SHELL 2> /dev/null -c 'cd ""' && err_exit 'cd "" not producing an error'
 [[ $($SHELL 2> /dev/null -c 'cd "";print hi') != hi ]] && err_exit 'cd "" should not terminate script'
 
+bincat=$(whence -p cat)
+builtin cat
+seq 11 >tmp11 
+cmp -s <(print -- "$($bincat<( $bincat tmp11 ) )") <(print -- "$(cat <( cat tmp11 ) )") || err_exit "builtin cat differes from $bincat"
+
 exit $((Errors))

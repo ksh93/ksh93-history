@@ -2127,7 +2127,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			lastc = 0;
 		}
 		newlines = nextnewlines;
-		if(c++ < bufsize)
+		if(++c < bufsize)
 			str[c] = 0;
 		else
 		{

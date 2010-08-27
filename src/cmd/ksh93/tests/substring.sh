@@ -163,7 +163,7 @@ if	[[ ${xx//\//\\} != 'a\b\c\d\e' ]]
 then	err_exit '${xx//\//\\} not working'
 fi
 x=[123]def
-if	[[ "${x//\[(*)\]/\{\1\}}" != {123}def ]]
+if	[[ "${x//\[@(*)\]/\{\1\}}" != {123}def ]]
 then	err_exit 'closing brace escape not working'
 fi
 xx=%28text%29
@@ -355,7 +355,7 @@ x='-((-))-'
 x='-((-))-'
 [[ ${x/~(+g:*(?))*%(())*(?)*/:\1:\2:\3:} == ':-(:(-):)-:' ]] || err_exit $M
 x='call(a+b,x/(c/d),(0));'
-[[ ${x/+([[:alnum:]])*([[:space:]])(*%(()))*/:\1:\2:\3:} == ':call::(a+b,x/(c/d),(0)):' ]] || err_exit $M
+[[ ${x/+([[:alnum:]])*([[:space:]])@(*%(()))*/:\1:\2:\3:} == ':call::(a+b,x/(c/d),(0)):' ]] || err_exit $M
 
 x='-(-;-)-'
 [[ ${x/*%(()D${D})*/\1} == '-(-;-)-' ]] || err_exit $M

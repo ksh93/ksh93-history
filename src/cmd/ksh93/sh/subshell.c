@@ -462,9 +462,11 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	struct checkpt buff;
 	struct sh_scoped savst;
 	struct dolnod   *argsav=0;
+	int argcnt;
 	memset((char*)sp, 0, sizeof(*sp));
 	sfsync(shp->outpool);
-	argsav = sh_arguse(shp);
+	if(argsav = sh_arguse(shp))
+		argcnt = argsav->dolrefcnt;
 	if(shp->curenv==0)
 	{
 		subshell_data=0;
@@ -701,7 +703,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 		SH_SUBSHELLNOD->nvalue.s = --shp->subshell;
 	subshell = shp->subshell;
 	subshell_data = sp->prev;
-	sh_argfree(shp,argsav,0);
+	if(!argsav  ||  argsav->dolrefcnt==argcnt)
+		sh_argfree(shp,argsav,0);
 	if(shp->topfd != buff.topfd)
 		sh_iorestore(shp,buff.topfd|IOSUBSHELL,jmpval);
 	if(sp->sig)

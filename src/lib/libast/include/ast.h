@@ -393,4 +393,12 @@ extern char**		environ;
 
 #define AST_PLUGIN_VERSION(v)	((v)>AST_VERSION?(v):AST_VERSION)
 
+#if defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
+extern unsigned long	plugin_version(void);
+
+#undef	extern
+
 #endif

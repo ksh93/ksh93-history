@@ -199,12 +199,13 @@ freeaddrinfo(struct addrinfo* ap)
 
 /*
  * return <protocol>/<host>/<service> fd
+ * If called with flags==O_NONBLOCK return 1 if protocol is supported
  */
 
 typedef int (*Inetintr_f)(struct addrinfo*, void*);
 
 static int
-inetopen(const char* path, int server, Inetintr_f onintr, void* handle)
+inetopen(const char* path, int flags, Inetintr_f onintr, void* handle)
 {
 	register char*		s;
 	register char*		t;
@@ -213,6 +214,7 @@ inetopen(const char* path, int server, Inetintr_f onintr, void* handle)
 	struct addrinfo		hint;
 	struct addrinfo*	addr;
 	struct addrinfo*	p;
+	int			server = !!(flags&O_SERVICE);
 
 	memset(&hint, 0, sizeof(hint));
 	hint.ai_family = PF_UNSPEC;
@@ -252,6 +254,8 @@ inetopen(const char* path, int server, Inetintr_f onintr, void* handle)
 		errno = ENOTDIR;
 		return -1;
 	}
+	if(flags==O_NONBLOCK)
+		return 1;
 	if (!(s = strdup(path)))
 		return -1;
 	if (t = strchr(s, '/'))
@@ -734,6 +738,8 @@ int sh_open(register const char *path, int flags, ...)
 		case 'f':
 			if (path[6]=='d' && path[7]=='/')
 			{
+				if(flags==O_NONBLOCK)
+					return(1);
 				fd = (int)strtol(path+8, &e, 10);
 				if (*e)
 					fd = -1;
@@ -760,11 +766,15 @@ int sh_open(register const char *path, int flags, ...)
 #ifdef O_SERVICE
 		if (fd < 0)
 		{
-			if ((fd = inetopen(path+5, !!(flags & O_SERVICE), onintr, shp)) < 0 && errno != ENOTDIR)
+			if ((fd = inetopen(path+5, flags, onintr, shp)) < 0 && errno != ENOTDIR)
 				return -1;
+			if(flags==O_NONBLOCK)
+				return(fd>=0);
 			if (fd >= 0)
 				goto ok;
 		}
+		if(flags==O_NONBLOCK)
+			return(0);
 #endif
 	}
 	if (fd >= 0)

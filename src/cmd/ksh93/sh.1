@@ -7278,10 +7278,16 @@ The names refer to function names rather than
 variable names.
 No assignments can be made and the only other
 valid options are
+.BR \-S ,
 .BR \-t ,
 .B \-u
 and
 .BR \-x .
+The \-S
+can be used with discipline functions defined in a type to indicate that
+the function is static.  For a static function, the same method will be used by all instances of that type no matter which instance references it.  In additon,
+it can only use value of variables from the original type definition.  These
+discipline functions cannot be redefined in any type instance.
 The
 .B \-t
 option

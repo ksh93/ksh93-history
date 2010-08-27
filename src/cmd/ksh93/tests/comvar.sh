@@ -457,7 +457,7 @@ typeset -C more_content=(
 	some_stuff="hello"
 )
 mica01[4]+=more_content
-expected=$'typeset -C -a mica01=([4]=(a_string=\'foo bar\';some_stuff=hello;))'
+expected=$'typeset -C -a mica01=([4]=(a_string=\'foo bar\';some_stuff=hello))'
 [[ $(typeset -p mica01) == "$expected" ]] || err_exit 'appened to indexed array compound variable not working'
 
 unset x
@@ -476,7 +476,7 @@ typeset -C -A hello19=(
 		two="xtwo 23"
 	)
 )
-expected="typeset -C -A hello19=([19]=(one='xone 19';two='xtwo 19';) [23]=(one='xone 23';two='xtwo 23';))"
+expected="typeset -C -A hello19=([19]=(one='xone 19';two='xtwo 19') [23]=(one='xone 23';two='xtwo 23'))"
 [[ $(typeset -p hello19) == "$expected" ]] || print -u2 'typeset -p hello19 incorrect'
 expected=$'(\n\tone=\'xone 19\'\n\ttwo=\'xtwo 19\'\n) (\n\tone=\'xone 23\'\n\ttwo=\'xtwo 23\'\n)'
 [[ ${hello19[@]} == "$expected" ]] || print -u2 '${hello19[@]} incorrect'
@@ -513,7 +513,7 @@ expected=$'(\n\ttypeset -A subtree=(\n\t\t[a_node]=(\n\t\t\tone=hello\n\t\t\ttwo
 
 typeset -C -A array
 float array[12].amount=2.9 
-expected='typeset -C -A array=([12]=(typeset -l -E amount=2.9;))'
+expected='typeset -C -A array=([12]=(typeset -l -E amount=2.9))'
 [[ $(typeset -p array) == "$expected" ]] || err_exit 'typeset with compound  variable with compound variable array not working'
 
 typeset -T foo_t=(
@@ -562,24 +562,24 @@ x[1]=( a=1 b=2 )
 [[ $(print -v x[1]) == "${x[1]}" ]] || err_exit  'print -v x[1] not working for index array of compound variables'
 
 unset x
-z='typeset -a x=(hello (x=12;y=5;) world)'
+z='typeset -a x=(hello (x=12;y=5) world)'
 { eval "$z" ;} 2> /dev/null
 [[ $(typeset -p x) == "$z" ]] || err_exit "compound assignment '$z' not working"
 
-expected='typeset -C -A l=([4]=(typeset -a ar=(1 2 3);b=1;))'
+expected='typeset -C -A l=([4]=(typeset -a ar=(1 2 3);b=1))'
 typeset -A -C l
 printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l[4] 
 [[ $(typeset -p l) == "$expected" ]] ||  err_exit 'read -C for associative array of compound variables not working'
 
 unset x
 compound x=( z="a=b c")
-exp=$'typeset -C x=(z=a\\=\'b c\';)'
+exp=$'typeset -C x=(z=a\\=\'b c\')'
 got=$(typeset -p x)
 [[ $got == "$exp" ]] || err_exit "typeset -p failed -- expected '$exp', got '$got'"
 
 x=(typeset -C -a y;float z=2)
 got=$(print -C x)
-expected='(typeset -C -a y;typeset -l -E z=2;)'
+expected='(typeset -C -a y;typeset -l -E z=2)'
 [[ $expected == "$got" ]] || err_exit "print -C x exects '$expected' got '$got'"
 
 unset vx vy

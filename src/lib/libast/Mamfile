@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-08-11
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-08-24
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -120,7 +120,6 @@ make ast_limits.h
 make FEATURE/limits
 meta FEATURE/limits features/%.c>FEATURE/% features/limits.c limits
 make features/limits.c
-make joint.conflim.h implicit joint
 make conflim.h implicit
 make conf
 make comp/conf.sh
@@ -162,12 +161,14 @@ done conf generated
 make comp/conf.tab
 done comp/conf.tab
 exec - ${INSTALLROOT}/src/lib/libast/conf -v comp/conf.tab ${CC} ${mam_cc_FLAGS} ${CCFLAGS}
-done conflim.h generated
+make joint.conflim.h joint
+prev conflim.h
 make conftab.h
 done conftab.h generated
 make conftab.c
 done conftab.c generated
 done joint.conflim.h generated virtual
+done conflim.h generated
 prev FEATURE/param implicit
 make comp/getopt.h implicit
 make include/ast_getopt.h implicit
@@ -967,7 +968,6 @@ make path/pathexists.c
 prev include/error.h implicit
 prev include/ls.h implicit
 make port/lclib.h implicit
-make joint.lc.h implicit joint
 make lc.h implicit
 make lcgen
 make port/lcgen.c
@@ -991,10 +991,12 @@ exec - fi
 prev include/ast.h implicit
 make ${INSTALLROOT}/include/prototyped.h implicit
 done ${INSTALLROOT}/include/prototyped.h dontcare
-done lc.h dontcare generated
+make joint.lc.h joint
+prev lc.h
 make lctab.c
 done lctab.c generated
 done joint.lc.h generated virtual
+done lc.h dontcare generated
 prev include/error.h implicit
 prev include/ast.h implicit
 done port/lclib.h
@@ -1532,6 +1534,13 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${IN
 done iconv.o generated
 make lc.o
 make port/lc.c
+make FEATURE/locale implicit
+meta FEATURE/locale features/%>FEATURE/% features/locale locale
+make features/locale
+done features/locale
+prev ast.req
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/locale
+done FEATURE/locale generated
 make port/lclang.h implicit
 prev include/ast_windows.h implicit
 done port/lclang.h

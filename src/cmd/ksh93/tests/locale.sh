@@ -256,11 +256,13 @@ function message
         print $"An error occurred."
 }
 exp=$'(libshell,3,46)\nAn error occurred.\n(libshell,3,46)'
+alt=$'(debug,message,libshell,"An error occurred.")\nAn error occurred.\n(debug,message,libshell,"An error occurred.")'
 got=$(message; LANG=C message; message)
-[[ $got == "$exp" ]] || {
+[[ $got == "$exp" || $got == "$alt" ]] || {
 	EXP=$(printf %q "$exp")
+	ALT=$(printf %q "$alt")
 	GOT=$(printf %q "$got")
-	err_exit "LANG change not seen by function -- expected $EXP, got $GOT"
+	err_exit "LANG change not seen by function -- expected $EXP or $ALT, got $GOT"
 }
 unset LANG
 

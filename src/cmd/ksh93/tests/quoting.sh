@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -302,7 +302,7 @@ fi
 ###########################################################
 print foo) ]] || err_exit "command subsitution with long comments broken"
 subject='some/other/words'
-re='(?*)/(?*)/(?*)'
+re='@(?*)/@(?*)/@(?*)'
 [[ ${subject/${re}/\3} != words ]] && err_exit 'string replacement with \3 not working'
 [[ ${subject/${re}/'\3'} != '\3' ]] && err_exit 'string replacement with '"'\3'"' not working'
 [[ ${subject/${re}/"\\3"} != '\3' ]] && err_exit 'string replacement with "\\3" not working'

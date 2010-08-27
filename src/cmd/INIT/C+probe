@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2010-06-22
+# @(#)C probe (AT&T Research) 2010-08-20
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -409,7 +409,6 @@ case $version_stamp in
 			''|*[Ee][Rr][Rr][Oo][Rr]*|*[Ff][Aa][Tt][Aa][Ll]*|*[Ww][Aa][Rr][Nn][Ii][Nn][Gg]*|*[Oo][Pp][Tt][Ii][Oo][Nn]*)
 				;;
 			*)	version_flags=$o
-				version_stamp=";VERSION;$o;$version_string;PATH;$cc"
 				break
 				;;
 			esac

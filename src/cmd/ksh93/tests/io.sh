@@ -400,7 +400,7 @@ do	a=$1
 done
 
 if	[[ $lc_utf8 ]]
-then	export LC_ALL=en_US.UTF-8
+then	export LC_ALL=$lc_utf8
 	typeset -a c=( '' 'A' $'\303\274' $'\342\202\254' )
 	integer i w
 	typeset o

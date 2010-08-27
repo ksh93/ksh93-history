@@ -44,6 +44,7 @@ function test_reset
 n=1000
 
 # one round to get to steady state -- sensitive to -x
+
 test_reset $n
 a=0$(vmstate --format='+%(size)u')
 
@@ -55,5 +56,12 @@ b=0$(vmstate --format='+%(size)u')
 if	(( b > a ))
 then	err_exit "variable value reset memory leak -- $((b-a)) bytes after $n iterations"
 fi
+
+# buffer boundary tests
+
+for exp in 65535 65536
+do	got=$($SHELL -c 'x=$(printf "%.*c" '$exp' x); print ${#x}' 2>&1)
+	[[ $got == $exp ]] || err_exit "large command substitution failed -- expected $exp, got $got"
+done
 
 exit $((Errors))

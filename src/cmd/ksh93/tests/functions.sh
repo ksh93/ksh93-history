@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -1045,6 +1045,11 @@ foo
 	foobar
 ++++
 ) == foo ]] > /dev/null  || err_exit 'functions compiled with shcomp not working'
+# tests for compiled . scripts
+print $'print hello\nprint world' > $tmp/foo
+${SHCOMP:-${SHELL%/*}/shcomp} $tmp/foo > $tmp/foo.sh
+val=$(. $tmp/foo.sh)
+[[ $val ==  $'hello\nworld' ]] || err_exit "processing compiled dot files not working correctly val=$val"
 # test for functions in shell having side effects.
 unset -f foo foobar bar
 cd "$tmp"

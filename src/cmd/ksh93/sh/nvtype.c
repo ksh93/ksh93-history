@@ -715,7 +715,10 @@ static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *fp)
 			cp = 0;
 			if((nq = nv_search(stakptr(offset),sh.fun_tree,0)) && nq->nvalue.cp)
 				cp = nq->nvalue.rp->help;
-			sfprintf(out,"\t[+%s?%s]\n",dp->names[i],cp?cp:Empty);
+			if(nq && nv_isattr(nq,NV_STATICF))
+				sfprintf(out,"\t[+%s?:static:%s]\n",dp->names[i],cp?cp:Empty);
+			else
+				sfprintf(out,"\t[+%s?%s]\n",dp->names[i],cp?cp:Empty);
 			if(cp)
 				sfputc(out,'.');
 			stakseek(n);
@@ -1556,7 +1559,7 @@ int	sh_outtype(Shell_t *shp,Sfio_t *out)
 {
 	Namval_t	node,*mp,*tp;
 	Dt_t		*dp;
-	char		*cp,*sp,nvtype[sizeof(NV_CLASS)];
+	char		*cp,*sp,*xp,nvtype[sizeof(NV_CLASS)];
 	Sfio_t		*iop=0;
 	strcpy(nvtype,NV_CLASS);
 	if(!(mp = nv_open(nvtype, shp->var_base,NV_NOADD|NV_VARNAME)))
@@ -1588,21 +1591,32 @@ int	sh_outtype(Shell_t *shp,Sfio_t *out)
 				sfprintf(out,"\t%s()",cp);
 			else
 				sfprintf(out,"\tfunction %s",cp);
-			cp = 0;
+			xp = 0;
 			if(mp->nvalue.ip && mp->nvalue.rp->hoffset>=0)
 			{
 				if(nv_isattr(mp,NV_FTMP))
 					iop = shp->heredocs;
-				else if(cp=mp->nvalue.rp->fname)
-					iop = sfopen(iop,cp,"r");
+				else if(xp=mp->nvalue.rp->fname)
+					iop = sfopen(iop,xp,"r");
 				else if(shp->gd->hist_ptr)
 					iop = (shp->gd->hist_ptr)->histfp;
 				if(iop && sfseek(iop,(Sfoff_t)mp->nvalue.rp->hoffset,SEEK_SET)>=0)
 					sfmove(iop,out, nv_size(mp), -1);
 				else
 					sfputc(iop,'\n');
-				if(cp)
+				if(xp)
 					sfclose(iop);
+				if(nv_isattr(mp,NV_STATICF|NV_TAGGED))
+				{
+					sfwrite(out,"\ttypeset -f",11);
+					if(nv_isattr(mp,NV_STATICF))
+						sfputc(out,'S');
+					if(nv_isattr(mp,NV_TAGGED))
+						sfputc(out,'t');
+					if(mp->nvalue.rp->help)
+						sfprintf(out,"h '%s'",mp->nvalue.rp->help);
+					sfprintf(out," %s\n",cp);
+				}
 				iop = 0;
 			}
 		}

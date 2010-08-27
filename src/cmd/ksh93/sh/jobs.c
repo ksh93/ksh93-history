@@ -268,7 +268,7 @@ static struct jobsave *jobsave_create(pid_t pid)
     int job_cowalk(int (*fun)(struct process*,int),int arg,char *name)
     {
 	struct cosh	*csp;
-	struct process	*pw;
+	struct process	*pw,*pwnext;
 	pid_t		mask,val;
 	int		n,r=0;
 	char		*cp = strchr(name,'.');
@@ -288,8 +288,9 @@ static struct jobsave *jobsave_create(pid_t pid)
 		n = strtol(cp+1, &cp, 10);
 		val = (csp->id<<16)|n|COPID_BIT;
 	}
-	for(pw=job.pwlist; pw; pw=pw->p_nxtjob)
+	for(pw=job.pwlist; pw; pw=pwnext)
 	{
+		pwnext = pw->p_nxtjob;
 		if((cp && val==pw->p_pid) || (pw->p_cojob->local==(void*)csp))
 		{
 			if(fun)
@@ -862,7 +863,10 @@ void job_bwait(char **jobs)
 		}
 #   if SHOPT_COSHELL
 		else if(isalpha(*jp))
+		{
 			job_cowalk(NULL,0,jp);
+			return;
+		}
 #   endif /* SHOPT_COSHELL */
 		else
 #endif /* JOBS */
@@ -1329,7 +1333,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 	}
 #if SHOPT_COSHELL
 	pw->p_cojob = 0;
-	if(shp->coshell)
+	if(shp->coshell && (pid&COPID_BIT))
 	{
 		pw->p_cojob = ((struct cosh*)shp->coshell)->cojob;
 		job.curpgid = sh_isstate(SH_MONITOR)?pid:0;
@@ -1576,7 +1580,7 @@ int	job_wait(register pid_t pid)
 					}
 				}
 				px = job_unpost(pw,1);
-				if(!px || !sh_isoption(SH_PIPEFAIL) || !job.waitall)
+				if(!px || (!sh_isoption(SH_PIPEFAIL) && !job.waitall))
 					break;
 				pw = px;
 				continue;

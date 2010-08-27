@@ -634,7 +634,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		c = '\n';
 		if(indent<0)
 		{
-			c = ';';
+			c = indent < -1?-1:';';
 			if(ap)
 				c = more?' ':-1;
 		}
@@ -791,6 +791,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			r = 0;
 			if(*cp=='.')
 				cp++,r++;
+			if(wp->indent < 0 && argv[1]==0)
+				wp->indent--;
 			if(nextcp=nextdot(cp))
 			{
 				if(outfile)

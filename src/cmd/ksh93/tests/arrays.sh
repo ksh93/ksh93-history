@@ -510,7 +510,20 @@ a=([0]=11 [1]=22)
 typeset -m y=a[$i]
 [[ $y == 22 ]] || err_exit 'typeset -m for associative array not working'
 [[ ${a[$i]} || ${a[0]} != 11 ]] && err_exit 'typeset -m for associative array not deleting element'
+unset x a j
 
-unset x
+typeset -a a=( [0]="aa" [1]="bb" [2]="cc" )
+typeset -m 'j=a[0]'
+typeset -m 'a[0]=a[1]'
+typeset -m 'a[1]=j'
+[[ ${a[@]} == 'bb aa cc' ]] || err_exit 'moving index array elements not working'
+unset a j
+
+typeset -A a=( [0]="aa" [1]="bb" [2]="cc" )
+typeset -m 'j=a[0]'
+typeset -m 'a[0]=a[1]'
+typeset -m 'a[1]=j'
+[[ ${a[@]} == 'bb aa cc' ]] || err_exit 'moving associative array elements not working'
+unset a j
 
 exit $((Errors))

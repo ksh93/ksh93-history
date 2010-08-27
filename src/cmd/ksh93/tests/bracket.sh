@@ -324,4 +324,9 @@ unset x y z foo bar
 { x=$($SHELL -c '[[ (( $# -eq 0 )) ]] && print ok') 2> /dev/null;}
 [[ $x == ok ]] || err_exit '((...)) inside [[...]] not treated as nested ()'
 
+[[ -e /dev/fd/ ]] || err_exit '/dev/fd/ does not exits'
+[[ -e /dev/tcp/ ]] || err_exit '/dev/tcp/ does not exist'
+[[ -e /dev/udp/ ]] || err_exit '/dev/udp/ does not exist'
+[[ -e /dev/xxx/ ]] &&  err_exit '/dev/xxx/ exists'
+
 exit $((Errors))
