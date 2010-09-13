@@ -879,26 +879,31 @@ int	sh_pipe(register int pv[])
     int sh_coaccept(Shell_t *shp,int *pv,int out)
     {
 	int fd = accept(pv[0],(struct sockaddr*)0,(socklen_t*)0);
-	close(pv[0]);
+	sh_close(pv[0]);
 	pv[0] = -1;
 	if(fd<0)
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
-	pv[out] = sh_iomovefd(fd);
+	if((pv[out]=sh_fcntl(fd,F_DUPFD,10)) >=10)
+		sh_close(fd);
+	else
+		pv[out] = sh_iomovefd(fd);
 	if(fcntl(pv[out],F_SETFD,FD_CLOEXEC) >=0)
 		shp->fdstatus[pv[out]] |= IOCLEX;
 	shp->fdstatus[pv[out]] = (out?IOWRITE:IOREAD);
 	shp->fdstatus[pv[out]] |= IONOSEEK;
 	sh_subsavefd(pv[out]);
+#if defined(SHUT_RD) && defined(SHUT_WR)
 	shutdown(pv[out],out?SHUT_RD:SHUT_WR);
+#endif
 	return(0);
     }
 
-    int sh_copipe(Shell_t *shp, int *pv)
+    int sh_copipe(Shell_t *shp, int *pv, int out)
     {
 	int			r,port=20000;
 	struct sockaddr_in	sin;
 	socklen_t		slen;
-	if ((pv[0] = socket (AF_INET, SOCK_STREAM, 0)) < 0)
+	if ((pv[out] = socket (AF_INET, SOCK_STREAM, 0)) < 0)
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
 	do
 	{
@@ -907,13 +912,16 @@ int	sh_pipe(register int pv[])
 		sin.sin_addr.s_addr = INADDR_ANY;
 		slen = sizeof (sin);
 	}
-	while ((r=bind (pv[0], (struct sockaddr *) &sin, slen)) == -1 && errno==EADDRINUSE);
-	if(r<0 ||  listen(pv[0],5) <0)
+	while ((r=bind (pv[out], (struct sockaddr *) &sin, slen)) == -1 && errno==EADDRINUSE);
+	if(r<0 ||  listen(pv[out],5) <0)
 	{
-		close(pv[0]);
+		close(pv[out]);
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
 	}
-	pv[1] = port;
+	fcntl(pv[out],F_SETFD,FD_CLOEXEC);
+	shp->fdstatus[pv[out]] |= IOCLEX;
+	pv[1-out] = -1;
+	pv[2] = port;
 	return(0);
     }
 #endif /* SHOPT_COSHELL */
@@ -1456,7 +1464,8 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				}
 				else
 				{
-					fd = sh_iorenumber(shp,sh_iomovefd(fd),fn);
+					if(fd!=fn)
+						fd = sh_iorenumber(shp,sh_iomovefd(fd),fn);
 					if(fn>2 && fn<10)
 						shp->inuse_bits |= (1<<fn);
 				}
@@ -1664,6 +1673,13 @@ void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 			continue;
 		}
 		origfd = filemap[fd].orig_fd;
+		if(origfd<0)
+		{
+			/* this should never happen */
+			shp->sftable[savefd] = 0;
+			sh_close(savefd);
+			return;
+		}
 		if(filemap[fd].tname == Empty && shp->exitval==0)
 			ftruncate(origfd,lseek(origfd,0,SEEK_CUR));
 		else if(filemap[fd].tname)

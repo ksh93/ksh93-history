@@ -1036,7 +1036,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COSHELL -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_OPTIMIZE -DSHOPT_TYPEDEF -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -D_API_ast=20100309 -DSHOPT_ESH -DSHOPT_SUID_EXEC -DSHOPT_BGX -DSHOPT_KIA -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COSHELL -DSHOPT_OPTIMIZE -DSHOPT_TYPEDEF -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -D_API_ast=20100309 -DSHOPT_ESH -DSHOPT_SUID_EXEC -DSHOPT_BGX -DSHOPT_KIA -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
@@ -1146,7 +1146,7 @@ prev include/defs.h implicit
 done sh/subshell.c
 meta subshell.o %.c>%.o sh/subshell.c subshell
 prev sh/subshell.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_PFSH -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_STATS -DSHOPT_COSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -D_API_ast=20100309 -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_BGX -DSHOPT_KIA -DKSHELL -c sh/subshell.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COSHELL -DSHOPT_SUID_EXEC -DSHOPT_PFSH -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -D_API_ast=20100309 -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_BGX -DSHOPT_KIA -DKSHELL -c sh/subshell.c
 done subshell.o generated
 make tdump.o
 make sh/tdump.c

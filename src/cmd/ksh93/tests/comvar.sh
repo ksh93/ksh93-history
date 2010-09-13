@@ -595,4 +595,9 @@ eval "vy=$(print -C vx)"
 eval "vy=$(print -v vx)"
 [[ $vx == "$vy" ]] || err_exit 'print -v with multi-dimensional array not working'
 
+unset x
+typeset -C -A x=( [0]=(a=1) [1]=(b=2) )
+expected=$'(\n\t[0]=(\n\t\ta=1\n\t)\n\t[1]=(\n\t\tb=2\n\t)\n)'
+[[ $(print -v x) == "$expected" ]] || err_exit 'print -v not formatting correctly'
+
 exit $((Errors))

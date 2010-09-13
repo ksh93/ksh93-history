@@ -576,7 +576,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			continue;
 		}
 		if(tabs)
-			sfnputc(out,'\t',++indent);
+			sfnputc(out,'\t',Indent = ++indent);
 		tabs=0;
 		if(associative||special)
 		{

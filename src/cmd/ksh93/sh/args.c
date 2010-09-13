@@ -799,12 +799,13 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 {
 	/* argument of the form <(cmd) or >(cmd) */
 	register struct argnod *ap;
-	int monitor, fd, pv[2];
+	int monitor, fd, pv[3];
 	int subshell = shp->subshell;
 	ap = (struct argnod*)stkseek(shp->stk,ARGVAL);
 	ap->argflag |= ARG_MAKE;
 	ap->argflag &= ~ARG_RAW;
 	sfwrite(shp->stk,e_devfdNN,8);
+	pv[2] = 0;
 	sh_pipe(pv);
 	fd = argp->argflag&ARG_RAW;
 	if(fd==0 && shp->subshell)

@@ -267,6 +267,7 @@ static struct jobsave *jobsave_create(pid_t pid)
 
     int job_cowalk(int (*fun)(struct process*,int),int arg,char *name)
     {
+	Shell_t		*shp = sh_getinterp();
 	struct cosh	*csp;
 	struct process	*pw,*pwnext;
 	pid_t		mask,val;
@@ -288,17 +289,27 @@ static struct jobsave *jobsave_create(pid_t pid)
 		n = strtol(cp+1, &cp, 10);
 		val = (csp->id<<16)|n|COPID_BIT;
 	}
-	for(pw=job.pwlist; pw; pw=pwnext)
+	job_reap(SIGCHLD);
+	for(n=0,pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
-		if((cp && val==pw->p_pid) || (pw->p_cojob->local==(void*)csp))
+		if((cp && val==pw->p_pid) || (pw->p_cojob && pw->p_cojob->local==(void*)csp))
 		{
 			if(fun)
+			{
+				if(pw->p_flag&P_DONE)
+					continue;
 				r |= (*fun)(pw,arg);
+			}
 			else
-				job_wait(pw->p_pid);
+				job_wait(-pw->p_pid);
+			n++;
 		}
 	}
+	if(!n)
+		shp->exitval = fun?1:ERROR_NOENT;
+	else if(fun)
+		shp->exitval = r;
 	return(r);
     }
 
@@ -322,10 +333,10 @@ int job_reap(register int sig)
 #if SHOPT_COSHELL
 	Cojob_t		*cjp;
 	int		cojobs;
-	long		cotimeout = 0;
+	long		cotimeout = sig?0:-1;
 	for(pw=job.pwlist;pw;pw=pw->p_nxtjob)
 	{
-		if(pw->p_cojob)
+		if(pw->p_cojob && !(pw->p_flag&P_DONE))
 			break;
 	}
 	cojobs = (pw!=0);
@@ -360,33 +371,28 @@ int job_reap(register int sig)
 #if SHOPT_COSHELL
 		if(cojobs)
 		{
-			pid = 0;
-			if(cjp = cowait(0,0,0))
+			if(cjp = cowait(0,0,cotimeout))
 			{
 				struct cosh *csp;
 				csp = (struct cosh*)(cjp->coshell->data);
-
+				csp->cojob = cjp;
 				pid = sh_copid(csp);
 				if(cjp->status < 256)
 					wstat = cjp->status <<8;
 				else
 					wstat = cjp->status-256;
 				cotimeout = 0;
+				goto cojob;
 			}
 			else if(copending(0)==0)
-				pid = -1;
-			else if(!(flags&WNOHANG))
-				cotimeout = 5000;
-			if(!cjp)
 				cojobs = 0;
+			cotimeout = 0;
 		}
-		else if(pid>=0)
 #endif /* SHOPT_COSHELL */
 		pid = waitpid((pid_t)-1,&wstat,flags);
 		sh_offstate(SH_TTYWAIT);
 #if SHOPT_COSHELL
-		if(cotimeout && pid<0 && errno==ECHILD)
-			continue;
+	cojob:
 #endif /* SHOPT_COSHELL */
 
 		/*
@@ -581,6 +587,7 @@ void job_init(Shell_t *shp, int lflag)
 	register int ntry=0;
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
+	job_reap(SIGCHLD);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)
 	signal(SIGCLD,job_waitsafe);
 #   endif

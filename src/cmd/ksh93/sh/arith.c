@@ -100,24 +100,49 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		np = mp;
 	while(nv_isref(np))
 	{
-		if(sub = nv_refsub(np))
-			nosub=1;
+		sub = nv_refsub(np);
 		np = nv_refnode(np);
+		if(sub)
+			nv_putsub(np,sub,assign==NV_ASSIGN?ARRAY_ADD:0);
 	}
-	if(!nosub && (flag || sub))
+	if(!nosub && flag)
 	{
 		cp = 0;
-		if(!sub)
-			sub = (char*)&lvalue->expr[flag];
-		if(strchr(sub,'$'))
+		if(sub)
 		{
-			cp = nv_endsubscript(np,sub,0);
-			*--cp = 0;
-			sub = sh_mactrim(shp,sub,0);
+			cp = (char*)&lvalue->expr[flag];
+			goto skip;
 		}
-		nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
-		if(cp)
-			*cp = ']';
+		else
+			sub = (char*)&lvalue->expr[flag];
+		while(1)
+		{
+			Namarr_t	*ap;
+			Namval_t	*nq;
+			cp = nv_endsubscript(np,sub,0);
+			flag = *cp;
+			*cp = 0;
+			if(strchr(sub,'$'))
+				sub = sh_mactrim(shp,sub,0);
+			*cp = flag;
+			nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
+			if(flag!='[')
+				break;
+		skip:
+			if(nq = nv_opensub(np))
+				np = nq;
+			else
+			{
+				ap = nv_arrayptr(np);
+				if(ap && !ap->table)
+					ap->table = dtopen(&_Nvdisc,Dtoset);
+				if(ap && ap->table && (nq=nv_search(nv_getsub(np),ap->table,NV_ADD)))
+					nq->nvenv = (char*)np;
+				if(nq && nv_isnull(nq))
+					np = nv_arraychild(np,nq,0);
+			}
+			sub = cp;
+		}
 	}
 	return(np);
 }
@@ -158,7 +183,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			{
 				while(xp=str, c=mbchar(str), isaname(c));
 				str = xp;
-				if(c=='[' && dot==NV_NOADD)
+				while(c=='[' && dot==NV_NOADD)
 				{
 					str = nv_endsubscript((Namval_t*)0,str,0);
 					c = *str;
@@ -219,11 +244,12 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				char *saveptr = stakfreeze(0);
 				Dt_t  *root = (lvalue->emode&ARITH_COMP)?shp->var_base:shp->var_tree;
 				*str = c;
+				cp = str;
 				while(c=='[' || c=='.')
 				{
 					if(c=='[')
 					{
-						str = nv_endsubscript(np,cp=str,0);
+						str = nv_endsubscript(np,str,0);
 						if((c= *str)!='[' &&  c!='.')
 						{
 							str = cp;
@@ -253,7 +279,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					NaNnod.nvalue.ldp = &NaN;
 					np = &NaNnod;
 				}
-				else if(!(np = nv_open(*ptr,root,NV_NOASSIGN|NV_VARNAME|dot)))
+				else if(!(np = nv_open(*ptr,root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|dot)))
 				{
 					lvalue->value = (char*)*ptr;
 					lvalue->flag =  str-lvalue->value;

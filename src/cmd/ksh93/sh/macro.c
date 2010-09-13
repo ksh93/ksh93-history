@@ -1964,6 +1964,10 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	mp->shp->argaddr = 0;
 	savemac = *mp;
 	mp->shp->st.staklist=0;
+#ifdef SHOPT_COSHELL
+	if(mp->shp->inpool)
+		return;
+#endif /*SHOPT_COSHELL */
 	if(type)
 	{
 		sp = 0;

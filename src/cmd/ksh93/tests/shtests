@@ -9,7 +9,7 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-08-18 $
+@(#)$Id: shtests (AT&T Research) 2010-09-08 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -29,8 +29,11 @@ USAGE=$'
     }
 [a:all?Equivalent to the default \b--compile --script\b.]
 [c:compile?Run compiled test scripts using \bshcomp\b(1).]
-[C:C-locale?Only run the test scripts in the C locale.]
-[f:force-locale?Force the tests to be run in the locale of the caller.  This may cause invalid regressions, especially for locales where \b.\b is not the radix point.]
+[p|C:posix-locale|C-locale?Only run the test scripts in the posix/C
+    locale.]
+[f:force-locale?Force the tests to be run in the locale of the caller.
+    This may cause invalid regressions, especially for locales where \b.\b
+    is not the radix point.]
 [l:locales?Run the test scripts in the \bC\b and \aast\a \bC.UTF-8\b
     locales. Test script names matching \b'$setslocale$'\b are run only in
     the C locale.]
@@ -67,11 +70,11 @@ do	case $OPT in
 		compile=2
 		script=0
 		;;
-	C)	locale_one=$OPTARG
-		;;
 	f)	locale_force=$OPTARG
 		;;
 	l)	locale_accept=$OPTARG
+		;;
+	p)	locale_one=$OPTARG
 		;;
 	s)	default=0
 		compile=0

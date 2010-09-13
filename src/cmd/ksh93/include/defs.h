@@ -205,7 +205,7 @@ struct shared
 	int		subdup;		/* bitmask for dups of 1 */ \
 	int		*inpipe;	/* input pipe pointer */ \
 	int		*outpipe;	/* output pipe pointer */ \
-	int		cpipe[2]; \
+	int		cpipe[3]; \
 	int		coutpipe; \
 	int		inuse_bits; \
 	struct argnod	*envlist; \
@@ -431,7 +431,7 @@ extern void		sh_utol(const char*, char*);
 extern int 		sh_whence(char**,int);
 #if SHOPT_COSHELL
    extern int		sh_coaddfile(Shell_t*,char*);
-   extern int		sh_copipe(Shell_t*, int[]);
+   extern int		sh_copipe(Shell_t*, int[], int);
    extern int		sh_coaccept(Shell_t*,int[],int);
 #endif /* SHOPT_COSHELL */
 

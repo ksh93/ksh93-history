@@ -437,4 +437,19 @@ sizes[bar]=1
 
 $SHELL 2> /dev/null -c 'nameref foo=bar; typeset -A foo; (( (x=foo[a])==0 ))' || err_exit 'references inside arithmetic expressions not working'
 :
+
+unset ar z
+integer -a ar
+nameref z=ar[0]
+(( z[2]=3))
+[[ ${ar[0][2]} == 3 ]] || err_exit "\${ar[0][2]} is '${ar[0][2]}' but should be 3"
+(( ar[0][2] == 3 )) || err_exit "ar[0][2] is '${ar[0][2]}' but should be 3"
+
+unset c x
+typeset +n c x
+compound c=( typeset -a x )  
+nameref x=c.x
+x[4]=1
+[[ ${ typeset -p c.x ;} == *-C* ]] && err_exit 'c.x should not have -C attributes'
+
 exit $((Errors))

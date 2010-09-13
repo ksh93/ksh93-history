@@ -865,7 +865,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						flags &= ~NV_NOSCOPE;
 				}
 				flags |= NV_NOREF;
-				if(nv_isnull(np))
+				if(nv_isnull(np) && !nv_isarray(np))
 					nv_onattr(np,NV_NOFREE);
 			}
 			shp->last_root = root;
@@ -3048,7 +3048,14 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 			nv_putsub(nq,(char*)0,ARRAY_UNDEF);
 	}
 	if(nq && ep && nv_isarray(nq) && !nv_getsub(nq))
+	{
+		if(!nv_arrayptr(nq))
+		{
+			nv_putsub(nq,"1",ARRAY_FILL);
+			_nv_unset(nq,NV_RDONLY);
+		}
 		nv_endsubscript(nq,ep-1,NV_ARRAY);
+	}
 	if(!nr)
 	{
 		shp->last_root = 0;

@@ -92,6 +92,9 @@ static struct subshell
 	int		subdup;
 	char		subshare;
 	char		comsub;
+#if SHOPT_COSHELL
+	void		*coshell;
+#endif /* SHOPT_COSHELL */
 } *subshell_data;
 
 static int subenv;
@@ -122,8 +125,9 @@ void	sh_subtmpfile(Shell_t *shp)
 		if((fd=sffileno(sfstdout))<0)
 		{
 			/* unable to create the /tmp file so use a pipe */
-			int fds[2];
+			int fds[3];
 			Sfoff_t off;
+			fds[2] = 0;
 			sh_pipe(fds);
 			sp->pipefd = fds[0];
 			sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
@@ -487,6 +491,10 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	sp->options = shp->options;
 	sp->jobs = job_subsave();
 	sp->subdup = shp->subdup;
+#if SHOPT_COSHELL
+	sp->coshell = shp->coshell;
+	shp->coshell = 0;
+#endif /* SHOPT_COSHELL */
 	/* make sure initialization has occurred */ 
 	if(!shp->pathlist)
 		path_get(shp,".");
@@ -699,6 +707,9 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	shp->subshare = sp->subshare;
 	shp->comsub = sp->comsub;
 	shp->subdup = sp->subdup;
+#if SHOPT_COSHELL
+	shp->coshell = sp->coshell;
+#endif /* SHOPT_COSHELL */
 	if(shp->subshell)
 		SH_SUBSHELLNOD->nvalue.s = --shp->subshell;
 	subshell = shp->subshell;

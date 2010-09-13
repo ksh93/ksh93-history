@@ -93,6 +93,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+10-09-10 ratz.c: add _SEAR_ARGS for _SEAR_EXEC
+10-09-01 package.sh: fix ratz from source logic
 10-08-25 package.mk: consolidate license file search in .package.licenses.
 10-08-22 ratz.c: run sear bootstrap command detached
 10-08-20 C+probe: version_stamp only if version_flags works

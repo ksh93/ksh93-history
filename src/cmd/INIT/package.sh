@@ -57,6 +57,7 @@ admin_ping="ping -c 1 -w 5"
 
 default_url=default.url
 MAKESKIP=${MAKESKIP:-"*[-.]*"}
+RATZ=ratz
 TAR=tar
 TARFLAGS=xv
 TARPROBE=B
@@ -66,7 +67,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-08-26 $
+@(#)$Id: package (AT&T Research) 2010-09-01 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -3231,6 +3232,28 @@ checkaout()	# cmd ...
 {
 	case $PROTOROOT in
 	-)	PROTOROOT=
+		case $* in
+		ratz)	if	test -f $INITROOT/ratz.c -a -w $PACKAGEROOT
+			then	test -f $INITROOT/hello.c || {
+					cat > $INITROOT/hello.c <<'!'
+#ifndef printf
+#include <stdio.h>
+#endif
+int main() { int new = 0; printf("hello world\n"); return new;}
+!
+				}
+				test -f $INITROOT/p.c || {
+					cat > $INITROOT/p.c <<'!'
+/*
+ * small test for prototyping cc
+ */
+
+int main(int argc, char** argv) { return argc || argv; }
+!
+				}
+			fi
+			;;
+		esac
 		test -f $INITROOT/hello.c -a -f $INITROOT/p.c -a -w $PACKAGEROOT || {
 			for i
 			do	onpath $i || {
@@ -3252,11 +3275,11 @@ checkaout()	# cmd ...
 				# check for prototyping cc
 				# NOTE: proto.c must be K&R compatible
 
-				checkaout proto || return
 				$CC -c $INITROOT/p.c >/dev/null 2>&1
 				c=$?
 				rm -f p.*
 				test 0 != "$c" && {
+					checkaout proto || return
 					PROTOROOT=$PACKAGEROOT/proto
 					$show PROTOROOT=$PACKAGEROOT/proto
 					export PROTOROOT
@@ -3377,9 +3400,13 @@ checkaout()	# cmd ...
 				esac
 			fi
 			test -f $i.o && $exec rm -f $i.o
+			i=$PATH
+			PATH=/bin
+			PATH=$i
 			;;
 		esac
 	done
+	return 0
 }
 
 # check package requirements against received packages
@@ -5857,15 +5884,16 @@ read)	case ${PWD:-`pwd`} in
 							continue
 						}
 					fi
-				else	checkaout ratz || {
+				else	checkaout ratz && onpath ratz || {
 						code=1
 						continue
 					}
+					RATZ=$_onpath_
 					case $exec in
 					'')	echo $f:
-						$exec ratz -lm < "$f"
+						$exec $RATZ -lm < "$f"
 						;;
-					*)	$exec "ratz -lm < $f"
+					*)	$exec "$RATZ -lm < $f"
 						;;
 					esac || {
 						code=1

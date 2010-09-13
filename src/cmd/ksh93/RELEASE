@@ -1,4 +1,30 @@
-10-08-25  --- Release ksh93u  ---
+10-09-13  --- Release ksh93u  ---
+10-09-13  A bug which occured when both xtrace and showme options where
+	  specified in which the xtrace option disabled showme has been fixed.
+10-09-13  A bug in which creating a reference to an array variable with any
+	  elements could cause subsequent array elements to be treated as
+	  compound variables has been fixed.
+10-09-09  A bug which caused ((c.ar[x][y])) to be treated as a syntax error
+	  has been fixed.
+10-09-08  A bug in the processing of references to multidimensional arrays
+	  in arithmetic expressions has been fixed.
+10-09-08  A bug in the handling of multi-dimensional arrays which caused
+	  the number of elements in each dimension to be incorrect has
+	  been fixed.
+10-09-07  The change for messages on 10-08-09 did not handle message in
+	  assignments and this has been fixed.
+10-09-07  A bug in the indentation of compound variables in arrays when
+	  output with print -v has been fixed.
+10-09-07  A rare bug with indexed arrays when assigned a null string that could
+	  cause a core dump has been fixed.
+10-09-03  A number of changes were made for jobs pools.
+10-08-31  typeset -p was modified to output name references after other
+	  variables so that the output could be used as input.
+10-08-31  A bug with typeset -p in which variables with attributes but
+	  without attributes were not displayed correctly has been fixed.
+10-08-27 +When running a subshell, the current pool is unset.
+10-08-27  A bug in which jobs started from within for or while lists in
+	  interactive shells could generate completion messages has been fixed.
 10-08-25  Fixed a couple of bugs related to job pools. 
 10-08-24 +[[ -e /dev/xxx/ ]] can be used to check whether special files of
 	  those names are handled by the shell.

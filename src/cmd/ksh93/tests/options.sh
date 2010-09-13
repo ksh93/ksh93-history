@@ -498,4 +498,6 @@ wait
 
 [[ $($SHELL -uc '[[ "${d1.u[z asd].revents}" ]]' 2>&1) == *'d1.u[z asd].revents'* ]] || err_exit 'name of unset parameter not in error message'
 
+[[ $($SHELL 2> /dev/null -xc $'set --showme\nprint 1\n; print 2') == 1 ]] || err_exit  'showme option with xtrace not working correctly'
+
 exit $((Errors))

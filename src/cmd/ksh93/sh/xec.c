@@ -777,9 +777,9 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	{
 		if(gethostname(host,sizeof(host)) < 0)
 			errormsg(SH_DICT,ERROR_system(1),e_pipe);
-		if(shp->inpipe[1]>=20000)
-			sfprintf(sfstdout,"command exec < /dev/tcp/%s/%d || print -u2 'cannot create pipe'\n",host,shp->inpipe[1]);
-		sfprintf(sfstdout,"command exec > /dev/tcp/%s/%d || print -u2 'cannot create pipe'\n",host,shp->outpipe[1]);
+		if(shp->inpipe[2]>=20000)
+			sfprintf(sfstdout,"command exec < /dev/tcp/%s/%d || print -u2 'cannot create pipe'\n",host,shp->inpipe[2]);
+		sfprintf(sfstdout,"command exec > /dev/tcp/%s/%d || print -u2 'cannot create pipe'\n",host,shp->outpipe[2]);
 		if(filt==3)
 			t = t->fork.forktre;
 	}
@@ -788,6 +788,7 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	nv_scan(shp->fun_tree, print_fun, (void*)0,0, 0);
 	if(1)
 	{
+		Dt_t *top = shp->var_tree;
 		sh_scope(shp,(struct argnod*)0,0);
 		shp->inpool = dtopen(&_Nvdisc,Dtset);
 		sh_exec(t,filt==1||filt==2?SH_NOFORK:0);
@@ -797,7 +798,7 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 			sfprintf(sfstdout,"[[ ${.sh} == *pool* ]] && .sh.pool.files=(\n");
 			for(np=(Namval_t*)dtfirst(shp->inpool);np;np=(Namval_t*)dtnext(shp->inpool,np))
 			{
-				sfprintf(sfstdout,"\t%s\n",np->nvname);
+				sfprintf(sfstdout,"\t%s\n",sh_fmtq(np->nvname));
 			}
 			sfputr(sfstdout,")",'\n');
 			;
@@ -806,6 +807,7 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 		shp->inpool = 0;
 		shp->poolfiles = 0;
 		sh_unscope(shp);
+		shp->var_tree = top;
 	}
 	sfprintf(sfstdout,"typeset -f .sh.pool.init && .sh.pool.init\n");
 	sfprintf(sfstdout,"LINENO=%d\n",lineno);
@@ -827,7 +829,6 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 			if(filt>1)
 				sh_coaccept(shp,shp->inpipe,1);
 			sh_coaccept(shp,shp->outpipe,0);
-			shp->outpipe[1] = -1;
 			if(filt > 2)
 			{
 				shp->coutpipe = shp->inpipe[1];
@@ -1082,8 +1083,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 					com = argv;
 				}
 				/* set +x doesn't echo */
-				else if((np!=SYSSET) && sh_isoption(SH_XTRACE))
-					sh_trace(shp,com-command,tflags);
 				else if((t->tre.tretyp&FSHOWME) && sh_isoption(SH_SHOWME))
 				{
 					int ison = sh_isoption(SH_XTRACE);
@@ -1096,6 +1095,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh_offoption(SH_XTRACE);
 					break;
 				}
+				else if((np!=SYSSET) && sh_isoption(SH_XTRACE))
+					sh_trace(shp,com-command,tflags);
 				if(trap=shp->st.trap[SH_DEBUGTRAP])
 				{
 					int n = sh_debug(shp,trap,(char*)0,(char*)0, com, ARG_RAW);
@@ -1398,7 +1399,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 		    {
 			register pid_t parent;
 			int no_fork,jobid;
-			int pipes[2];
+			int pipes[3];
 #if SHOPT_COSHELL
 			if(shp->inpool)
 			{
@@ -1452,13 +1453,18 @@ int sh_exec(register const Shnode_t *t, int flags)
 				nv_getval(RANDNOD);
 				if(type&FCOOP)
 				{
+					pipes[2] = 0;
 #if SHOPT_COSHELL
 					if(shp->coshell)
 					{
-						int pipes[2];
-						sh_copipe(shp,shp->outpipe=shp->cpipe);
-						sh_copipe(shp,shp->inpipe=pipes);
+						if(shp->cpipe[0]<0 || shp->cpipe[1] < 0)
+						{
+							sh_copipe(shp,shp->outpipe=shp->cpipe,0);
+							shp->fdptrs[shp->cpipe[0]] = shp->cpipe;
+						}
+						sh_copipe(shp,shp->inpipe=pipes,0);
 						parent = sh_coexec(shp,t,3);
+						shp->cpid = parent;
 						jobid = job_post(shp,parent,0);
 						goto skip;
 					}
@@ -1600,7 +1606,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(type&FPIN)
 				{
 #if SHOPT_COSHELL
-					if(shp->inpipe[1]>20000)
+					if(shp->inpipe[2]>20000)
 						sh_coaccept(shp,shp->inpipe,0);
 #endif /* SHOPT_COSHELL */
 					sh_iorenumber(shp,shp->inpipe[0],0);
@@ -1610,7 +1616,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(type&FPOU)
 				{
 #if SHOPT_COSHELL
-					if(shp->outpipe[1]>20000)
+					if(shp->outpipe[2]>20000)
 						sh_coaccept(shp,shp->outpipe,1);
 #endif /* SHOPT_COSHELL */
 					sh_iorenumber(shp,shp->outpipe[1],1);
@@ -1800,8 +1806,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 		     * All elements of the pipe are started by the parent.
 		     * The last element executes in current environment
 		     */
-			int	pvo[2];	/* old pipe for multi-stage */
-			int	pvn[2];	/* current set up pipe */
+			int	pvo[3];	/* old pipe for multi-stage */
+			int	pvn[3];	/* current set up pipe */
 			int	savepipe = pipejob;
 			int	showme = t->tre.tretyp&FSHOWME;
 			pid_t	savepgid = job.curpgid;
@@ -1822,6 +1828,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			coskip1:
 				break;
 			}
+			pvo[2] = pvn[2] = 0;
 #endif /* SHOPT_COSHELL */
 			job.curpgid = 0;
 			if(shp->subshell)
@@ -1841,11 +1848,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 				tt = t->lst.lstrit;
 				if(shp->coshell && !showme)
 				{
-					if(copipe)
-						sh_copipe(shp,pvo);
 					if(t->lst.lstlef->tre.tretyp&FALTPIPE)
 					{
-						sh_copipe(shp,pvn);
+						sh_copipe(shp,pvn,0);
 						type = sh_coexec(shp,t,1+copipe);
 						pvn[1] = -1;
 						pipejob=1;
@@ -1863,8 +1868,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					else if(tt->tre.tretyp==TFIL && tt->lst.lstlef->tre.tretyp&FALTPIPE)
 					{
-						sh_copipe(shp,pvn);
-						pvo[1] = pvn[1];
+						sh_copipe(shp,pvn,0);
+						pvo[2] = pvn[2];
 						copipe = 0;
 						goto coskip2;
 					}
@@ -1872,18 +1877,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 #endif /* SHOPT_COSHELL */
 				sh_pipe(pvn);
 #if SHOPT_COSHELL
+				pvn[2] = 0;
 			coskip2:
 #endif /* SHOPT_COSHELL */
 				/* execute out part of pipe no wait */
 				(t->lst.lstlef)->tre.tretyp |= showme;
 				type = sh_exec(t->lst.lstlef, errorflg);
 				/* close out-part of pipe */
-#if SHOPT_COSHELL
-				if(pvn[1] <= 20000)
-					sh_close(pvn[1]);
-#else
 				sh_close(pvn[1]);
-#endif /* SHOPT_COSHELL */
 				pipejob=1;
 				/* save the pipe stream-ids */
 				pvo[0] = pvn[0];
@@ -1999,6 +2000,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			nameref = nv_isref(np)!=0;
 			shp->st.loopcnt++;
 			cp = *args;
+			if(sh_isoption(SH_INTERACTIVE))
+				sh_offstate(SH_MONITOR);
 			while(cp && shp->st.execbrk==0)
 			{
 				if(t->tre.tretyp&COMSCAN)
@@ -2162,6 +2165,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			}
 #endif /*SHOPT_FILESCAN */
 			shp->st.loopcnt++;
+			if(sh_isoption(SH_INTERACTIVE))
+				sh_offstate(SH_MONITOR);
 			while(shp->st.execbrk==0)
 			{
 #if SHOPT_FILESCAN
@@ -3566,7 +3571,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 			if(otype&FPOU)
 			{
 #if SHOPT_COSHELL
-					if(shp->outpipe[1] > 20000)
+					if(shp->outpipe[2] > 20000)
 						sh_coaccept(shp,shp->outpipe,1);
 #endif /* SHOPT_COSHELL */
 				sh_iosave(shp,1,buff.topfd,(char*)0);

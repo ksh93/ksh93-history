@@ -139,4 +139,36 @@ unset x
 typeset -A -is x=( [0]=(1 2 3) [1]=(4 5 6) [2]=(7 8 9) )
 [[ ${x[1][2]} == 6 ]] || err_exit 'changing two dimensional associative array to short integer failed'
 
+unset ar x y
+integer -a ar
+integer i x y
+for (( i=0 ; i < 100 ; i++ ))
+do	(( ar[y][x++]=i ))
+	(( x > 9 )) && (( y++ , x=0 ))
+done
+[[ ${#ar[0][*]} == 10 ]] || err_exit "\${#ar[0][*]} is '${#ar[0][*]}', should be 10"
+[[ ${#ar[*]} == 10 ]] || err_exit  "\${#ar[*]} is '${#ar[*]}', should be 10"
+[[ ${ar[5][5]} == 55 ]] || err_exit "ar[5][5] is '${ar[5][5]}', should be 55"
+
+unset ar
+integer -a ar
+x=0 y=0
+for (( i=0 ; i < 81 ; i++ ))
+do	nameref ar_y=ar[$y]
+	(( ar_y[x++]=i ))
+	(( x > 8 )) && (( y++ , x=0 ))
+	typeset +n ar_y
+done
+[[ ${#ar[0][*]} == 9 ]] || err_exit "\${#ar[0][*]} is '${#ar[0][*]}', should be 9"
+[[ ${#ar[*]} == 9 ]] || err_exit  "\${#ar[*]} is '${#ar[*]}', should be 9"
+[[ ${ar[4][4]} == 40 ]] || err_exit "ar[4][4] is '${ar[4][4]}', should be 40"
+
+$SHELL 2> /dev/null -c 'compound c;float -a c.ar;(( c.ar[2][3][3] = 5))' || 'multi-dimensional arrays in arithemtic expressions not working'
+
+expected='typeset -a -l -E c.ar=([2]=([3]=([3]=5) ) )'
+unset c
+float c.ar
+c.ar[2][3][3]=5
+[[ $(typeset -p c.ar) == "$expected" ]] || err_exit "c.ar[2][3][3]=5;typeset -c c.ar expands to $(typeset -p c.ar)"
+
 exit $((Errors))

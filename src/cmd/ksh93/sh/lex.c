@@ -1322,6 +1322,7 @@ breakloop:
 	{
 		if(sh_isoption(SH_DICTIONARY))
 			lp->arg = sh_endword(shp,2);
+		c |= ARG_MAC;
 	}
 	if(c==0 || (c&(ARG_MAC|ARG_EXP|ARG_MESSAGE)) || (lp->lexd.warn && !lp->lexd.docword))
 	{

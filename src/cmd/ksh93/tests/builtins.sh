@@ -536,7 +536,8 @@ $SHELL 2> /dev/null -c 'cd ""' && err_exit 'cd "" not producing an error'
 
 bincat=$(whence -p cat)
 builtin cat
-seq 11 >tmp11 
-cmp -s <(print -- "$($bincat<( $bincat tmp11 ) )") <(print -- "$(cat <( cat tmp11 ) )") || err_exit "builtin cat differes from $bincat"
+out=$tmp/seq.out
+seq 11 >$out
+cmp -s <(print -- "$($bincat<( $bincat $out ) )") <(print -- "$(cat <( cat $out ) )") || err_exit "builtin cat differes from $bincat"
 
 exit $((Errors))

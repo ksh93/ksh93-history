@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-08-22 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-09-10 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-08-22 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-09-10 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -4445,7 +4445,7 @@ register char*	s;
 #define PATH_MAX	256
 #endif
 
-#define EXIT(n)	return(sear_exec((char*)0,(char**)0),(n))
+#define EXIT(n)	return(sear_exec((char*)0,(char**)0,(char*)0),(n))
 
 static int	sear_stdin;
 static char*	sear_tmp;
@@ -4522,9 +4522,8 @@ sear_rm_r(char* dir)
 				sear_rm_r(info.cFileName);
 		} while(FindNextFile(hp, &info));
 	FindClose(hp);
-	if (!SetCurrentDirectory(".."))
-		return;
-	RemoveDirectory(dir);
+	if (SetCurrentDirectory(".."))
+		RemoveDirectory(dir);
 }
 
 /*
@@ -4532,7 +4531,7 @@ sear_rm_r(char* dir)
  */
 
 static int
-sear_system(const char* command, int detached)
+sear_system(const char* command, int nowindow)
 {
 	PROCESS_INFORMATION	pinfo;
 	STARTUPINFO		sinfo;
@@ -4555,7 +4554,7 @@ sear_system(const char* command, int detached)
 	if (GetFileAttributes(path) == 0xffffffff && GetLastError() == ERROR_FILE_NOT_FOUND)
 		strcpy(cp, ".exe");
 	ZeroMemory(&sinfo, sizeof(sinfo));
-	if (detached)
+	if (nowindow)
 	{
 		sa = &sattr;
 		InitializeSecurityDescriptor(&sdesc, SECURITY_DESCRIPTOR_REVISION);
@@ -4575,19 +4574,22 @@ sear_system(const char* command, int detached)
 		}
 		sinfo.hStdError = sinfo.hStdOutput;
 		sinfo.dwFlags = STARTF_USESTDHANDLES;
-		flags |= CREATE_NO_WINDOW|DETACHED_PROCESS;
+		flags |= CREATE_NO_WINDOW;
 	}
 	else
 		sa = 0;
 	if (!CreateProcess(path, (char*)command, sa, sa, TRUE, flags, NULL, NULL, &sinfo, &pinfo))
 		n = GetLastError() == ERROR_FILE_NOT_FOUND ? 127 : 126;
-	else if (!detached)
+	else
 	{
+		if (nowindow)
+			CloseHandle(sinfo.hStdOutput);
 		CloseHandle(pinfo.hThread);
 		WaitForSingleObject(pinfo.hProcess, INFINITE);
 		if (!GetExitCodeProcess(pinfo.hProcess, &n))
 			n = 1;
 		CloseHandle(pinfo.hProcess);
+		Sleep(4 * 1000);
 	}
 	return n;
 }
@@ -4610,14 +4612,14 @@ copy(char* t, const char* f, char* e)
  */
 
 static int
-sear_exec(const char* cmd, char* const* arg)
+sear_exec(const char* cmd, char* const* arg, char* operands)
 {
 	const char*	a;
 	char*		b;
 	char*		e;
 	int		r;
 	int		sh;
-	int		detached;
+	int		nowindow;
 	char		buf[1024];
 
 	fflush(stdout);
@@ -4629,7 +4631,7 @@ sear_exec(const char* cmd, char* const* arg)
 		close(sear_stdin);
 		if (cmd)
 		{
-			detached = arg && arg[0];
+			nowindow = arg && arg[0];
 			sh = 0;
 			for (a = cmd; *a && *a != ' '; a++)
 				if (a[0] == '.' && a[1] == 's' && a[2] == 'h' && (!a[3] || a[3] == ' '))
@@ -4637,13 +4639,13 @@ sear_exec(const char* cmd, char* const* arg)
 					sh = 1;
 					break;
 				}
-			if (sh || detached)
+			if (sh || nowindow)
 			{
 				b = buf;
 				e = buf + sizeof(buf) - 1;
 				if (sh)
 				{
-					b = copy(b, "./ksh.exe ", e);
+					b = copy(b, "ksh.exe ", e);
 					if (*cmd && *cmd != '/')
 						b = copy(b, "./", e);
 				}
@@ -4656,11 +4658,16 @@ sear_exec(const char* cmd, char* const* arg)
 					b = copy(b, a, e);
 					b = copy(b, "\"", e);
 				}
+				if (operands)
+				{
+					b = copy(b, " -- ", e);
+					b = copy(b, operands, e);
+				}
 				*b = 0;
 				cmd = (const char*)buf;
 			}
 		}
-		r = cmd ? sear_system(cmd, detached) : 1;
+		r = cmd ? sear_system(cmd, nowindow) : 1;
 		sear_rm_r(sear_tmp);
 	}
 	else
@@ -5269,7 +5276,10 @@ char**	argv;
 	else if (verbose)
 		fprintf(stderr, "%lu file%s, %lu block%s\n", state.files, state.files == 1 ? "" : "s", state.blocks, state.blocks == 1 ? "" : "s");
 #if defined(_SEAR_EXEC)
-	if (sear_exec(_SEAR_EXEC, argv))
+#if !defined(_SEAR_ARGS)
+#define _SEAR_ARGS	0
+#endif
+	if (sear_exec(_SEAR_EXEC, argv, _SEAR_ARGS))
 	{
 		Sleep(5 * 1000);
 		return 1;

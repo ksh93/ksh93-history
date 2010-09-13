@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2010-06-25 # update in USAGE too #
+version=2010-09-01 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -634,7 +634,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2010-06-25 $
+@(#)$Id: iffe (AT&T Research) 2010-09-01 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -2958,7 +2958,8 @@ $*
 								do	map=
 									sep=
 									eval syms='"${'api_sym_${api}'}"'
-									set x x `echo "$syms" | sort -t: -u -k1,1 -k2,2nr | sed 's/\(.*\):\(.*\)/\1 \2/'`
+									# old solaris requires -k<space><junk> #
+									set x x `echo "$syms" | sort -t: -u -k 1,1 -k 2,2nr | sed 's/\(.*\):\(.*\)/\1 \2/'`
 									sym=
 									while	:
 									do	shift 2

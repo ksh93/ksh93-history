@@ -57,6 +57,7 @@ struct tdata
 	Dt_t 		*scanroot;
 	char    	**argnam;
 	int		indent;
+	int		noref;
 };
 
 
@@ -309,6 +310,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 			case 'p':
 				tdata.prefix = argv[0];
 				tdata.pflag = 1;
+				flag &= ~NV_ASSIGN;
 				break;
 			case 'r':
 				flag |= NV_RDONLY;
@@ -560,7 +562,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				path_alias(np,path_absolute(shp,nv_name(np),NIL(Pathcomp_t*)));
 				continue;
 			}
-			np = nv_open(name,troot,nvflags|NV_ARRAY);
+			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY));
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
 			if(tp->pflag)
@@ -741,8 +743,15 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				flag |= (nvflags&NV_ARRAY);
 				if(flag&NV_IARRAY)
 					flag |= NV_ARRAY;
+				if(!(flag&~NV_ASSIGN))
+					tp->noref = 1;
 			}
 			print_scan(sfstdout,flag,troot,tp->aflag=='+',tp);
+			if(tp->noref)
+			{
+				tp->noref = 0;
+				print_scan(sfstdout,flag|NV_REF,troot,tp->aflag=='+',tp);
+			}
 		}
 		else if(troot==shp->alias_tree)
 			print_scan(sfstdout,0,troot,0,tp);
@@ -1124,6 +1133,8 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 	sh_sigcheck(tp->sh);
 	if(flag)
 		flag = '\n';
+	if(tp->noref && nv_isref(np))
+		return(0);
 	if(nv_istable(np))
 	{
 		print_value(file,np,tp);
@@ -1137,7 +1148,7 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 	}
 	if(tp->prefix)
 	{
-		outname = (*tp->prefix=='t' &&  !nv_isnull(np));
+		outname = (*tp->prefix=='t' &&  (!nv_isnull(np) || nv_isattr(np,NV_FLOAT|NV_RDONLY|NV_BINARY|NV_RJUST|NV_NOPRINT)));
 		if(indent && (outname || *tp->prefix!='t'))
 		{
 			sfnputc(file,'\t',indent);
