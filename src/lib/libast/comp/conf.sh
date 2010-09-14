@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2010-06-14
+# @(#)conf.sh (AT&T Research) 2010-09-14
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -1525,10 +1525,10 @@ typedef struct Prefix_s
 } Prefix_t;
 
 extern const Conf_t	conf[];
-extern int		conf_elements;
+extern const int	conf_elements;
 
 extern const Prefix_t	prefix[];
-extern int		prefix_elements;
+extern const int	prefix_elements;
 
 #endif
 !
@@ -1574,7 +1574,7 @@ cat <<!
 	"SI",		2,	CONF_SVID,	CONF_sysinfo,
 };
 
-int	prefix_elements = (int)sizeof(prefix) / (int)sizeof(prefix[0]);
+const int	prefix_elements = (int)sizeof(prefix) / (int)sizeof(prefix[0]);
 
 /*
  * conf strings sorted in ascending order
@@ -1587,7 +1587,7 @@ cat $tmp.t
 cat <<!
 };
 
-int	conf_elements = (int)sizeof(conf) / (int)sizeof(conf[0]);
+const int	conf_elements = (int)sizeof(conf) / (int)sizeof(conf[0]);
 !
 } > $tmp.4
 case $debug in

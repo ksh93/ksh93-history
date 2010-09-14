@@ -32,13 +32,13 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make LICENSE
+done LICENSE dontcare
 make install
 make hurl
 make hurl.sh
 done hurl.sh
-meta hurl %.sh>% hurl.sh hurl
+meta hurl %.sh>% ${PACKAGEROOT}/src/cmd/INIT/hurl.sh hurl
 prev hurl.sh
 setv LICENSE -DLICENSE="since=2003,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -50,7 +50,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp hurl.sh hurl
 exec - 		;;
 exec - 	*)	{
@@ -59,7 +59,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - hurl.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > hurl
 exec - 		;;
@@ -67,7 +67,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - hurl.sh > hurl <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -76,7 +76,7 @@ done hurl generated
 make iffe
 make iffe.sh
 done iffe.sh
-meta iffe %.sh>% iffe.sh iffe
+meta iffe %.sh>% ${PACKAGEROOT}/src/cmd/INIT/iffe.sh iffe
 prev iffe.sh
 setv LICENSE -DLICENSE="since=1994,author=gsf+kpv"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -88,7 +88,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 237 in
+exec - "")	case 215 in
 exec - 	0)	cp iffe.sh iffe
 exec - 		;;
 exec - 	*)	{
@@ -97,7 +97,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - iffe.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > iffe
 exec - 		;;
@@ -105,7 +105,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - iffe.sh > iffe <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -114,7 +114,7 @@ done iffe generated
 make mktest
 make mktest.sh
 done mktest.sh
-meta mktest %.sh>% mktest.sh mktest
+meta mktest %.sh>% ${PACKAGEROOT}/src/cmd/INIT/mktest.sh mktest
 prev mktest.sh
 setv LICENSE -DLICENSE="since=2005,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -126,7 +126,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp mktest.sh mktest
 exec - 		;;
 exec - 	*)	{
@@ -135,7 +135,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - mktest.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > mktest
 exec - 		;;
@@ -143,7 +143,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - mktest.sh > mktest <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -152,7 +152,7 @@ done mktest generated
 make package
 make package.sh
 done package.sh
-meta package %.sh>% package.sh package
+meta package %.sh>% ${PACKAGEROOT}/src/cmd/INIT/package.sh package
 prev package.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -163,7 +163,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp package.sh package
 exec - 		;;
 exec - 	*)	{
@@ -172,7 +172,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - package.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > package
 exec - 		;;
@@ -180,7 +180,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - package.sh > package <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -189,7 +189,7 @@ done package generated
 make regress
 make regress.sh
 done regress.sh
-meta regress %.sh>% regress.sh regress
+meta regress %.sh>% ${PACKAGEROOT}/src/cmd/INIT/regress.sh regress
 prev regress.sh
 setv LICENSE -DLICENSE="since=1995,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -201,7 +201,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp regress.sh regress
 exec - 		;;
 exec - 	*)	{
@@ -210,7 +210,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - regress.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > regress
 exec - 		;;
@@ -218,7 +218,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - regress.sh > regress <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -227,7 +227,7 @@ done regress generated
 make rt
 make rt.sh
 done rt.sh
-meta rt %.sh>% rt.sh rt
+meta rt %.sh>% ${PACKAGEROOT}/src/cmd/INIT/rt.sh rt
 prev rt.sh
 setv LICENSE -DLICENSE="since=2005,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -239,7 +239,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp rt.sh rt
 exec - 		;;
 exec - 	*)	{
@@ -248,7 +248,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - rt.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > rt
 exec - 		;;
@@ -256,7 +256,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - rt.sh > rt <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2005-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -265,7 +265,7 @@ done rt generated
 make crossexec
 make crossexec.sh
 done crossexec.sh
-meta crossexec %.sh>% crossexec.sh crossexec
+meta crossexec %.sh>% ${PACKAGEROOT}/src/cmd/INIT/crossexec.sh crossexec
 prev crossexec.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -276,7 +276,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp crossexec.sh crossexec
 exec - 		;;
 exec - 	*)	{
@@ -285,7 +285,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - crossexec.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > crossexec
 exec - 		;;
@@ -293,7 +293,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - crossexec.sh > crossexec <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -302,7 +302,7 @@ done crossexec generated
 make ditto
 make ditto.sh
 done ditto.sh
-meta ditto %.sh>% ditto.sh ditto
+meta ditto %.sh>% ${PACKAGEROOT}/src/cmd/INIT/ditto.sh ditto
 prev ditto.sh
 setv LICENSE -DLICENSE="since=2001,author=gsf+ek"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -314,7 +314,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 244 in
+exec - "")	case 186 in
 exec - 	0)	cp ditto.sh ditto
 exec - 		;;
 exec - 	*)	{
@@ -323,7 +323,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - ditto.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Lefty Koutsofios <ek@research.att.com>][-copyright?Copyright (c) 2001-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?ek][-copyright?Copyright (c) 2001-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > ditto
 exec - 		;;
@@ -331,7 +331,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - ditto.sh > ditto <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Lefty Koutsofios <ek@research.att.com>][-copyright?Copyright (c) 2001-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?ek][-copyright?Copyright (c) 2001-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -340,7 +340,7 @@ done ditto generated
 make execrate
 make execrate.sh
 done execrate.sh
-meta execrate %.sh>% execrate.sh execrate
+meta execrate %.sh>% ${PACKAGEROOT}/src/cmd/INIT/execrate.sh execrate
 prev execrate.sh
 setv LICENSE -DLICENSE="since=2002,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -352,7 +352,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp execrate.sh execrate
 exec - 		;;
 exec - 	*)	{
@@ -361,7 +361,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - execrate.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > execrate
 exec - 		;;
@@ -369,7 +369,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - execrate.sh > execrate <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -378,7 +378,7 @@ done execrate generated
 make filter
 make filter.sh
 done filter.sh
-meta filter %.sh>% filter.sh filter
+meta filter %.sh>% ${PACKAGEROOT}/src/cmd/INIT/filter.sh filter
 prev filter.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -389,7 +389,7 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 196 in
+exec - "")	case 174 in
 exec - 	0)	cp filter.sh filter
 exec - 		;;
 exec - 	*)	{
@@ -398,7 +398,7 @@ exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
 exec - 		cat - filter.sh <<'!'
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 		} > filter
 exec - 		;;
@@ -406,7 +406,7 @@ exec - 	esac
 exec - 	;;
 exec - *)	cat - filter.sh > filter <<'!'
 exec - ${mam_cc_SHELLMAGIC}
-exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 exec - !
 exec - 	;;
 exec - esac
@@ -415,7 +415,7 @@ done filter generated
 make ignore
 make ignore.sh
 done ignore.sh
-meta ignore %.sh>% ignore.sh ignore
+meta ignore %.sh>% ${PACKAGEROOT}/src/cmd/INIT/ignore.sh ignore
 prev ignore.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -452,7 +452,7 @@ done ignore generated
 make silent
 make silent.sh
 done silent.sh
-meta silent %.sh>% silent.sh silent
+meta silent %.sh>% ${PACKAGEROOT}/src/cmd/INIT/silent.sh silent
 prev silent.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -494,9 +494,9 @@ done shlib-compat.h dontcare virtual
 make ast.h implicit
 done ast.h dontcare virtual
 done mamake.c
-meta mamake.o %.c>%.o mamake.c mamake
+meta mamake.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/mamake.c mamake
 prev mamake.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c mamake.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o mamake mamake.o
 done mamake generated
@@ -504,7 +504,7 @@ make proto
 make proto.o
 make proto.c
 done proto.c
-meta proto.o %.c>%.o proto.c proto
+meta proto.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/proto.c proto
 prev proto.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c proto.c
 done proto.o generated
@@ -529,7 +529,7 @@ make direct.h implicit
 done direct.h dontcare virtual
 prev ast.h implicit
 done ratz.c
-meta ratz.o %.c>%.o ratz.c ratz
+meta ratz.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/ratz.c ratz
 prev ratz.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c ratz.c
 done ratz.o generated
@@ -540,16 +540,16 @@ make release.o
 make release.c
 prev ast.h implicit
 done release.c
-meta release.o %.c>%.o release.c release
+meta release.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/release.c release
 prev release.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c release.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c release.c
 done release.o generated
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o release release.o
 done release generated
 make mprobe
 make mprobe.sh
 done mprobe.sh
-meta mprobe %.sh>% mprobe.sh mprobe
+meta mprobe %.sh>% ${PACKAGEROOT}/src/cmd/INIT/mprobe.sh mprobe
 prev mprobe.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -671,7 +671,7 @@ exec - test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${PACKAGEROOT}/bin/
 done ${PACKAGEROOT}/bin/ignore generated
 make ${PACKAGEROOT}/bin/mamprobe
 make mamprobe
-meta mamprobe %.sh>% mamprobe.sh mamprobe
+meta mamprobe %.sh>% ${PACKAGEROOT}/src/cmd/INIT/mamprobe.sh mamprobe
 make mamprobe.sh
 done mamprobe.sh
 exec - case static,port:$OPTIND:$RANDOM in
@@ -1236,7 +1236,7 @@ done test.iffe virtual
 make test.mamake
 prev mamake
 make mamake.tst
-meta mamake.tst %.rt>%.tst mamake.rt mamake
+meta mamake.tst %.rt>%.tst ${PACKAGEROOT}/src/cmd/INIT/mamake.rt mamake
 make mamake.rt
 done mamake.rt
 exec - if	[[ "1" || "mamake.rt" -nt "mamake.tst" ]]

@@ -1,3 +1,4 @@
+10-09-14 comp/conf.sh: const int conf_elements, prefix_elements;
 10-09-08 add features/sizeof => ast_sizeof.h
 10-08-31 comp/getopt[l].c: export functions for dlls
 10-08-25 port/lc.c: add features/locale check for canonical UTF-8 spelling

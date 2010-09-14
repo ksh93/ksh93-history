@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make cmd
 make libcmd.a archive
@@ -96,7 +96,7 @@ prev cmd.h implicit
 done cat.c
 make chgrp.c
 make FEATURE/symlink implicit
-meta FEATURE/symlink features/%>FEATURE/% features/symlink symlink
+meta FEATURE/symlink features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libcmd/features/symlink symlink
 make features/symlink
 done features/symlink
 prev cmd.req
@@ -271,7 +271,7 @@ done expr.c
 make fds.c
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 make FEATURE/sockets implicit
-meta FEATURE/sockets features/%>FEATURE/% features/sockets sockets
+meta FEATURE/sockets features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libcmd/features/sockets sockets
 make features/sockets
 done features/sockets
 prev cmd.req
@@ -305,7 +305,7 @@ done ${PACKAGE_ast_INCLUDE}/ast_stdio.h dontcare
 done ${PACKAGE_ast_INCLUDE}/stdio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 make FEATURE/ids implicit
-meta FEATURE/ids features/%>FEATURE/% features/ids ids
+meta FEATURE/ids features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libcmd/features/ids ids
 make features/ids
 done features/ids
 prev cmd.req
@@ -408,7 +408,7 @@ prev cmd.h implicit
 done tty.c
 make uname.c
 make FEATURE/utsname implicit
-meta FEATURE/utsname features/%>FEATURE/% features/utsname utsname
+meta FEATURE/utsname features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libcmd/features/utsname utsname
 make features/utsname
 done features/utsname
 prev cmd.req
@@ -464,7 +464,7 @@ exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/extern int	b_&(int, char**, void*);/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c |
+exec - 	${PACKAGEROOT}/src/lib/libcmd/cmdinit.c ${PACKAGEROOT}/src/lib/libcmd/basename.c ${PACKAGEROOT}/src/lib/libcmd/cat.c ${PACKAGEROOT}/src/lib/libcmd/chgrp.c ${PACKAGEROOT}/src/lib/libcmd/chmod.c ${PACKAGEROOT}/src/lib/libcmd/chown.c ${PACKAGEROOT}/src/lib/libcmd/cksum.c ${PACKAGEROOT}/src/lib/libcmd/cmp.c ${PACKAGEROOT}/src/lib/libcmd/comm.c ${PACKAGEROOT}/src/lib/libcmd/cp.c ${PACKAGEROOT}/src/lib/libcmd/cut.c ${PACKAGEROOT}/src/lib/libcmd/dirname.c ${PACKAGEROOT}/src/lib/libcmd/date.c ${PACKAGEROOT}/src/lib/libcmd/expr.c ${PACKAGEROOT}/src/lib/libcmd/fds.c ${PACKAGEROOT}/src/lib/libcmd/fmt.c ${PACKAGEROOT}/src/lib/libcmd/fold.c ${PACKAGEROOT}/src/lib/libcmd/getconf.c ${PACKAGEROOT}/src/lib/libcmd/head.c ${PACKAGEROOT}/src/lib/libcmd/id.c ${PACKAGEROOT}/src/lib/libcmd/join.c ${PACKAGEROOT}/src/lib/libcmd/ln.c ${PACKAGEROOT}/src/lib/libcmd/logname.c ${PACKAGEROOT}/src/lib/libcmd/md5sum.c ${PACKAGEROOT}/src/lib/libcmd/mkdir.c ${PACKAGEROOT}/src/lib/libcmd/mkfifo.c ${PACKAGEROOT}/src/lib/libcmd/mktemp.c ${PACKAGEROOT}/src/lib/libcmd/mv.c ${PACKAGEROOT}/src/lib/libcmd/paste.c ${PACKAGEROOT}/src/lib/libcmd/pathchk.c ${PACKAGEROOT}/src/lib/libcmd/pids.c ${PACKAGEROOT}/src/lib/libcmd/rev.c ${PACKAGEROOT}/src/lib/libcmd/rm.c ${PACKAGEROOT}/src/lib/libcmd/rmdir.c ${PACKAGEROOT}/src/lib/libcmd/stty.c ${PACKAGEROOT}/src/lib/libcmd/sum.c ${PACKAGEROOT}/src/lib/libcmd/sync.c ${PACKAGEROOT}/src/lib/libcmd/tail.c ${PACKAGEROOT}/src/lib/libcmd/tee.c ${PACKAGEROOT}/src/lib/libcmd/tty.c ${PACKAGEROOT}/src/lib/libcmd/uname.c ${PACKAGEROOT}/src/lib/libcmd/uniq.c ${PACKAGEROOT}/src/lib/libcmd/vmstate.c ${PACKAGEROOT}/src/lib/libcmd/wc.c ${PACKAGEROOT}/src/lib/libcmd/revlib.c ${PACKAGEROOT}/src/lib/libcmd/wclib.c ${PACKAGEROOT}/src/lib/libcmd/fts_fix.c ${PACKAGEROOT}/src/lib/libcmd/lib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -481,277 +481,277 @@ prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done cmd.h
 done cmdinit.c
-meta cmdinit.o %.c>%.o cmdinit.c cmdinit
+meta cmdinit.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/cmdinit.c cmdinit
 prev cmdinit.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c cmdinit.c
 done cmdinit.o generated
 make basename.o
 prev basename.c
-meta basename.o %.c>%.o basename.c basename
+meta basename.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/basename.c basename
 prev basename.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c basename.c
 done basename.o generated
 make cat.o
 prev cat.c
-meta cat.o %.c>%.o cat.c cat
+meta cat.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/cat.c cat
 prev cat.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -D_BLD_cmd -D_PACKAGE_ast -c cat.c
 done cat.o generated
 make chgrp.o
 prev chgrp.c
-meta chgrp.o %.c>%.o chgrp.c chgrp
+meta chgrp.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/chgrp.c chgrp
 prev chgrp.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c chgrp.c
 done chgrp.o generated
 make chmod.o
 prev chmod.c
-meta chmod.o %.c>%.o chmod.c chmod
+meta chmod.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/chmod.c chmod
 prev chmod.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c chmod.c
 done chmod.o generated
 make chown.o
 prev chown.c
-meta chown.o %.c>%.o chown.c chown
+meta chown.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/chown.c chown
 prev chown.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c chown.c
 done chown.o generated
 make cksum.o
 prev cksum.c
-meta cksum.o %.c>%.o cksum.c cksum
+meta cksum.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/cksum.c cksum
 prev cksum.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c cksum.c
 done cksum.o generated
 make cmp.o
 prev cmp.c
-meta cmp.o %.c>%.o cmp.c cmp
+meta cmp.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/cmp.c cmp
 prev cmp.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c cmp.c
 done cmp.o generated
 make comm.o
 prev comm.c
-meta comm.o %.c>%.o comm.c comm
+meta comm.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/comm.c comm
 prev comm.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c comm.c
 done comm.o generated
 make cp.o
 prev cp.c
-meta cp.o %.c>%.o cp.c cp
+meta cp.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/cp.c cp
 prev cp.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c cp.c
 done cp.o generated
 make cut.o
 prev cut.c
-meta cut.o %.c>%.o cut.c cut
+meta cut.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/cut.c cut
 prev cut.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c cut.c
 done cut.o generated
 make dirname.o
 prev dirname.c
-meta dirname.o %.c>%.o dirname.c dirname
+meta dirname.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/dirname.c dirname
 prev dirname.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c dirname.c
 done dirname.o generated
 make date.o
 prev date.c
-meta date.o %.c>%.o date.c date
+meta date.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/date.c date
 prev date.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c date.c
 done date.o generated
 make expr.o
 prev expr.c
-meta expr.o %.c>%.o expr.c expr
+meta expr.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/expr.c expr
 prev expr.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c expr.c
 done expr.o generated
 make fds.o
 prev fds.c
-meta fds.o %.c>%.o fds.c fds
+meta fds.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/fds.c fds
 prev fds.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c fds.c
 done fds.o generated
 make fmt.o
 prev fmt.c
-meta fmt.o %.c>%.o fmt.c fmt
+meta fmt.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/fmt.c fmt
 prev fmt.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c fmt.c
 done fmt.o generated
 make fold.o
 prev fold.c
-meta fold.o %.c>%.o fold.c fold
+meta fold.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/fold.c fold
 prev fold.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c fold.c
 done fold.o generated
 make getconf.o
 prev getconf.c
-meta getconf.o %.c>%.o getconf.c getconf
+meta getconf.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/getconf.c getconf
 prev getconf.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c getconf.c
 done getconf.o generated
 make head.o
 prev head.c
-meta head.o %.c>%.o head.c head
+meta head.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/head.c head
 prev head.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c head.c
 done head.o generated
 make id.o
 prev id.c
-meta id.o %.c>%.o id.c id
+meta id.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/id.c id
 prev id.c
 exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c id.c
 done id.o generated
 make join.o
 prev join.c
-meta join.o %.c>%.o join.c join
+meta join.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/join.c join
 prev join.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c join.c
 done join.o generated
 make ln.o
 prev ln.c
-meta ln.o %.c>%.o ln.c ln
+meta ln.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/ln.c ln
 prev ln.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c ln.c
 done ln.o generated
 make logname.o
 prev logname.c
-meta logname.o %.c>%.o logname.c logname
+meta logname.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/logname.c logname
 prev logname.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c logname.c
 done logname.o generated
 make md5sum.o
 prev md5sum.c
-meta md5sum.o %.c>%.o md5sum.c md5sum
+meta md5sum.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/md5sum.c md5sum
 prev md5sum.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c md5sum.c
 done md5sum.o generated
 make mkdir.o
 prev mkdir.c
-meta mkdir.o %.c>%.o mkdir.c mkdir
+meta mkdir.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/mkdir.c mkdir
 prev mkdir.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c mkdir.c
 done mkdir.o generated
 make mkfifo.o
 prev mkfifo.c
-meta mkfifo.o %.c>%.o mkfifo.c mkfifo
+meta mkfifo.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/mkfifo.c mkfifo
 prev mkfifo.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c mkfifo.c
 done mkfifo.o generated
 make mktemp.o
 prev mktemp.c
-meta mktemp.o %.c>%.o mktemp.c mktemp
+meta mktemp.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/mktemp.c mktemp
 prev mktemp.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c mktemp.c
 done mktemp.o generated
 make mv.o
 prev mv.c
-meta mv.o %.c>%.o mv.c mv
+meta mv.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/mv.c mv
 prev mv.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c mv.c
 done mv.o generated
 make paste.o
 prev paste.c
-meta paste.o %.c>%.o paste.c paste
+meta paste.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/paste.c paste
 prev paste.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c paste.c
 done paste.o generated
 make pathchk.o
 prev pathchk.c
-meta pathchk.o %.c>%.o pathchk.c pathchk
+meta pathchk.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/pathchk.c pathchk
 prev pathchk.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c pathchk.c
 done pathchk.o generated
 make pids.o
 prev pids.c
-meta pids.o %.c>%.o pids.c pids
+meta pids.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/pids.c pids
 prev pids.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c pids.c
 done pids.o generated
 make rev.o
 prev rev.c
-meta rev.o %.c>%.o rev.c rev
+meta rev.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/rev.c rev
 prev rev.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c rev.c
 done rev.o generated
 make rm.o
 prev rm.c
-meta rm.o %.c>%.o rm.c rm
+meta rm.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/rm.c rm
 prev rm.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c rm.c
 done rm.o generated
 make rmdir.o
 prev rmdir.c
-meta rmdir.o %.c>%.o rmdir.c rmdir
+meta rmdir.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/rmdir.c rmdir
 prev rmdir.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c rmdir.c
 done rmdir.o generated
 make stty.o
 prev stty.c
-meta stty.o %.c>%.o stty.c stty
+meta stty.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/stty.c stty
 prev stty.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c stty.c
 done stty.o generated
 make sum.o
 prev sum.c
-meta sum.o %.c>%.o sum.c sum
+meta sum.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/sum.c sum
 prev sum.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c sum.c
 done sum.o generated
 make sync.o
 prev sync.c
-meta sync.o %.c>%.o sync.c sync
+meta sync.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/sync.c sync
 prev sync.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c sync.c
 done sync.o generated
 make tail.o
 prev tail.c
-meta tail.o %.c>%.o tail.c tail
+meta tail.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/tail.c tail
 prev tail.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c tail.c
 done tail.o generated
 make tee.o
 prev tee.c
-meta tee.o %.c>%.o tee.c tee
+meta tee.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/tee.c tee
 prev tee.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c tee.c
 done tee.o generated
 make tty.o
 prev tty.c
-meta tty.o %.c>%.o tty.c tty
+meta tty.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/tty.c tty
 prev tty.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c tty.c
 done tty.o generated
 make uname.o
 prev uname.c
-meta uname.o %.c>%.o uname.c uname
+meta uname.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/uname.c uname
 prev uname.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c uname.c
 done uname.o generated
 make uniq.o
 prev uniq.c
-meta uniq.o %.c>%.o uniq.c uniq
+meta uniq.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/uniq.c uniq
 prev uniq.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c uniq.c
 done uniq.o generated
 make vmstate.o
 prev vmstate.c
-meta vmstate.o %.c>%.o vmstate.c vmstate
+meta vmstate.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/vmstate.c vmstate
 prev vmstate.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c vmstate.c
 done vmstate.o generated
 make wc.o
 prev wc.c
-meta wc.o %.c>%.o wc.c wc
+meta wc.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/wc.c wc
 prev wc.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c wc.c
 done wc.o generated
 make revlib.o
 prev revlib.c
-meta revlib.o %.c>%.o revlib.c revlib
+meta revlib.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/revlib.c revlib
 prev revlib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c revlib.c
 done revlib.o generated
 make wclib.o
 prev wclib.c
-meta wclib.o %.c>%.o wclib.c wclib
+meta wclib.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/wclib.c wclib
 prev wclib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_cmd -c wclib.c
 done wclib.o generated
@@ -761,13 +761,13 @@ exec - ${AR} x ${mam_libsum} sumlib.o
 done sumlib.o generated
 make fts_fix.o
 prev fts_fix.c
-meta fts_fix.o %.c>%.o fts_fix.c fts_fix
+meta fts_fix.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/fts_fix.c fts_fix
 prev fts_fix.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c fts_fix.c
 done fts_fix.o generated
 make lib.o
 prev lib.c
-meta lib.o %.c>%.o lib.c lib
+meta lib.o %.c>%.o ${PACKAGEROOT}/src/lib/libcmd/lib.c lib
 prev lib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c lib.c
 done lib.o generated
@@ -835,7 +835,7 @@ exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/CMDLIST(&)/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c |
+exec - 	${PACKAGEROOT}/src/lib/libcmd/cmdinit.c ${PACKAGEROOT}/src/lib/libcmd/basename.c ${PACKAGEROOT}/src/lib/libcmd/cat.c ${PACKAGEROOT}/src/lib/libcmd/chgrp.c ${PACKAGEROOT}/src/lib/libcmd/chmod.c ${PACKAGEROOT}/src/lib/libcmd/chown.c ${PACKAGEROOT}/src/lib/libcmd/cksum.c ${PACKAGEROOT}/src/lib/libcmd/cmp.c ${PACKAGEROOT}/src/lib/libcmd/comm.c ${PACKAGEROOT}/src/lib/libcmd/cp.c ${PACKAGEROOT}/src/lib/libcmd/cut.c ${PACKAGEROOT}/src/lib/libcmd/dirname.c ${PACKAGEROOT}/src/lib/libcmd/date.c ${PACKAGEROOT}/src/lib/libcmd/expr.c ${PACKAGEROOT}/src/lib/libcmd/fds.c ${PACKAGEROOT}/src/lib/libcmd/fmt.c ${PACKAGEROOT}/src/lib/libcmd/fold.c ${PACKAGEROOT}/src/lib/libcmd/getconf.c ${PACKAGEROOT}/src/lib/libcmd/head.c ${PACKAGEROOT}/src/lib/libcmd/id.c ${PACKAGEROOT}/src/lib/libcmd/join.c ${PACKAGEROOT}/src/lib/libcmd/ln.c ${PACKAGEROOT}/src/lib/libcmd/logname.c ${PACKAGEROOT}/src/lib/libcmd/md5sum.c ${PACKAGEROOT}/src/lib/libcmd/mkdir.c ${PACKAGEROOT}/src/lib/libcmd/mkfifo.c ${PACKAGEROOT}/src/lib/libcmd/mktemp.c ${PACKAGEROOT}/src/lib/libcmd/mv.c ${PACKAGEROOT}/src/lib/libcmd/paste.c ${PACKAGEROOT}/src/lib/libcmd/pathchk.c ${PACKAGEROOT}/src/lib/libcmd/pids.c ${PACKAGEROOT}/src/lib/libcmd/rev.c ${PACKAGEROOT}/src/lib/libcmd/rm.c ${PACKAGEROOT}/src/lib/libcmd/rmdir.c ${PACKAGEROOT}/src/lib/libcmd/stty.c ${PACKAGEROOT}/src/lib/libcmd/sum.c ${PACKAGEROOT}/src/lib/libcmd/sync.c ${PACKAGEROOT}/src/lib/libcmd/tail.c ${PACKAGEROOT}/src/lib/libcmd/tee.c ${PACKAGEROOT}/src/lib/libcmd/tty.c ${PACKAGEROOT}/src/lib/libcmd/uname.c ${PACKAGEROOT}/src/lib/libcmd/uniq.c ${PACKAGEROOT}/src/lib/libcmd/vmstate.c ${PACKAGEROOT}/src/lib/libcmd/wc.c ${PACKAGEROOT}/src/lib/libcmd/revlib.c ${PACKAGEROOT}/src/lib/libcmd/wclib.c ${PACKAGEROOT}/src/lib/libcmd/fts_fix.c ${PACKAGEROOT}/src/lib/libcmd/lib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdlist.h
