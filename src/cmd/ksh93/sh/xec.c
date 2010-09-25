@@ -70,6 +70,7 @@ static void	coproc_init(Shell_t*, int pipes[]);
 
 static void	*timeout;
 static char	pipejob;
+static char	nopost;
 
 struct funenv
 {
@@ -1791,9 +1792,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 			}
 			else if((t->par.partre->tre.tretyp&(FAMP|TFORK))==(FAMP|TFORK))
 			{
-				pid_t	bckpid = shp->bckpid;
-				sh_exec(t->par.partre,flags);
-				shp->bckpid = bckpid;
+				pid_t	pid;
+				while((pid=fork())< 0)
+					_sh_fork(shp,pid,0,0);
+				if(pid==0)
+				{
+					sh_exec(t->par.partre,flags);
+					shp->st.trapcom[0]=0;
+					sh_done(shp,0);
+				}
 			}
 			else
 				sh_subshell(shp,t->par.partre,flags,0);

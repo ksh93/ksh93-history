@@ -883,6 +883,8 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 	{
 		struct index_array *aq = (struct index_array*)ap;
 		array_setbit(aq->bits,aq->cur,ARRAY_CHILD);
+		if(c=='.' && !nq->nvalue.cp)
+			ap->nelem++;
 		up->np = nq;
 	}
 	if(c=='.')

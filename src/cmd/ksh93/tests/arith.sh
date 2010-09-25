@@ -636,4 +636,13 @@ function f
 }
 [[ $F == 1 ]] || err_exit 'scoping bug2 with arithmetic expression'
 
+unset play foo x z
+typeset -A play
+x=foo
+play[$x]=(x=2)
+for ((i=0; i < 2; i++))
+do	(( play[$x].y , z++  ))
+done
+(( z==2 )) || err_exit 'unset compound array variable error with for loop optimization'
+
 exit $((Errors))

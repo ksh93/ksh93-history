@@ -1,3 +1,7 @@
+10-09-24 string/chresc.c: \Cc for control c, \S[.X.] for collating symbol X
+10-09-24 string/chresc.c: { \cc \e } deprecated
+10-09-22 regex/regcomp.c: fix off-by-one collation class allocation bug
+10-09-20 regex/regclass.c: fix CTYPES off-by-one bug
 10-09-14 comp/conf.sh: const int conf_elements, prefix_elements;
 10-09-08 add features/sizeof => ast_sizeof.h
 10-08-31 comp/getopt[l].c: export functions for dlls

@@ -1,4 +1,15 @@
-10-09-13  --- Release ksh93u  ---
+10-09-22  --- Release ksh93u  ---
+10-09-22  A bug which could cause an excpetion when a function with static
+	  variables was redefined has been fixed.
+10-09-21  A bug in the processing of (command&) which created a job in the
+	  parent process has been fixed.
+10-09-21  A for loop optimization bug with arithmetic expression evaluation
+	  has been fixed.
+10-09-21  A bug in which a recursive function containing a pipeline could
+	  lead to an exception fixed after 8 levels of recursion has been
+	  fixed.
+10-09-18  A bug in which the count of elements in an array was wrong leading
+	  to an excpetion has been fixed.
 10-09-13  A bug which occured when both xtrace and showme options where
 	  specified in which the xtrace option disabled showme has been fixed.
 10-09-13  A bug in which creating a reference to an array variable with any

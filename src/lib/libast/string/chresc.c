@@ -45,6 +45,7 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 	register int		c;
 	const char*		e;
 	const char*		b;
+	char*			r;
 	int			n;
 	int			w;
 #if !_PACKAGE_astsa
@@ -90,38 +91,26 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 					goto noexpand;
 				c = '\b';
 				break;
-			case 'c':
-				if (!(flags & FMT_EXP_CHAR))
-					goto noexpand;
-			control:
-				if (c = *s)
-				{
-					s++;
-					if (islower(c))
-						c = toupper(c);
-				}
-				c = ccmapc(c, CC_NATIVE, CC_ASCII);
-				c ^= 0x40;
-				c = ccmapc(c, CC_ASCII, CC_NATIVE);
-				break;
+			case 'c': /*DEPRECATED*/
 			case 'C':
 				if (!(flags & FMT_EXP_CHAR))
 					goto noexpand;
-				if (*s == '-' && *(s + 1))
+				if (c = *s)
 				{
 					s++;
-					goto control;
+					if (c == '\\')
+					{
+						c = chrexp(s - 1, &r, 0, flags);
+						s = (const char*)r;
+					}
+					if (islower(c))
+						c = toupper(c);
+					c = ccmapc(c, CC_NATIVE, CC_ASCII);
+					c ^= 0x40;
+					c = ccmapc(c, CC_ASCII, CC_NATIVE);
 				}
-#if !_PACKAGE_astsa
-				if (*s == '[' && (n = regcollate(s + 1, (char**)&e, buf, sizeof(buf))) >= 0)
-				{
-					if (n == 1)
-						c = buf[0];
-					s = e;
-				}
-#endif
 				break;
-			case 'e':
+			case 'e': /*DEPRECATED*/
 			case 'E':
 				if (!(flags & FMT_EXP_CHAR))
 					goto noexpand;
@@ -154,6 +143,36 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 				if (!(flags & FMT_EXP_LINE))
 					goto noexpand;
 				c = '\r';
+				break;
+			case 'S':
+				if (!(flags & FMT_EXP_CHAR))
+					goto noexpand;
+				if (*s == '[')
+				{
+#if _PACKAGE_astsa
+					if ((n = *(e = s + 1)) == '.' || n == '=')
+						while (*e && *e++ != n)
+							if (*e == ']')
+							{
+								if ((e - s) == 4)
+									c = *(s + 2);
+								s = e + 1;
+								break;
+							}
+#else
+					if ((n = regcollate(s + 1, (char**)&e, buf, sizeof(buf))) >= 0)
+					{
+						s = e;
+						c = buf[0];
+						if (n > 1)
+						{
+							for (w = 1; w < n; w++)
+								c = (c << 8) | buf[w];
+							w = 1;
+						}
+					}
+#endif
+				}
 				break;
 			case 't':
 				if (!(flags & FMT_EXP_CHAR))

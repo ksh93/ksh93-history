@@ -778,7 +778,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					}
 					else
 					{
-						root = shp->var_tree->walk;
+				
+						if(shp->var_tree->walk)
+							root = shp->var_tree->walk;
 						flags |= NV_NOSCOPE;
 						noscope = 1;
 					}

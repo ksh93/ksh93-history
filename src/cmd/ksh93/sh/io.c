@@ -1585,7 +1585,7 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 			{
 				cp = (char*)shp->fdptrs[savefd];
 				if(cp >= oldptr && cp < oldend)
-					shp->fdptrs[savefd] = (int*)(oldptr+moved);
+					shp->fdptrs[savefd] = (int*)(cp+moved);
 			}
 		}
 	}
@@ -1676,6 +1676,7 @@ void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 		if(origfd<0)
 		{
 			/* this should never happen */
+			savefd = filemap[fd].save_fd;
 			shp->sftable[savefd] = 0;
 			sh_close(savefd);
 			return;

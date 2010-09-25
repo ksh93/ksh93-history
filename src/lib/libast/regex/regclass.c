@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -40,13 +40,6 @@ struct Ctype_s
 };
 
 static Ctype_t*		ctypes;
-
-#define CTYPES		12
-#if _lib_wctype
-#define WTYPES		8
-#else
-#define WTYPES		0
-#endif
 
 /*
  * this stuff gets around posix failure to define isblank,
@@ -119,6 +112,9 @@ static Ctype_t ctype[] =
 	{ SZ("upper"), Isupper },
 	{ SZ("word"),  Isword  },
 	{ SZ("xdigit"),Isxdigit},
+
+#define CTYPES		13
+
 #if _lib_wctype
 	{ 0, 0,        Is_wc_1 },
 	{ 0, 0,        Is_wc_2 },
@@ -128,6 +124,13 @@ static Ctype_t ctype[] =
 	{ 0, 0,        Is_wc_6 },
 	{ 0, 0,        Is_wc_7 },
 	{ 0, 0,        Is_wc_8 },
+
+#define WTYPES		8
+
+#else
+
+#define WTYPES		0
+
 #endif
 };
 

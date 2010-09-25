@@ -138,11 +138,16 @@ typedef struct Cenv_s
  * allocate a new Rex_t node
  */
 
+#if _BLD_DEBUG
+#define node(a,b,c,d,e)	node(a,b,c,d,e, const char* file, unsigned int line)
+#endif
+
 static Rex_t*
 node(Cenv_t* env, int type, int lo, int hi, size_t extra)
 {
 	register Rex_t*	e;
 
+	DEBUG_TEST(0x0800,(sfprintf(sfstdout, "%s:%d node(%d,%d,%d,%u)\n", file, line, type, lo, hi, sizeof(Rex_t) + extra)),(0));
 	if (e = (Rex_t*)alloc(env->disc, 0, sizeof(Rex_t) + extra))
 	{
 		memset(e, 0, sizeof(Rex_t) + extra);
@@ -158,6 +163,11 @@ node(Cenv_t* env, int type, int lo, int hi, size_t extra)
 	}
 	return e;
 }
+
+#if _BLD_DEBUG
+#undef	node
+#define node(a,b,c,d,e)	node(a,b,c,d,e,__FILE__,__LINE__)
+#endif
 
 /*
  * free a Trie_node_t node
@@ -1462,7 +1472,7 @@ bra(Cenv_t* env)
 			drop(env->disc, e);
 			if (ic = env->flags & REG_ICASE)
 				elements *= 2;
-			if (!(e = node(env, REX_COLL_CLASS, 1, 1, (elements + 2) * sizeof(Celt_t))))
+			if (!(e = node(env, REX_COLL_CLASS, 1, 1, (elements + 3) * sizeof(Celt_t))))
 				return 0;
 			ce = (Celt_t*)e->re.data;
 			e->re.collate.invert = neg;

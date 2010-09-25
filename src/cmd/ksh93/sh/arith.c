@@ -84,10 +84,10 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		}
 		if(!np && assign)
 			np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
+		cp[flag] = c;
 		if(!np)
 			return(0);
 		root = shp->last_root;
-		cp[flag] = c;
 		if(cp[flag+1]=='[')
 			flag++;
 		else
