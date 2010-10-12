@@ -645,6 +645,7 @@ static void funload(Shell_t *shp,int fno, const char *name)
 	shp->funload = 1;
 	error_info.line = 0;
 	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),SH_FUNEVAL);
+	sh_close(fno);
 	shp->readscript = 0;
 	if(!(np=nv_search(name,shp->fun_tree,0)) || !np->nvalue.ip)
 		pname = stakcopy(shp->st.filename);

@@ -562,7 +562,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				path_alias(np,path_absolute(shp,nv_name(np),NIL(Pathcomp_t*)));
 				continue;
 			}
-			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY));
+			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|NV_FARRAY);
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
 			if(tp->pflag)
@@ -583,7 +583,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			}
 			if(!nv_isarray(np) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
 			{
-				if(comvar || (shp->last_root==shp->var_tree && (tp->tp || (!shp->st.real_fun && (nvflags&NV_STATIC)))))
+				if(comvar || (shp->last_root==shp->var_tree && (tp->tp || (!shp->st.real_fun && (nvflags&NV_STATIC)) || (!(flag&NV_EXPORT) && nv_isattr(np,(NV_EXPORT|NV_IMPORT))==(NV_EXPORT|NV_IMPORT)))))
 {
 					_nv_unset(np,0);
 }
@@ -1098,7 +1098,12 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 			isfun = is_afunction(np);
 			if(troot==shp->var_tree)
 			{
+				Namarr_t *ap;
+#if SHOPT_FIXEDARRAY
+				if((ap=nv_arrayptr(np)) && !ap->fixed  && name[strlen(name)-1]==']' && !nv_getsub(np))
+#else
 				if(nv_isarray(np) && name[strlen(name)-1]==']' && !nv_getsub(np))
+#endif /* SHOPT_FIXEDARRAY */
 				{
 					r=1;
 					continue;
@@ -1109,11 +1114,18 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 			}
 			if(!nv_isnull(np))
 				_nv_unset(np,0);
-			nv_close(np);
 			if(troot==shp->var_tree && shp->st.real_fun && (dp=shp->var_tree->walk) && dp==shp->st.real_fun->sdict)
 				nv_delete(np,dp,NV_NOFREE);
 			else if(isfun)
 				nv_delete(np,troot,NV_NOFREE);
+#if 0
+			/* causes unsetting local variable to expose global */
+			else if(shp->var_tree==troot && shp->var_tree!=shp->var_base && nv_search((char*)np,shp->var_tree,HASH_BUCKET|HASH_NOSCOPE))
+				nv_delete(np,shp->var_tree,0);
+#endif
+			else
+				nv_close(np);
+
 		}
 		else if(troot==shp->alias_tree)
 			r = 1;

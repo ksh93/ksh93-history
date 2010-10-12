@@ -36,8 +36,9 @@
 #undef	regmatch_t
 
 #include <ast_common.h>
+#include <ast_wchar.h>
 
-#define REG_VERSION	20030916L
+#define REG_VERSION	20100930L
 
 /* regcomp flags */
 
@@ -213,7 +214,7 @@ extern void	regfree(regex_t*);
 
 extern regclass_t regclass(const char*, char**);
 extern int	regaddclass(const char*, regclass_t);
-extern int	regcollate(const char*, char**, char*, int);
+extern int	regcollate(const char*, char**, char*, size_t, wchar_t*);
 extern int	regcomb(regex_t*, regex_t*);
 extern size_t	regdecomp(regex_t*, regflags_t, char*, size_t);
 extern int	regdup(regex_t*, regex_t*);

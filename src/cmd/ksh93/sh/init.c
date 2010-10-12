@@ -1672,7 +1672,6 @@ static Init_t *nv_init(Shell_t *shp)
 	shp->var_base = shp->var_tree = inittree(shp,shtab_variables);
 	SHLVL->nvalue.ip = &shlvl;
 	ip->IFS_init.hdr.disc = &IFS_disc;
-	ip->IFS_init.hdr.nofree = 1;
 	ip->PATH_init.disc = &RESTRICTED_disc;
 	ip->PATH_init.nofree = 1;
 	ip->FPATH_init.disc = &RESTRICTED_disc;
@@ -1728,6 +1727,7 @@ static Init_t *nv_init(Shell_t *shp)
 	ip->LANG_init.nofree = 1;
 #endif /* _hdr_locale */
 	nv_stack(IFSNOD, &ip->IFS_init.hdr);
+	ip->IFS_init.hdr.nofree = 1;
 	nv_stack(PATHNOD, &ip->PATH_init);
 	nv_stack(FPATHNOD, &ip->FPATH_init);
 	nv_stack(CDPNOD, &ip->CDPATH_init);

@@ -2570,7 +2570,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					struct Ufunction *rp = np->nvalue.rp;
 					rp->np = np;
 					if(!shp->fpathdict)
-						shp->fpathdict = dtopen(&_Rpdisc,Dtbag);
+						shp->fpathdict = dtopen(&_Rpdisc,Dtobag);
 					if(shp->fpathdict)
 						dtinsert(shp->fpathdict,rp);
 				}
@@ -3222,8 +3222,10 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		sh_trap(trap,0);
 		free(trap);
 	}
-	if(shp->exitval > SH_EXITSIG)
-		sh_fault(shp->exitval&SH_EXITMASK);
+	if(jmpval)
+		r=shp->exitval;
+	if(r>SH_EXITSIG && ((r&SH_EXITMASK)==SIGINT || ((r&SH_EXITMASK)==SIGQUIT)))
+		sh_fault(r&SH_EXITMASK);
 	if(jmpval > SH_JMPFUN)
 	{
 		sh_chktrap(shp);

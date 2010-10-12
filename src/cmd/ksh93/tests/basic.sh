@@ -487,4 +487,12 @@ then	float t0=SECONDS
 	(( (SECONDS-t0) < 1 )) && err_exit 'time not waiting for pipeline to complete' 
 fi
 
+cat > $tmp/foo.sh <<- \EOF
+	eval "cat > /dev/null  < /dev/null"
+	sleep 1
+EOF
+float sec=SECONDS
+. $tmp/foo.sh  | cat > /dev/null
+(( (SECONDS-sec) < .7 ))  && err_exit '. script does not restore output redirection with eval'
+
 exit $((Errors))

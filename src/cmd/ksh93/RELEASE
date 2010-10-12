@@ -1,4 +1,31 @@
-10-09-22  --- Release ksh93u  ---
+10-10-10  --- Release ksh93u  ---
+10-10-08  A bug in which killing the last command in a function defined
+	  with function name, terminated the calling script has been fixed. 
+10-10-08  A bug which could cause a core dump if IFS is unset inside a function
+	  has been fixed.
+10-10-07 +To reduce unwanted side effects, invoking typeset without the export
+	  option and without an assignment now causes the variables to be unset
+	  if the variable is inherited from the environment.
+10-10-06  The closing brace for ${ command } new a token no matter what
+	  character follows it.
+10-10-04  The change for $'...' expansion on 10-08-09 did not expand parameters
+	  contained in the error message and this has been fixed.
+10-10-04  A bug in which a declaration of indexed array (-a_ in a type
+	  definition would be displayed as a compound indexed array (-C -a)
+	  has been fixed.
+10-09-30  The C99 math funtion ldexp has been added.
+10-09-30  A bug with two dimensional arrays with expansion of the form
+	  ${ref[0..5]} where ref is a nameref to array[i] has been fixed.
+10-09-29  A bug in which an eval with redirections invoked from a dot script
+	  would not restore the file has been fixed.
+10-09-29  A bug in which loading a function from FPATH could leave a file
+	  descriptor open has been fixed.
+10-09-28 +A new compile option SHOPT_FIXEDARRAY has been added and is being
+	  evaluation.  It allows fixed sized indexed arrays be to defined
+	  using "typeset array[dim1][dim2]...[dimn]".  Fixed sized arrays
+	  are used the same way indexed arrays are.  Currently, only fixed
+	  arrays of fixed objects (float, int, and justifies objects) are
+	  supported.
 10-09-22  A bug which could cause an excpetion when a function with static
 	  variables was redefined has been fixed.
 10-09-21  A bug in the processing of (command&) which created a job in the

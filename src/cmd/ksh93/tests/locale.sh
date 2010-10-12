@@ -264,6 +264,12 @@ got=$(message; LANG=C message; message)
 	GOT=$(printf %q "$got")
 	err_exit "LANG change not seen by function -- expected $EXP or $ALT, got $GOT"
 }
+
+a_thing=fish
+got=$(print yyy$"hello \" ${a_thing}\\"xx)
+expected='yyy(debug,'$Command',libshell,hello " fish\)xx'
+[[ $got == "$expected" ]] || err_exit "$\"...\" containing expansions fails: expected $expected, got $got"
+
 unset LANG
 
 LC_ALL=C

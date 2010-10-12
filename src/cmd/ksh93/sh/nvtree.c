@@ -410,6 +410,9 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 	char *ip=0;
 	Namfun_t *fp=0; 
 	Namval_t *typep=0;
+#if SHOPT_FIXEDARRAY
+	int fixed=0;
+#endif /* SHOPT_FIXEDARRAY */
 	for(fp=np->nvfun;fp;fp=fp->next)
 	{
 		if((typep=fp->type) || (fp->disc && fp->disc->typef && (typep=(*fp->disc->typef)(np,fp))))
@@ -487,6 +490,11 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 						if(prefix && *prefix)
 							sfwrite(out,"-C ",3);
 					}
+#if SHOPT_FIXEDARRAY
+					if(ap && ap->fixed)
+						fixed++;
+					else
+#endif /* SHOPT_FIXEDARRAY */
 					if(ap && !array_assoc(ap) && (xp=(char**)(ap+1)) && *xp)
 						ip = nv_namptr(*xp,0)->nvname;
 				}
@@ -522,6 +530,14 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 				break;
 			}
 		}
+#if SHOPT_FIXEDARRAY
+		if(fixed)
+		{
+			sfprintf(out,"%s",nv_name(np));
+			nv_arrfixed(np,out,0,(char*)0);
+			sfputc(out,';');
+		}
+#endif /* SHOPT_FIXEDARRAY */
 		if(fp)
 			outtype(np,fp,out,prefix);
 		if(noname)
@@ -863,9 +879,13 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					continue;
 				if(wp->indent>0)
 					sfnputc(outfile,'\t',wp->indent);
+				if(cp[-1]=='.')
+					cp--;
 				sfputr(outfile,cp,'=');
+				if(*cp=='.')
+					cp++;
 				argv = genvalue(++argv,cp,cp-arg ,wp);
-				sfputc(outfile,'\n');
+				sfputc(outfile,wp->indent>0?'\n':';');
 			}
 			else
 			{

@@ -84,6 +84,7 @@ typedef Sfdouble_t (*Math_f)(Sfdouble_t,...);
 typedef Sfdouble_t (*Math_1f_f)(Sfdouble_t);
 typedef int	   (*Math_1i_f)(Sfdouble_t);
 typedef Sfdouble_t (*Math_2f_f)(Sfdouble_t,Sfdouble_t);
+typedef Sfdouble_t (*Math_2f_i)(Sfdouble_t,int);
 typedef int        (*Math_2i_f)(Sfdouble_t,Sfdouble_t);
 typedef Sfdouble_t (*Math_3f_f)(Sfdouble_t,Sfdouble_t,Sfdouble_t);
 typedef int        (*Math_3i_f)(Sfdouble_t,Sfdouble_t,Sfdouble_t);
@@ -441,7 +442,10 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				num = sh_mathfun(shp,(void*)fun,2,arg);
 				break;
 			}
-			num = (*((Math_2f_f)fun))(sp[1],num);
+			if(c&T_NOFLOAT)
+				num = (*((Math_2f_i)fun))(sp[1],(int)num);
+			else
+				num = (*((Math_2f_f)fun))(sp[1],num);
 			break;
 		    case A_CALL2I:
 			sp-=2,tp-=2;
@@ -705,6 +709,8 @@ again:
 				vp->infun=1;
 				if((int)lvalue.nargs<0)
 					userfun = T_BINARY;
+				else if((int)lvalue.nargs&040)
+					userfun = T_NOFLOAT;
 				stakputc(A_PUSHF);
 				stakpush(vp,fun,Math_f);
 				stakputc(1);
@@ -719,7 +725,7 @@ again:
 			vp->paren--;
 			if(fun)
 			{
-				int  x= (nargs>7)?2:-1;
+				int  x= (nargs&010)?2:-1;
 				nargs &= 7;
 				if(vp->infun != nargs)
 					ERROR(vp,e_argcount);

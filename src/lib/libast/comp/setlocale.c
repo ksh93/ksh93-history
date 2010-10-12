@@ -551,7 +551,35 @@ sjis_mbtowc(register wchar_t* p, register const char* s, size_t n)
 
 #endif
 
+#if 0
+
 #define utf8_wctomb	wctomb
+
+#else
+
+static int
+utf8_wctomb(char* u, wchar_t w) 
+{
+	if (!u)
+		return 0;
+	if (w >= (1<<11))
+	{
+		*u++ = 0xe0|(w>>12);  
+		*u++ = 0x80|((w>>6)&0x3f);
+		*u++ = 0x80|(w&0x3f);
+		return 3;
+	}
+	if (w >= (1<<7))
+	{
+		*u++ = 0xc0|(w>>6);  
+		*u++ = 0x80|(w&0x3f);
+		return 2;
+	}
+	*u++ = w;
+	return 1;
+}
+
+#endif
 
 static const uint32_t		utf8mask[] =
 {

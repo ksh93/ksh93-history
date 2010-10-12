@@ -248,11 +248,11 @@ function bar
 }
 bar
 
-expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=3;typeset -C -a text=(line1 line2 line3);typeset -l -i mtime=-1))'
+expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=3;typeset -a text=(line1 line2 line3);typeset -l -i mtime=-1))'
 got=$(typeset -p _Dbg_filenames)
 [[ "$got" == "$expected" ]] || {
 	got=$(printf %q "$got")
-	err_exit "copy to associative array of types in function failed -- expected '$expected', got '$got'"
+	err_exit "copy to associative array of types in function failed -- expected '$expected', got $got"
 }
 
 $SHELL > /dev/null  <<- '+++++' || err_exit 'passing _ as nameref arg not working'
@@ -535,5 +535,15 @@ foobar_t z=(x=3 y=4)
 (( z.slen == 1 )) || err_exit 'z.slen should be 1'
 (( .sh.type.foobar_t.slen == 1 )) || err_exit '.sh.type.foobar_t.slen should be 1'
 (( .sh.type.foobar_t.len == 1 )) || err_exit '.sh.type.foobar_t.len should be 1'
+
+typeset -T z_t=( typeset -a ce )
+z_t x1
+x1.ce[3][4]=45
+compound c
+z_t -a c.x2
+c.x2[9]=x1
+got=$(typeset +p "c.x2[9].ce")
+exp='typeset -a c.x2[9].ce'
+[[ $got == "$exp" ]] || err_exit "typeset +p 'c.x2[9].ce' failed -- expected '$exp', got '$got'"
 
 exit $Errors

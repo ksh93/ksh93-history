@@ -92,7 +92,7 @@ struct Namarray
 	Namfun_t	hdr;
 	long		nelem;				/* number of elements */
 	void	*(*fun)(Namval_t*,const char*,int);	/* associative arrays */
-	Namval_t	*fixed;			/* for fixed sized arrays */
+	void		*fixed;			/* for fixed sized arrays */
 	Dt_t		*table;			/* for subscripts */
 	void		*scope;			/* non-zerp when scoped */
 };

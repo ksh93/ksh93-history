@@ -192,6 +192,23 @@ make include/sfio_s.h implicit
 done include/sfio_s.h dontcare
 make include/ast_std.h implicit
 make include/regex.h implicit
+make ast_wchar.h implicit
+make FEATURE/wchar
+meta FEATURE/wchar features/%>FEATURE/% features/wchar wchar
+make features/wchar
+done features/wchar
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wchar
+prev std/endian.h implicit
+make std/stdio.h implicit
+prev ast_stdio.h implicit
+done std/stdio.h dontcare
+prev std/stdio.h implicit
+prev ast_common.h implicit
+done FEATURE/wchar generated
+exec - cmp 2>/dev/null -s FEATURE/wchar ast_wchar.h || { rm -f ast_wchar.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wchar ast_wchar.h; }
+prev std/stdio.h implicit
+prev ast_common.h implicit
+done ast_wchar.h dontcare generated
 prev ast_common.h implicit
 done include/regex.h dontcare
 prev comp/getopt.h implicit
@@ -257,7 +274,7 @@ done FEATURE/stdio generated
 exec - cmp 2>/dev/null -s FEATURE/stdio ast_stdio.h || { rm -f ast_stdio.h; silent test -d . || mkdir .; ${STDCP} FEATURE/stdio ast_stdio.h; }
 prev include/sfio_s.h implicit
 prev include/ast_std.h implicit
-done ast_stdio.h generated
+done ast_stdio.h dontcare generated
 make ast_nl_types.h
 make FEATURE/nl_types
 meta FEATURE/nl_types features/%>FEATURE/% features/nl_types nl_types
@@ -267,23 +284,7 @@ exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '
 done FEATURE/nl_types generated
 exec - cmp 2>/dev/null -s FEATURE/nl_types ast_nl_types.h || { rm -f ast_nl_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/nl_types ast_nl_types.h; }
 done ast_nl_types.h generated
-make ast_wchar.h
-make FEATURE/wchar
-meta FEATURE/wchar features/%>FEATURE/% features/wchar wchar
-make features/wchar
-done features/wchar
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wchar
-prev std/endian.h implicit
-make std/stdio.h implicit
-prev ast_stdio.h implicit
-done std/stdio.h dontcare
-prev std/stdio.h implicit
-prev ast_common.h implicit
-done FEATURE/wchar generated
-exec - cmp 2>/dev/null -s FEATURE/wchar ast_wchar.h || { rm -f ast_wchar.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wchar ast_wchar.h; }
-prev std/stdio.h implicit
-prev ast_common.h implicit
-done ast_wchar.h generated
+prev ast_wchar.h
 exec - : clean up obsolete headers :
 exec - rm -rf dirent.h iconv.h nl_types.h stdio.h wchar.h ast_hdr.h ast_types.h ast_unistd.h iffeio.h \
 exec - 	${INSTALLROOT}/include/ast/limits.h ${INSTALLROOT}/include/ast/unistd.h \
@@ -3775,10 +3776,6 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iregex -Iinclude -Istd -D_PA
 done regclass.o generated
 make regcoll.o
 make regex/regcoll.c
-make regex/ucs_names.h implicit
-prev ast_common.h implicit
-done regex/ucs_names.h
-prev include/ccode.h implicit
 prev regex/reglib.h implicit
 done regex/regcoll.c
 meta regcoll.o %.c>%.o regex/regcoll.c regcoll

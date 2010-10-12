@@ -72,7 +72,6 @@ typedef struct
 	Dtdisc_t	catalog_disc;	/* catalog dict discipline	*/
 	Dt_t*		catalogs;	/* catalog dictionary handle	*/
 	Sfio_t*		tmp;		/* temporary string stream	*/
-	const char*	debug;		/* debug locale name		*/
 	int		error;		/* no dictionaries!		*/
 	char		null[1];	/* null string			*/
 } State_t;
@@ -339,8 +338,6 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 			state.error = 1;
 			goto done;
 		}
-		if (streq(loc, "debug"))
-			state.debug = loc;
 	}
 
 	/*
@@ -357,6 +354,7 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 #if DEBUG_trace > 1
 sfprintf(sfstderr, "AHA#%d:%s cmd %s cat %s:%s id %s msg `%s'\n", __LINE__, __FILE__, cmd, cat, error_info.catalog, ast.id, msg);
 #endif
+		cp = 0;
 		goto done;
 	}
 
@@ -400,34 +398,35 @@ sfprintf(sfstderr, "AHA#%d:%s cp->cat %p cp->debug %d NOCAT %p\n", __LINE__, __F
 			sfprintf(state.tmp, "(%s,%d,%d)%s", cp->name, mp->set, mp->seq, r);
 			r = tempuse(state.tmp, p);
 		}
-		goto done;
 	}
-
-	/*
-	 * get the translated message
-	 */
-
-	r = catgets(cp->cat, mp->set, mp->seq, msg);
-	if (ast.locale.set & AST_LC_translate)
-		sfprintf(sfstderr, "translate locale=%s catalog=%s set=%d seq=%d \"%s\" => \"%s\"\n", cp->locale, cp->name, mp->set, mp->seq, msg, r == (char*)msg ? "NOPE" : r);
-	if (r != (char*)msg)
+	else
 	{
-		if (streq(r, (char*)msg))
-			r = (char*)msg;
-		else if (strcmp(fmtfmt(r), fmtfmt(msg)))
+		/*
+		 * get the translated message
+		 */
+
+		r = catgets(cp->cat, mp->set, mp->seq, msg);
+		if (r != (char*)msg)
 		{
-			sfprintf(sfstderr, "locale %s catalog %s message %d.%d \"%s\" does not match \"%s\"\n", cp->locale, cp->name, mp->set, mp->seq, r, msg);
-			r = (char*)msg;
+			if (streq(r, (char*)msg))
+				r = (char*)msg;
+			else if (strcmp(fmtfmt(r), fmtfmt(msg)))
+			{
+				sfprintf(sfstderr, "locale %s catalog %s message %d.%d \"%s\" does not match \"%s\"\n", cp->locale, cp->name, mp->set, mp->seq, r, msg);
+				r = (char*)msg;
+			}
+		}
+		if (ast.locale.set & AST_LC_debug)
+		{
+			p = tempget(state.tmp);
+			sfprintf(state.tmp, "(%s,%d,%d)%s", cp->name, mp->set, mp->seq, r);
+			r = tempuse(state.tmp, p);
 		}
 	}
-	if (ast.locale.set & AST_LC_debug)
-	{
-		p = tempget(state.tmp);
-		sfprintf(state.tmp, "(%s,%d,%d)%s", cp->name, mp->set, mp->seq, r);
-		r = tempuse(state.tmp, p);
-	}
+	if (ast.locale.set & AST_LC_translate)
+		sfprintf(sfstderr, "translate locale=%s catalog=%s set=%d seq=%d \"%s\" => \"%s\"\n", cp->locale, cp->name, mp->set, mp->seq, msg, r == (char*)msg ? "NOPE" : r);
  done:
-	if (r == (char*)msg && loc == state.debug)
+	if (r == (char*)msg && (!cp && streq(loc, "debug") || cp && cp->debug))
 	{
 		p = tempget(state.tmp);
 		sfprintf(state.tmp, "(%s,%s,%s,\"%s\")", loc, cmd, cat, r);

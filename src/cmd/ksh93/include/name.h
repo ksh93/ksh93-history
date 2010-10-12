@@ -70,6 +70,12 @@ union Value
 #define ARRAY_SETSUB	(64L<<ARRAY_BITS)	/* set subscript */
 #define ARRAY_NOSCOPE	(128L<<ARRAY_BITS)	/* top level scope only */
 #define ARRAY_TREE	(256L<<ARRAY_BITS)	/* arrays of compound vars */
+#if SHOPT_FIXEDARRAY
+#   define ARRAY_FIXED	ARRAY_NOCLONE		/* For index values */
+#   define NV_FARRAY	0x10000000		/* fixed sized arrays */
+#else
+#   define NV_FARRAY	0
+#endif /* SHOPT_FIXEDARRAY */
 #define NV_ASETSUB	8			/* set subscript */
 
 /* These flags are used as options to array_get() */
@@ -84,6 +90,10 @@ struct Namref
 	Namval_t	*table;
 	Dt_t		*root;
 	char		*sub;
+#if SHOPT_FIXEDARRAY
+	int		curi;
+	char		dim;
+#endif /* SHOPT_FIXEDARRAY */
 };
 
 /* This describes a user shell function node */
@@ -152,6 +162,10 @@ struct Ufunction
 #define nv_reftree(n)	((n)->nvalue.nrp->root)
 #define nv_reftable(n)	((n)->nvalue.nrp->table)
 #define nv_refsub(n)	((n)->nvalue.nrp->sub)
+#if SHOPT_FIXEDARRAY
+#   define nv_refindex(n)	((n)->nvalue.nrp->curi)
+#   define nv_refdimen(n)	((n)->nvalue.nrp->dim)
+#endif /* SHOPT_FIXEDARRAY */
 
 /* ... etc */
 
@@ -205,6 +219,10 @@ extern int		nv_subsaved(Namval_t*);
 extern void		nv_typename(Namval_t*, Sfio_t*);
 extern void		nv_newtype(Namval_t*);
 extern int		nv_istable(Namval_t*);
+extern size_t		nv_datasize(Namval_t*, size_t*);
+#if SHOPT_FIXEDARRAY
+   extern int		nv_arrfixed(Namval_t*, Sfio_t*, int, char*);
+#endif /* SHOPT_FIXEDARRAY */
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern const Namdisc_t	ENUM_disc;

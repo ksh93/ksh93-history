@@ -29,7 +29,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Research) 2008-09-10 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Research) 2010-10-04 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -818,11 +818,14 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 			c = mp->swap;
 			t = ckmagic(mp, file, b + (b > buf), st, num);
 			mp->swap = c;
-			if (!t)
+			if (t)
+			{
+				if (b > buf)
+					*b = ' ';
+				b += strlen(b);
+			}
+			else if (ep->cont == '&')
 				goto next;
-			if (b > buf)
-				*b = ' ';
-			b += strlen(b);
 			break;
 
 		case 'r':

@@ -31,6 +31,7 @@ SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
 SHOPT_EDPREDICT == 1		/* predictive editing  */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
 SHOPT_FILESCAN == 1		/* fast file scan */
+SHOPT_FIXEDARRAY == 1		/* fixed dimension indexed array */
 SHOPT_FS_3D == 			/* 3d file system */
 SHOPT_HISTEXPAND == 1		/* csh-style history file expansions */
 SHOPT_KIA == 1			/* shell information database generation */

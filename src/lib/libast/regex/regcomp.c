@@ -1362,7 +1362,7 @@ bra(Cenv_t* env)
 					setadd(e->re.charclass, last);
 					elements++;
 				}
-				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf))) < 0)
+				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf), NiL)) < 0)
 					goto ecollate;
 				if (c > 1)
 					collate++;
@@ -1376,7 +1376,7 @@ bra(Cenv_t* env)
 			case '.':
 				if (env->regexp)
 					goto normal;
-				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf))) < 0)
+				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf), NiL)) < 0)
 					goto ecollate;
 				if (c > 1)
 					collate++;
@@ -1433,7 +1433,7 @@ bra(Cenv_t* env)
 		Cchr_t			key;
 		int			rw;
 		int			rc;
-		int			wc;
+		wchar_t			wc;
 		unsigned char*		rp;
 		unsigned char*		pp;
 		char*			wp;
@@ -1607,10 +1607,8 @@ bra(Cenv_t* env)
 							ce = col(ce, ic, rp, rw, rc, NiL, 0, 0);
 						pp = (unsigned char*)cb[inrange];
 						rp = env->cursor + 1;
-						if ((rw = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX)) < 0)
+						if ((rw = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX, &wc)) < 0)
 							goto ecollate;
-						wp = (char*)pp;
-						wc = mbchar(wp);
 						c = 0;
 						if (ic)
 						{
@@ -1664,7 +1662,7 @@ bra(Cenv_t* env)
 						if (env->regexp)
 							goto complicated_normal;
 						pp = (unsigned char*)cb[inrange];
-						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX)) < 0)
+						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX, NiL)) < 0)
 							goto ecollate;
 						c = buf[0];
 						break;

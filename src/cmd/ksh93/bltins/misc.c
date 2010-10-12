@@ -291,6 +291,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		{
 			char buff[IOBSIZE+1];
 			iop = sfnew(NIL(Sfio_t*),buff,IOBSIZE,fd,SF_READ);
+			sh_offstate(SH_NOFORK);
 			sh_eval(iop,0);
 		}
 	}

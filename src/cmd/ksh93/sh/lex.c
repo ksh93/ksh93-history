@@ -1170,6 +1170,8 @@ int sh_lex(Lex_t* lp)
 				{
 					if(mode==ST_BEGIN && (lp->lex.reservok||lp->comsub))
 					{
+						if(lp->comsub)
+							return(lp->token=c);
 						fcgetc(n);
 						if(n>0)
 							fcseek(-LEN);
@@ -1560,7 +1562,8 @@ static int comsub(register Lex_t *lp, int endtok)
 			    rbrace:
 				if(endtok==LBRACE && --count<=0)
 					goto done;
-				lp->comsub = (count==1);
+				if(count==1)
+					lp->comsub = endtok==LBRACE;
 				break;
 			    case IPROCSYM:	case OPROCSYM:
 			    case LPAREN:
@@ -1590,7 +1593,9 @@ static int comsub(register Lex_t *lp, int endtok)
 				messages |= lp->lexd.message;
 				break;
 			    case ';':
-				fcgetc(c);
+				do
+					fcgetc(c);
+				while(!sh_lexstates[ST_BEGIN][c]);
 				if(c==RBRACE && endtok==LBRACE)
 					goto rbrace;
 				if(c>0)

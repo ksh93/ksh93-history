@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2009-11-21
+# @(#)magic (AT&T Research) 2010-10-10
 #
 # magic number database for file(1) and magic(3)
 #
@@ -249,54 +249,43 @@ o()
 0	long		0413		bsd 386 executable, paged	x-system/exe
 +16	long		>0		, not stripped
 
-0	long		0xcafebabe	java object			x-system/obj
-&4	byte		0
+0	belong		0xcafebabe	java object			x-java/obj
+&4	belong		>30
++6	beshort		*		version %d
++6	beshort		*		.%d
 
-n{
-+0	long		1		[vax]
-+0	long		2		[romp]
-+0	long		3		[architecture=%ld]
-+0	long		4		[ns32032]
-+0	long		5		[ns32332]
-+0	long		6		[m68k]
-+0	long		7		[i386]
-+0	long		8		[mips]
-+0	long		9		[ns32532]
-+0	long		10		[architecture=%ld]
-+0	long		11		[hp pa-risc]
-+0	long		12		[acorn]
-+0	long		13		[m88k]
-+0	long		14		[sparc]
-+0	long		15		[i860-big]
-+0	long		16		[i860]
-+0	long		17		[rs6000]
-+0	long		18		[powerPC]
-+0	long		>=19		[architecture=%ld]
-+8	void		magic()
+a{
++4	long		&0x00ffffff=1	vax
++4	long		&0x00ffffff=2	romp
++4	long		&0x00ffffff=3	architecture=%ld
++4	long		&0x00ffffff=4	ns32032
++4	long		&0x00ffffff=5	ns32332
++4	long		&0x00ffffff=6	m68k
++4	long		&0x00ffffff=7	i386
++4	long		&0x00ffffff=8	mips
++4	long		&0x00ffffff=9	ns32532
++4	long		&0x00ffffff=10	architecture=%ld
++4	long		&0x00ffffff=11	hp pa-risc
++4	long		&0x00ffffff=12	acorn
++4	long		&0x00ffffff=13	m88k
++4	long		&0x00ffffff=14	sparc
++4	long		&0x00ffffff=15	i860-big
++4	long		&0x00ffffff=16	i860
++4	long		&0x00ffffff=17	rs6000
++4	long		&0x00ffffff=18	powerpc
++4	long		&0x00ffffff>=19	architecture=%ld
++4	long		&0x01000000!=0	\b-64
 }
-0	long		0xcafebabe	fat
-+4	long		loop(n,8,20)
-0	long		0xfeedface	mach-o
-+4	long		<=0		architecture=%ld
-+4	long		1		vax
-+4	long		2		romp
-+4	long		3		architecture=%ld
-+4	long		4		ns32032
-+4	long		5		ns32332
-+4	long		6		m68k
-+4	long		7		i386
-+4	long		8		mips
-+4	long		9		ns32532
-+4	long		10		architecture=%ld
-+4	long		11		hp pa-risc
-+4	long		12		acorn
-+4	long		13		m88k
-+4	long		14		sparc
-+4	long		15		i860-big
-+4	long		16		i860
-+4	long		17		rs6000
-+4	long		18		powerpc
-+4	long		>=19		architecture=%ld
+
+0	belong		0xcafebabe	universal binary [
++4	belong		loop(a,4,20)
++4	belong		*		]
++010000	void		magic()
++0	void		*		...
+
+0	long		&0xfffffffe=0xfeedface	mach-o
++0	long		&0x00000001!=0	64-bit
+a()
 +12	long		<=0		filetype=%ld
 {
 12	long		1		relocatable			x-system/obj
@@ -1095,6 +1084,9 @@ o{
 
 0		short	0x5a4c
 o()
+
+0	long		0x4c000000
+&4	long		0x01140200	windows shortcut		application/x-windows-lnk
 
 0	string		PMCC		windows GRP			application/dos-grp
 369	string		MICROSOFT	windows PIF			application/dos-pif

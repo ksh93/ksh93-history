@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -93,7 +93,6 @@ exp=2 got=${#bb.items[@]}
 [[ ${#bb.items[@]} == 2 ]] || err_exit "\${#bb.items[@]} incorrect for iteration $i -- expected $exp, got '$got'"
 [[ $b == "$bb" ]] || err_exit "\$b='$b' != \$bb='$bb'"
 b.count=0
-false
 unset b bb
 done
 
@@ -201,9 +200,11 @@ unset cc[two].x cc[two].y cc[two].z
 (( cc[two].len == cc[one].len )) || err_exit 'cc[two].len != cc[one].len'
 (( cc[two].count == 4 )) || err_exit 'cc[two].count != 4'
 cc[three]=cc[two]
-[[ ${cc[two]} == "${cc[three]}" ]] || err_exit ' ${cc[two]} != ${cc[three]}'
-[[ $cc[two] == "${cc[three]}" ]] || err_exit ' $cc[two] != $cc[three]'
-[[ ${#cc[@]} == 3 ]] || err_exit '${#cc[@]} != 3'
+[[ ${cc[two]} == "${cc[three]}" ]] || err_exit "\${cc[two]}='${cc[two]}' != \${cc[three]}='${cc[three]}'"
+[[ $cc[two] == "${cc[three]}" ]] || err_exit "\$cc[two]='${cc[two]}' != \${cc[three]}='${cc[three]}'"
+exp=3
+got=${#cc[@]}
+[[ $got == $exp ]] || err_exit "\${#cc[@]} failed -- expected '$exp', got '$got'"
 unset cc[two].name unset cc[two].colors
 cc[two].count=0
 unset cc

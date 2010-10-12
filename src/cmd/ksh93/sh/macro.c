@@ -440,6 +440,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	int		brace = 0;
 	Sfio_t		*sp = mp->sp;
 	Stk_t		*stkp = mp->shp->stk;
+	char		*resume = 0;
 	mp->sp = NIL(Sfio_t*);
 	mp->quote = newquote;
 	first = cp = fcseek(0);
@@ -595,34 +596,27 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 				mp->quote = 1;
 				if(!ERROR_translating())
 					break;
-				while(1)
+				while(n=c, c= *++cp)
 				{
-					while((c = *++cp) && c!='"');
-					n = cp-first;
-					sfwrite(stkp,first,n);
-					fcseek(n);
-					if(c)
-					{
-						fcseek(1);
+					if(c=='\\' && n==c)
+						c = 0;
+					else if(c=='"' && n!='\\')
 						break;
-					}
-					if((c=fcfill()) <= 0)
-						break;
-					first = cp = fcseek(-1);
 				}
+				n = cp-first;
+				sfwrite(stkp,first,n);
 				sfputc(stkp,0);
 				cp = stkptr(stkp,off);
 				dp = (char*)sh_translate(cp);
-				if(dp == cp)
-					dp = strdup(cp);
-				else
-					cp = dp;
 				stkseek(stkp,off);
-				mac_copy(mp,dp,strlen(dp));
-				if(dp!=cp)
-					free(dp);
-				mp->quote = 0;
-				cp = first;
+				if(dp==cp)
+				{
+					cp = first;
+					break;
+				}
+				resume = fcseek(n);
+				fcclose();
+				fcsopen(dp);
 			}
 			else if(n==0 || !varsub(mp))
 			{
@@ -647,6 +641,14 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					mac_copy(mp,first,c);
 				else
 					sfwrite(stkp,first,c);
+			}
+			if(n==S_EOF && resume)
+			{
+				fcclose();
+				fcsopen(resume);
+				resume = 0;
+				cp = first = fcseek(0);
+				continue;
 			}
 			c += (n!=S_EOF);
 			first = fcseek(c);
@@ -1184,6 +1186,7 @@ retry1:
 		offset = stktell(stkp);
 		do
 		{
+			register int d;
 			np = 0;
 			do
 			{
@@ -1192,11 +1195,11 @@ retry1:
 				else
 					sfwrite(stkp,fcseek(0)-LEN,LEN);
 			}
-			while(((c=fcmbget(&LEN)),isaname(c))||type && c=='.');
+			while((d=c,(c=fcmbget(&LEN)),isaname(c))||type && c=='.');
 			while(c==LBRACT && (type||mp->arrayok))
 			{
 				mp->shp->argaddr=0;
-				if((c=fcmbget(&LEN),isastchar(c)) && fcpeek(0)==RBRACT)
+				if((c=fcmbget(&LEN),isastchar(c)) && fcpeek(0)==RBRACT && d!='.')
 				{
 					if(type==M_VNAME)
 						type = M_SUBNAME;
@@ -1217,7 +1220,8 @@ retry1:
 				{
 					fcseek(-LEN);
 					c = stktell(stkp);
-					sfputc(stkp,LBRACT);
+					if(d!='.')
+						sfputc(stkp,LBRACT);
 					v = stkptr(stkp,subcopy(mp,1));
 					if(type && mp->dotdot)
 					{
@@ -1228,7 +1232,7 @@ retry1:
 						else if(type==M_SIZE)
 							goto nosub;
 					}
-					else
+					else if(d!='.')
 						sfputc(stkp,RBRACT);
 					c = fcmbget(&LEN);
 					if(c==0 && type==M_VNAME)
@@ -1302,7 +1306,11 @@ retry1:
 		{
 			if(nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
+#if  SHOPT_FILESCAN
+			else if(np!=REPLYNOD  || !mp->shp->cur_line)
+#else
 			else
+#endif  /* SHOPT_FILESCAN */
 				np = 0;
 		}
 		ap = np?nv_arrayptr(np):0;
@@ -1310,6 +1318,13 @@ retry1:
 		{
 			if(mp->dotdot)
 			{
+				Namval_t *nq;
+#if SHOPT_FIXEDARRAY
+				if(ap && !ap->fixed && (nq=nv_opensub(np)))
+#else
+				if(ap && (nq=nv_opensub(np)))
+#endif /* SHOPT_FIXEDARRAY */
+					ap = nv_arrayptr(np=nq);
 				if(ap)
 				{
 					nv_putsub(np,v,ARRAY_SCAN);

@@ -645,4 +645,6 @@ do	(( play[$x].y , z++  ))
 done
 (( z==2 )) || err_exit 'unset compound array variable error with for loop optimization'
 
+[[ $($SHELL 2> /dev/null -c 'print -- $(( ldexp(1, 4) ))' ) == 16 ]] || err_exit 'funtion ldexp not implement or not working correctly'
+
 exit $((Errors))

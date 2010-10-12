@@ -90,16 +90,13 @@ gl_dirnext(glob_t* gp, void* handle)
 	struct dirent*	dp;
 
 	while (dp = (struct dirent*)(*gp->gl_readdir)(handle))
-#ifdef D_FILENO
-		if (D_FILENO(dp))
-#endif
-		{
+	{
 #ifdef D_TYPE
-			if (D_TYPE(dp) != DT_UNKNOWN && D_TYPE(dp) != DT_DIR && D_TYPE(dp) != DT_LNK)
-				gp->gl_status |= GLOB_NOTDIR;
+		if (D_TYPE(dp) != DT_UNKNOWN && D_TYPE(dp) != DT_DIR && D_TYPE(dp) != DT_LNK)
+			gp->gl_status |= GLOB_NOTDIR;
 #endif
-			return dp->d_name;
-		}
+		return dp->d_name;
+	}
 	return 0;
 }
 

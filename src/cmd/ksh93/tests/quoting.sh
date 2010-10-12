@@ -79,6 +79,7 @@ x=$(print -r -- "\"$HOME\"")
 if	[[ $x != '"'$HOME'"' ]]
 then	err_exit "nested double quotes failed"
 fi
+unset z
 : ${z="a{b}c"}
 if	[[ $z != 'a{b}c' ]]
 then	err_exit '${z="a{b}c"} not correct'

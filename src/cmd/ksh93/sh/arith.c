@@ -100,8 +100,22 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		np = mp;
 	while(nv_isref(np))
 	{
+#if SHOPT_FIXEDARRAY
+		int n,dim;
+		dim = nv_refdimen(np);
+		n = nv_refindex(np);
+#endif /* SHOPT_FIXEDARRAY */
 		sub = nv_refsub(np);
 		np = nv_refnode(np);
+#if SHOPT_FIXEDARRAY
+		if(n)
+		{
+			Namarr_t *ap = nv_arrayptr(np);
+			ap->nelem = dim;
+			nv_putsub(np,(char*)0,n);
+		}
+		else
+#endif /* SHOPT_FIXEDARRAY */
 		if(sub)
 			nv_putsub(np,sub,assign==NV_ASSIGN?ARRAY_ADD:0);
 	}
@@ -125,8 +139,13 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			if(strchr(sub,'$'))
 				sub = sh_mactrim(shp,sub,0);
 			*cp = flag;
-			nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
-			if(flag!='[')
+#if SHOPT_FIXEDARRAY
+			ap = nv_arrayptr(np);
+			cp = nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE|(ap&&ap->fixed?NV_FARRAY:0));
+#else
+			cp = nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
+#endif /* SHOPT_FIXEDARRAY */
+			if(*cp!='[')
 				break;
 		skip:
 			if(nq = nv_opensub(np))

@@ -493,4 +493,7 @@ fi
 wait $! 2> /dev/null
 (( $? > 128 )) && err_exit 'incorrect exit status with comsub' 
 
+$SHELL 2> /dev/null -c '[[ ${ print foo },${ print bar } == foo,bar ]]' || err_exit  '${ print foo },${ print bar } not working'
+$SHELL 2> /dev/null -c '[[ ${ print foo; },${ print bar } == foo,bar ]]' || err_exit  '${ print foo; },${ print bar } not working'
+
 exit $Errors

@@ -45,6 +45,7 @@ i 1 iszero fpclassify=FP_ZERO
 f 1 j0
 f 1 j1
 f 2 jn
+x 2 ldexp
 f 1 lgamma
 f 1 log
 f 1 log10

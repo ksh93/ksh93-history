@@ -1,3 +1,9 @@
+10-10-10 misc/glob.c: drop ancient D_FILENO(d)!=0 test and trust readdir()
+10-10-06 misc/translate.c: fix "debug" locale logic
+10-10-04 misc/magic.c: fix magic() skip check to honor the continuation
+10-10-04 regex/regcoll.c: add wchar_t* args to regcollate(), drop ucs name lookup
+10-09-28 comp/setlocale.c: add utf8_wctomb()
+10-09-28 string/chresc.c,regex/regcoll.c: fix \S[.X.] (\C[.X.] never worked!)
 10-09-24 string/chresc.c: \Cc for control c, \S[.X.] for collating symbol X
 10-09-24 string/chresc.c: { \cc \e } deprecated
 10-09-22 regex/regcomp.c: fix off-by-one collation class allocation bug

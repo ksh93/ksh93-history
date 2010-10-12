@@ -9,7 +9,7 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-09-08 $
+@(#)$Id: shtests (AT&T Research) 2010-10-04 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -171,7 +171,6 @@ do	if	[[ ! -r $i ]]
 	if	(( t != 1 ))
 	then	T=${T}s
 	fi
-	E=error
 	u=${i##*/}
 	u=${u%.sh}
 	if	[[ $i == $timesensitive ]]
@@ -188,6 +187,7 @@ do	if	[[ ! -r $i ]]
 				lang=LANG=$locale
 			fi
 			echo test $o begins ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"}
+			E=error
 			if	eval $lang \$SHELL \$i
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 			else	e=$?
@@ -206,6 +206,7 @@ do	if	[[ ! -r $i ]]
 	then	c=$tmp/shcomp-$u.ksh
 		o="$u(shcomp)"
 		echo test $o begins ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"}
+		E=error
 		if	$SHCOMP $i > $c
 		then	if	$SHELL $c
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"

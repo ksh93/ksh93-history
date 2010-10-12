@@ -1098,4 +1098,26 @@ function B
 x=$(B)      
 [[ $x == $'TRAP A\nTRAP B' ]] || err_exit "trap from funtions in subshells fails got" $x
 
+function foo
+{
+	typeset bar=abc
+	unset bar
+#	[[ $bar == bam ]] || err_exit 'unsetting local variable does not expose global variable'
+	[[ $bar ]] && err_exit 'unsetting local variable exposes global variable'
+}
+bar=bam
+foo
+
+sleep=$(whence -p sleep)
+function gosleep
+{
+	$sleep 4
+}
+x=$(
+	(sleep 1; ps | grep sleep | read pid extra; kill -- $pid) &
+	gosleep 2> /dev/null
+	print ok
+)
+[[ $x == ok ]] || err_exit 'TERM signal sent to last process of function kills the script'
+
 exit $((Errors))
