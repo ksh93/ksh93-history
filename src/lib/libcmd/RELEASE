@@ -1,3 +1,6 @@
+10-10-20 cp: add --timestamps (preserv timestamps and permissions)
+10-10-20 ln: fix 'cannot replace existing file' logic
+10-10-10 cp,mv: add --remove-destination
 10-08-11 cp.c,expr.c: use conformance("standard",0) test
 10-08-11 cut.c: use mbnsize() instead of mblen() (for ast C.UTF-8)
 10-07-28 chgrp.c,chmod.c,cksum.c: fts_path for diagnostics, not fts_accpath!

@@ -250,14 +250,11 @@ static struct jobsave *jobsave_create(pid_t pid)
 	{
 		int id = (pid>>16) &0x3f;
 		struct cosh  *csp;
-		char	*name = "unknown";
 		for(csp=job.colist; csp; csp = csp->next)
 		{
 			if(csp->id == id)
 				break;
 		}
-		if(csp)
-			name = csp->name;
 		sfprintf(shp->strbuf,"%s.%d%c",csp->name,pid&0xff,0);
 	}
 	else
@@ -270,7 +267,7 @@ static struct jobsave *jobsave_create(pid_t pid)
 	Shell_t		*shp = sh_getinterp();
 	struct cosh	*csp;
 	struct process	*pw,*pwnext;
-	pid_t		mask,val;
+	pid_t		val;
 	int		n,r=0;
 	char		*cp = strchr(name,'.');
 	if(!cp)
@@ -1391,8 +1388,13 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 			pw->p_flag |= (P_DONE|P_NOTIFY);
 	}
 #ifdef SHOPT_BGX
-	if(bg && !(pw->p_flag&P_DONE))
-		pw->p_flag |= P_BG;
+	if(bg)
+	{
+		if(pw->p_flag&P_DONE)
+			job.numbjob--;
+		else
+			pw->p_flag |= P_BG;
+	}
 #endif /* SHOPT_BGX */
 	lastpid = 0;
 	job_unlock();
@@ -1761,7 +1763,6 @@ static void job_unstop(register struct process *px)
 
 static struct process *job_unpost(register struct process *pwtop,int notify)
 {
-	Shell_t	*shp = pwtop->p_shp;
 	register struct process *pw;
 	/* make sure all processes are done */
 #ifdef DEBUG

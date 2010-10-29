@@ -1273,6 +1273,7 @@ static void put_table(register Namval_t* np, const char* val, int flags, Namfun_
 	dtclose(root);
 	if(!(fp->nofree&1))
 		free((void*)fp);
+	np->nvfun = 0;
 }
 
 /*
@@ -1408,3 +1409,15 @@ int nv_hasget(Namval_t *np)
 	}
 	return(0);
 }
+
+#if SHOPT_NAMESPACE
+Namval_t *sh_fsearch(Shell_t *shp, const char *fname, int add)
+{
+	Stk_t	*stkp = shp->stk;
+	int	offset = stktell(stkp);
+	sfputr(stkp,nv_name(shp->namespace),'.');
+	sfputr(stkp,fname,0);
+	fname = stkptr(stkp,offset);
+	return(nv_search(fname,sh_subfuntree(add&NV_ADD),add));
+}
+#endif /* SHOPT_NAMESPACE */

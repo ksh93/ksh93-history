@@ -636,12 +636,22 @@ static int set_instance(Shell_t *shp,Namval_t *nq, Namval_t *node, struct Namref
 	nr->np = nq;
 	nr->root = shp->var_tree;
 	nr->table = shp->last_table;
+#if SHOPT_NAMESPACE
+	if(!nr->table && shp->namespace)
+		nr->table = shp->namespace;
+#endif /* SHOPT_NAMESPACE */
 	shp->instance = 1;
 	if((ap=nv_arrayptr(nq)) && (sp = nv_getsub(nq)))
 		sp = strdup(sp);
 	shp->instance = 0;
-	if(shp->var_tree!=shp->var_base && !nv_open(cp,nr->root,NV_VARNAME|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL))
+	if(shp->var_tree!=shp->var_base && !nv_search((char*)nq,nr->root,HASH_BUCKET|HASH_NOSCOPE))
+	{
+#if SHOPT_NAMESPACE
+		nr->root = shp->namespace?nv_dict(shp->namespace):shp->var_base;
+#else
 		nr->root = shp->var_base;
+#endif /* SHOPT_NAMESPACE */
+	}
 	nv_putval(SH_NAMENOD, cp, NV_NOFREE);
 	memcpy(node,L_ARGNOD,sizeof(*node));
 	L_ARGNOD->nvalue.nrp = nr;
@@ -756,7 +766,6 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	struct cosh	*csp = ((struct cosh*)shp->coshell);
 	Cojob_t		*cjp;
 	char		*str,*trap,host[PATH_MAX];
-	register char	*cp;
 	int		lineno,sig,trace = sh_isoption(SH_XTRACE);
 	int		verbose = sh_isoption(SH_VERBOSE);
 	sh_offoption(SH_XTRACE);
@@ -961,7 +970,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(np && is_abuiltin(np))
 			{
 				if(!command)
+				{
+					Namval_t *mp;
+#if SHOPT_NAMESPACE
+					if(shp->namespace && (mp=sh_fsearch(shp,np->nvname,0)))
+						np = mp;
+					else
+#endif /* SHOPT_NAMESPACE */
 					np = dtsearch(shp->fun_tree,np);
+				}
 #if SHOPT_PFSH
 				if(sh_isoption(SH_PFSH) && nv_isattr(np,NV_BLTINOPT) && !nv_isattr(np,NV_BLTPFSH)) 
 				{
@@ -984,14 +1001,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					np = nv_bfsearch(com0, root, &nq, &cp); 
 #if SHOPT_NAMESPACE
 					if(shp->namespace && !nq && !cp)
-					{
-						int offset = stktell(stkp);
-						sfputr(stkp,nv_name(shp->namespace),-1);
-						sfputc(stkp,'.');
-						sfputr(stkp,com0,0);
-						stkseek(stkp,offset);
-						np = nv_bfsearch(stkptr(stkp,offset), root, &nq, &cp); 
-					}
+						np = sh_fsearch(shp,com0,0);
 #endif /* SHOPT_NAMESPACE */
 				}
 				comn = com[argn-1];
@@ -1121,7 +1131,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(path_search(shp,com0,NIL(Pathcomp_t**),1))
 					{
 						error_info.line = t->com.comline-shp->st.firstline;
-						if((np=nv_search(com0,shp->fun_tree,0)) && !np->nvalue.ip)
+#if SHOPT_NAMESPACE
+						if(!shp->namespace || !(np=sh_fsearch(shp,com0,0)))
+#endif /* SHOPT_NAMESPACE */
+							np=nv_search(com0,shp->fun_tree,0);
+						if(!np && !np->nvalue.ip)
 						{
 							Namval_t *mp=nv_search(com0,shp->bltin_tree,0);
 							if(mp)
@@ -1332,7 +1346,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 					{
 						indx = path_search(shp,com0,NIL(Pathcomp_t**),0);
 						if(indx==1)
+						{
+#if SHOPT_NAMESPACE
+							if(shp->namespace)
+								np = sh_fsearch(shp,com0,0);
+							else
+#endif /* SHOPT_NAMESPACE */
 							np = nv_search(com0,shp->fun_tree,HASH_NOSCOPE);
+						}
 						
 						if(!np->nvalue.ip)
 						{
@@ -2405,11 +2426,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 		    }
 		    case TFUN:
 		    {
-			register Namval_t *np;
+			register Namval_t *np=0;
 			register struct slnod *slp;
 			register char *fname = ((struct functnod*)t)->functnam;
 			register char *cp = strrchr(fname,'.');
-			register Namval_t *npv=0;
+			register Namval_t *npv=0,*mp;
 #if SHOPT_COSHELL
 			if(shp->inpool)
 			{
@@ -2453,7 +2474,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				shp->var_tree = root;
 				if(bot)
 					dtview(shp->var_tree,bot);
-				sh_exec(t->for_.fortre,flags);
+				sh_exec(t->for_.fortre,flags|sh_state(SH_ERREXIT));
 				if(dtvnext(shp->var_tree))
 					bot = dtview(shp->var_tree,0);
 				shp->var_tree = oldroot;
@@ -2488,19 +2509,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 				sfprintf(stkp,"%s.%s%c",nv_name(npv),cp,0);
 				fname = stkptr(stkp,offset);
 			}
-			else if((np=nv_search(fname,shp->bltin_tree,0)) && nv_isattr(np,BLT_SPC))
+			else if((mp=nv_search(fname,shp->bltin_tree,0)) && nv_isattr(mp,BLT_SPC))
 				errormsg(SH_DICT,ERROR_exit(1),e_badfun,fname);
 #if SHOPT_NAMESPACE
-			else if(shp->namespace)
-			{
-				int offset = stktell(stkp);
-				sfputr(stkp,nv_name(shp->namespace),-1);
-				sfputc(stkp,'.');
-				sfputr(stkp,fname,0);
-				fname = stkptr(stkp,offset);
-				np = nv_search(fname,sh_subfuntree(1),NV_ADD);
-			}
-			if(!shp->namespace)
+			if(shp->namespace && !shp->prefix && *fname!='.')
+				np = sh_fsearch(shp,fname,NV_ADD|HASH_NOSCOPE);
+			if(!np)
 #endif /* SHOPT_NAMESPACE */
 			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_NOARRAY|NV_VARNAME|NV_NOSCOPE);
 			if(npv)
@@ -2999,10 +3013,13 @@ pid_t sh_fork(Shell_t *shp,int flags, int *jobid)
 	shp->savesig = -1;
 	while(_sh_fork(shp,parent=fork(),flags,jobid) < 0);
 	sh_stats(STAT_FORKS);
-	sig = shp->savesig;
-	shp->savesig = 0;
-	if(sig>0)
-		sh_fault(sig);
+	if(!shp->subshell)
+	{
+		sig = shp->savesig;
+		shp->savesig = 0;
+		if(sig>0)
+			sh_fault(sig);
+	}
 	job_fork(parent);
 	return(parent);
 }

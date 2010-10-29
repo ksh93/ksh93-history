@@ -1254,9 +1254,11 @@ static void search(Emacs_t* ep,genchar *out,int direction)
 				draw(ep,UPDATE);
 			}
 			else
-				beep();
+				goto restore;
 			continue;
 		}
+		if(i == ep->ed->e_intr)
+			goto restore;
 		if (i==usrkill)
 		{
 			beep();

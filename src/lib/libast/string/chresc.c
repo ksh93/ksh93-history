@@ -48,14 +48,11 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 	char*			r;
 	int			n;
 	int			w;
-#if !_PACKAGE_astsa
-	wchar_t			wc;
-	char			buf[MB_LEN_MAX];
-#endif
 
 	w = 0;
 	for (;;)
 	{
+		b = s;
 		switch (c = mbchar(s))
 		{
 		case 0:
@@ -211,6 +208,10 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 				s--;
 				break;
 			}
+			break;
+		default:
+			if ((s - b) > 1)
+				w = 1;
 			break;
 		}
 		break;

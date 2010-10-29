@@ -73,7 +73,7 @@ struct assoc_array
 	char		*data;
    };
 #  define array_fixed_data(ap)	((ap)?((struct fixed_array*)((ap)->fixed))->data:0)
-   static void *array_fixed_setdata(Namval_t*,Namarr_t*,struct fixed_array*);
+   static void array_fixed_setdata(Namval_t*,Namarr_t*,struct fixed_array*);
 #endif /* SHOPT_FIXEDARRAY */
 
 static Namarr_t *array_scope(Namval_t *np, Namarr_t *ap, int flags)
@@ -1233,7 +1233,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 		{
 			size = (mode&ARRAY_MASK)&~(ARRAY_FIXED);
 			fp->curi = size;
-			for(fp->dim=0;size>0 &fp->dim < fp->ndim; fp->dim++)
+			for(fp->dim=0;size>0 && fp->dim<fp->ndim; fp->dim++)
 			{
 				fp->cur[fp->dim] = size/fp->incr[fp->dim];
 				size -= fp->incr[fp->dim]*fp->cur[fp->dim];
@@ -1305,7 +1305,7 @@ int nv_arrfixed(Namval_t *np, Sfio_t *out, int flag, char *dim)
 	return(fp->curi);
 }
 
-static void *array_fixed_setdata(Namval_t *np,Namarr_t* ap,struct fixed_array* fp)
+static void array_fixed_setdata(Namval_t *np,Namarr_t* ap,struct fixed_array* fp)
 {
 	int n = ap->nelem;
 	ap->nelem = 1;
@@ -1459,6 +1459,8 @@ char *nv_endsubscript(Namval_t *np, register char *cp, int mode)
 		if(ap)
 			scan = ap->nelem&ARRAY_SCAN;
 		if((mode&NV_ASSIGN) && (cp[1]=='=' || cp[1]=='+'))
+			mode |= NV_ADD;
+		else if(ap && cp[1]=='.' && (mode&NV_FARRAY))
 			mode |= NV_ADD;
 #if SHOPT_FIXEDARRAY
 		if(ap && ap->fixed)
@@ -1727,7 +1729,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
  */
 void nv_setvec(register Namval_t *np,int append,register int argc,register char *argv[])
 {
-	int i,arg0=0;
+	int arg0=0;
 	struct index_array *ap=0,*aq;
 	if(nv_isarray(np))
 	{

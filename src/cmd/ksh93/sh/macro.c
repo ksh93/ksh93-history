@@ -1539,6 +1539,8 @@ retry1:
 		{
 			int newops = (c=='#' || c == '%' || c=='/');
 			offset = stktell(stkp);
+			if(newops && sh_isoption(SH_NOUNSET) && *id && (!np || nv_isnull(np)))
+				errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 			if(c=='/' ||c==':' || ((!v || (nulflg && *v==0)) ^ (c=='+'||c=='#'||c=='%')))
 			{
 				int newquote = mp->quote;
@@ -1992,8 +1994,10 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		if(t && t->tre.tretyp==TARITH)
 		{
 			fcsave(&save);
-			if((t->ar.arexpr->argflag&ARG_RAW))
+			if(t->ar.arcomp)
 				num = arith_exec(t->ar.arcomp);
+			else if((t->ar.arexpr->argflag&ARG_RAW))
+				num = sh_arith(mp->shp,t->ar.arexpr->argval);
 			else
 				num = sh_arith(mp->shp,sh_mactrim(mp->shp,t->ar.arexpr->argval,3));
 		out_offset:

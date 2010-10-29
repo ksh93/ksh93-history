@@ -28,6 +28,8 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
+unset LANG ${!LC_*}
+
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
 cd $tmp || exit
@@ -119,7 +121,7 @@ set -- $($SHELL -c "
 got=$*
 [[ $got == $exp ]] || err_exit "command wc LC_ALL default failed -- expected '$exp', got '$got'"
 set -- $($SHELL -c "
-	if	builtin -f cmd wc 2>/dev/null
+	if	builtin wc 2>/dev/null || builtin -f cmd wc 2>/dev/null
 	then	unset LC_CTYPE
 		export LANG=$locale
 		export LC_ALL=C
@@ -253,10 +255,10 @@ unset LC_ALL LC_MESSAGES
 export LANG=debug
 function message
 {
-        print $"An error occurred."
+        print -r $"An error occurred."
 }
 exp=$'(libshell,3,46)\nAn error occurred.\n(libshell,3,46)'
-alt=$'(debug,message,libshell,"An error occurred.")\nAn error occurred.\n(debug,message,libshell,"An error occurred.")'
+alt=$'(debug,message,libshell,An error occurred.)\nAn error occurred.\n(debug,message,libshell,An error occurred.)'
 got=$(message; LANG=C message; message)
 [[ $got == "$exp" || $got == "$alt" ]] || {
 	EXP=$(printf %q "$exp")
@@ -266,9 +268,9 @@ got=$(message; LANG=C message; message)
 }
 
 a_thing=fish
-got=$(print yyy$"hello \" ${a_thing}\\"xx)
-expected='yyy(debug,'$Command',libshell,hello " fish\)xx'
-[[ $got == "$expected" ]] || err_exit "$\"...\" containing expansions fails: expected $expected, got $got"
+got=$(print -r aa$"\\ahello \" /\\${a_thing}/\\"zz)
+exp='aa(debug,'$Command',libshell,\ahello " /\fish/\)zz'
+[[ $got == "$exp" ]] || err_exit "$\"...\" containing expansions fails: expected $exp, got $got"
 
 unset LANG
 

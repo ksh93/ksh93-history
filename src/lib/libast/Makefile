@@ -229,7 +229,7 @@ virtual		ast/stdio.h
 
 		:NOOPTIMIZE: spawnveg.c
 "ibm.risc"	:NOOPTIMIZE: regcomp.c
-"sol*.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c tmxfmt.c
+"sol?.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c tmxfmt.c
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
 
 /*

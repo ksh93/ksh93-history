@@ -69,7 +69,7 @@ cat{
 	#	define _NIL_(x)	((x)0)
 	#endif
 
-	/* __INLINE__ is the inline keyword */
+	/* __INLINE__, if defined, is the inline keyword */
 	#if !defined(__INLINE__) && defined(__cplusplus)
 	#	define __INLINE__	inline
 	#endif
@@ -269,6 +269,41 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 		if (m == sizeof(long))
 			printf("#define _ast_intmax_long		1\n");
 		printf("#define _ast_intswap		%d\n", w);
+		printf("\n");
+		return 0;
+	}
+}end
+
+tst	- output{
+	#include <string.h>
+	#include <sys/types.h>
+
+	#define elementsof(x)	(sizeof(x)/sizeof(x[0]))
+	
+	static struct
+	{
+		char*	name;
+		int	size;
+	} types[] = 
+	{
+		"short",	sizeof(short),
+		"int",		sizeof(int),
+		"long",		sizeof(long),
+		"pointer",	sizeof(void*),
+		"float",	sizeof(float),
+		"double",	sizeof(double),
+	#ifdef _typ_long_double
+		"long_double",	sizeof(long double),
+	#endif
+	};
+	
+	int
+	main()
+	{
+		register int	t;
+
+		for (t = 0; t < elementsof(types); t++)
+			printf("#define _ast_sizeof_%s%s	%d	/* sizeof(%s) */\n", types[t].name, strlen(types[t].name) < 4 ? "\t" : "", types[t].size, types[t].name);
 		printf("\n");
 		return 0;
 	}

@@ -96,7 +96,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	}
 	else if(assign==NV_ASSIGN  && nv_isnull(np) && !nv_isattr(np, ~(NV_MINIMAL|NV_NOFREE)))
 		flags |= NV_ADD;
-	if((lvalue->emode&ARITH_COMP) && dtvnext(root) && ((sdict && (mp=nv_search(cp,sdict,flags&~NV_ADD))) || (mp=nv_search(cp,root,flags&~NV_ADD))))
+	if((lvalue->emode&ARITH_COMP) && dtvnext(root) && ((sdict && (mp=nv_search(cp,sdict,flags&~NV_ADD))) || (mp=nv_search(cp,root,flags&~(NV_ADD|HASH_NOSCOPE)))))
 		np = mp;
 	while(nv_isref(np))
 	{
@@ -245,7 +245,10 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				}
 				if(lvalue->fun)
 					break;
-				lvalue->value = (char*)ERROR_dictionary(e_function);
+				if(lvalue->emode&ARITH_COMP)
+					lvalue->value = (char*)e_function;
+				else
+					lvalue->value = (char*)ERROR_dictionary(e_function);
 				return(r);
 			}
 			if((lvalue->emode&ARITH_COMP) && dot)
@@ -427,6 +430,9 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			errormsg(SH_DICT,ERROR_warn(0),lvalue->value,*ptr);
 		else
 #endif
+		if((lvalue->emode&ARITH_COMP) && lvalue->value==(char*)e_function)
+			return(-1);
+			
 			errormsg(SH_DICT,ERROR_exit((lvalue->emode&3)!=0),lvalue->value,*ptr);
 	}
 	*ptr = str;

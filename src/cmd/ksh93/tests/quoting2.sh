@@ -207,4 +207,9 @@ foo='# '
 [[ '\$' == '\$'* ]] ||   err_exit $'\'\\$\' not matching \'\\$\'*'
 [[ a+a == ~(E)a\+a ]] || err_exit '~(E)a\+a not matching a+a'
 [[ a+a =~ a\+a ]] || err_exit 'RE a\+a not matching a+a'
+
+exp='ac'
+got=$'a\0b'c
+[[ $got == "$exp" ]] || err_exit "\$'a\\0b'c expansion failed -- expected '$exp', got '$got'"
+
 exit $((Errors))

@@ -179,6 +179,7 @@ void sh_subfork(void)
 	if(sp->pipe)
 		sh_subtmpfile(shp);
 	shp->curenv = 0;
+	shp->savesig = -1;
 	if(pid = sh_fork(shp,FSHOWME,NIL(int*)))
 	{
 		shp->curenv = curenv;
@@ -203,6 +204,7 @@ void sh_subfork(void)
 		SH_SUBSHELLNOD->nvalue.s = 0;
 		sp->subpid=0;
 		shp->st.trapcom[0] = trap;
+		shp->savesig = 0;
 	}
 }
 
@@ -730,10 +732,16 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	}
 	sh_sigcheck(shp);
 	shp->trapnote = 0;
+	nsig = shp->savesig;
+	shp->savesig = 0;
+	if(nsig>0)
+		sh_fault(nsig);
 	if(sp->subpid)
 		job_wait(sp->subpid);
 	if(comsub && iop && sp->pipefd<0)
 		sfseek(iop,(off_t)0,SEEK_SET);
+	if(shp->trapnote)
+		sh_chktrap(shp);
 	if(shp->exitval > SH_EXITSIG)
 	{
 		int sig = shp->exitval&SH_EXITMASK;

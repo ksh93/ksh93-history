@@ -901,7 +901,12 @@ Arith_t *arith_compile(Shell_t *shp,const char *string,char **last,Sfdouble_t(*f
         {
 		if(cur.errstr)
 			string = cur.errstr;
-		(*fun)( &string , &cur.errmsg, MESSAGE, 0);
+		if((*fun)( &string , &cur.errmsg, MESSAGE, 0) < 0)
+		{
+			stakseek(0);
+			*last = (char*)Empty;
+			return(0);
+		}
 		cur.nextchr = cur.errchr;
 	}
 	stakputc(0);

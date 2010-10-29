@@ -9,7 +9,7 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-10-04 $
+@(#)$Id: shtests (AT&T Research) 2010-10-10 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -29,6 +29,7 @@ USAGE=$'
     }
 [a:all?Equivalent to the default \b--compile --script\b.]
 [c:compile?Run compiled test scripts using \bshcomp\b(1).]
+[d:debug?Enable \bshtests\b execution trace.]
 [p|C:posix-locale|C-locale?Only run the test scripts in the posix/C
     locale.]
 [f:force-locale?Force the tests to be run in the locale of the caller.
@@ -43,6 +44,7 @@ USAGE=$'
 [v!:vmalloc_options?Run tests with \bVMALLOC_OPTIONS=abort\b. Test
     script names matching \b'$timesensitive$'\b are run with
     \bVMALLOC_OPTIONS\b unset.]
+[x:trace?Enable script execution trace.]
 
 [ test.sh ... ] [ name=value ...
 
@@ -57,8 +59,8 @@ function usage
 }
 
 unset DISPLAY ENV FIGNORE HISTFILE
-integer compile=1 default=1 locale_accept=0 locale_force=0 locale_one=0 script=1 time=1
-typeset vmalloc_options=abort
+integer compile=1 default=1 locale_accept=0 locale_force=0 locale_one=0 script=1 time=1 debug=0
+typeset vmalloc_options=abort trace=
 
 while	getopts -a $command "$USAGE" OPT
 do	case $OPT in
@@ -69,6 +71,8 @@ do	case $OPT in
 	c)	default=0
 		compile=2
 		script=0
+		;;
+	d)	debug=1
 		;;
 	f)	locale_force=$OPTARG
 		;;
@@ -87,11 +91,21 @@ do	case $OPT in
 		else	vmalloc_options=
 		fi
 		;;
+	x)	trace=-x
+		;;
 	*)	usage
 		;;
 	esac
 done
 shift $OPTIND-1
+
+if	(( debug )) || [[ $trace ]]
+then	export PS4=':$LINENO: '
+	if	(( debug ))
+	then	set -x
+	fi
+fi
+
 while	[[ $1 == *=* ]]
 do	eval export "$1"
 	shift
@@ -188,7 +202,7 @@ do	if	[[ ! -r $i ]]
 			fi
 			echo test $o begins ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"}
 			E=error
-			if	eval $lang \$SHELL \$i
+			if	eval $lang \$SHELL \$trace \$i
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 			else	e=$?
 				if	(( e > 256 ))
@@ -208,7 +222,7 @@ do	if	[[ ! -r $i ]]
 		echo test $o begins ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"}
 		E=error
 		if	$SHCOMP $i > $c
-		then	if	$SHELL $c
+		then	if	$SHELL $trace $c
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 			else	e=$?
 				if	(( e > 256 ))

@@ -470,7 +470,7 @@ then	EXP=$(printf %q "$exp")
 fi
 
 (
-$SHELL -c 'sleep 5 & pid=$!; { x=$( ( seq 60000 ) );kill -9 $pid;}&;wait $pid'
+$SHELL -c 'sleep 20 & pid=$!; { x=$( ( seq 60000 ) );kill -9 $pid;}&;wait $pid'
 ) 2> /dev/null
 (( $? )) ||  err_exit 'nested command substitution with large output hangs'
 

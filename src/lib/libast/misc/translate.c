@@ -429,7 +429,7 @@ sfprintf(sfstderr, "AHA#%d:%s cp->cat %p cp->debug %d NOCAT %p\n", __LINE__, __F
 	if (r == (char*)msg && (!cp && streq(loc, "debug") || cp && cp->debug))
 	{
 		p = tempget(state.tmp);
-		sfprintf(state.tmp, "(%s,%s,%s,\"%s\")", loc, cmd, cat, r);
+		sfprintf(state.tmp, "(%s,%s,%s,%s)", loc, cmd, cat, r);
 		r = tempuse(state.tmp, p);
 	}
 	errno = oerrno;

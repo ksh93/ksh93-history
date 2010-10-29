@@ -292,7 +292,7 @@ static Namfun_t *clone_optindex(Namval_t* np, Namval_t *mp, int flags, Namfun_t 
 static void put_restricted(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shell_t *shp = nv_shell(np);
-	int	path_scoped = 0;
+	int	path_scoped = 0, fpath_scoped=0;
 	Pathcomp_t *pp;
 	char *name = nv_name(np);
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
@@ -305,7 +305,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	}
 	if(val && !(flags&NV_RDONLY) && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
 		 return;
-	if(np==FPATHNOD)
+	if(np==FPATHNOD	|| (fpath_scoped=(strcmp(name,FPATHNOD->nvname)==0)))		
 		shp->pathlist = (void*)path_unsetfpath(shp);
 	nv_putv(np, val, flags, fp);
 	shp->universe = 0;
@@ -314,7 +314,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 		val = np->nvalue.cp;
 		if(np==PATHNOD || path_scoped)
 			pp = (void*)path_addpath(shp,(Pathcomp_t*)shp->pathlist,val,PATH_PATH);
-		else if(val && np==FPATHNOD)
+		else if(val && (np==FPATHNOD || fpath_scoped))
 			pp = (void*)path_addpath(shp,(Pathcomp_t*)shp->pathlist,val,PATH_FPATH);
 		else
 			return;
@@ -1144,7 +1144,6 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	Shell_t	*shp;
 	register int n;
 	int type;
-	long v;
 	static char *login_files[3];
 	memfatal();
 	n = strlen(e_version);
@@ -1470,6 +1469,11 @@ int sh_reinit(char *argv[])
 	Shopt_t opt;
 	Namval_t *np,*npnext;
 	Dt_t	*dp;
+	struct adata
+	{
+		Shell_t		*sh;
+		Namval_t	*tp;
+	} data;
 	for(np=dtfirst(shp->fun_tree);np;np=npnext)
 	{
 		if((dp=shp->fun_tree)->walk)
@@ -1486,7 +1490,6 @@ int sh_reinit(char *argv[])
 	dtclose(shp->alias_tree);
 	shp->alias_tree = inittree(shp,shtab_aliases);
 	shp->last_root = shp->var_tree;
-	shp->namespace = 0;
 	shp->inuse_bits = 0;
 	if(shp->userinit)
 		(*shp->userinit)(shp, 1);
@@ -1497,11 +1500,23 @@ int sh_reinit(char *argv[])
 	}
 	/* remove locals */
 	sh_onstate(SH_INIT);
-	nv_scan(shp->var_tree,sh_envnolocal,(void*)0,NV_EXPORT,0);
-	nv_scan(shp->var_tree,sh_envnolocal,(void*)0,NV_ARRAY,NV_ARRAY);
+	data.sh = shp;
+	data.tp = 0;
+	nv_scan(shp->var_tree,sh_envnolocal,(void*)&data,NV_EXPORT,0);
+	nv_scan(shp->var_tree,sh_envnolocal,(void*)&data,NV_ARRAY,NV_ARRAY);
 	sh_offstate(SH_INIT);
 	memset(shp->st.trapcom,0,(shp->st.trapmax+1)*sizeof(char*));
 	memset((void*)&opt,0,sizeof(opt));
+#if SHOPT_NAMESPACE
+	if(shp->namespace)
+	{
+		dp=nv_dict(shp->namespace);
+		if(dp==shp->var_tree)
+			shp->var_tree = dtview(dp,0);
+		_nv_unset(shp->namespace,NV_RDONLY);
+		shp->namespace = 0;
+	}
+#endif /* SHOPT_NAMESPACE */
 	if(sh_isoption(SH_TRACKALL))
 		on_option(&opt,SH_TRACKALL);
 	if(sh_isoption(SH_EMACS))
@@ -1541,7 +1556,7 @@ int sh_reinit(char *argv[])
  */
 Namfun_t *nv_cover(register Namval_t *np)
 {
-	if(np==IFSNOD || np==PATHNOD || np==SHELLNOD || np==FPATHNOD || np==CDPNOD || np==SECONDS || np==ENVNOD)
+	if(np==IFSNOD || np==PATHNOD || np==SHELLNOD || np==FPATHNOD || np==CDPNOD || np==SECONDS || np==ENVNOD || np==LINENO)
 		return(np->nvfun);
 #ifdef _hdr_locale
 	if(np==LCALLNOD || np==LCTYPENOD || np==LCMSGNOD || np==LCCOLLNOD || np==LCNUMNOD || np==LANGNOD)
@@ -1660,7 +1675,6 @@ static void stat_init(Shell_t *shp)
  */
 static Init_t *nv_init(Shell_t *shp)
 {
-	Namval_t *np;
 	register Init_t *ip;
 	double d=0;
 	ip = newof(0,Init_t,1,0);
@@ -1767,7 +1781,7 @@ static Init_t *nv_init(Shell_t *shp)
 	shp->bltin_tree = inittree(shp,(const struct shtable2*)shtab_builtins);
 	shp->fun_tree = dtopen(&_Nvdisc,Dtoset);
 	dtview(shp->fun_tree,shp->bltin_tree);
-	np = nv_mount(DOTSHNOD, "type", shp->typedict=dtopen(&_Nvdisc,Dtoset));
+	nv_mount(DOTSHNOD, "type", shp->typedict=dtopen(&_Nvdisc,Dtoset));
 	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
 	DOTSHNOD->nvalue.cp = Empty;
 	SH_LINENO->nvalue.ip = &shp->st.lineno;

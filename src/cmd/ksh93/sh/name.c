@@ -310,8 +310,10 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 		shtp.nodes =(Namval_t**)malloc(shtp.maxnodes*sizeof(Namval_t*));
 	}
 #endif /* SHOPT_TYPEDEF*/
-	if(shp->namespace)
+#if SHOPT_NAMESPACE
+	if(shp->namespace && nv_dict(shp->namespace)==shp->var_tree)
 		flags |= NV_NOSCOPE;
+#endif /* SHOPT_NAMESPACE */
 	flags &= ~(NV_TYPE|NV_ARRAY|NV_IARRAY);
 	if(sh_isoption(SH_ALLEXPORT))
 		flags |= NV_EXPORT;
@@ -772,18 +774,26 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				{
 					Dt_t *dp = dtview(shp->var_tree,(Dt_t*)0);
 					rp->sdict = dtopen(&_Nvdisc,Dtoset);
-					dtview(rp->sdict,shp->var_base);
+					dtview(rp->sdict,dp);
 					dtview(shp->var_tree,rp->sdict);
 				}
 				if(np = nv_search(name,shp->var_tree,0))
 				{
-					if(shp->var_tree->walk == shp->var_base)
+#if SHOPT_NAMESPACE
+					if(shp->var_tree->walk==shp->var_base || (shp->var_tree->walk!=shp->var_tree && shp->namespace &&  nv_dict(shp->namespace)==shp->var_tree->walk))
+#else
+					if(shp->var_tree->walk==shp->var_base)
+#endif /* SHOPT_NAMESPACE */
 					{
+#if SHOPT_NAMESPACE
+						if(!(nq = nv_search((char*)np,shp->var_base,HASH_BUCKET)))
+#endif /* SHOPT_NAMESPACE */
 						nq = np;
+						shp->last_root = shp->var_tree->walk;
 						if((flags&NV_NOSCOPE) && *cp!='.')
 						{
 							if(mode==0)
-								root = shp->var_base;
+								root = shp->var_tree->walk;
 							else
 							{
 								nv_delete(np,(Dt_t*)0,0);
@@ -812,6 +822,10 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						np =  nv_search(name,root,HASH_NOSCOPE|NV_ADD);
 				}
 			}
+#if SHOPT_NAMESPACE
+			if(!np && !noscope && *name!='.' && shp->namespace && root==shp->var_tree)
+				root = nv_dict(shp->namespace);
+#endif /* SHOPT_NAMESPACE */
 			if(np ||  (np = nv_search(name,root,mode)))
 			{
 				isref = nv_isref(np);
@@ -820,7 +834,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					if(nq==np)
 					{
 						flags &= ~NV_NOSCOPE;
-						root = shp->var_base;
+						root = shp->last_root;
 					}
 					else if(nq)
 					{
@@ -831,6 +845,13 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				}
 				else if(add && nv_isnull(np) && c=='.' && cp[1]!='.')
 					nv_setvtree(np);
+#if SHOPT_NAMESPACE
+				if(shp->namespace && root->walk==nv_dict(shp->namespace))
+				{
+					flags |= NV_NOSCOPE;
+					shp->last_table = shp->namespace; 
+				}
+#endif /* SHOPT_NAMESPACE */
 			}
 			if(c)
 				*sp = c;
@@ -1214,7 +1235,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	
 	sh_stats(STAT_NVOPEN);
 	memset(&fun,0,sizeof(fun));
-	shp->last_table = shp->namespace;
+	shp->last_table = 0;
 	if(!root)
 		root = shp->var_tree;
 	shp->last_root = root;
@@ -2156,6 +2177,10 @@ void sh_scope(Shell_t *shp, struct argnod *envlist, int fun)
 {
 	register Dt_t		*newscope, *newroot=shp->var_base;
 	struct Ufunction	*rp;
+#if SHOPT_NAMESPACE
+	if(shp->namespace)
+		newroot = nv_dict(shp->namespace);
+#endif /* SHOPT_NAMESPACE */
 	newscope = dtopen(&_Nvdisc,Dtoset);
 	if(envlist)
 	{
@@ -2184,11 +2209,13 @@ void sh_scope(Shell_t *shp, struct argnod *envlist, int fun)
 
 void	sh_envnolocal (register Namval_t *np, void *data)
 {
+	struct adata *tp = (struct adata*)data;
 	char *cp=0;
-	NOT_USED(data);
 	if(np==VERSIONNOD && nv_isref(np))
 		return;
 	if(np==L_ARGNOD)
+		return;
+	if(np == tp->sh->namespace)
 		return;
 	if(nv_isattr(np,NV_EXPORT) && nv_isarray(np))
 	{
@@ -2308,7 +2335,7 @@ void	_nv_unset(register Namval_t *np,int flags)
 				*cp = 0;
 				 npv = nv_open(name,shp->var_tree,NV_NOARRAY|NV_VARNAME|NV_NOADD);
 				*cp++ = '.';
-				if(npv)
+				if(npv && npv!=shp->namespace)
 					nv_setdisc(npv,cp,NIL(Namval_t*),(Namfun_t*)npv);
 			}
 			if(rp->fname && shp->fpathdict && (rq = (struct Ufunction*)nv_search(rp->fname,shp->fpathdict,0)))
@@ -2852,9 +2879,8 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 		np->nvflag |= newatts;
 		if (cp)
 		{
-			if(mp)
-				nv_putsub(mp,sub,0);
-			nv_putval (np, cp, NV_RDONLY);
+			if(!mp)
+				nv_putval (np, cp, NV_RDONLY);
 			free(cp);
 		}
 	}
@@ -3055,7 +3081,14 @@ int nv_rename(register Namval_t *np, int flags)
 	if(!hp)
 		hp = shp->var_tree;
 	if(!(nr = nv_open(cp, hp, flags|NV_ARRAY|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
+	{
+#if SHOPT_NAMESPACE
+		if(shp->namespace)
+			hp = nv_dict(shp->namespace);
+		else
+#endif /* SHOPT_NAMESPACE */
 		hp = shp->var_base;
+	}
 	else if(shp->last_root)
 		hp = shp->last_root;
 	if(!nr)
@@ -3366,7 +3399,18 @@ char *nv_name(register Namval_t *np)
 #endif /* SHOPT_FIXEDARRAY */
 	char *cp;
 	if(is_abuiltin(np) || is_afunction(np))
+	{
+#if SHOPT_NAMESPACE
+		if(shp->namespace && is_afunction(np))
+		{
+			char *name = nv_name(shp->namespace);
+			int n = strlen(name);
+			if(memcmp(np->nvname,name,n)==0 && np->nvname[n]=='.')
+				return(np->nvname+n+1);
+		}
+#endif /* SHOPT_NAMESPACE */
 		return(np->nvname);
+	}
 #if SHOPT_FIXEDARRAY
 	ap = nv_arrayptr(np);
 #endif /* SHOPT_FIXEDARRAY */

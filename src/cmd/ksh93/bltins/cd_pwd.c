@@ -98,7 +98,7 @@ int	b_cd(int argc, char *argv[],void *extra)
 	if(*dir != '/')
 #endif /* _WINIX */
 	{
-		if(!(cdpath = (Pathcomp_t*)shp->cdpathlist) && (dp=(CDPNOD)->nvalue.cp))
+		if(!(cdpath = (Pathcomp_t*)shp->cdpathlist) && (dp=sh_scoped(shp,CDPNOD)->nvalue.cp))
 		{
 			if(cdpath=path_addpath(shp,(Pathcomp_t*)0,dp,PATH_CDPATH))
 			{

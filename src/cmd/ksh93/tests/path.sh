@@ -326,4 +326,13 @@ $SHELL -c 'whence -q cat' & pid=$!
 sleep 3
 kill $! 2> /dev/null && err_exit 'whence -q appears to be hung'
 
+FPATH=$PWD
+print  'function foobar { :;}' > foobar
+autoload foobar;
+for ((i=0; i < 25; i++))
+do	( foobar )
+done
+exec {n}< /dev/null
+(( n > 24 )) && err_exit 'autoload function in subshell leaves file open'
+
 exit $((Errors))

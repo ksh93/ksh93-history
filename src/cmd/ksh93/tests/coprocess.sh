@@ -209,8 +209,9 @@ builtin cat
 cat |&
 pid=$!
 exec 5<&p 6>&p
-print -u6 hi; read -u5
-[[ $REPLY == hi ]] || err_exit 'REPLY is $REPLY not hi'
+exp=hi
+print -u6 $exp; read -u5
+[[ $REPLY == "$exp" ]] || err_exit "REPLY failed -- expected '$exp', got '$REPLY'"
 exec 6>&-
 wait $pid
 trap - TERM

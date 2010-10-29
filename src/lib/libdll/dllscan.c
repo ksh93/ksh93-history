@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1997-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1997-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -217,6 +217,8 @@ dllsopen(const char* lib, const char* name, const char* version)
 	Dllinfo_t*	info;
 	Vmalloc_t*	vm;
 	int		i;
+	int		j;
+	int		k;
 	char		buf[32];
 
 	if (!(vm = vmopen(Vmdcheap, Vmlast, 0)))
@@ -236,7 +238,7 @@ dllsopen(const char* lib, const char* name, const char* version)
 		lib = 0;
 		i = 0;
 	}
-	if (version && *version && (*version != '-' || *(version + 1)))
+	if (version && (!*version || *version == '-' && !*(version + 1)))
 		version = 0;
 	if (!(scan = vmnewof(vm, 0, Dllscan_t, 1, i)) || !(scan->tmp = sfstropen()))
 	{
@@ -266,19 +268,37 @@ dllsopen(const char* lib, const char* name, const char* version)
 		memcpy(scan->pb, name, t - (char*)name);
 		name = (const char*)(t + 1);
 	}
-	if (name && !version)
-		for (t = (char*)name; *t; t++)
-			if ((*t == '-' || *t == '.' || *t == '?') && isdigit(*(t + 1)))
+	if (name)
+	{
+		i = strlen(name);
+		j = strlen(info->prefix);
+		if (!j || i > j && strneq(name, info->prefix, j))
+		{
+			k = strlen(info->suffix);
+			if (i > k && streq(name + i - k, info->suffix))
 			{
-				if (*t != '-')
-					scan->flags |= DLL_MATCH_VERSION;
-				version = t + 1;
-				if (!(s = vmnewof(vm, 0, char, t - (char*)name, 1)))
+				i -= j + k;
+				if (!(t = vmnewof(vm, 0, char, i, 1)))
 					goto bad;
-				memcpy(s, name, t - (char*)name);
-				name = (const char*)s;
-				break;
+				memcpy(t, name + j, i);
+				t[i] = 0;
+				name = (const char*)t;
 			}
+		}
+		if (!version)
+			for (t = (char*)name; *t; t++)
+				if ((*t == '-' || *t == '.' || *t == '?') && isdigit(*(t + 1)))
+				{
+					if (*t != '-')
+						scan->flags |= DLL_MATCH_VERSION;
+					version = t + 1;
+					if (!(s = vmnewof(vm, 0, char, t - (char*)name, 1)))
+						goto bad;
+					memcpy(s, name, t - (char*)name);
+					name = (const char*)s;
+					break;
+				}
+	}
 	if (!version)
 	{
 		scan->flags |= DLL_MATCH_VERSION;

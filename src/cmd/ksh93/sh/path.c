@@ -521,7 +521,7 @@ Pathcomp_t *path_get(register Shell_t *shp,register const char *name)
 			path_init(shp);
 		pp = (Pathcomp_t*)shp->pathlist;
 	}
-	if(!pp && (!(PATHNOD)->nvalue.cp) || sh_isstate(SH_DEFPATH))
+	if(!pp && (!(sh_scoped(shp,PATHNOD)->nvalue.cp)) || sh_isstate(SH_DEFPATH))
 	{
 		if(!(pp=(Pathcomp_t*)shp->defpathlist))
 			pp = defpath_init(shp);
@@ -636,6 +636,7 @@ static void funload(Shell_t *shp,int fno, const char *name)
 			rp->fdict = funtree;
 		}
 		while((rp=dtnext(shp->fpathdict,rp)) && strcmp(pname,rp->fname)==0);
+		sh_close(fno);
 		return;
 	}
 	sh_onstate(SH_NOLOG);
@@ -647,7 +648,11 @@ static void funload(Shell_t *shp,int fno, const char *name)
 	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),SH_FUNEVAL);
 	sh_close(fno);
 	shp->readscript = 0;
-	if(!(np=nv_search(name,shp->fun_tree,0)) || !np->nvalue.ip)
+	if(shp->namespace)
+		np = sh_fsearch(shp,name,0);
+	else
+		np = nv_search(name,shp->fun_tree,0);
+	if(!np || !np->nvalue.ip)
 		pname = stakcopy(shp->st.filename);
 	else
 		pname = 0;
@@ -783,7 +788,6 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 				typedef int (*Fptr_t)(int, char*[], void*);
 				Fptr_t addr;
 				int n = staktell();
-				int libcmd;
 				char *cp;
 				stakputs("b_");
 				stakputs(name);
@@ -794,7 +798,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 						cp++;
 					else
 						cp = oldpp->blib;
-					if((libcmd = !strcmp(cp,LIBCMD)) && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
+					if(!strcmp(cp,LIBCMD) && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
 					{
 						if((np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) && nv_isattr(np,NV_BLTINOPT))
 							return(oldpp);
@@ -1607,7 +1611,7 @@ Pathcomp_t *path_addpath(Shell_t *shp,Pathcomp_t *first, register const char *pa
 				pp = defpath_init(shp);
 			first = path_dup(pp);
 		}
-		if(cp=(FPATHNOD)->nvalue.cp)
+		if(cp=(sh_scoped(shp,FPATHNOD))->nvalue.cp)
 			first = (void*)path_addpath(shp,(Pathcomp_t*)first,cp,PATH_FPATH);
 		path_delete(old);
 	}

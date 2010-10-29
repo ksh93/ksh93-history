@@ -1159,6 +1159,8 @@ loop_fmt :
 				*endsp++ = fmt == 'a' ? 'x' : 'X';
 				if (!isxdigit(*ep))
 					goto infinite;
+				if (base < 0)
+					base = 0;
 				goto a_format;
 			}
 			else /* 'g' or 'G' format */
@@ -1197,6 +1199,8 @@ loop_fmt :
 			if(isalpha(*ep))
 				goto infinite;
 			sp = endsp = buf+1;	/* reserve space for sign */
+			if (base <= 0)
+				base = 2;
 		a_format:
 			*endsp++ = *ep ? *ep++ : '0';
 
@@ -1221,7 +1225,7 @@ loop_fmt :
 			}
 			else	n = 0;
 			*--ep = (char)('0' + n);
-			if(endep-ep <= 1)	/* at least 2 digits */
+			while((endep-ep) < base && ep > (buf+2)) /* at least base digits in exponent */
 				*--ep = '0';
 
 			/* the e/Exponent separator and sign */

@@ -67,7 +67,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-09-01 $
+@(#)$Id: package (AT&T Research) 2010-10-10 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -3672,6 +3672,18 @@ components() # [ package ]
 	done
 }
 
+# list main environment values
+
+showenv()
+{
+	case $1 in
+	''|make)for __i__ in CC SHELL $env
+		do	eval echo $__i__='$'$__i__
+		done
+		;;
+	esac
+}
+
 # capture command output
 
 capture() # file command ...
@@ -3741,6 +3753,7 @@ capture() # file command ...
 				case $s in
 				?*)	echo "$s"  ;;
 				esac
+				showenv $action
 				"$@"
 			} < /dev/null 2>&1 | $TEE -a $o
 			;;
@@ -3748,6 +3761,7 @@ capture() # file command ...
 				case $s in
 				?*)	echo "$s"  ;;
 				esac
+				showenv $action
 				"$@"
 			} < /dev/null > $o 2>&1
 			;;
@@ -5467,12 +5481,6 @@ cat $j $k
 		;;
 	esac
  
-	# list main environment values
-
-	for i in $env
-	do	eval echo $i='$'$i
-	done
-
 	# separate flags from target list
 
 	case $target in

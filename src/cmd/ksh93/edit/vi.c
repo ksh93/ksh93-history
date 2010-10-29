@@ -1387,6 +1387,8 @@ static void getline(register Vi_t* vp,register int mode)
 			c = UWERASE;
 		else if( c == usrlnext )
 			c = ULNEXT;
+		else if(mode==SEARCH && c==editb.e_intr)
+			c = UINTR;
 
 		if( c == ULNEXT)
 		{
@@ -1449,6 +1451,11 @@ static void getline(register Vi_t* vp,register int mode)
 			}
 			break;
 
+		case UINTR:
+				first_virt = 0;
+				cdelete(vp,cur_virt+1, BAD);
+				cur_virt = -1;
+				return;
 		case UERASE:		/** user erase char **/
 				/*** treat as backspace ***/
 

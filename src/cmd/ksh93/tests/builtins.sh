@@ -529,7 +529,7 @@ n=$(printf "%b" 'a\0b\0c' | wc -c)
 (( n == 5 )) || err_exit '\0 not working with %b format with printf'
 
 t=$(ulimit -t)
-[[ $($SHELL -c 'ulimit -v 15000; ulimit -t') == "$t" ]] || err_exit 'ulimit -v changes ulimit -t'
+[[ $($SHELL -c 'ulimit -v 15000 2>/dev/null; ulimit -t') == "$t" ]] || err_exit 'ulimit -v changes ulimit -t'
 
 $SHELL 2> /dev/null -c 'cd ""' && err_exit 'cd "" not producing an error'
 [[ $($SHELL 2> /dev/null -c 'cd "";print hi') != hi ]] && err_exit 'cd "" should not terminate script'
@@ -538,6 +538,6 @@ bincat=$(whence -p cat)
 builtin cat
 out=$tmp/seq.out
 seq 11 >$out
-cmp -s <(print -- "$($bincat<( $bincat $out ) )") <(print -- "$(cat <( cat $out ) )") || err_exit "builtin cat differes from $bincat"
+cmp -s <(print -- "$($bincat<( $bincat $out ) )") <(print -- "$(cat <( cat $out ) )") || err_exit "builtin cat differs from $bincat"
 
 exit $((Errors))

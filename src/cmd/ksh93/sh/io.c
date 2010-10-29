@@ -2092,7 +2092,6 @@ done:
  */
 static int pipeexcept(Sfio_t* iop, int mode, void *data, Sfdisc_t* handle)
 {
-	Shell_t *shp = ((struct Iodisc*)handle)->sh;
 	if(mode==SF_DPOP || mode==SF_FINAL)
 		free((void*)handle);
 	else if(mode==SF_WRITE && errno==EPIPE)

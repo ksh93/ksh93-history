@@ -1,3 +1,5 @@
+10-10-10 package.sh: list main env vars at start of make action
+10-10-10 ratz.c: tweak widnows delays
 10-09-10 ratz.c: add _SEAR_ARGS for _SEAR_EXEC
 10-09-01 package.sh: fix ratz from source logic
 10-08-25 package.mk: consolidate license file search in .package.licenses.

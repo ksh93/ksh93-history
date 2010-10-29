@@ -179,7 +179,8 @@ int    b_alias(int argc,register char *argv[],void *extra)
 			{
 				if(argv[1][1]=='r' && argv[1][2]==0)
 				{
-					nv_putval(PATHNOD,nv_getval(PATHNOD),NV_RDONLY);
+					Namval_t *np = nv_search((char*)PATHNOD,tdata.sh->var_tree,HASH_BUCKET);
+					nv_putval(np,nv_getval(np),NV_RDONLY);
 					argv++;
 					if(!argv[1])
 						return(0);
@@ -442,7 +443,7 @@ static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
 			sfnputc(iop,'\t',tp->indent);
 		sfprintf(iop,"{\n", name);
 		tp->indent++;
-		print_scan(iop,0,root,aflag=='+',tp);
+		print_scan(iop,NV_NOSCOPE,root,aflag=='+',tp);
 		tp->indent--;
 		if(tp->indent)
 			sfnputc(iop,'\t',tp->indent);
@@ -512,6 +513,11 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					/* Function names cannot be special builtin */
 					if((np=nv_search(name,shp->bltin_tree,0)) && nv_isattr(np,BLT_SPC))
 						errormsg(SH_DICT,ERROR_exit(1),e_badfun,name);
+#if SHOPT_NAMESPACE
+					if(shp->namespace)
+						np = sh_fsearch(shp,name,NV_ADD|HASH_NOSCOPE);
+					else
+#endif /* SHOPT_NAMESPACE */
 					np = nv_open(name,sh_subfuntree(1),NV_NOARRAY|NV_IDENT|NV_NOSCOPE);
 				}
 				else 
@@ -521,6 +527,12 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						sfprintf(shp->strbuf,"%s.%s%c",shp->prefix,name,0);
 						name = sfstruse(shp->strbuf);
 					}
+#if SHOPT_NAMESPACE
+					np = 0;
+					if(shp->namespace)
+						np = sh_fsearch(shp,name,HASH_NOSCOPE);
+					if(!np)
+#endif /* SHOPT_NAMESPACE */
 					if((np=nv_search(name,troot,0)) && !is_afunction(np))
 						np = 0;
 				}
@@ -1080,7 +1092,14 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 		jmpval = sigsetjmp(buff.buff,0);
 		np = 0;
 		if(jmpval==0)
+		{
+#if SHOPT_NAMESPACE
+			if(shp->namespace && troot!=shp->var_tree)
+				np = sh_fsearch(shp,name,nflag?HASH_NOSCOPE:0);
+			if(!np)
+#endif /* SHOPT_NAMESPACE */
 			np=nv_open(name,troot,NV_NOADD|nflag);
+		}
 		else
 		{
 			r = 1;

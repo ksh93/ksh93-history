@@ -1096,7 +1096,7 @@ function B
 }
             
 x=$(B)      
-[[ $x == $'TRAP A\nTRAP B' ]] || err_exit "trap from funtions in subshells fails got" $x
+[[ $x == $'TRAP A\nTRAP B' ]] || err_exit "trap from functions in subshells fails got" $x
 
 function foo
 {
@@ -1114,7 +1114,7 @@ function gosleep
 	$sleep 4
 }
 x=$(
-	(sleep 1; ps | grep sleep | read pid extra; kill -- $pid) &
+	(sleep 2; pid=; ps | grep sleep | read pid extra; [[ $pid ]] && kill -- $pid) &
 	gosleep 2> /dev/null
 	print ok
 )

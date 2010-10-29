@@ -432,15 +432,15 @@ do	HOME=$tmp ENV= $SHELL -o $i >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $
 	((j++))
 done
 
-export ENV=
+export ENV= PS1="(:$$:)"
 histfile=$tmp/history
 exp=$(HISTFILE=$histfile $SHELL -c $'function foo\n{\ncat\n}\ntype foo')
 for var in HISTSIZE HISTFILE
-do	got=$( ( HISTFILE=$histfile $SHELL -ic $'unset '$var$'\nfunction foo\n{\ncat\n}\ntype foo\nexit' ) 2>&1 )
-	got=${got##*': '} 
+do	got=$( ( HISTFILE=$histfile $SHELL +E -ic $'unset '$var$'\nfunction foo\n{\ncat\n}\ntype foo\nexit' ) 2>&1 )
+	got=${got##*"$PS1"} 
 	[[ $got == "$exp" ]] || err_exit "function definition inside (...) with $var unset fails -- got '$got', expected '$exp'"
-	got=$( { HISTFILE=$histfile $SHELL -ic $'unset '$var$'\nfunction foo\n{\ncat\n}\ntype foo\nexit' ;} 2>&1 )
-	got=${got##*': '} 
+	got=$( { HISTFILE=$histfile $SHELL +E -ic $'unset '$var$'\nfunction foo\n{\ncat\n}\ntype foo\nexit' ;} 2>&1 )
+	got=${got##*"$PS1"} 
 	[[ $got == "$exp" ]] || err_exit "function definition inside {...;} with $var unset fails -- got '$got', expected '$exp'"
 done
 ( unset HISTFILE; $SHELL -ic "HISTFILE=$histfile" 2>/dev/null ) || err_exit "setting HISTFILE when not in environment fails"
@@ -499,5 +499,7 @@ wait
 [[ $($SHELL -uc '[[ "${d1.u[z asd].revents}" ]]' 2>&1) == *'d1.u[z asd].revents'* ]] || err_exit 'name of unset parameter not in error message'
 
 [[ $($SHELL 2> /dev/null -xc $'set --showme\nprint 1\n; print 2') == 1 ]] || err_exit  'showme option with xtrace not working correctly'
+
+$SHELL 2> /dev/null  -uc 'unset var;print ${var%foo}' && err_exit '${var%foo} not generating error message with set -u'
 
 exit $((Errors))

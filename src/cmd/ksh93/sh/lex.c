@@ -1124,7 +1124,8 @@ int sh_lex(Lex_t* lp)
 						wordflags |= ARG_MAC;
 					else if(c!=LPAREN && assignment==SH_COMPASSIGN)
 						assignment = 0;
-					fcseek(-LEN);
+					if(c!=EOF)
+						fcseek(-LEN);
 				}
 				break;
 			case S_LABEL:
@@ -2136,7 +2137,8 @@ struct argnod *sh_endword(Shell_t *shp,int mode)
 					if(ep)
 					{
 						*dp = 0;
-						dp = ep+stresc(ep);
+						stresc(ep);
+						dp = ep+ strlen(ep);
 					}
 					ep = 0;
 				}

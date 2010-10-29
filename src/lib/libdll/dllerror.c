@@ -28,8 +28,8 @@
 Dllstate_t	state;
 
 /*
- * check if dll on path has plugin version ver
- * 1 returned on success, 0 on failure
+ * return error message from last failed dl*() call
+ * retain==0 resets the last dl*() error
  */
 
 extern char*

@@ -569,6 +569,19 @@ function .sh.math.mysin x
 
 (( abs(sin(.5)-mysin(.5)) < 1e-6 )) || err_exit 'mysin() not close to sin()'
 
+$SHELL 2> /dev/null  <<- \EOF || err_exit "arithmetic functions defined and referenced in compound command not working"
+{
+	function .sh.math.mysin x
+	{
+	        ((.sh.value = x-x**3/6. + x**5/120.-x**7/5040. + x**9/362880.))
+	}
+	(( abs(sin(.5)-mysin(.5)) < 1e-6 )) 
+	exit 0
+}
+EOF
+
+
+
 function .sh.math.max x y z
 {
 	.sh.value=x
@@ -603,7 +616,7 @@ x z[1]
 unset x
 float x
 x=$( ($SHELL -c 'print -- $(( asinh(acosh(atanh(sin(cos(tan(atan(acos(asin(tanh(cosh(sinh(asinh(acosh(atanh(sin(cos(tan(atan(acos(asin(tanh(cosh(sinh(.5)))))))))))))))))))))))) )) ';:) 2> /dev/null)
-(( abs(x-.5) < 1.e-10 )) || err_exit 'bug in composit function evaluation'
+(( abs(x-.5) < 1.e-10 )) || err_exit 'bug in composite function evaluation'
 
 unset x
 typeset -X x=16
@@ -645,6 +658,6 @@ do	(( play[$x].y , z++  ))
 done
 (( z==2 )) || err_exit 'unset compound array variable error with for loop optimization'
 
-[[ $($SHELL 2> /dev/null -c 'print -- $(( ldexp(1, 4) ))' ) == 16 ]] || err_exit 'funtion ldexp not implement or not working correctly'
+[[ $($SHELL 2> /dev/null -c 'print -- $(( ldexp(1, 4) ))' ) == 16 ]] || err_exit 'function ldexp not implement or not working correctly'
 
 exit $((Errors))

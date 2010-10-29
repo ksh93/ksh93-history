@@ -171,4 +171,42 @@ float c.ar
 c.ar[2][3][3]=5
 [[ $(typeset -p c.ar) == "$expected" ]] || err_exit "c.ar[2][3][3]=5;typeset -c c.ar expands to $(typeset -p c.ar)"
 
+unset values
+float -a values=( [1][3]=90 [1][4]=89 )
+function fx
+{
+	nameref arg=$1
+	[[ ${arg[0..5]} == '90 89' ]] || err_exit '${arg[0..5]} not correct where arg is a nameref to values[1]'
+}
+fx values[1]
+
+function test_short_integer
+{
+        compound out=( typeset stdout stderr ; integer res )
+	compound -r -a tests=(
+		( cmd='integer -s -r -a x=( 1 2 3 ) ; print "${x[2]}"' stdoutpattern='3' )
+		( cmd='integer -s -r -A x=( [0]=1 [1]=2 [2]=3 ) ; print "${x[2]}"' stdoutpattern='3' )
+		# 2D integer arrays: the following two tests crash for both "integer -s" and "integer"
+		( cmd='integer    -r -a x=( [0]=( [0]=1 [1]=2 [2]=3 ) [1]=( [0]=4 [1]=5 [2]=6 ) [2]=( [0]=7 [1]=8 [2]=9 ) ) ; print "${x[1][1]}"' stdoutpattern='5' )
+		( cmd='integer -s -r -a x=( [0]=( [0]=1 [1]=2 [2]=3 ) [1]=( [0]=4 [1]=5 [2]=6 ) [2]=( [0]=7 [1]=8 [2]=9 ) ) ; print "${x[1][1]}"' stdoutpattern='5' )
+   	)
+	typeset testname
+	integer i
+
+	for (( i=0 ; i < ${#tests[@]} ; i++ )) ; do
+		nameref tst=tests[i]
+		testname="${0}/${i}"
+
+		out.stderr="${ { out.stdout="${ ${SHELL} -o nounset -o errexit -c "${tst.cmd}" ; (( out.res=$? )) ; }" ; } 2>&1 ; }"
+
+	        [[ "${out.stdout}" == ${tst.stdoutpattern}      ]] || err_exit "${testname}: Expected stdout to match $(printf '%q\n' "${tst.stdoutpattern}"), got $(printf '%q\n' "${out.stdout}")"
+       		[[ "${out.stderr}" == ''			]] || err_exit "${testname}: Expected empty stderr, got $(printf '%q\n' "${out.stderr}")"
+		(( out.res == 0 )) || err_exit "${testname}: Unexpected exit code ${out.res}"
+	done
+	
+	return 0
+}
+# run tests
+test_short_integer
+
 exit $((Errors))

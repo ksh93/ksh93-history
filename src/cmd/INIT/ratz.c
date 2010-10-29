@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-09-10 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-10-10 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-09-10 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-10-10 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -4589,7 +4589,7 @@ sear_system(const char* command, int nowindow)
 		if (!GetExitCodeProcess(pinfo.hProcess, &n))
 			n = 1;
 		CloseHandle(pinfo.hProcess);
-		Sleep(4 * 1000);
+		Sleep(2 * 1000);
 	}
 	return n;
 }
@@ -4629,9 +4629,16 @@ sear_exec(const char* cmd, char* const* arg, char* operands)
 		close(0);
 		dup(sear_stdin);
 		close(sear_stdin);
+		nowindow = 0;
 		if (cmd)
 		{
-			nowindow = arg && arg[0];
+			if (arg)
+				for (r = 0; arg[r]; r++)
+					if (!strcmp(arg[r], "remote"))
+					{
+						nowindow = 1;
+						break;
+					}
 			sh = 0;
 			for (a = cmd; *a && *a != ' '; a++)
 				if (a[0] == '.' && a[1] == 's' && a[2] == 'h' && (!a[3] || a[3] == ' '))
@@ -4639,10 +4646,10 @@ sear_exec(const char* cmd, char* const* arg, char* operands)
 					sh = 1;
 					break;
 				}
-			if (sh || nowindow)
+			b = buf;
+			e = buf + sizeof(buf) - 1;
+			if (sh || arg)
 			{
-				b = buf;
-				e = buf + sizeof(buf) - 1;
 				if (sh)
 				{
 					b = copy(b, "ksh.exe ", e);
@@ -4658,11 +4665,16 @@ sear_exec(const char* cmd, char* const* arg, char* operands)
 					b = copy(b, a, e);
 					b = copy(b, "\"", e);
 				}
-				if (operands)
-				{
-					b = copy(b, " -- ", e);
-					b = copy(b, operands, e);
-				}
+			}
+			if (operands)
+			{
+				if (b == buf)
+					b = copy(b, cmd, e);
+				b = copy(b, " -- ", e);
+				b = copy(b, operands, e);
+			}
+			if (b > buf)
+			{
 				*b = 0;
 				cmd = (const char*)buf;
 			}
@@ -4853,7 +4865,7 @@ char**	argv;
 #if defined(_SEAR_SEEK)
 	if (sear_seek((off_t)_SEAR_SEEK, !list))
 	{
-		Sleep(5 * 1000);
+		Sleep(2 * 1000);
 		return 1;
 	}
 #endif
@@ -5281,7 +5293,7 @@ char**	argv;
 #endif
 	if (sear_exec(_SEAR_EXEC, argv, _SEAR_ARGS))
 	{
-		Sleep(5 * 1000);
+		Sleep(2 * 1000);
 		return 1;
 	}
 #endif

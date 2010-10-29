@@ -1,4 +1,28 @@
-10-10-10  --- Release ksh93u  ---
+10-10-26  --- Release ksh93u  ---
+10-10-26  Fix a bug where terminal interrupt was ignored while in vi/emacs
+	  edit search mode.
+10-10-26  Fix $'a\0b'c to expand to 'ac'.
+10-10-26  Provide user defined round() if not in <math.h>.
+10-10-26  Fix bug where $((undefined_function(1))) dumped core.
+10-10-22  Provide user defined iszero() if not in <math.h>.
+10-10-22  Fixed a bug with BGX compile option that could cause the shell to
+	  hang.
+10-10-22  Fixed a bug with user define math function on systems for which
+	  char is unsigned.
+10-10-21  A bug in which function autoloaded in a function leaves a file open
+	  has been fixed.
+10-10-20  Modified the behavior of set -u so that the shell terminates when
+	  when var is unset with ${var op string} when op is #, % or /.
+10-10-20  Fixed a bug with the AUDIT option in which the audit file was not
+	  not close-on-exec.
+10-10-20 +Made a number of changes and fixes for the NAMESPACE compile option
+	  which as added on 10-06-09 but some problems still remain.
+10-10-15  Fixed a bug in which arithmetic functions (added on 10-03-24) did
+	  not work when the function definition was in the same compound
+	  command in which the function was referenced.
+10-10-13  A bug in which creating an associative array of compound variables
+	  with no members as an element of a compound variable did not work
+	  has been fixed.
 10-10-08  A bug in which killing the last command in a function defined
 	  with function name, terminated the calling script has been fixed. 
 10-10-08  A bug which could cause a core dump if IFS is unset inside a function

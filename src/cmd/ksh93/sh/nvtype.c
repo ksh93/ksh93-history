@@ -151,7 +151,6 @@ static const Namdisc_t type_disc =
 size_t nv_datasize(Namval_t *np, size_t *offset)
 {
 	size_t s=0, a=0;
-	Namarr_t *ap;
 	if(nv_isattr(np,NV_INTEGER))
 	{
 		if(nv_isattr(np,NV_DOUBLE)==NV_DOUBLE)

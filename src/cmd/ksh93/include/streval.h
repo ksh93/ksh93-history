@@ -76,13 +76,13 @@ struct lval
 	const char	*expr;
 	const  void	*ptr;
 	short		flag;
-	char		isfloat;
-	char		nargs;
+	short		nargs;
 	short		emode;
 	short		level;
 	short		elen;
 	char		nosub;
 	char		eflag;
+	char		isfloat;
 };
 
 struct mathtab

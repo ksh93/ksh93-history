@@ -1,3 +1,4 @@
+10-10-20 misc/translate.c: change debug translation to drop " in (a,b,c,"d")
 10-10-10 misc/glob.c: drop ancient D_FILENO(d)!=0 test and trust readdir()
 10-10-06 misc/translate.c: fix "debug" locale logic
 10-10-04 misc/magic.c: fix magic() skip check to honor the continuation
