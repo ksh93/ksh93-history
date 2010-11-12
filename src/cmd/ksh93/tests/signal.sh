@@ -377,4 +377,14 @@ x=$(
 )
 [[ $x == ok ]] || err_exit 'SIGPIPE exit status causes PIPE signal to be propogaged'
 
+x=$(
+    $SHELL <<- \EOF
+	trap "print GNAW" URG
+	print 1
+	( sleep 1 ; kill -URG $$ ; sleep 1 ; print S1 ; )
+	print 2
+EOF
+)
+[[ $x == $'1\nS1\nGNAW\n2' ]] || err_exit 'signal ignored in subshell not propagated to parent'
+
 exit $((Errors))

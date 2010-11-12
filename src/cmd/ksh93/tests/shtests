@@ -9,13 +9,14 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-10-10 $
+@(#)$Id: shtests (AT&T Research) 2010-11-12 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
-[+DESCRIPTION?\bshtests\b is the \bksh\b(1) regression test harness. If
-    none of \b--compile --script\b are specified then \b--compile
-    --script\b are assumed.]
+[+DESCRIPTION?\bshtests\b is the \bksh\b(1) regression test harness for
+    \b$SHELL\b or \bksh\b if \bSHELL\b is not defined. If none of
+    \b--compile --script\b are specified then \b--compile --script\b are
+    assumed.]
 [+INPUT FILES?\bshtests\b regression test files are shell scripts that
     run in an environment controlled by \bshtests\b. An identification
     message is printed before and after each test on the standard output.
@@ -59,6 +60,8 @@ function usage
 }
 
 unset DISPLAY ENV FIGNORE HISTFILE
+trap + PIPE # unadvertized -- set SIGPIPE to SIG_DFL #
+
 integer compile=1 default=1 locale_accept=0 locale_force=0 locale_one=0 script=1 time=1 debug=0
 typeset vmalloc_options=abort trace=
 

@@ -195,6 +195,7 @@ struct shared
 	char		universe; \
 	char		winch; \
 	char		indebug; 	/* set when in debug trap */ \
+	unsigned char	ignsig;		/* ignored signal in subshell */ \
 	unsigned char	lastsig;	/* last signal received */ \
 	char		comsub;		/* set when in $() comsub */ \
 	char		subshare;	/* set when in ${..} comsub */ \

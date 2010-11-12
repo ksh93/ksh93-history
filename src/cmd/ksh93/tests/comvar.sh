@@ -600,4 +600,17 @@ typeset -C -A x=( [0]=(a=1) [1]=(b=2) )
 expected=$'(\n\t[0]=(\n\t\ta=1\n\t)\n\t[1]=(\n\t\tb=2\n\t)\n)'
 [[ $(print -v x) == "$expected" ]] || err_exit 'print -v not formatting correctly'
 
+compound -a x=( [0]=(a=1) [1]=(b=2) )
+typeset -m "z=x[1]"
+[[ $(typeset -p z 2>/dev/null) == 'typeset -C z=(b=2)' ]] || err_exit 'typeset -m not working with commpound -a variable'
+
+unset x z
+compound -A x=( [0]=(a=1) [1]=(b=2) )
+typeset -m "z=x[1]"
+[[ $(typeset -p z 2>/dev/null) == 'typeset -C z=(b=2)' ]] || err_exit 'typeset -m not working with commpound -a variable'
+typeset -m "x[1]=x[0]"
+typeset -m "x[0]=z"
+exp='([0]=(b=2) [1]=(a=1))'
+[[ $(print -C x) == "$exp" ]] || err_exit 'typeset -m not working for associative arrays'
+
 exit $((Errors))

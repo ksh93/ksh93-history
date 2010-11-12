@@ -577,4 +577,7 @@ x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:1:3}" == "<2b|>c<3d|\\>" ||
 x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x:1:20}" == "<2b|>c<3d|\\>e" || err_exit ${x:1:20} should be <2b|>c<3d|\>e'
 x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x#??}" == "c<3d|\\>e" || err_exit "${x#??} should be c<3d|\>e'
 
+x='a one and a two'
+[[ "${x//~(E)\<.\>/}" == ' one and  two' ]]  || err_exit "\< and \> not working in with ere's"
+
 exit $((Errors))

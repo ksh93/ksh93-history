@@ -5888,6 +5888,14 @@ the names and values of each variable with
 the export attribute are printed with the values
 quoted in a manner that allows them to be re-input.
 The
+.B export
+command is the same as
+.B typeset \-x
+except that if you use
+.B export
+within a function, no local
+variable is created.
+The
 .B \-p
 option
 causes the word

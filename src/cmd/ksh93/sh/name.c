@@ -1395,9 +1395,8 @@ skip:
 		else
 		{
 			char *sub=0, *prefix= shp->prefix;
-#if SHOPT_FIXEDARRAY
+			Namval_t *mp;
 			Namarr_t *ap;
-#endif /* SHOPT_FIXEDARRAY */
 			int isref;
 			shp->prefix = 0;
 			if((flags&NV_STATIC) && !shp->mktype)
@@ -1422,6 +1421,11 @@ skip:
 			{
 				nv_offattr(np,NV_LJUST|NV_RJUST|NV_ZFILL);
 				np->nvsize = 0;
+			}
+			if((flags&NV_MOVE) && (ap=nv_arrayptr(np)) && (mp=nv_opensub(np)))
+			{
+				_nv_unset(mp,NV_EXPORT);
+				np =  mp;
 			}
 			nv_putval(np, cp, c);
 			if(isref)
@@ -3060,7 +3064,7 @@ int nv_rename(register Namval_t *np, int flags)
 	Namval_t		*last_table = shp->last_table;
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;
-	char			*prefix=shp->prefix,*nvenv = 0;
+	char			*prefix=shp->prefix;
 	Namarr_t		*ap;
 	if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
 	{
@@ -3108,10 +3112,7 @@ int nv_rename(register Namval_t *np, int flags)
 			mp->nvenv = (void*)np;
 	}
 	if(mp)
-	{
-		nvenv = (char*)np;
 		np = mp;
-	}
 	if(nr==np)
 	{
 		if(index<0)
@@ -3119,8 +3120,7 @@ int nv_rename(register Namval_t *np, int flags)
 		if(cp = nv_getval(np))
 			cp = strdup(cp);
 	}
-	_nv_unset(np,0);
-	np->nvenv = nvenv;
+	_nv_unset(np,NV_EXPORT);
 	if(nr==np)
 	{
 		nv_putsub(np,(char*)0, index);
@@ -3141,6 +3141,7 @@ int nv_rename(register Namval_t *np, int flags)
 	else
 	{
 		nv_clone(nr,np,(flags&NV_MOVE)|NV_COMVAR);
+		np->nvenv = 0;
 		if(flags&NV_MOVE)
 			nv_delete(nr,(Dt_t*)0,NV_NOFREE);
 	}

@@ -536,7 +536,8 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 				/* also \alpha for extended patterns */
 				if(!mp->lit && !mp->quote)
 				{
-					if((n==S_DIG || ((paren+ere) && sh_lexstates[ST_DOL][*(unsigned char*)cp]==S_ALP)))
+					int nc = *(unsigned char*)cp;
+					if((n==S_DIG || ((paren+ere) && (sh_lexstates[ST_DOL][nc]==S_ALP) || nc=='<' || nc=='>')))
 						break;
 					if(ere && mp->pattern==1 && strchr(".[()*+?{|^$&!",*cp))
 						break;
@@ -617,6 +618,8 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 				resume = fcseek(n);
 				fcclose();
 				fcsopen(dp);
+				cp = first = fcseek(0);
+				break;
 			}
 			else if(n==0 || !varsub(mp))
 			{
@@ -1022,20 +1025,26 @@ int sh_macfun(Shell_t *shp, const char *name, int offset)
 	if(np)
 	{
 		/* treat ${x.foo} as ${x.foo;} */
-		Shnode_t *tp;
-		char buff[sizeof(struct dolnod)+sizeof(char*)];
-		struct comnod node;
-		struct dolnod *dp = (struct dolnod*)buff;
-		memset(&node,0,sizeof(node));
-		memset(&buff,0,sizeof(buff));
-		tp = (Shnode_t*)&node;
-		tp->com.comarg = (struct argnod*)dp;
-		tp->com.comline = shp->inlineno;
-		dp->dolnum = 1;
-		dp->dolval[0] = strdup(name);
+		union
+		{
+			struct comnod	com;
+			Shnode_t	node;
+		} t;
+		union
+		{
+			struct argnod	arg;
+			struct dolnod	dol;
+			char buff[sizeof(struct dolnod)+sizeof(char*)];
+		} d;
+		memset(&t,0,sizeof(t));
+		memset(&d,0,sizeof(d));
+		t.node.com.comarg = &d.arg;
+		t.node.com.comline = shp->inlineno;
+		d.dol.dolnum = 1;
+		d.dol.dolval[0] = strdup(name);
 		stkseek(shp->stk,offset);
-		comsubst((Mac_t*)shp->mac_context,tp,2);
-		free(dp->dolval[0]);
+		comsubst((Mac_t*)shp->mac_context,&t.node,2);
+		free(d.dol.dolval[0]);
 		return(1);
 	}
 	return(0);
@@ -1424,6 +1433,8 @@ retry1:
 		}
 		else
 		{
+			if(sh_isoption(SH_NOUNSET) && !isastchar(mode) && (type==M_VNAME || type==M_SIZE))
+				errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 			v = 0;
 			if(type==M_VNAME)
 			{

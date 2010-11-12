@@ -83,13 +83,14 @@ void	sh_fault(register int sig)
 		shp->winch++;
 	}
 #endif  /* SIGWINCH */
+	trap = shp->st.trapcom[sig];
 	if(shp->savesig)
 	{
 		/* critical region, save and process later */
-		shp->savesig = sig;
+		if(!(shp->sigflag[sig]&SH_SIGIGNORE))
+			shp->savesig = sig;
 		return;
 	}
-	trap = shp->st.trapcom[sig];
 	if(sig==SIGALRM && shp->bltinfun==b_sleep)
 	{
 		if(trap && *trap)
@@ -115,7 +116,12 @@ void	sh_fault(register int sig)
 		if(sig==SIGINT && (shp->trapnote&SH_SIGIGNORE))
 			return;
 		if(flag&SH_SIGIGNORE)
+		{
+			if(shp->subshell)
+				shp->ignsig = sig;
+			sigrelease(sig);
 			return;
+		}
 		if(flag&SH_SIGDONE)
 		{
 			void *ptr=0;
@@ -128,17 +134,20 @@ void	sh_fault(register int sig)
 			}
 			shp->lastsig = sig;
 			sigrelease(sig);
-			if(pp->mode < SH_JMPFUN)
-				pp->mode = SH_JMPFUN;
-			else
-				pp->mode = SH_JMPEXIT;
+			if(pp->mode != SH_JMPSUB)
+			{
+				if(pp->mode < SH_JMPSUB)
+					pp->mode = shp->subshell?SH_JMPSUB:SH_JMPFUN;
+				else
+					pp->mode = SH_JMPEXIT;
+			}
+			if(shp->subshell)
+				sh_exit(SH_EXITSIG);
 			if(sig==SIGABRT || (abortsig(sig) && (ptr = malloc(1))))
 			{
 				if(ptr)
 					free(ptr);
-				if(!shp->subshell)
-					sh_done(shp,sig);
-				sh_exit(SH_EXITSIG);
+				sh_done(shp,sig);
 			}
 			/* mark signal and continue */
 			shp->trapnote |= SH_SIGSET;

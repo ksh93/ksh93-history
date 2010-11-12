@@ -67,7 +67,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-10-10 $
+@(#)$Id: package (AT&T Research) 2010-11-10 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2614,19 +2614,19 @@ cat $INITROOT/$i.sh
 		;;
 	esac
 	path=$PATH
-	PATH=$INSTALLROOT/bin:$PATH
+	PATH=$INSTALLROOT/bin:$PACKAGEROOT/bin:$PATH
 	checkcc
 	PATH=$path
 	case $cc in
 	?*)	if	test -f $INITROOT/hello.c
 		then	
-			# check if $CC is a cross compiler
+			# check if $CC (full path $cc) is a cross compiler
 
 			(
 				cd /tmp || exit 3
 				cp $INITROOT/hello.c pkg$$.c || exit 3
-				PATH=$path $CC -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
-					if PATH=$path $CC -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
+				$cc -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
+					if $cc -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
 					then	echo "$command: ${warn}$CC: must be a C compiler (not C++)" >&2
 					else	cat pkg$$.e
 						echo "$command: ${warn}$CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2

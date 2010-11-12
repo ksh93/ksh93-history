@@ -296,7 +296,7 @@ inetopen(const char* path, int flags, Inetintr_f onintr, void* handle)
 			if (errno != EINTR || !onintr)
 				break;
 			if ((*onintr)(addr, handle))
-				return -1;
+				goto done;
 		}
 	}
  done:

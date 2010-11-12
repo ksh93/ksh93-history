@@ -91,7 +91,10 @@ Vmstat_t*	st;
 				}
 				else	/* get the real size */
 				{	if(vd->mode&VM_MTDEBUG)
-						s = DBSIZE(DB2DEBUG(DATA(b)));
+					{	/* strict-aliasing dance */
+						void*	d = DB2DEBUG(DATA(b));
+						s = DBSIZE(d);
+					}
 					else if(vd->mode&VM_MTPROFILE)
 						s = PFSIZE(DATA(b));
 					if(s > st->m_busy)

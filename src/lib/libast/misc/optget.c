@@ -4368,7 +4368,6 @@ optget(register char** argv, const char* oopts)
 				return 0;
 			if (c == '+')
 				opt_info.arg = 0;
-			message((-2, "c='%c' n=%d", c, n));
 			if (n == 2)
 			{
 				x = 0;

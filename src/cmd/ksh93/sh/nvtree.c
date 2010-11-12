@@ -42,7 +42,7 @@ struct nvdir
 	Namfun_t	*fun;
 	struct nvdir	*prev;
 	int		len;
-	char		data[1];
+	char		*data;
 };
 
 static int	Indent;
@@ -146,12 +146,13 @@ void *nv_diropen(Namval_t *np,const char *name)
 {
 	char *next,*last;
 	int c,len=strlen(name);
-	struct nvdir *save, *dp = new_of(struct nvdir,len);
+	struct nvdir *save, *dp = new_of(struct nvdir,len+1);
 	Namval_t *nq=0,fake;
 	Namfun_t *nfp=0;
 	if(!dp)
 		return(0);
 	memset((void*)dp, 0, sizeof(*dp));
+	dp->data = (char*)(dp+1);
 	if(name[len-1]=='*' || name[len-1]=='@')
 		len -= 1;
 	name = memcpy(dp->data,name,len);
@@ -317,6 +318,7 @@ char *nv_dirnext(void *dir)
 				if(nfp || nv_istable(np))
 				{
 					Dt_t *root;
+					int len;
 					if(nv_istable(np))
 						root = nv_dict(np);
 					else
@@ -329,12 +331,15 @@ char *nv_dirnext(void *dir)
 					}
 					if(save)
 						return(cp);
-					if(!(save = new_of(struct nvdir,0)))
+					len = strlen(cp);
+					if(!(save = new_of(struct nvdir,len+1)))
 						return(0);
 					*save = *dp;
 					dp->prev = save;
 					dp->root = root;
-					dp->len = 0;
+					dp->len = len-1;
+					dp->data = (char*)(save+1);
+					memcpy(dp->data,cp,len+1);
 					if(nfp && np->nvfun)
 					{
 #if 0

@@ -334,11 +334,7 @@ char	*sh_fmtq(const char *string)
 		if(c=='\'' || !isprint(c))
 #endif /* SHOPT_MULTIBYTE */
 			state = 2;
-#if 1
-		 else if(c==']' || c=='=' || (c!=':' && c<=0xff && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
-#else
-		else if(c==']' || (c!=':' && c<=0xff && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
-#endif
+		else if(c==']' || c=='=' || (c!=':' && c<=0x7f && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
 			state |=1;
 	}
 	if(state<2)

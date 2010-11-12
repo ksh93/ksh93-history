@@ -471,6 +471,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	int argcnt;
 	memset((char*)sp, 0, sizeof(*sp));
 	sfsync(shp->outpool);
+	sh_sigcheck(shp);
+	shp->savesig = -1;
 	if(argsav = sh_arguse(shp))
 		argcnt = argsav->dolrefcnt;
 	if(shp->curenv==0)
@@ -569,7 +571,11 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 			sp->pipe = sp->prev->pipe;
 			flags &= ~sh_state(SH_NOFORK);
 		}
-		sh_exec(t,flags);
+		if(shp->savesig < 0)
+		{
+			shp->savesig = 0;
+			sh_exec(t,flags);
+		}
 	}
 	if(comsub!=2 && jmpval!=SH_JMPSUB && shp->st.trapcom[0] && shp->subshell)
 	{
@@ -589,6 +595,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 		shp->exitval &= SH_EXITMASK;
 		sh_done(shp,0);
 	}
+	if(!shp->savesig)
+		shp->savesig = -1;
 	if(comsub)
 	{
 		/* re-enable job control */
@@ -754,10 +762,10 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 		shp->toomany = 1;
 		errormsg(SH_DICT,ERROR_system(1),e_redirect);
 	}
+	if(shp->ignsig)
+		sh_fault(shp->ignsig);
 	if(jmpval==SH_JMPSUB && shp->lastsig)
-	{
 		sh_fault(shp->lastsig);
-	}
 	if(jmpval && shp->toomany)
 		siglongjmp(*shp->jmplist,jmpval);
 	return(iop);

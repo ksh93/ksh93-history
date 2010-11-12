@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -234,10 +234,9 @@ typedef struct
 	regmatch_t		save[1];
 } Match_frame_t;
 
-#define matchframe	stkdata(stkstd,Match_frame_t)
 #define matchpush(e,x)	((x)->re.group.number?_matchpush(e,x):0)
-#define matchcopy(e,x)	((x)->re.group.number?memcpy(matchframe->match,matchframe->save,matchframe->size):(void*)0)
-#define matchpop(e,x)	((x)->re.group.number?memcpy(matchframe->match,matchframe->save,matchframe->size),stkpop(stkstd):(void*)0)
+#define matchcopy(e,x)	do if ((x)->re.group.number) { Match_frame_t* fp = (void*)stkframe(stkstd)->data; memcpy(fp->match, fp->save, fp->size); } while (0)
+#define matchpop(e,x)	do if ((x)->re.group.number) { Match_frame_t* fp = (void*)stkframe(stkstd)->data; memcpy(fp->match, fp->save, fp->size); stkpop(stkstd); } while (0)
 
 #define pospop(e)	(--(e)->pos->cur)
 

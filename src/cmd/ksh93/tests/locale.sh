@@ -61,7 +61,6 @@ done
 
 # this locale is supported by ast on all platforms
 # EU for { decimal_point="," thousands_sep="." }
-# however wctype is not supported but that's ok for these tests
 
 locale=C_EU.UTF-8
 
@@ -203,6 +202,16 @@ exp="f1"
 got="$(<out)"
 [[ $got == "$exp" ]] || err_exit "LC_ALL test script failed -- expected '$exp', got '$got'"
 
+# multibyte identifiers
+
+exp=OK
+got=$(LC_ALL=C.UTF-8 $SHELL -c $'\u[5929]=OK; print ${\u[5929]}' 2>&1)
+[[ $got == "$exp" ]] || err_exit "multibyte variable definition/expansion failed -- expected '$exp', got '$got'"
+got=$(LC_ALL=C.UTF-8 $SHELL -c $'function \u[5929]\n{\nprint OK;\n}; \u[5929]' 2>&1)
+[[ $got == "$exp" ]] || err_exit "multibyte ksh function definition/execution failed -- expected '$exp', got '$got'"
+got=$(LC_ALL=C.UTF-8 $SHELL -c $'\u[5929]()\n{\nprint OK;\n}; \u[5929]' 2>&1)
+[[ $got == "$exp" ]] || err_exit "multibyte posix function definition/execution failed -- expected '$exp', got '$got'"
+
 # this locale is supported by ast on all platforms
 # mainly used to debug multibyte and message translation code
 # however wctype is not supported but that's ok for these tests
@@ -271,6 +280,10 @@ a_thing=fish
 got=$(print -r aa$"\\ahello \" /\\${a_thing}/\\"zz)
 exp='aa(debug,'$Command',libshell,\ahello " /\fish/\)zz'
 [[ $got == "$exp" ]] || err_exit "$\"...\" containing expansions fails: expected $exp, got $got"
+
+exp='(debug,'$Command',libshell,This is a string\n)'
+typeset got=$"This is a string\n"
+[[ $got == "$exp" ]] || err_exit "$\"...\" in assignment expansion fails: expected $exp got $got"
 
 unset LANG
 

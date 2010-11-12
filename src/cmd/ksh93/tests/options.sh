@@ -500,6 +500,10 @@ wait
 
 [[ $($SHELL 2> /dev/null -xc $'set --showme\nprint 1\n; print 2') == 1 ]] || err_exit  'showme option with xtrace not working correctly'
 
-$SHELL 2> /dev/null  -uc 'unset var;print ${var%foo}' && err_exit '${var%foo} not generating error message with set -u'
+$SHELL -uc 'var=foo;unset var;: ${var%foo}' >/dev/null 2>&1 && err_exit '${var%foo} should fail with set -u'
+$SHELL -uc 'var=foo;unset var;: ${!var}' >/dev/null 2>&1 && err_exit '${!var} should fail with set -u'
+$SHELL -uc 'var=foo;unset var;: ${#var}' >/dev/null 2>&1 && err_exit '${#var} should fail with set -u'
+$SHELL -uc 'var=foo;unset var;: ${var-OK}' >/dev/null 2>&1 || err_exit '${var-OK} should not fail with set -u'
+$SHELL -uc 'var=foo;nset var;: ${var:-OK}' >/dev/null 2>&1 || err_exit '${var:-OK} should not fail with set -u'
 
 exit $((Errors))

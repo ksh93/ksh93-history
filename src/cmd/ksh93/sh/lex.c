@@ -1015,6 +1015,8 @@ int sh_lex(Lex_t* lp)
 					}
 				}
 			err:
+				if(iswalpha(c))
+					continue;
 				n = endchar(lp);
 				mode = oldmode(lp);
 				poplevel(lp);

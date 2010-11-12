@@ -1,3 +1,5 @@
+10-11-12 tm/tmlocale.c: ast TM_* extensions default to C locale
+10-11-10 regex/regnexec.c,vmalloc/vmstat.c: eliminate strict-aliasing puns
 10-10-20 misc/translate.c: change debug translation to drop " in (a,b,c,"d")
 10-10-10 misc/glob.c: drop ancient D_FILENO(d)!=0 test and trust readdir()
 10-10-06 misc/translate.c: fix "debug" locale logic

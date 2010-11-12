@@ -1,4 +1,4 @@
-: -O to CCSPECIALIZE cc wrapper : 2005-07-17 :
+: -O* specialization cc wrapper : 2010-10-10 :
 
 case " $* " in
 *" -dumpmachine "*) echo $HOSTTYPE; exit ;;
@@ -6,10 +6,11 @@ esac
 
 cc=cc
 
-CCSPECIALZE='-O3 -march=mips4'
+CCREPLACE='these (possibly empty) options replace -O*'
+CCALWAYS='these (possibly empty) options always set'
 
 case " $* " in
-*" -O "*)
+*" -O* "*)
 	set '' "$@" ''
 	shift
 	while	:
@@ -18,7 +19,7 @@ case " $* " in
 		case $a in
 		'')	break
 			;;
-		-O)	set '' "$@" $CCSPECIALZE
+		-O*)	set '' "$@" $CCREPLACE
 			;;
 		*)	set '' "$@" "$a"
 			;;
@@ -27,4 +28,4 @@ case " $* " in
 	done
 	;;
 esac
-$cc "$@"
+$cc $CCALWAYS "$@"

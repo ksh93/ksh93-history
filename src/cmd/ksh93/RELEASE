@@ -1,4 +1,19 @@
-10-10-26  --- Release ksh93u  ---
+10-11-12  --- Release ksh93u  ---
+10-11-12  The sequences \< and \> are now preserved after patterns contaning
+	  ~(E) in ${var/pattern/string} expansions.
+10-11-11  A bug in typeset -m when the variables were compound arrary instances
+	  has been fixed.
+10-11-10  A bug in output of a compound variable with types containing types
+	  has been fixed.
+10-11-10  Fixed ``name=value export [-p]'' to list environment.
+10-11-09  shtests resets SIGPIPE to SIG_DFL for all tests.
+10-11-09  Fixed a bug in expansion of $"..." when used in assignments.
+10-11-09  Fixed a getaddrinfo() memory leak that didn't call freeaddrinfo()
+	  after an interrupt.
+10-11-08  Modified the behavior of set -u so that the shell terminates with
+	  error message when when var is unset with ${!var} and ${#var}.
+10-11-02  Fix a bug in which a signal received while in a subshell could be
+	  ignored.
 10-10-26  Fix a bug where terminal interrupt was ignored while in vi/emacs
 	  edit search mode.
 10-10-26  Fix $'a\0b'c to expand to 'ac'.
