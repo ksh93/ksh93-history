@@ -4535,13 +4535,8 @@ sear_system(const char* command, int nowindow)
 {
 	PROCESS_INFORMATION	pinfo;
 	STARTUPINFO		sinfo;
-	SECURITY_ATTRIBUTES	sattr;
-	SECURITY_ATTRIBUTES*	sa;
-	SECURITY_DESCRIPTOR	sdesc;
 	char*			cp;
-	char*			lp;
 	char			path[PATH_MAX];
-	char			log[PATH_MAX];
 	int			n = *command == '"';
 	DWORD			flags = NORMAL_PRIORITY_CLASS;
 
@@ -4555,35 +4550,11 @@ sear_system(const char* command, int nowindow)
 		strcpy(cp, ".exe");
 	ZeroMemory(&sinfo, sizeof(sinfo));
 	if (nowindow)
-	{
-		sa = &sattr;
-		InitializeSecurityDescriptor(&sdesc, SECURITY_DESCRIPTOR_REVISION);
-		SetSecurityDescriptorDacl(&sdesc, TRUE, NULL, FALSE);
-		ZeroMemory(sa, sizeof(sattr));
-		sattr.bInheritHandle = TRUE;
-		sattr.lpSecurityDescriptor = &sdesc;
-		sattr.nLength = sizeof(sattr);
-		lp = log;
-		for (cp = "C:\\temp\\"; *lp = *cp++; lp++);
-		for (cp = state.id; (*lp = *cp++) && *lp != '.'; lp++);
-		for (cp = ".log"; *lp = *cp++; lp++);
-		if (!(sinfo.hStdOutput = CreateFile(log, GENERIC_WRITE, FILE_SHARE_WRITE, &sattr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) || sinfo.hStdOutput == INVALID_HANDLE_VALUE)
-		{
-			fprintf(stderr, "%s: %s: cannot create log file\n", state.id, log);
-			exit(1);
-		}
-		sinfo.hStdError = sinfo.hStdOutput;
-		sinfo.dwFlags = STARTF_USESTDHANDLES;
 		flags |= CREATE_NO_WINDOW;
-	}
-	else
-		sa = 0;
-	if (!CreateProcess(path, (char*)command, sa, sa, TRUE, flags, NULL, NULL, &sinfo, &pinfo))
+	if (!CreateProcess(path, (char*)command, 0, 0, TRUE, flags, NULL, NULL, &sinfo, &pinfo))
 		n = GetLastError() == ERROR_FILE_NOT_FOUND ? 127 : 126;
 	else
 	{
-		if (nowindow)
-			CloseHandle(sinfo.hStdOutput);
 		CloseHandle(pinfo.hThread);
 		WaitForSingleObject(pinfo.hProcess, INFINITE);
 		if (!GetExitCodeProcess(pinfo.hProcess, &n))

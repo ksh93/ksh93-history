@@ -28,6 +28,8 @@
 #include        "builtins.h"
 #include        "path.h"
 
+static void assign(Namval_t*,const char*,int,Namfun_t*);
+
 int nv_compare(Dt_t* dict, Void_t *sp, Void_t *dp, Dtdisc_t *disc)
 {
 	if(sp==dp)
@@ -139,6 +141,8 @@ void nv_putv(Namval_t *np, const char *value, int flags, register Namfun_t *nfp)
 		if(!nv_isattr(np,NV_NODISC) || fp==(Namfun_t*)nv_arrayptr(np))
 			break;
 	}
+	if(!value && (flags&NV_TYPE) && fp && fp->disc->putval==assign)
+		fp = 0;
 	if(fp && fp->disc->putval)
 		(*fp->disc->putval)(np,value, flags, fp);
 	else
@@ -1143,7 +1147,7 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 	char			*cp;
 	register Namval_t	*np, *nq=0;
 	int			offset=staktell();
-	if(name==path && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
+	if(name==path && bltin!=SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
 		path = name = stakptr(offset);
 	if(np = nv_search(path,sh.bltin_tree,0))
 	{
@@ -1357,15 +1361,12 @@ int nv_istable(Namval_t *np)
  */
 Namval_t *nv_mount(Namval_t *np, const char *name, Dt_t *dict)
 {
-	Namval_t *mp, *pp=0;
+	Namval_t *mp, *pp;
 	struct table *tp;
-	if(name)
-	{
-		if(nv_hasdisc(np,&table_disc))
-			pp = np;
-		else
-			pp = nv_lastdict();
-	}
+	if(nv_hasdisc(np,&table_disc))
+		pp = np;
+	else
+		pp = nv_lastdict();
 	if(!(tp = newof((struct table*)0, struct table,1,0)))
 		return(0);
 	if(name)

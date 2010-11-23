@@ -48,6 +48,7 @@ typedef struct  _shlex_
 	char		intypeset;	/* on when processing typeset */
 	char		comp_assign;	/* in compound assignment */
 	char		comsub;		/* parsing command substitution */
+	char		noreserv;	/* reserved works not legal */
 	int		inlineno;	/* saved value of sh.inlineno */
 	int		firstline;	/* saved value of sh.st.firstline */
 #if SHOPT_KIA

@@ -560,4 +560,18 @@ exp='typeset -C b=(typeset -C -a ca=( [4]=(b_t b=(a_t b=(a=hello))));)'
 got=$(typeset -p b)
 [[ $got == "$exp" ]] || err_exit 'typeset -p of nested type not correct'
 
+typeset -T u_t=(
+	integer dummy 
+	unset()
+	{
+		print unset
+	}
+)
+unset z
+u_t -a x | read z
+[[ $z == unset ]]  && err_exit 'unset discipline called on type creation'
+
+{ z=$($SHELL 2> /dev/null 'typeset -T foo; typeset -T') ;} 2> /dev/null
+[[ $z == 'typeset -T foo' ]] || err_exit '"typeset -T foo; typeset -T" failed'
+
 exit $Errors

@@ -506,4 +506,7 @@ $SHELL -uc 'var=foo;unset var;: ${#var}' >/dev/null 2>&1 && err_exit '${#var} sh
 $SHELL -uc 'var=foo;unset var;: ${var-OK}' >/dev/null 2>&1 || err_exit '${var-OK} should not fail with set -u'
 $SHELL -uc 'var=foo;nset var;: ${var:-OK}' >/dev/null 2>&1 || err_exit '${var:-OK} should not fail with set -u'
 
+z=$($SHELL 2>&1  -uc 'print ${X23456789012345}')
+[[ $z == *X23456789012345:* ]] || err_exit "error message garbled with set -u got $z"
+
 exit $((Errors))

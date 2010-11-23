@@ -377,12 +377,12 @@ extern char**		environ;
  * really handy malloc()/free() (__FILE__,__LINE__,__FUNCTION__) tracing
  * make with VMDEBUG==1 or debug=1 or CCFLAGS=$(CC.DEBUG)
  * VMDEBUG==0 disables
- * at runtime export VMDEBUG or VMTRACE per vmalloc.3
+ * at runtime export VMALLOC_OPTIONS per vmalloc.3
  * to list originating call locations
  */
 
 #if !_std_malloc && !defined(VMFL) && !defined(_VMHDR_H) && \
-	(!defined(VMDEBUG) || VMDEBUG) && (VMDEBUG || _BLD_DEBUG)
+	(VMDEBUG || !defined(VMDEBUG) && _BLD_DEBUG)
 
 #define VMFL	1
 #include <vmalloc.h>

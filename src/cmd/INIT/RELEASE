@@ -1,3 +1,4 @@
+10-11-22 ditto.sh: fix timing problem between |& and exec &p
 10-11-10 package.sh: fix cc cross compile check to use checkcc absolute path
 10-10-10 package.sh: list main env vars at start of make action
 10-10-10 ratz.c: tweak widnows delays

@@ -24,7 +24,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $COMMAND"
 	USAGE=$'
 [-?
-@(#)$Id: ditto (AT&T Labs Research) 2010-01-21 $
+@(#)$Id: ditto (AT&T Labs Research) 2010-11-22 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?ditto - replicate directory hierarchies]
@@ -175,16 +175,24 @@ fi
 parse src "$1"
 parse dst "$2"
 
+# the |& command may exit before the exec &p
+# the print sync + read delays the |& until the exec &p finishes
+
 if [[ $src_host ]]
-then	($remote $src_user $src_host "{ test ! -f .profile || . ./.profile ;} && cd $src_dir && ${tw[*]}") 2>&1 |&
-else	(cd $src_dir && eval "${tw[@]}") 2>&1 |&
+then	($remote $src_user $src_host "{ test ! -f .profile || . ./.profile ;} && cd $src_dir && read && ${tw[*]}") 2>&1 |&
+else	(cd $src_dir && read && eval "${tw[@]}") 2>&1 |&
 fi
-exec 5<&p 7>&p 7>&-
+exec 5<&p 7>&p
+print -u7 sync
+exec 7>&-
+
 if [[ $dst_host ]]
-then	($remote $dst_user $dst_host "{ test ! -f .profile || . ./.profile ;} && cd $dst_dir && ${tw[*]}") 2>&1 |&
-else	(cd $dst_dir && eval "${tw[@]}") 2>&1 |&
+then	($remote $dst_user $dst_host "{ test ! -f .profile || . ./.profile ;} && cd $dst_dir && read && ${tw[*]}") 2>&1 |&
+else	(cd $dst_dir && read && eval "${tw[@]}") 2>&1 |&
 fi
-exec 6<&p 7>&p 7>&-
+exec 6<&p 7>&p
+print -u7 sync
+exec 7>&-
 
 # scan through the sorted path lists
 

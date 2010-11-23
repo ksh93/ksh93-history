@@ -1811,9 +1811,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 					shp->exitval -= 128;
 				sh_done(shp,0);
 			}
-			else if((t->par.partre->tre.tretyp&(FAMP|TFORK))==(FAMP|TFORK))
+			else if(((type=t->par.partre->tre.tretyp)&FAMP) && ((type&COMMSK)==TFORK))
 			{
 				pid_t	pid;
+				sfsync(NIL(Sfio_t*));
 				while((pid=fork())< 0)
 					_sh_fork(shp,pid,0,0);
 				if(pid==0)
@@ -3103,6 +3104,9 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	Namval_t		*nspace = shp->namespace;
 	Dt_t			*last_root = shp->last_root;
 	Shopt_t			options = shp->options;
+#if SHOPT_NAMESPACE
+	Namval_t		*np;
+#endif /* SHOPT_NAMESPACE */
 	if(shp->fn_depth==0)
 		shp->glob_options =  shp->options;
 	else
@@ -3125,6 +3129,10 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		envlist = fp->env;
 	}
 	prevscope->save_tree = shp->var_tree;
+#if SHOPT_NAMESPACE
+	if((np=(fp->node)->nvalue.rp->nspace) && np!=shp->namespace)
+		shp->namespace = np;
+#endif /* SHOPT_NAMESPACE */
 	sh_scope(shp,envlist,1);
 	if(dtvnext(prevscope->save_tree)!= (shp->namespace?shp->var_base:0))
 	{
@@ -3142,16 +3150,6 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 			sh_onoption(SH_XTRACE);
 		else
 			sh_offoption(SH_XTRACE);
-#if SHOPT_NAMESPACE
-		if((np=(fp->node)->nvalue.rp->nspace) && np!=shp->namespace)
-		{
-			Dt_t *dt = shp->var_tree;
-			dtview(dt,0);
-			dtview(dt,nv_dict(np));
-			shp->var_tree = nv_dict(np);
-			shp->namespace = np;
-		}
-#endif /* SHOPT_NAMESPACE */
 	}
 	shp->st.cmdname = argv[0];
 	/* save trap table */

@@ -329,6 +329,7 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 		return((void*)sh_trestore(shp,iop));
 	fcsave(&sav_input);
 	shp->st.staklist = 0;
+	lexp->noreserv = 0;
 	lexp->heredoc = 0;
 	lexp->inlineno = shp->inlineno;
 	lexp->firstline = shp->st.firstline;
@@ -933,7 +934,7 @@ static Shnode_t *funct(Lex_t *lexp)
 /*
  * Compound assignment
  */
-static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
+static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int type)
 {
 	register int n;
 	register Shnode_t *t, **tp;
@@ -964,8 +965,11 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 	ap->argflag &= ARG_QUOTED;
 	ap->argflag |= array;
 	lexp->assignok = SH_ASSIGN;
-	lexp->aliasok = 1;
-	array=0;
+	if(type==NV_ARRAY)
+		lexp->noreserv = 1;
+	else
+		lexp->aliasok = 1;
+	array= (type==NV_ARRAY)?SH_ARRAY:0;
 	if((n=skipnl(lexp,0))==RPAREN || n==LPAREN)
 	{
 		struct argnod *ar,*aq,**settail;
@@ -1010,7 +1014,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 	}
 	else if(n && n!=FUNCTSYM)
 		sh_syntax(lexp);
-	else if(n!=FUNCTSYM && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && (nv_isattr(np,BLT_DCL)|| np==SYSDOT)))
+	else if(type!=NV_ARRAY && n!=FUNCTSYM && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && (nv_isattr(np,BLT_DCL)|| np==SYSDOT)))
 	{
 		array=SH_ARRAY;
 		if(fcgetc(n)==LPAREN)
@@ -1026,7 +1030,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 		}
 		else if(n>0)
 			fcseek(-1);
-		if(array && tdef)
+		if(array && type==NV_TYPE)
 		{
 			struct argnod *arg = lexp->arg;
 			n = lexp->token;
@@ -1040,6 +1044,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 				sh_syntax(lexp);
 		}
 	}
+	lexp->noreserv = 0;
 	while(1)
 	{
 		if((n=lexp->token)==RPAREN)
@@ -1494,11 +1499,25 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			if(argp->argflag&ARG_ASSIGN)
 			{
 				int intypeset = lexp->intypeset;
-				int tdef = 0;
+				int type = 0;
 				lexp->intypeset = 0;
-				if(t->comnamp==SYSTYPESET && t->comarg->argnxt.ap && strcmp(t->comarg->argnxt.ap->argval,"-T")==0)
-					tdef = 1;
-				argp = assign(lexp,argp,tdef);
+				if(t->comnamp==SYSTYPESET)
+				{
+					struct argnod  *ap;
+					for(ap=t->comarg->argnxt.ap;ap;ap=ap->argnxt.ap)
+					{
+						if(*ap->argval!='-')
+							break;
+						if(strchr(ap->argval,'T'))
+							type = NV_TYPE;
+						else if(strchr(ap->argval,'a'))
+							type = NV_ARRAY;
+						else
+							continue;
+						break;
+					}
+				}
+				argp = assign(lexp,argp,type);
 				lexp->intypeset = intypeset;
 				if(associative)
 					lexp->assignok |= SH_ASSIGN;

@@ -227,6 +227,8 @@ _END_EXTERNS_
 #define vmresize(vm,d,sz,type)	(_VMFL_(vm), \
 				 (*(_VM_(vm)->meth.resizef))\
 					((vm),(Void_t*)(d),(sz),(type)) )
+#define vmstrdup(vm,s)		(_VMFL_(vm), \
+				 vmstrdup(vm,s))
 #define vmfree(vm,d)		(_VMFL_(vm), \
 				 (*(_VM_(vm)->meth.freef))((vm),(Void_t*)(d)) )
 #define vmalign(vm,sz,align)	(_VMFL_(vm), \

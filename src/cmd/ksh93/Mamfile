@@ -752,7 +752,7 @@ prev include/defs.h implicit
 done sh/nvtype.c
 meta nvtype.o %.c>%.o sh/nvtype.c nvtype
 prev sh/nvtype.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DSHOPT_FIXEDARRAY -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20100309 -D_BLD_shell -DKSHELL -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/nvtype.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DSHOPT_FIXEDARRAY -DSHOPT_NAMESPACE -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20100309 -D_BLD_shell -DKSHELL -DSHOPT_STATS -DSHOPT_COSHELL -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/nvtype.c
 done nvtype.o generated
 make arith.o
 make sh/arith.c

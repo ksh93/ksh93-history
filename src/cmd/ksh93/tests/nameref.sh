@@ -452,4 +452,36 @@ nameref x=c.x
 x[4]=1
 [[ ${ typeset -p c.x ;} == *-C* ]] && err_exit 'c.x should not have -C attributes'
 
+{ $SHELL 2> /dev/null  <<- \EOF 
+	typeset -T xxx_t=(
+		float x=1 y=2
+		typeset name=abc
+	)
+	xxx_t x
+	nameref r=x.y
+	[[ $r == 2 ]] || exit 1
+	unset x
+	[[ ${!r} == .deleted ]] || exit 2
+EOF
+} 2> /dev/null #|| print -u2 bad
+exitval=$?
+if	[[ $(kill -l $exitval) == SEGV ]]
+then	print -u2 'name reference to unset type instance causes segmentation violation'
+else 	if((exitval))
+	then	print -u2 'name reference to unset type instance not redirected to .deleted'
+	fi
+fi
+
+typeset +n nr
+unset c nr
+compound c
+compound -A c.a 
+nameref nr=c.a[hello]
+[[ ${!nr} == "c.a[hello]" ]] || err_exit 'name reference nr to unset associative array instance does not expand ${!nr} correctly.'
+
+typeset +n nr
+compound -a c.b 
+nameref nr=c.b[2]
+[[ ${!nr} == "c.b[2]" ]] || err_exit 'name reference nr to unset indexed array instance does not expand ${!nr} correctly.'
+
 exit $((Errors))

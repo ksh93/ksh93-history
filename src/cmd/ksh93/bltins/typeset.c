@@ -1312,6 +1312,8 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 #endif /* SHOPT_TYPEDEF */
 	if(flag&NV_INTEGER)
 		tp->scanmask |= (NV_DOUBLE|NV_EXPNOTE);
+	if(flag==NV_LTOU || flag==NV_LTOU)
+		tp->scanmask |= NV_UTOL|NV_LTOU;
 	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag);
 	argv = tp->argnam  = (char**)stkalloc(tp->sh->stk,(namec+1)*sizeof(char*));
 	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag&~NV_IARRAY);

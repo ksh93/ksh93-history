@@ -94,12 +94,9 @@ int path_xattr(Shell_t *shp, const char *path, char *rpath)
 			free_execattr(pf);
 			return(1);
 		}
-		else
-		{
-			errno = ENOENT;
-			return(-1);
-		}
 	}
+	errno = ENOENT;
+	return(-1);
 }
 #endif /* SHOPT_PFSH */
 

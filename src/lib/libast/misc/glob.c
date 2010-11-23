@@ -287,7 +287,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, register const c
  */
 
 static void
-glob_dir(glob_t* gp, globlist_t* ap)
+glob_dir(glob_t* gp, globlist_t* ap, int re_flags)
 {
 	register char*		rescan;
 	register char*		prefix;
@@ -305,6 +305,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	int			t1;
 	int			t2;
 	int			bracket;
+	int			next_flags;
 
 	int			anymeta = ap->gl_flags & MATCH_META;
 	int			complete = 0;
@@ -327,6 +328,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	pat = rescan = ap->gl_begin;
 	prefix = dirname = ap->gl_path + gp->gl_extra;
 	first = (rescan == prefix);
+	next_flags = gp->re_flags;
+	error(-1, "AHA glob_dir re_flags=0x%08x gp->re_flags=0x%08x pattern='%s'", re_flags, gp->re_flags, rescan);
 again:
 	bracket = 0;
 	for (;;)
@@ -354,6 +357,7 @@ again:
 			}
 			else if ((anymeta || !(gp->gl_flags & GLOB_NOCHECK)) && (*gp->gl_type)(gp, prefix, 0))
 				addmatch(gp, NiL, prefix, NiL, NiL, anymeta);
+			gp->re_flags = next_flags;
 			return;
 		case '[':
 			if (!bracket)
@@ -431,7 +435,8 @@ again:
 			if (pat[2])
 			{
 				pat += 3;
-				while (*pat=='/') pat++;
+				while (*pat=='/')
+					pat++;
 				if (*pat)
 					continue;
 			}
@@ -486,13 +491,14 @@ skip:
 					if (err = regcomp(&rei, pat, gp->re_flags|REG_ICASE))
 						break;
 					prei = &rei;
+					next_flags = regstat(prei)->re_flags;
 				}
 				pre = prei;
 				if (gp->gl_ignore)
 				{
 					if (!gp->gl_ignorei)
 					{
-						if (regcomp(&gp->re_ignorei, gp->gl_fignore, gp->re_flags|REG_ICASE))
+						if (regcomp(&gp->re_ignorei, gp->gl_fignore, re_flags|REG_ICASE))
 						{
 							gp->gl_error = GLOB_APPERR;
 							break;
@@ -511,6 +517,7 @@ skip:
 					if (err = regcomp(&rec, pat, gp->re_flags))
 						break;
 					prec = &rec;
+					next_flags = regstat(prec)->re_flags;
 				}
 				pre = prec;
 				ire = gp->gl_ignore;
@@ -558,6 +565,7 @@ skip:
 		regfree(prei);
 	if (err == REG_ESPACE)
 		gp->gl_error = GLOB_NOSPACE;
+	gp->re_flags = next_flags;
 }
 
 int
@@ -573,6 +581,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	unsigned long		f;
 	int			n;
 	int			x;
+	int			re_flags;
 
 	const char*		nocheck = pattern;
 	int			optlen = 0;
@@ -740,10 +749,11 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	suflen = 0;
 	if (!(flags & GLOB_LIST))
 		gp->gl_match = 0;
+	re_flags = gp->re_flags;
 	do
 	{
 		gp->gl_rescan = ap->gl_next;
-		glob_dir(gp, ap);
+		glob_dir(gp, ap, re_flags);
 	} while (!gp->gl_error && (ap = gp->gl_rescan));
 	if (gp->gl_pathc == skip)
 	{

@@ -526,4 +526,30 @@ typeset -m 'a[1]=j'
 [[ ${a[@]} == 'bb aa cc' ]] || err_exit 'moving associative array elements not working'
 unset a j
 
+{
+typeset -a arr=(
+	float
+)
+} 2> /dev/null
+[[ ${arr[0]} == float ]] || err_exit 'typeset -a should not expand alias for float'
+unset arr
+
+{
+typeset -r -a arr=(
+	float
+)
+} 2> /dev/null
+[[ ${arr[0]} == float ]] || err_exit 'typeset -r -a should not expand alias for float'
+{
+typeset -a arr2=(
+	typeset +r
+)
+} 2> /dev/null
+[[ ${arr2[0]} == typeset ]] || err_exit 'typeset -a should not process declarations'
+unset arr2
+
+$SHELL 2> /dev/null -c $'typeset -a arr=(\nfor)' || err_exit 'typeset -a should allow reserved words as first argument'
+
+$SHELL 2> /dev/null -c $'typeset -r -a arr=(\nfor)' || err_exit 'typeset -r -a should allow reserved words as first argument'
+
 exit $((Errors))

@@ -1,3 +1,7 @@
+10-11-20 glob.c: handle modes switches across /
+10-11-19 regcomp.c: REG_SHELL => REG_CLASS_ESCAPE
+10-11-16 vmalloc.h: add VMFL tracing to vmstrdup()
+10-11-16 ast.h: simplify VMDEBUG _BLD_DEBUG and VMFL logic
 10-11-12 tm/tmlocale.c: ast TM_* extensions default to C locale
 10-11-10 regex/regnexec.c,vmalloc/vmstat.c: eliminate strict-aliasing puns
 10-10-20 misc/translate.c: change debug translation to drop " in (a,b,c,"d")

@@ -171,10 +171,11 @@ struct regdisc_s
 
 typedef struct regstat_s
 {
-	regflags_t	re_flags;	/* REG_LEFT|REG_RIGHT		*/
+	regflags_t	re_flags;	/* REG_*			*/
 	ssize_t		re_min;		/* min anchored match length	*/
 	ssize_t		re_max;		/* max anchored match length	*/
 	ssize_t		re_record;	/* regrexec() match length	*/
+	regflags_t	re_info;	/* REG_* info			*/
 } regstat_t;
 
 struct regex_s

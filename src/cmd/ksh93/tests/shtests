@@ -9,7 +9,7 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-11-12 $
+@(#)$Id: shtests (AT&T Research) 2010-11-21 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -81,7 +81,7 @@ do	case $OPT in
 		;;
 	l)	locale_accept=$OPTARG
 		;;
-	p)	locale_one=$OPTARG
+	p|C)	locale_one=$OPTARG
 		;;
 	s)	default=0
 		compile=0

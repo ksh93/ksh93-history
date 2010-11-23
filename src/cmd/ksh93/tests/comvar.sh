@@ -613,4 +613,27 @@ typeset -m "x[0]=z"
 exp='([0]=(b=2) [1]=(a=1))'
 [[ $(print -C x) == "$exp" ]] || err_exit 'typeset -m not working for associative arrays'
 
+unset z r
+z=(a b c)
+r=(x=3 y=4)
+typeset -m z[1]=r
+exp='typeset -a z=(a (x=3;y=4) c)'
+[[ $(typeset -p z) == "$exp" ]] || err_exit 'moving compound variable into indexed array fails'
+
+unset c
+compound c
+compound -a c.a=( [1]=( aa=1 ) )
+compound -a c.b=( [2]=( bb=2 ) )
+typeset -m "c.b[9]=c.a[1]"
+exp='typeset -C c=(typeset -C -a a;typeset -C -a b=( [2]=(bb=2;)[9]=(aa=1));)'
+[[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to another index fails'
+
+unset c
+compound c
+compound -a c.a=( [1]=( aa=1 ) )
+compound -A c.b=( [2]=( bb=2 ) )
+typeset -m "c.b[9]=c.a[1]"
+exp='typeset -C c=(typeset -C -a a;typeset -C -A b=( [2]=(bb=2;)[9]=(aa=1));)'
+[[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to a compound associative array element fails'
+
 exit $((Errors))

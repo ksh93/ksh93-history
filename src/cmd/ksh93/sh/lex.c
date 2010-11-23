@@ -368,6 +368,8 @@ int sh_lex(Lex_t* lp)
 			lp->lexd.first = 0;
 	}
 	lp->lastline = lp->sh->inlineno;
+	if(lp->noreserv)
+		lp->lex.reservok = 0;
 	while(1)
 	{
 		/* skip over characters in the current state */
@@ -1329,7 +1331,7 @@ breakloop:
 			lp->arg = sh_endword(shp,2);
 		c |= ARG_MAC;
 	}
-	if(c==0 || (c&(ARG_MAC|ARG_EXP|ARG_MESSAGE)) || (lp->lexd.warn && !lp->lexd.docword))
+	if(c==0 || (c&(ARG_MAC|ARG_EXP|ARG_MESSAGE)))
 	{
 		lp->arg = (struct argnod*)stkfreeze(stkp,1);
 		lp->arg->argflag = (c?c:ARG_RAW);

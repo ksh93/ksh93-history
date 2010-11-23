@@ -636,7 +636,10 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 						nv_delete(mp,ap->table,0);
 					}
 					if(!array_covered(np,(struct index_array*)ap))
-						ap->nelem--;
+					{
+						if(array_elem(ap))
+							ap->nelem--;
+					}
 #if SHOPT_FIXEDARRAY
 					else if(fp=(struct fixed_array*)ap->fixed)
 					{

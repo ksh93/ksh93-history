@@ -1216,7 +1216,7 @@ bra(Cenv_t* env)
 		if (!(c = *env->cursor) || c == env->terminator || c == env->delimiter && (env->flags & REG_ESCAPE))
 			goto error;
 		env->cursor += (w = MBSIZE(env->cursor));
-		if (c == '\\' && ((env->flags & REG_CLASS_ESCAPE) || env->type >= SRE && env->parnest || *env->cursor == env->delimiter && (env->flags & REG_ESCAPE)))
+		if (c == '\\' && ((env->flags & REG_CLASS_ESCAPE) || *env->cursor == env->delimiter && (env->flags & REG_ESCAPE)))
 		{
 			if (*env->cursor)
 			{
@@ -1485,7 +1485,7 @@ bra(Cenv_t* env)
 					goto error;
 				pp = env->cursor;
 				env->cursor += (w = MBSIZE(env->cursor));
-				if (c == '\\' && ((env->flags & REG_CLASS_ESCAPE) || env->type >= SRE && env->parnest || *env->cursor == env->delimiter && (env->flags & REG_ESCAPE)))
+				if (c == '\\' && ((env->flags & REG_CLASS_ESCAPE) || *env->cursor == env->delimiter && (env->flags & REG_ESCAPE)))
 				{
 					if (*env->cursor)
 					{
@@ -2161,28 +2161,28 @@ grp(Cenv_t* env, int parno)
 					break; /* PCRE_EXTRA */
 				/*FALLTHROUGH*/
 			case 'A':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_AUGMENTED|REG_EXTENDED;
 				typ = ARE;
 				break;
 			case 'B':
 			case 'G':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				typ = BRE;
 				break;
 			case 'E':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_EXTENDED;
 				typ = ERE;
 				break;
 			case 'F':
 			case 'L':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_LITERAL;
 				typ = ERE;
 				break;
 			case 'K':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_AUGMENTED|REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = KRE;
 				break;
@@ -2196,12 +2196,12 @@ grp(Cenv_t* env, int parno)
 				/* used by caller to disable glob(3) GLOB_STARSTAR */
 				break;
 			case 'P':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_EXTENDED|REG_CLASS_ESCAPE;
 				typ = ERE;
 				break;
 			case 'S':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = SRE;
 				break;
@@ -3263,9 +3263,13 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 	{
 		if (env.flags & REG_SHELL_PATH)
 			env.explicit = env.mappedslash;
+		if (!(env.flags & REG_SHELL_ESCAPED))
+			env.flags |= REG_CLASS_ESCAPE;
 		env.flags |= REG_LENIENT|REG_NULL;
 		env.type = env.type == BRE ? SRE : KRE;
 	}
+	else
+		env.flags &= ~(REG_SHELL_DOT|REG_SHELL_ESCAPED|REG_SHELL_GROUP|REG_SHELL_PATH);
 	if ((env.flags & (REG_NEWLINE|REG_SPAN)) == REG_NEWLINE)
 		env.explicit = env.mappednewline;
 	p->env->leading = (env.flags & REG_SHELL_DOT) ? env.mappeddot : -1;
@@ -3294,43 +3298,34 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 		env.error = REG_EPAREN;
 		goto bad;
 	}
-	p->env->stats.re_flags = env.flags & (REG_EXTENDED|REG_AUGMENTED|REG_SHELL);
-	if (env.flags & REG_LEFT)
+	if ((env.flags & REG_LEFT) && p->env->rex->type != REX_BEG)
 	{
-		if (p->env->rex->type != REX_BEG)
+		if (p->env->rex->type == REX_ALT)
+			env.flags &= ~REG_FIRST;
+		if (!(e = node(&env, REX_BEG, 0, 0, 0)))
 		{
-			if (p->env->rex->type == REX_ALT)
-				env.flags &= ~REG_FIRST;
-			if (!(e = node(&env, REX_BEG, 0, 0, 0)))
-			{
-				regfree(p);
-				return fatal(disc, REG_ESPACE, pattern);
-			}
-			e->next = p->env->rex;
-			p->env->rex = e;
-			p->env->once = 1;
+			regfree(p);
+			return fatal(disc, REG_ESPACE, pattern);
 		}
-		p->env->stats.re_flags |= REG_LEFT;
+		e->next = p->env->rex;
+		p->env->rex = e;
+		p->env->once = 1;
 	}
 	for (e = p->env->rex; e->next; e = e->next);
 	p->env->done.type = REX_DONE;
 	p->env->done.flags = e->flags;
-	if (env.flags & REG_RIGHT)
+	if ((env.flags & REG_RIGHT) && e->type != REX_END)
 	{
-		if (e->type != REX_END)
+		if (p->env->rex->type == REX_ALT)
+			env.flags &= ~REG_FIRST;
+		if (!(f = node(&env, REX_END, 0, 0, 0)))
 		{
-			if (p->env->rex->type == REX_ALT)
-				env.flags &= ~REG_FIRST;
-			if (!(f = node(&env, REX_END, 0, 0, 0)))
-			{
-				regfree(p);
-				return fatal(disc, REG_ESPACE, pattern);
-			}
-			f->flags = e->flags;
-			f->map = e->map;
-			e->next = f;
+			regfree(p);
+			return fatal(disc, REG_ESPACE, pattern);
 		}
-		p->env->stats.re_flags |= REG_RIGHT;
+		f->flags = e->flags;
+		f->map = e->map;
+		e->next = f;
 	}
 	if (stats(&env, p->env->rex))
 	{

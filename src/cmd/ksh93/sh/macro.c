@@ -1300,6 +1300,11 @@ retry1:
 			if(mp->shp->argaddr)
 				flag &= ~NV_NOADD;
 			np = nv_open(id,mp->shp->var_tree,flag|NV_NOFAIL);
+			if(!np)
+			{
+				sfprintf(mp->shp->strbuf,"%s%c",id,0);
+				id = sfstruse(mp->shp->strbuf);
+			}
 		}
 		if(isastchar(mode))
 			var = 0;
@@ -1810,7 +1815,9 @@ retry2:
 				mac_copy(mp,v,vsize>0?vsize:strlen(v));
 			if(addsub)
 			{
+				mp->shp->instance++;
 				sfprintf(mp->shp->strbuf,"[%s]",nv_getsub(np));
+				mp->shp->instance--;
 				v = sfstruse(mp->shp->strbuf);
 				mac_copy(mp, v, strlen(v));
 			}
@@ -1943,11 +1950,6 @@ retry2:
 			else
 				id = nv_name(np);
 			nv_close(np);
-		}
-		else if(stkptr(stkp,0)==id)
-		{
-			stkseek(stkp,strlen(id));
-			id = stkfreeze(stkp,1);
 		}
 		errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 	}

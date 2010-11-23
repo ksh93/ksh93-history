@@ -1,4 +1,37 @@
-10-11-12  --- Release ksh93u  ---
+10-11-22  --- Release ksh93u  ---
+10-11-22  The handling of \ inside [...] for for shell and ~(E) patterns has
+	  been fixed.
+10-11-22  A patch was made to pfsh to handle an error case.
+10-11-22 +Modified types defined in namespace so that they do not clash with
+	  types in other namespaces.  Types can be referenced using
+	  .namespace.typename.
+10-11-22  A bug which caused functions addressed as .namespace.funct to not
+	  work has been fixed.
+10-11-22  A bug in which if nr was a name reference to an unset associative
+	  array subscript, then ${!nr} did not output the subscript correctly
+	  has been fixed.
+10-11-18  A bug in which shcomp -n was not processing double quotes correctly
+	  has been fixed.
+10-11-18  Fixed a bug in which typeset -T foo; typeset -T could cause a
+	  core dump.
+10-11-17  Fixed a bug in which the error message for set -u could come out
+	  garbeled.
+10-11-17  Modified the parser so that typeset -a var=(...) no longer checks
+	  the first index for aliases and reserved words.
+10-11-17  A bug in which a subshell command consisted of only a for or until
+	  command has been fixed.
+10-11-16  Fixed a bug in which typeset -u would display namespace variables
+	  as well as upper case variables.
+10-11-16  A bug which could cause a core dump when unsetting a type variable
+	  when there are references to type elements has been fixed.
+10-11-15  A bug which could cause a core dump when unsetting a compound
+	  array variable when there are references to array subscripts has
+	  been fixed.
+10-11-15  A bug in which using typeset -m to move an indexed array instance
+	  to another array could cause the array to display incorrectly has
+	  been fixed.
+10-11-12  A bug in which the unset discipline function for a type is called
+	  when the type is initialized has been fixed.
 10-11-12  The sequences \< and \> are now preserved after patterns contaning
 	  ~(E) in ${var/pattern/string} expansions.
 10-11-11  A bug in typeset -m when the variables were compound arrary instances
