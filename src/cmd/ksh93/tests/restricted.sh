@@ -79,4 +79,5 @@ print hello
 for i in PATH ENV FPATH
 do	check_restricted  "function foo { typeset $i=foobar;};foo" || err_exit "$i can be changed in function by using typeset"
 done
-exit $((Errors))
+
+exit $((Errors<125?Errors:125))

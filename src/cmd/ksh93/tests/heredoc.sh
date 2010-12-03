@@ -480,4 +480,4 @@ EOF
 }
 [[ ${#foo} == 10238 ]] || err_exit 'large here docs containing command subs of dynamically loaded functions fails'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

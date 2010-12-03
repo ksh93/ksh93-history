@@ -509,4 +509,4 @@ $SHELL -uc 'var=foo;nset var;: ${var:-OK}' >/dev/null 2>&1 || err_exit '${var:-O
 z=$($SHELL 2>&1  -uc 'print ${X23456789012345}')
 [[ $z == *X23456789012345:* ]] || err_exit "error message garbled with set -u got $z"
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

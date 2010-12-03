@@ -551,7 +551,7 @@ function foo.set
 		fi
 		;;
 	barrier_hit)
-		if	[[ ${.sh.value} = yes ]]
+		if	[[ ${.sh.value} == yes ]]
 		then	foo[barrier_not_hit]=no
 		else	foo[barrier_not_hit]=yes
 		fi
@@ -660,4 +660,4 @@ SHLVL=1
 level=$($SHELL -c $'$SHELL -c \'print -r "$SHLVL"\'')
 [[ $level  == 3 ]]  || err_exit "SHLVL should be 3 not $level"
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

@@ -66,6 +66,7 @@ typedef struct  _mac_
 	int		fields;		/* number of fields */
 	short		quoted;		/* set when word has quotes */
 	unsigned char	ifs;		/* first char of IFS */
+	char		atmode;		/* when processing $@ */
 	char		quote;		/* set within double quoted contexts */
 	char		lit;		/* set within single quotes */
 	char		split;		/* set when word splittin is possible */
@@ -221,6 +222,7 @@ int sh_macexpand(Shell_t* shp, register struct argnod *argp, struct argnod **arg
 	str = argp->argval;
 	fcsopen(str);
 	mp->fields = 0;
+	mp->atmode = 0;
 	if(!arghead)
 	{
 		mp->split = 0;
@@ -244,7 +246,7 @@ int sh_macexpand(Shell_t* shp, register struct argnod *argp, struct argnod **arg
 	}
 	else
 	{
-		endfield(mp,mp->quoted);
+		endfield(mp,mp->quoted|mp->atmode);
 		flags = mp->fields;
 		if(flags==1 && shp->argaddr)
 			argp->argchn.ap = *arghead; 
@@ -1147,6 +1149,7 @@ retry1:
 			else
 #endif  /* SHOPT_FILESCAN */
 			dolmax = mp->shp->st.dolc+1;
+			mp->atmode = (v && c=='@');
 			dolg = (v!=0);
 		}
 		break;
@@ -1427,6 +1430,7 @@ retry1:
 				}
 				else
 					v = nv_getval(np);
+				mp->atmode = (v && mode=='@');
 				/* special case --- ignore leading zeros */  
 				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isalnum(c)))
 					mp->zeros = 1;
@@ -1887,6 +1891,7 @@ retry2:
 				if(!np)
 					mp->pattern = 0;
 				endfield(mp,mp->quoted);
+				mp->atmode = mode=='@';
 				mp->pattern = oldpat;
 			}
 			else if(d)
@@ -2398,6 +2403,7 @@ static void endfield(register Mac_t *mp,int split)
 		argp = (struct argnod*)stkfreeze(stkp,1);
 		argp->argnxt.cp = 0;
 		argp->argflag = 0;
+		mp->atmode = 0;
 		if(mp->patfound)
 		{
 			mp->shp->argaddr = 0;

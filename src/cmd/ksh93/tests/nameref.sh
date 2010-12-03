@@ -484,4 +484,13 @@ compound -a c.b
 nameref nr=c.b[2]
 [[ ${!nr} == "c.b[2]" ]] || err_exit 'name reference nr to unset indexed array instance does not expand ${!nr} correctly.'
 
-exit $((Errors))
+typeset +n a b
+unset a b
+typeset -n a=ls[0] b=ls[1]
+read line << \!
+3 4
+!
+set -A ls -- $line
+[[ $a == 3 ]] || err_exit 'name reference to ls[0] when ls is not an array fails'
+
+exit $((Errors<125?Errors:125))

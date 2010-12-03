@@ -146,4 +146,4 @@ done
 (( d==2000 )) ||  err_exit "trap '' CHLD  causes side effects d=$d"
 trap - CHLD
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

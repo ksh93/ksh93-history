@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2010-06-28 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2010-11-30 $\0\n";
 
 #include "univlib.h"
 
@@ -529,7 +529,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 					case 0:
 						break;
 					case ':':
-						if (command && (fp->op != OP_universe || !ok))
+						if (command && fp->op != OP_universe)
 						{
 							if (r = p - d - 1)
 							{

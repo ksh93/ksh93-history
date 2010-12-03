@@ -43,9 +43,15 @@ fi
 if	[[ -a $file ]]
 then	err_exit "-a: $file shouldn't exist"
 fi
+if	[[ -e $file ]]
+then	err_exit "-e: $file shouldn't exist"
+fi
 > $file
 if	[[ ! -a $file ]]
 then	err_exit "-a: $file should exist"
+fi
+if	[[ ! -e $file ]]
+then	err_exit "-e: $file should exist"
 fi
 chmod 777 $file
 if	[[ ! -r $file ]]
@@ -124,7 +130,7 @@ fi
 if	[[ $file != $tmp/* ]]
 then	err_exit "$file should match $tmp/*"
 fi
-if	[[ $file = $tmp'/*' ]]
+if	[[ $file == $tmp'/*' ]]
 then	err_exit "$file should not equal $tmp'/*'"
 fi
 [[ ! ( ! -z $null && ! -z x) ]]	|| err_exit "negation and grouping"
@@ -150,7 +156,7 @@ fi
 if	[[ 'x&' != *'&' ]]
 then	err_exit " 'x&' does not match '&'* within [[...]]"
 fi
-if	[[ 'xy' = *'*' ]]
+if	[[ 'xy' == *'*' ]]
 then	err_exit " 'xy' matches *'*' within [[...]]"
 fi
 if	[[ 3 > 4 ]]
@@ -162,7 +168,7 @@ fi
 if	[[ 3x > 4x ]]
 then	err_exit '3x < 4x'
 fi
-x='bin|dev|?'
+x='@(bin|dev|?)'
 cd /
 if	[[ $(print $x) != "$x" ]]
 then	err_exit 'extended pattern matching on command arguments'
@@ -329,4 +335,4 @@ unset x y z foo bar
 [[ -e /dev/udp/ ]] || err_exit '/dev/udp/ does not exist'
 [[ -e /dev/xxx/ ]] &&  err_exit '/dev/xxx/ exists'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

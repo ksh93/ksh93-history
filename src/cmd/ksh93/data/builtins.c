@@ -1334,7 +1334,7 @@ USAGE_LICENSE
 
 
 const char sh_optksh[] =
-"+[-1c?\n@(#)$Id: sh (AT&T Research) "SH_RELEASE" $\n]"
+"+[-1?\n@(#)$Id: sh (AT&T Research) "SH_RELEASE" $\n]"
 USAGE_LICENSE
 "[+NAME?\b\f?\f\b - Shell, the standard command language interpreter]"
 "[+DESCRIPTION?\b\f?\f\b is a command language interpreter that "

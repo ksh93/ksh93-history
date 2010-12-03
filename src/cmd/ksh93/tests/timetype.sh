@@ -77,4 +77,5 @@ tt[2pm]='2008-08-11+00:00:00,2pm'
 (( (tt[tomorrow] - tt[today] ) == 24*3600 )) || err_exit "tt[tomorrow]-tt[today] failed -- expected 24*3600, got $(((tt[tomorrow]-tt[today])/3600.0))*3600"
 (( (tt[2pm] - tt[today] ) == 14*3600 )) || err_exit "tt[2pm]-tt[today] failed -- expected 14*3600, got $(((tt[2pm]-tt[today])/3600.0))*3600"
 unset tt
-exit $Errors
+
+exit $((Errors<125?Errors:125))

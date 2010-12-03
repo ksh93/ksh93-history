@@ -914,61 +914,6 @@ void _vmoptions()
 	v = &buf[sizeof(buf)-1];
 	if (s = getenv("VMALLOC_OPTIONS"))
 		COPY(t, v, s);
-#if 1 /* backwards compatibility until 2011 */
-	else
-	{
-		char*	p;
-
-		if (s = getenv("VMDEBUG"))
-		{
-			switch (*s++)
-			{
-			case 0:
-				break;
-			case 'a':
-				p = " abort";
-				COPY(t, v, p);
-				break;
-			case 'w':
-				p = " warn";
-				COPY(t, v, p);
-				break;
-			case '0':
-				if (*s-- == 'x')
-				{
-					p = " watch=";
-					COPY(t, v, p);
-					COPY(t, v, s);
-					break;
-				}
-				/*FALLTHROUGH*/
-			default:
-				p = " period=";
-				COPY(t, v, p);
-				COPY(t, v, s);
-				break;
-			}
-		}
-		if ((s = getenv("VMETHOD")) && *s)
-		{
-			p = " method=";
-			COPY(t, v, p);
-			COPY(t, v, s);
-		}
-		if ((s = getenv("VMPROFILE")) && *s)
-		{
-			p = " profile=";
-			COPY(t, v, p);
-			COPY(t, v, s);
-		}
-		if ((s = getenv("VMTRACE")) && *s)
-		{
-			p = " trace=";
-			COPY(t, v, p);
-			COPY(t, v, s);
-		}
-	}
-#endif
 	if (t > buf)
 	{
 		*t = 0;

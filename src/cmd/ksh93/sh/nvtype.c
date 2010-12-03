@@ -856,7 +856,11 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 	Namfun_t	*fp;
 	m = strlen(mp->nvname)+1;
 	if(numnodes < 2)
-		errormsg(SH_DICT,ERROR_exit(1),"%s: invalid type definition",nodes[0]->nvname);
+	{
+		cp = nodes[0]->nvname;
+		_nv_unset(nodes[0],NV_RDONLY);
+		errormsg(SH_DICT,ERROR_exit(1),e_badtypedef,cp);
+	}
 	for(nnodes=1,i=1; i <numnodes; i++)
 	{
 		np=nodes[i];
@@ -1594,6 +1598,8 @@ int	sh_outtype(Shell_t *shp,Sfio_t *out)
 	dp  = 	nv_dict(mp);
 	for(tp = (Namval_t*)dtfirst(dp); tp; tp = (Namval_t*)dtnext(dp,tp))
 	{
+		if(!nv_search(tp->nvname,shp->bltin_tree,0))
+			continue;
 #if SHOPT_NAMESPACE
 		nsp = 0;
 		if(ntp = (Namtype_t*)nv_hasdisc(tp, &type_disc))

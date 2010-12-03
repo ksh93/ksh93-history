@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -63,7 +63,7 @@ function bar
 
 function funcheck
 {
-	[[ $foo = EXIT ]] || err_exit "foo "$@" : exit trap not set"
+	[[ $foo == EXIT ]] || err_exit "foo "$@" : exit trap not set"
 	if	[[ -f $file ]]
 	then	rm -r $file
 		err_exit "foo $@: doesn't remove $file"
@@ -95,14 +95,14 @@ then	err_exit "foo 0 3: return is $ret not 3"
 fi
 funcheck 0 3
 foo 2 0 || err_exit "foo 2 0: incorrect return"
-[[ $bar = EXIT ]] || err_exit "foo 2 0: bar exit trap not set"
+[[ $bar == EXIT ]] || err_exit "foo 2 0: bar exit trap not set"
 funcheck 2 0
 foo 2 3
 ret=$?
 if	(( $ret != 3 ))
 then	err_exit "foo 2 3: return is $ret not 3"
 fi
-[[ $bar = EXIT ]] || err_exit "foo 2 3: bar exit trap not set"
+[[ $bar == EXIT ]] || err_exit "foo 2 3: bar exit trap not set"
 funcheck 2 3
 (foo 3 3)
 ret=$?
@@ -179,4 +179,5 @@ exit 1
 if	(( $? != 8 ))
 then	err_exit "exit 8 in trap should set exit value to 8"
 fi
-exit $((Errors))
+
+exit $((Errors<125?Errors:125))

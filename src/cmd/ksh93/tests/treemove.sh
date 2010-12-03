@@ -81,5 +81,4 @@ f2 tree2
 [[ "${tree1.subtree["a_node"].two}" == "world" ]] || err_exit "expected tree1.subtree[\"a_node\"].two == 'world', got ${tree1.subtree["a_node"].two}"
 [[ "${tree1}" == "${tree2}" ]] || err_exit "tree1 and tree2 differ:$'\n'"
 
-# tests done
-exit $((Errors))
+exit $((Errors<125?Errors:125))

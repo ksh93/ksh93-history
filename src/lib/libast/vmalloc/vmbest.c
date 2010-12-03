@@ -1268,6 +1268,26 @@ int	sig;
 		Gotsegv = 1;
 }
 
+/*
+ * okaddr() is required for systems that overcommit brk()/mmap() allocations
+ * by returning ok when even though the pages that cover the allocation
+ * haven't been committed to the process yet -- linux does this and it
+ * works most of the time, but when it fails its insidious because it
+ * manifests as random core dumps under system load, although it can
+ * also happen under normal load but during a spike of allocation requests
+ *
+ * overcommit is costly to iffe out, so we resort to cursed system specific
+ * predefined macro guards to detect systems that we know 100% do not overcommit
+ *
+ * sunos only overcommits for mmap(MAP_NORESERVE) allocations (vmalloc doesn't use that)
+ */
+
+#if defined(__SunOS)
+
+#define okaddr(a,n)	0
+
+#else
+
 #if __STD_C
 static int okaddr(Void_t* addr, size_t nsize)
 #else
@@ -1295,6 +1315,8 @@ size_t	nsize;
 
 	return rv;
 }
+
+#endif
 
 /* A discipline to get raw memory using sbrk/VirtualAlloc/mmap */
 #if __STD_C

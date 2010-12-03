@@ -20,12 +20,12 @@
 function err_exit
 {
 	print -u2 -r $'\t'"${Command}[$1] ${@:2}"
-	((errors++))
+	((Errors++))
 }
 alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
-integer aware=0 contrary=0 errors=0 ignorant=0
+integer aware=0 contrary=0 Errors=0 ignorant=0
 
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
@@ -266,13 +266,13 @@ then
 	set --glob
 fi
 
-FIGNORE='.*|*'
+FIGNORE='@(.*|*)'
 test_glob '<*>' *
 
-FIGNORE='.*|*c|*e|?'
+FIGNORE='@(.*|*c|*e|?)'
 test_glob '<a-b> <aXb> <abd> <bb> <bcd> <bdir> <ca> <cb> <dd> <man>' *
 
-FIGNORE='.*|*b|*d|?'
+FIGNORE='@(.*|*b|*d|?)'
 test_glob '<Beware> <abc> <abe> <bdir> <ca> <de> <man>' *
 
 FIGNORE=
@@ -371,4 +371,4 @@ test_sub '//@(!(a))/[\1]'     '[aha]'
 test_sub '/@(!(aha))/[\1]'    '[ah]a'
 test_sub '//@(!(aha))/[\1]'   '[ah][a]'
 
-exit $errors
+exit $((Errors<125?Errors:125))

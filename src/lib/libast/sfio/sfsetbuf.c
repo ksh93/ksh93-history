@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -56,6 +56,10 @@ struct stat
 #define sysfstatf(fd,st)	(-1)
 #endif /*_sys_stat*/
 
+#define SETLINEMODE		0
+
+#if SETLINEMODE
+
 static int setlinemode()
 {	char*			astsfio;
 	char*			endw;
@@ -88,6 +92,8 @@ static int setlinemode()
 	}
 	return modes;
 }
+
+#endif
 
 #if __STD_C
 Void_t* sfsetbuf(Sfio_t* f, Void_t* buf, size_t size)
@@ -242,8 +248,10 @@ size_t	size;	/* buffer size, -1 for default size */
 #endif
 		}
 
+#if SETLINEMODE
 		if(init)
 			f->flags |= setlinemode();
+#endif
 
 		if(f->here >= 0)
 		{	f->extent = (Sfoff_t)st.st_size;
@@ -270,11 +278,19 @@ size_t	size;	/* buffer size, -1 for default size */
 #if _sys_stat
 					else	/* special case /dev/null */
 					{	reg int	dev, ino;
+						static int null_checked, null_dev, null_ino;
 						dev = (int)st.st_dev;	
 						ino = (int)st.st_ino;	
-						if(sysstatf(DEVNULL,&st) >= 0 &&
-						   dev == (int)st.st_dev &&
-						   ino == (int)st.st_ino)
+						if(!null_checked)
+						{	if(sysstatf(DEVNULL,&st) < 0)
+								null_checked = -1;
+							else
+							{	null_checked = 1;
+								null_dev = (int)st.st_dev;	
+								null_ino = (int)st.st_ino;	
+							}
+						}
+						if(null_checked >= 0 && dev == null_dev && ino == null_ino)
 							SFSETNULL(f);
 					}
 #endif

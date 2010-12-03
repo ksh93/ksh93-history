@@ -1,4 +1,20 @@
-10-11-22  --- Release ksh93u  ---
+10-12-01  --- Release ksh93u  ---
+10-12-01  A bug in the expansion of ${$1+"$@"} which causes the last positional
+	  parameter to disappear when it is empty has been fixed.
+10-12-01  A number of changes were made to reduce the startup time.
+10-11-29  When wait is interrupted by a signal that is caught, it now exits
+	  with a non-zero exit status.
+10-11-29  When a variable is used directly in an arithmetic expression,
+	  leading zeros no longer cause the value to be treated as an
+	  octal constant.  This was true in previous versions for justified
+	  variables.
+10-11-29  An incorrect warning message was eliminated with the -n option for
+	  arithmetic expressions with associative arrays.
+10-11-29  Some changes were made to slightly reduces startup time.
+10-11-24  A bug in which a name reference is make to arr[0] when arr is not
+	  an array has been fixed.
+10-11-23  If a type definition is made without a compound variable assignment it
+	  produces an error message and no longer shows up as a defined type. 
 10-11-22  The handling of \ inside [...] for for shell and ~(E) patterns has
 	  been fixed.
 10-11-22  A patch was made to pfsh to handle an error case.

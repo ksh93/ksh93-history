@@ -2808,11 +2808,8 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 	}
 	else if((str=nv_getval(np)) && *str!=0)
 	{
-		if(np->nvfun ||  nv_isattr(np,NV_LJUST|NV_RJUST|NV_ZFILL))
-		{
-			while(*str=='0')
-				str++;
-		}
+		while(*str=='0')
+			str++;
 		r = sh_arith(shp,str);
 	}
 	return(r);
@@ -3276,9 +3273,10 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 			ep = nv_getsub(nq);
 		else
 		{
-			ep[strlen(ep)-1] = 0;
+			int n;
+			ep[n=strlen(ep)-1] = 0;
 			nv_putsub(nr, ep, 0);
-			ep[strlen(ep)-1] = ']';
+			ep[n] = ']';
 			if(nq = nv_opensub(nr))
 				ep = 0;
 			else

@@ -1495,7 +1495,6 @@ fts_flags(void)
 	register char*	s;
 	
 	s = astconf("PATH_RESOLVE", NiL, NiL);
-	error(-1, "AHA fts_flags() PATH_RESOLVE=%s", s);
 	if (streq(s, "logical"))
 		return FTS_LOGICAL;
 	if (streq(s, "physical"))

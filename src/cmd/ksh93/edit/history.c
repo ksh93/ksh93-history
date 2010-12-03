@@ -162,7 +162,7 @@ static History_t *hist_ptr;
 		acctfd = 0;
 		return(0);
 	}
-	if(strmatch(acctfile,e_devfdNN))
+	if(sh_isdevfd(acctfile))
 	{
 		char newfile[16];
 		sfsprintf(newfile,sizeof(newfile),"%.8s%d\0",e_devfdNN,acctfd);

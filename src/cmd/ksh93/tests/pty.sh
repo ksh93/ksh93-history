@@ -402,4 +402,4 @@ c n
 r echo repeat-3
 !
 
-exit $Errors
+exit $((Errors<125?Errors:125))

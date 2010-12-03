@@ -34,13 +34,13 @@ trap "cd /; rm -rf $tmp" EXIT
 # test shell builtin commands
 builtin getconf
 : ${foo=bar} || err_exit ": failed"
-[[ $foo = bar ]] || err_exit ": side effects failed"
+[[ $foo == bar ]] || err_exit ": side effects failed"
 set -- - foobar
-[[ $# = 2 && $1 = - && $2 = foobar ]] || err_exit "set -- - foobar failed"
+[[ $# == 2 && $1 == - && $2 == foobar ]] || err_exit "set -- - foobar failed"
 set -- -x foobar
-[[ $# = 2 && $1 = -x && $2 = foobar ]] || err_exit "set -- -x foobar failed"
+[[ $# == 2 && $1 == -x && $2 == foobar ]] || err_exit "set -- -x foobar failed"
 getopts :x: foo || err_exit "getopts :x: returns false"
-[[ $foo = x && $OPTARG = foobar ]] || err_exit "getopts :x: failed"
+[[ $foo == x && $OPTARG == foobar ]] || err_exit "getopts :x: failed"
 OPTIND=1
 getopts :r:s var -r
 if	[[ $var != : || $OPTARG != r ]]
@@ -74,7 +74,7 @@ false ${foo=bar} &&  err_exit "false failed"
 read <<!
 hello world
 !
-[[ $REPLY = 'hello world' ]] || err_exit "read builtin failed"
+[[ $REPLY == 'hello world' ]] || err_exit "read builtin failed"
 print x:y | IFS=: read a b
 if	[[ $a != x ]]
 then	err_exit "IFS=: read ... not working"
@@ -83,11 +83,11 @@ read <<!
 hello \
 world
 !
-[[ $REPLY = 'hello world' ]] || err_exit "read continuation failed"
+[[ $REPLY == 'hello world' ]] || err_exit "read continuation failed"
 read -d x <<!
 hello worldxfoobar
 !
-[[ $REPLY = 'hello world' ]] || err_exit "read builtin failed"
+[[ $REPLY == 'hello world' ]] || err_exit "read builtin failed"
 read <<\!
 hello \
 	world \
@@ -540,4 +540,4 @@ out=$tmp/seq.out
 seq 11 >$out
 cmp -s <(print -- "$($bincat<( $bincat $out ) )") <(print -- "$(cat <( cat $out ) )") || err_exit "builtin cat differs from $bincat"
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

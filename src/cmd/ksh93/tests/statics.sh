@@ -687,6 +687,4 @@ function fun1
 )
 [[ $out == $'a=3, b=3\na=3, b=3' ]] || err_exit 'static variables in functions with initializers not working'
 
-
-# tests done
-exit $((Errors))
+exit $((Errors<125?Errors:125))

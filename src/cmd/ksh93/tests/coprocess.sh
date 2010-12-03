@@ -347,4 +347,4 @@ fi
 kill $pid 2>/dev/null
 wait
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

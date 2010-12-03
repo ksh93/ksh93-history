@@ -9,7 +9,7 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-11-21 $
+@(#)$Id: shtests (AT&T Research) 2010-12-01 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -208,10 +208,6 @@ do	if	[[ ! -r $i ]]
 			if	eval $lang \$SHELL \$trace \$i
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 			else	e=$?
-				if	(( e > 256 ))
-				then	e=1
-					E=signal
-				fi
 				if	(( e != 1 ))
 				then	E=${E}s
 				fi
@@ -228,10 +224,6 @@ do	if	[[ ! -r $i ]]
 		then	if	$SHELL $trace $c
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 			else	e=$?
-				if	(( e > 256 ))
-				then	e=1
-					E=signal
-				fi
 				if	(( e != 1 ))
 				then	E=${E}s
 				fi

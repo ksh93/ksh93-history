@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -35,7 +35,7 @@ int		flags;
 int		set;
 #endif
 {
-	reg int	oflags;
+	reg int	oflags, tflags, rv;
 	SFMTXDECL(f);
 
 	SFMTXENTER(f,0);
@@ -43,9 +43,19 @@ int		set;
 	if(flags == 0 && set == 0)
 		SFMTXRETURN(f, (f->flags&SF_FLAGS));
 
-	if((oflags = (f->mode&SF_RDWR)) != (int)f->mode && _sfmode(f,oflags,0) < 0)
-		SFMTXRETURN(f, 0);
-
+	if((oflags = (f->mode&SF_RDWR)) != (int)f->mode)
+	{	/* avoid sfsetbuf() isatty() call if user sets (SF_LINE|SF_WCWIDTH) */
+		if(set && (flags & (SF_LINE|SF_WCWIDTH)) && !(f->flags & (SF_LINE|SF_WCWIDTH)))
+		{	tflags = (SF_LINE|SF_WCWIDTH);
+			f->flags |= tflags;
+		}
+		else	tflags = 0;
+		rv = _sfmode(f,oflags,0);
+		if(tflags)
+			f->flags &= ~tflags;
+		if(rv < 0)
+			SFMTXRETURN(f, 0);
+	}
 	if(flags == 0)
 		SFMTXRETURN(f, (f->flags&SF_FLAGS));
 

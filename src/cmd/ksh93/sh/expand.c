@@ -102,7 +102,7 @@ int path_expand(Shell_t *shp,const char *pattern, struct argnod **arghead)
 #endif
 	sh_stats(STAT_GLOBS);
 	memset(gp,0,sizeof(gdata));
-	flags = GLOB_AUGMENTED|GLOB_NOCHECK|GLOB_NOSORT|GLOB_STACK|GLOB_LIST|GLOB_DISC;
+	flags = GLOB_GROUP|GLOB_AUGMENTED|GLOB_NOCHECK|GLOB_NOSORT|GLOB_STACK|GLOB_LIST|GLOB_DISC;
 	if(sh_isoption(SH_MARKDIRS))
 		flags |= GLOB_MARK;
 	if(sh_isoption(SH_GLOBSTARS))

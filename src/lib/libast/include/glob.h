@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -113,6 +113,8 @@ struct _glob_
 #define GLOB_LIST	0x2000		/* just create gl_list		*/
 #define GLOB_ALTDIRFUNC	0x4000		/* gnu discipline functions	*/
 #define GLOB_DISC	0x8000		/* discipline initialized	*/
+
+#define GLOB_GROUP	0x10000		/* REG_SHELL_GROUP		*/
 
 /* gl_status */
 #define GLOB_NOTDIR	0x0001		/* last gl_dirnext() not a dir	*/

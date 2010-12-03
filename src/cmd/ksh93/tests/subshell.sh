@@ -496,4 +496,9 @@ wait $! 2> /dev/null
 $SHELL 2> /dev/null -c '[[ ${ print foo },${ print bar } == foo,bar ]]' || err_exit  '${ print foo },${ print bar } not working'
 $SHELL 2> /dev/null -c '[[ ${ print foo; },${ print bar } == foo,bar ]]' || err_exit  '${ print foo; },${ print bar } not working'
 
-exit $Errors
+src=$'true 2>&1\n: $(true | true)\n: $(true | true)\n: $(true | true)\n'$(whence -p true)
+exp=ok
+got=$( $SHELL -c "(eval '$src'); echo $exp" )
+[[ $got == "$exp" ]] || err_exit 'subshell eval of pipeline clobbers stdout'
+
+exit $((Errors<125?Errors:125))

@@ -496,7 +496,7 @@ b_expr(int argc, char *argv[], void *context)
 	int	n;
 
 	cmdinit(argc, argv,context, ERROR_CATALOG, 0);
-	state.standard = !!conformance("standard", 0);
+	state.standard = !!conformance(0, 0);
 #if 0
 	if (state.standard)
 		state.arglist = argv+1;

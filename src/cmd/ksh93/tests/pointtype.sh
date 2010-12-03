@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -134,12 +134,5 @@ eval s="$r"
 [[ $r == "$s" ]] || err_exit 'expansion of type containing index array of types is incorrect'
 eval "$(typeset -p s)"
 [[ $y == "$z" ]] || err_exit 'typeset -p z for type containing index of types is incorrect'
-unset r s
-exit
 
-
-
-typeset -C z=(Pt_t -A p=( [1]=(typeset -l -E x=1;typeset -l -E y=2;)[2]=(typeset -l -E x=1;typeset -l -E y=5;)[3]=(typeset -l -E x=6;typeset -l -E y=4;));)
-
-print z="$z"
-exit $Errors
+exit $((Errors<125?Errors:125))

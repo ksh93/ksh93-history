@@ -1,4 +1,11 @@
-10-11-20 glob.c: handle modes switches across /
+10-12-01 sfset.c: SF_LINE|SF_WCWIDTH => no need for sfsetbuf() to call isatty()
+10-12-01 sfsetbuf.c: cache /dev/null <dev,ino> to cut down /dev/null stat()'s
+10-12-01 optget.c: delay dictionary initialization until needed
+10-11-30 malloc.c: drop { VMDEBUG VMETHOD VMPROFILE VMTRACE } env checks
+10-11-30 port/astconf.c: eliminate esaccess() calls for OP_universe checks
+10-11-24 regcomp.c: [[=]=]] must at least match itself in non-C locales
+10-11-23 glob.h,glob.c: add GLOB_GROUP => REG_SHELL_GROUP
+10-11-20 glob.c: handle mode switches across /
 10-11-19 regcomp.c: REG_SHELL => REG_CLASS_ESCAPE
 10-11-16 vmalloc.h: add VMFL tracing to vmstrdup()
 10-11-16 ast.h: simplify VMDEBUG _BLD_DEBUG and VMFL logic

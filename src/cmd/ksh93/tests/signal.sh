@@ -387,4 +387,45 @@ EOF
 )
 [[ $x == $'1\nS1\nGNAW\n2' ]] || err_exit 'signal ignored in subshell not propagated to parent'
 
-exit $((Errors))
+{
+$SHELL <<- \EOF
+	trap : RTMIN
+	for ((i=0 ; i < 3 ; i++))
+	do	sleep 1
+		kill -RTMIN $$ 2> /dev/null
+	done &
+	wait
+EOF
+} 2> /dev/null
+[[ $? == 0 ]] && err_exit 'wait interrupted by caught signal should have non-zero exit status'
+{
+$SHELL <<- \EOF
+	for ((i=0 ; i < 3 ; i++))
+	do	sleep 1
+		kill -RTMIN $$ 2> /dev/null
+	done &
+	wait
+EOF
+} 2> /dev/null
+[[ $(kill -l $?) == RTMIN ]] || err_exit 'wait interrupted by signal not caught should exit with the value of that signal+256'
+
+function b
+{
+	sleep 3
+	endb=1
+}
+
+function a
+{
+	trap 'print int'  TERM
+	b
+	enda=1
+}
+
+{ /bin/sleep 1;kill -s TERM $$;}&
+unset enda endb
+a
+[[ $endb ]] &&  err_exit 'TERM signal did not kill function b'
+[[ $enda == 1 ]] || err_exit 'TERM signal killed function a'
+
+exit $((Errors<125?Errors:125))

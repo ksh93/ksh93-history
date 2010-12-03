@@ -580,4 +580,4 @@ x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x#??}" == "c<3d|\\>e" || err_
 x='a one and a two'
 [[ "${x//~(E)\<.\>/}" == ' one and  two' ]]  || err_exit "\< and \> not working in with ere's"
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

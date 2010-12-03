@@ -64,4 +64,4 @@ do	got=$($SHELL -c 'x=$(printf "%.*c" '$exp' x); print ${#x}' 2>&1)
 	[[ $got == $exp ]] || err_exit "large command substitution failed -- expected $exp, got $got"
 done
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

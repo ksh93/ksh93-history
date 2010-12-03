@@ -87,10 +87,11 @@ struct funenv
  * temp file.
  */
 static int	subpipe[3] = {-1};
-static int	subdup,tsetio;
+static int	subdup,tsetio,usepipe;
 static void iousepipe(Shell_t *shp)
 {
 	int i;
+	usepipe++;
 	fcntl(subpipe[0],F_SETFD,FD_CLOEXEC);
 	subpipe[2] = fcntl(1,F_DUPFD,10);
 	shp->fdstatus[subpipe[2]] = shp->fdstatus[1];
@@ -113,6 +114,7 @@ static void iounpipe(Shell_t *shp)
 {
 	int n;
 	char buff[SF_BUFSIZE];
+	usepipe = 0;
 	close(1);
 	fcntl(subpipe[2], F_DUPFD, 1);
 	shp->fdstatus[1] = shp->fdstatus[subpipe[2]];
@@ -1568,7 +1570,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						shp->pipepid = parent;
 					else
 						job_wait(parent);
-					if(tsetio &&  subdup)
+					if(usepipe && tsetio &&  subdup)
 						iounpipe(shp);
 					if(!sh_isoption(SH_MONITOR))
 					{
@@ -3098,8 +3100,9 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	struct argnod		*envlist=0;
 	int			jmpval;
 	volatile int		r = 0;
+	int			n;
 	char 			*savstak;
-	struct funenv		*fp;
+	struct funenv		*fp = 0;
 	struct checkpt		buff;
 	Namval_t		*nspace = shp->namespace;
 	Dt_t			*last_root = shp->last_root;
@@ -3129,12 +3132,13 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		envlist = fp->env;
 	}
 	prevscope->save_tree = shp->var_tree;
+	n = dtvnext(prevscope->save_tree)!= (shp->namespace?shp->var_base:0);
 #if SHOPT_NAMESPACE
-	if((np=(fp->node)->nvalue.rp->nspace) && np!=shp->namespace)
+	if(n && fp && (np=(fp->node)->nvalue.rp->nspace) && np!=shp->namespace)
 		shp->namespace = np;
 #endif /* SHOPT_NAMESPACE */
 	sh_scope(shp,envlist,1);
-	if(dtvnext(prevscope->save_tree)!= (shp->namespace?shp->var_base:0))
+	if(n)
 	{
 		struct Tdata tdata;
 		tdata.sh = shp;

@@ -144,6 +144,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	struct stat	statb;
 	int i, rshflag;		/* set for restricted shell */
 	char *command;
+	free(malloc(64*1024));
 #ifdef _lib_sigvec
 	/* This is to clear mask that may be left on by rlogin */
 	clearsigmask(SIGALRM);
@@ -165,13 +166,13 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	{
 		/* begin script execution here */
 		sh_reinit((char**)0);
+		shp->gd->pid = getpid();
+		shp->gd->ppid = getppid();
 	}
 	shp->fn_depth = shp->dot_depth = 0;
 	command = error_info.id;
 	/* set pidname '$$' */
-	shp->gd->pid = getpid();
 	srand(shp->gd->pid&0x7fff);
-	shp->gd->ppid = getppid();
 	if(nv_isnull(PS4NOD))
 		nv_putval(PS4NOD,e_traceprompt,NV_RDONLY);
 	path_pwd(shp,1);

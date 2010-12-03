@@ -708,7 +708,7 @@ b_cp(int argc, register char** argv, void* context)
 	if (!state->tmp && !(state->tmp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space [tmp string]");
 	sfputr(state->tmp, usage_head, -1);
-	standard = !!conformance("standard", 0);
+	standard = !!conformance(0, 0);
 	switch (error_info.id[0])
 	{
 	case 'c':

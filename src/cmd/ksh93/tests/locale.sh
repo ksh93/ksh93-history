@@ -291,4 +291,4 @@ LC_ALL=C
 x=$"hello"
 [[ $x == hello ]] || err_exit 'assignment of message strings not working'
 
-exit $Errors
+exit $((Errors<125?Errors:125))

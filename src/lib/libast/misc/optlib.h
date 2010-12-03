@@ -97,6 +97,7 @@ typedef struct Optstate_s
 	int		width;		/* format line width		*/
 	int		flags;		/* display flags		*/
 	int		emphasis;	/* ansi term emphasis ok	*/
+	int		localized;	/* locale initialized		*/
 	Dtdisc_t	msgdisc;	/* msgdict discipline		*/
 	Dt_t*		msgdict;	/* default ast.id catalog msgs	*/
 	Optcache_t*	cache;		/* OPT_cache cache		*/

@@ -338,7 +338,7 @@ unset y
 [[ $(let y=$x;print $y) == 10 && $(let y=1$x;print $y) == 1010 ]] || err_exit 'zero filled fields not preserving leading zeros with let'
 unset i ip ipx
 typeset -i hex=( 172 30 18 1)
-typeset -iu ip=0 ipx=0
+typeset -ui ip=0 ipx=0
 integer i
 for	((i=0; i < 4; i++))
 do	(( ip =  (ip<<8) | hex[i]))
@@ -350,7 +350,7 @@ do	(( ipx = ip % 256 ))
 done
 unset x
 x=010
-(( x == 8 )) || err_exit 'leading zeros not treated as octal arithmetic'
+(( x == 10 )) || err_exit 'leading zeros in x treated as octal arithmetic with $((x))'
 (( $x == 8 )) || err_exit 'leading zeros not treated as octal arithmetic with $x'
 unset x
 typeset -Z x=010
@@ -660,4 +660,4 @@ done
 
 [[ $($SHELL 2> /dev/null -c 'print -- $(( ldexp(1, 4) ))' ) == 16 ]] || err_exit 'function ldexp not implement or not working correctly'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Research) 2010-07-28 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Research) 2010-11-30 $\n]"
 USAGE_LICENSE
 ;
 
@@ -65,6 +65,10 @@ static const char usage_2[] =
     "determined it is not overridden by any subsequent match. Unmatched "
     "files are silently ignored.]"
 "[n:show?Show actions but don't execute.]"
+"[N:numeric?By default numeric user and group id operands are first "
+    "interpreted as names; if no name exists then they are interpreted as "
+    "explicit numeric ids. \b--numeric\b interprets numeric id operands as "
+    "numeric ids.]"
 "[r:reference?Omit the explicit ownership operand and use the ownership "
     "of \afile\a instead.]:[file]"
 "[u:unmapped?Print a diagnostic for each file for which either the "
@@ -128,15 +132,16 @@ typedef struct Map_s			/* uid/gid map			*/
 
 #define NOID		(-1)
 
-#define OPT_CHOWN	(1<<0)		/* chown			*/
-#define OPT_FORCE	(1<<1)		/* ignore errors		*/
-#define OPT_GID		(1<<2)		/* have gid			*/
-#define OPT_LCHOWN	(1<<3)		/* lchown			*/
-#define OPT_SHOW	(1<<4)		/* show but don't do		*/
-#define OPT_TEST	(1<<5)		/* canonicalize output		*/
-#define OPT_UID		(1<<6)		/* have uid			*/
-#define OPT_UNMAPPED	(1<<7)		/* unmapped file diagnostic	*/
-#define OPT_VERBOSE	(1<<8)		/* have uid			*/
+#define OPT_CHOWN	0x0001		/* chown			*/
+#define OPT_FORCE	0x0002		/* ignore errors		*/
+#define OPT_GID		0x0004		/* have gid			*/
+#define OPT_LCHOWN	0x0008		/* lchown			*/
+#define OPT_NUMERIC	0x0010		/* favor numeric ids		*/
+#define OPT_SHOW	0x0020		/* show but don't do		*/
+#define OPT_TEST	0x0040		/* canonicalize output		*/
+#define OPT_UID		0x0080		/* have uid			*/
+#define OPT_UNMAPPED	0x0100		/* unmapped file diagnostic	*/
+#define OPT_VERBOSE	0x0200		/* have uid			*/
 
 extern int	lchown(const char*, uid_t, gid_t);
 
@@ -163,6 +168,7 @@ getids(register char* s, char** e, Key_t* key, int options)
 {
 	register char*	t;
 	register int	n;
+	register int	m;
 	char*		z;
 	char		buf[64];
 
@@ -181,10 +187,12 @@ getids(register char* s, char** e, Key_t* key, int options)
 	{
 		if (*s)
 		{
-			if ((n = struid(s)) == NOID)
+			n = (int)strtol(s, &z, 0);
+			if (*z || !(options & OPT_NUMERIC))
 			{
-				n = (int)strtol(s, &z, 0);
-				if (*z)
+				if ((m = struid(s)) != NOID)
+					n = m;
+				else if (*z)
 					error(ERROR_exit(1), "%s: unknown user", s);
 			}
 			key->uid = n;
@@ -199,10 +207,12 @@ getids(register char* s, char** e, Key_t* key, int options)
 	}
 	if (*s)
 	{
-		if ((n = strgid(s)) == NOID)
+		n = (int)strtol(s, &z, 0);
+		if (*z || !(options & OPT_NUMERIC))
 		{
-			n = (int)strtol(s, &z, 0);
-			if (*z)
+			if ((m = strgid(s)) != NOID)
+				n = m;
+			else if (*z)
 				error(ERROR_exit(1), "%s: unknown group", s);
 		}
 		key->gid = n;
@@ -285,6 +295,9 @@ b_chgrp(int argc, char** argv, void* context)
 			continue;
 		case 'n':
 			options |= OPT_SHOW;
+			continue;
+		case 'N':
+			options |= OPT_NUMERIC;
 			continue;
 		case 'r':
 			if (stat(opt_info.arg, &st))

@@ -59,6 +59,7 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 	globlist_t*	gl_match; \
 	Stak_t*		gl_stak; \
 	int		re_flags; \
+	int		re_first; \
 	regex_t*	gl_ignore; \
 	regex_t*	gl_ignorei; \
 	regex_t		re_ignore; \
@@ -201,7 +202,6 @@ trim(register char* sp, register char* p1, int* n1, register char* p2, int* n2)
 {
 	register char*	dp = sp;
 	register int	c;
-	register int	n;
 
 	if (p1)
 		*n1 = 0;
@@ -209,8 +209,8 @@ trim(register char* sp, register char* p1, int* n1, register char* p2, int* n2)
 		*n2 = 0;
 	do
 	{
-		if ((c = *sp++) == '\\' && (c = *sp++))
-			n++;
+		if ((c = *sp++) == '\\')
+			c = *sp++;
 		if (sp == p1)
 		{
 			p1 = 0;
@@ -305,7 +305,6 @@ glob_dir(glob_t* gp, globlist_t* ap, int re_flags)
 	int			t1;
 	int			t2;
 	int			bracket;
-	int			next_flags;
 
 	int			anymeta = ap->gl_flags & MATCH_META;
 	int			complete = 0;
@@ -328,8 +327,6 @@ glob_dir(glob_t* gp, globlist_t* ap, int re_flags)
 	pat = rescan = ap->gl_begin;
 	prefix = dirname = ap->gl_path + gp->gl_extra;
 	first = (rescan == prefix);
-	next_flags = gp->re_flags;
-	error(-1, "AHA glob_dir re_flags=0x%08x gp->re_flags=0x%08x pattern='%s'", re_flags, gp->re_flags, rescan);
 again:
 	bracket = 0;
 	for (;;)
@@ -357,7 +354,6 @@ again:
 			}
 			else if ((anymeta || !(gp->gl_flags & GLOB_NOCHECK)) && (*gp->gl_type)(gp, prefix, 0))
 				addmatch(gp, NiL, prefix, NiL, NiL, anymeta);
-			gp->re_flags = next_flags;
 			return;
 		case '[':
 			if (!bracket)
@@ -454,7 +450,8 @@ skip:
 		*(restore2 = rescan - 1) = 0;
 	if (rescan && !complete && (gp->gl_flags & GLOB_STARSTAR))
 	{
-		register char *p = rescan;
+		register char*	p = rescan;
+
 		while (p[0] == '*' && p[1] == '*' && (p[2] == '/'  || p[2]==0))
 		{
 			rescan = p;
@@ -491,24 +488,13 @@ skip:
 					if (err = regcomp(&rei, pat, gp->re_flags|REG_ICASE))
 						break;
 					prei = &rei;
-					next_flags = regstat(prei)->re_flags;
+					if (gp->re_first)
+					{
+						gp->re_first = 0;
+						gp->re_flags = regstat(prei)->re_flags & ~REG_ICASE;
+					}
 				}
 				pre = prei;
-				if (gp->gl_ignore)
-				{
-					if (!gp->gl_ignorei)
-					{
-						if (regcomp(&gp->re_ignorei, gp->gl_fignore, re_flags|REG_ICASE))
-						{
-							gp->gl_error = GLOB_APPERR;
-							break;
-						}
-						gp->gl_ignorei = &gp->re_ignorei;
-					}
-					ire = gp->gl_ignorei;
-				}
-				else
-					ire = 0;
 			}
 			else
 			{
@@ -517,10 +503,26 @@ skip:
 					if (err = regcomp(&rec, pat, gp->re_flags))
 						break;
 					prec = &rec;
-					next_flags = regstat(prec)->re_flags;
+					if (gp->re_first)
+					{
+						gp->re_first = 0;
+						gp->re_flags = regstat(prec)->re_flags;
+					}
 				}
 				pre = prec;
-				ire = gp->gl_ignore;
+			}
+			if ((ire = gp->gl_ignore) && (gp->re_flags & REG_ICASE))
+			{
+				if (!gp->gl_ignorei)
+				{
+					if (regcomp(&gp->re_ignorei, gp->gl_fignore, re_flags|REG_ICASE))
+					{
+						gp->gl_error = GLOB_APPERR;
+						break;
+					}
+					gp->gl_ignorei = &gp->re_ignorei;
+				}
+				ire = gp->gl_ignorei;
 			}
 			if (restore2)
 				*restore2 = gp->gl_delim;
@@ -565,7 +567,6 @@ skip:
 		regfree(prei);
 	if (err == REG_ESPACE)
 		gp->gl_error = GLOB_NOSPACE;
-	gp->re_flags = next_flags;
 }
 
 int
@@ -652,6 +653,8 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_type = gl_type;
 		if (!gp->gl_attr)
 			gp->gl_attr = gl_attr;
+		if (flags & GLOB_GROUP)
+			gp->re_flags |= REG_SHELL_GROUP;
 		if (flags & GLOB_ICASE)
 			gp->re_flags |= REG_ICASE;
 		if (!gp->gl_fignore)
@@ -750,11 +753,13 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	if (!(flags & GLOB_LIST))
 		gp->gl_match = 0;
 	re_flags = gp->re_flags;
+	gp->re_first = 1;
 	do
 	{
 		gp->gl_rescan = ap->gl_next;
 		glob_dir(gp, ap, re_flags);
 	} while (!gp->gl_error && (ap = gp->gl_rescan));
+	gp->re_flags = re_flags;
 	if (gp->gl_pathc == skip)
 	{
 		if (flags & GLOB_NOCHECK)

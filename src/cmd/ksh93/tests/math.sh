@@ -199,5 +199,4 @@ function test_has_iszero
 test_arithmetric_expression_accesss_array_element_through_nameref
 test_has_iszero
 
-# tests done
-exit $((Errors))
+exit $((Errors<125?Errors:125))

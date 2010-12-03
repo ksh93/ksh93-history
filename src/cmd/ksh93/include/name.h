@@ -255,5 +255,6 @@ extern const char	e_redef[];
 extern const char	e_required[];
 extern const char	e_badappend[];
 extern const char	e_unknowntype[];
+extern const char	e_badtypedef[];
 extern const char	e_globalref[];
 #endif /* _NV_PRIVATE */

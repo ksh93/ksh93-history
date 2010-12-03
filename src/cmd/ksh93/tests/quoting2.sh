@@ -212,4 +212,4 @@ exp='ac'
 got=$'a\0b'c
 [[ $got == "$exp" ]] || err_exit "\$'a\\0b'c expansion failed -- expected '$exp', got '$got'"
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

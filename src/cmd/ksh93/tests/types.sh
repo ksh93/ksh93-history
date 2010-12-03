@@ -574,4 +574,7 @@ u_t -a x | read z
 { z=$($SHELL 2> /dev/null 'typeset -T foo; typeset -T') ;} 2> /dev/null
 [[ $z == 'typeset -T foo' ]] || err_exit '"typeset -T foo; typeset -T" failed'
 
-exit $Errors
+{ z=$($SHELL 2> /dev/null 'typeset -T foo=bar; typeset -T') ;} 2> /dev/null
+[[ $z ]] && err_exit '"typeset -T foo=bar" should not creates type foo'
+
+exit $((Errors<125?Errors:125))

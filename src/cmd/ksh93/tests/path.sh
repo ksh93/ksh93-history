@@ -335,4 +335,4 @@ done
 exec {n}< /dev/null
 (( n > 24 )) && err_exit 'autoload function in subshell leaves file open'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

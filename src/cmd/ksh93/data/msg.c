@@ -114,6 +114,7 @@ const char e_notimp[]		= "%s: not implemented";
 const char e_notelem[]		= "%.*s: is not an element of %s";
 const char e_notenum[]		= "%s: not an enumeration type";
 const char e_unknowntype[]	= "%.*s: unknown type";
+const char e_badtypedef[]	= "%s: type definition requires compound assignment";
 const char e_nosupport[]	= "not supported";
 const char e_badrange[]		= "%d-%d: invalid range";
 const char e_eneedsarg[]	= "-e - requires single argument";

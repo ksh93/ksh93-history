@@ -1621,11 +1621,19 @@ bra(Cenv_t* env)
 							else if (iswlower(wc))
 								c = 'l';
 						}
+						i = 1;
 						for (;;)
 						{
 							mbxfrm(key.key, (char*)pp, COLL_KEY_MAX);
 							if (!(cc = (Cchr_t*)dtsearch(dt, &key)) && !(cc = (Cchr_t*)dtprev(dt, &key)))
+							{
+								if (i)
+								{
+									c = *pp;
+									goto singleton;
+								}
 								goto ecollate;
+							}
 							xc = (tc = (Cchr_t*)dtprev(dt, cc)) && !strcasecmp((char*)tc->nam, (char*)cc->nam) ? tc : cc;
 							if (c == 'l' || c == 'L' && !(c = 0))
 								ce->typ = COLL_range_lc;
@@ -1635,7 +1643,14 @@ bra(Cenv_t* env)
 								ce->typ = COLL_range;
 							strcpy((char*)ce->beg, (char*)xc->key);
 							if (!(cc = (Cchr_t*)dtnext(dt, cc)))
+							{
+								if (i)
+								{
+									c = *pp;
+									goto singleton;
+								}
 								goto ecollate;
+							}
 							if (!strcasecmp((char*)xc->nam, (char*)cc->nam) && (tc = (Cchr_t*)dtnext(dt, cc)))
 								cc = tc;
 							strcpy((char*)ce->end, (char*)cc->key);
@@ -1654,6 +1669,7 @@ bra(Cenv_t* env)
 								c = 'U';
 							}
 							rw = mbconv((char*)pp, wc);
+							i = 0;
 						}
 						inrange = 0;
 						c = *pp;
@@ -1664,7 +1680,7 @@ bra(Cenv_t* env)
 						pp = (unsigned char*)cb[inrange];
 						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX, NiL)) < 0)
 							goto ecollate;
-						c = buf[0];
+						c = *pp;
 						break;
 					default:
 					complicated_normal:
@@ -1673,6 +1689,7 @@ bra(Cenv_t* env)
 						break;
 					}
 				}
+			singleton:
 				if (inrange == 2)
 				{
 					ce = col(ce, ic, rp, rw, rc, pp, w, c);

@@ -430,10 +430,10 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			errormsg(SH_DICT,ERROR_warn(0),lvalue->value,*ptr);
 		else
 #endif
-		if((lvalue->emode&ARITH_COMP) && lvalue->value==(char*)e_function)
+		if(lvalue->emode&ARITH_COMP)
 			return(-1);
 			
-			errormsg(SH_DICT,ERROR_exit((lvalue->emode&3)!=0),lvalue->value,*ptr);
+		errormsg(SH_DICT,ERROR_exit((lvalue->emode&3)!=0),lvalue->value,*ptr);
 	}
 	*ptr = str;
 	return(r);

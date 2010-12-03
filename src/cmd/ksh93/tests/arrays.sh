@@ -552,4 +552,4 @@ $SHELL 2> /dev/null -c $'typeset -a arr=(\nfor)' || err_exit 'typeset -a should 
 
 $SHELL 2> /dev/null -c $'typeset -r -a arr=(\nfor)' || err_exit 'typeset -r -a should allow reserved words as first argument'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

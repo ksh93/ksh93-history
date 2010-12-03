@@ -538,7 +538,11 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd)
 	if(status&IODUP)
 		flags |= SF_SHARE|SF_PUBLIC;
 	if((iop = shp->sftable[fd]) && sffileno(iop)>=0)
+	{
+		if(status&IOTTY)
+			sfset(iop,SF_LINE|SF_WCWIDTH,1);
 		sfsetbuf(iop, bp, IOBSIZE);
+	}
 	else if(!(iop=sfnew((fd<=2?iop:0),bp,IOBSIZE,fd,flags)))
 		return(NIL(Sfio_t*));
 	dp = newof(0,struct Iodisc,1,0);
@@ -2586,3 +2590,14 @@ Sfio_t *sh_pathopen(const char *cp)
 	return(sh_iostream(shp,n));
 }
 
+int sh_isdevfd(register const char *fd)
+{
+	if(!fd || memcmp(fd,"/dev/fd/",8) || fd[8]==0)
+		return(0);
+	for ( fd=&fd[8] ; *fd != '\0' ; fd++ )
+	{
+		if (*fd < '0' || *fd > '9')
+			return(0);
+	}
+	return(1);
+}

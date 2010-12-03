@@ -1120,4 +1120,4 @@ x=$(
 )
 [[ $x == ok ]] || err_exit 'TERM signal sent to last process of function kills the script'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

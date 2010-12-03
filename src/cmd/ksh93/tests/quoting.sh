@@ -21,7 +21,7 @@ function err_exit
 {
 	print -u2 -n "\t"
 	print -u2 -r ${Command}[$1]: "${@:2}"
-	let Errors+=1
+	(( Errors++ ))
 }
 alias err_exit='err_exit $LINENO'
 
@@ -340,4 +340,29 @@ copy1=5 copynum=1
 foo="`eval echo "$"{copy$copynum"-0}"`"
 [[ $foo == "$copy1" ]] || err_exit '$"..." not being ignored inside ``'
 
-exit $((Errors))
+[[ $($SHELL -c 'set --  ${1+"$@"}; print $#' cmd '') == 1 ]] || err_exit '${1+"$@"} with one empty argument fails'
+[[ $($SHELL -c 'set --  ${1+"$@"}; print $#' cmd foo '') == 2 ]] || err_exit '${1+"$@"} with one non-empty and on empty argument fails'
+[[ $($SHELL -c 'set --  ${1+"$@"}; print $#' cmd "" '') == 2 ]] || err_exit '${1+"$@"} with two empty arguments fails'
+[[ $($SHELL -c 'set --  ${1+"$@"}; print $#' cmd "" '' '') == 3 ]] || err_exit '${1+"$@"} with three empty arguments fails'
+[[ $($SHELL -c 'set --  "$@"; print $#' cmd '') == 1 ]] || err_exit '"$@" with one empty argument fails'
+[[ $($SHELL -c 'set --  "$@"; print $#' cmd foo '') == 2 ]] || err_exit '"$@" with one non-empty and on empty argument fails'
+[[ $($SHELL -c 'set --  "$@"; print $#' cmd "" '') == 2 ]] || err_exit '"$@" with two empty arguments fails'
+[[ $($SHELL -c 'set --  "$@"; print $#' cmd "" '' '') == 3 ]] || err_exit '"$@" with three empty arguments fails'
+args=('')
+set -- "${args[@]}"
+[[ $# == 1 ]] || err_exit '"${args[@]}"} with one empty argument fails'
+set -- ${1+"${args[@]}"}
+[[ $# == 1 ]] || err_exit '${1+"${args[@]}"} with one empty argument fails'
+args=(foo '')
+set -- "${args[@]}"
+[[ $# == 2 ]] || err_exit '"${args[@]}"} with one non-empty and one empty argument fails'
+set -- ${1+"${args[@]}"}
+[[ $# == 2 ]] || err_exit '${1+"${args[@]}"} with one non-empty and one empty argument fails'
+
+unset ARGS
+set --
+ARGS=("$@")
+set -- "${ARGS[@]}"
+(( $# )) &&  err_exit 'set -- "${ARGS[@]}" for empty array should not produce arguments'
+
+exit $((Errors<125?Errors:125))

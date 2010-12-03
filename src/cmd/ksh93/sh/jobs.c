@@ -584,7 +584,6 @@ void job_init(Shell_t *shp, int lflag)
 	register int ntry=0;
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
-	job_reap(SIGCHLD);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)
 	signal(SIGCLD,job_waitsafe);
 #   endif
@@ -1607,6 +1606,8 @@ int	job_wait(register pid_t pid)
 		if((intr && shp->trapnote) || (pid==1 && !intr))
 			break;
 	}
+	if(intr && shp->trapnote)
+		shp->exitval = 1;
 	pwfg = 0;
 	job_unlock();
 	if(pid==1)

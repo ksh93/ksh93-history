@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -101,4 +101,5 @@ There are only two line with out foo but with bar.
 if	(( $(grep -c 'foo*bar' $tmp/grep ) != 6))
 then	err_exit
 fi
-exit $((Errors))
+
+exit $((Errors<125?Errors:125))

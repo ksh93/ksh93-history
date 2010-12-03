@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -66,4 +66,5 @@ r[one]=(ur=(x=4 y=4))
 (( r[one].area == 16 )) || err_exit 'area of r[one] should be 16'
 [[ ${r[one].area} == 16 ]] || err_exit '${r[one].area} should be 16'
 unset r
-exit $Errors
+
+exit $((Errors<125?Errors:125))

@@ -245,7 +245,7 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	command exec 3<# *jjjj*
 	read -u3
 	[[  $REPLY == {39}(j) ]] || err_exit "<# pattern failed"
-	[[ $(command exec 3<## *llll*) = {39}(k) ]] || err_exit "<## pattern not saving standard output"
+	[[ $(command exec 3<## *llll*) == {39}(k) ]] || err_exit "<## pattern not saving standard output"
 	read -u3
 	[[  $REPLY == {39}(l) ]] || err_exit "<## pattern failed to position"
 	command exec 3<# *abc*
@@ -459,4 +459,4 @@ exp=$':2:printf :1:A:\n:2::\n:2:print\n:2:print :1:Z:'
 got=$(<$tmp/22.out)
 [[ $exp == "$got" ]] || err_exit "standard error garbled -- expected $(printf %q "$exp"), got $(printf %q "$got")"
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

@@ -636,4 +636,4 @@ typeset -m "c.b[9]=c.a[1]"
 exp='typeset -C c=(typeset -C -a a;typeset -C -A b=( [2]=(bb=2;)[9]=(aa=1));)'
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to a compound associative array element fails'
 
-exit $((Errors))
+exit $((Errors<125?Errors:125))

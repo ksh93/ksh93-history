@@ -99,7 +99,7 @@ static int test_strmatch(const char *str, const char *pat)
 		match[0] = 0;
 	if(m >  elementsof(match)/2)
 		m = elementsof(match)/2;
-	n = strgrpmatch(str, pat, match, m, STR_MAXIMAL|STR_LEFT|STR_RIGHT);
+	n = strgrpmatch(str, pat, match, m, STR_GROUP|STR_MAXIMAL|STR_LEFT|STR_RIGHT);
 	if(m==0 && n==1)
 		match[1] = strlen(str);
 	if(n)
@@ -558,7 +558,7 @@ int sh_access(register const char *name, register int mode)
 	struct stat statb;
 	if(*name==0)
 		return(-1);
-	if(strmatch(name,(char*)e_devfdNN))
+	if(sh_isdevfd(name))
 		return(sh_ioaccess((int)strtol(name+8, (char**)0, 10),mode));
 	/* can't use access function for execute permission with root */
 	if(mode==X_OK && shp->gd->euserid==0)
@@ -659,7 +659,7 @@ static int test_stat(const char *name,struct stat *buff)
 		errno = ENOENT;
 		return(-1);
 	}
-	if(strmatch(name,(char*)e_devfdNN))
+	if(sh_isdevfd(name))
 		return(fstat((int)strtol(name+8, (char**)0, 10),buff));
 	else
 		return(stat(name,buff));

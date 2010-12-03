@@ -683,7 +683,7 @@ static char* get_lastarg(Namval_t* np, Namfun_t *fp)
 	char	*cp;
 	int	pid;
         if(sh_isstate(SH_INIT) && (cp=shp->lastarg) && *cp=='*' && (pid=strtol(cp+1,&cp,10)) && *cp=='*')
-		nv_putval(np,(pid==getppid()?cp+1:0),0);
+		nv_putval(np,(pid==shp->gd->ppid?cp+1:0),0);
 	return(shp->lastarg);
 }
 
@@ -1406,7 +1406,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	else
 		sh_offoption(SH_PRIVILEGED);
 	/* shname for $0 in profiles and . scripts */
-	if(strmatch(argv[1],e_devfdNN))
+	if(sh_isdevfd(argv[1]))
 		shp->shname = strdup(argv[0]);
 	else
 		shp->shname = strdup(shp->st.dolv[0]);
@@ -1861,72 +1861,107 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 
 static void env_init(Shell_t *shp)
 {
-	register char *cp;
-	register Namval_t	*np;
-	register char **ep=environ;
-	register char *next=0;
+	register char		*cp;
+	register Namval_t	*np,*mp;
+	register char		**ep=environ;
+	char			*dp,*next=0;
+	int			nenv=0,k=0,size=0;
+	Namval_t		*np0;
 #ifdef _ENV_H
 	shp->env = env_open(environ,3);
 	env_delete(shp->env,"_");
 #endif
-	if(ep)
+	if(!ep)
+		goto skip;
+	while(*ep++)
+		nenv++;
+	np = newof(0,Namval_t,nenv,0);
+	for(np0=np,ep=environ;cp= *ep; ep++)
 	{
-		while(cp= *ep++)
+		dp = strchr(cp,'=');
+		if(!dp)
+			continue;
+		*dp++ = 0;
+		if(mp = dtmatch(shp->var_base,cp))
 		{
-			if(*cp=='A' && cp[1]=='_' && cp[2]=='_' && cp[3]=='z' && cp[4]=='=')
-				next = cp+4;
-			else if(np=nv_open(cp,shp->var_tree,(NV_EXPORT|NV_IDENT|NV_ASSIGN|NV_NOFAIL))) 
-			{
-				nv_onattr(np,NV_IMPORT);
-				np->nvenv = cp;
-				nv_close(np);
-			}
-			else  /* swap with front */
-			{
-				ep[-1] = environ[shp->nenv];
-				environ[shp->nenv++] = cp;
-			}
+			mp->nvenv = (char*)cp;
+			dp[-1] = '=';
 		}
-		while(cp=next)
+		else if(*cp=='A' && cp[1]=='_' && cp[2]=='_' && cp[3]=='z' && cp[4]==0)
 		{
-			if(next = strchr(++cp,'='))
-				*next = 0;
-			np = nv_search(cp+2,shp->var_tree,NV_ADD);
-			if(np!=SHLVL && nv_isattr(np,NV_IMPORT|NV_EXPORT))
-			{
-				int flag = *(unsigned char*)cp-' ';
-				int size = *(unsigned char*)(cp+1)-' ';
-				if((flag&NV_INTEGER) && size==0)
-				{
-					/* check for floating*/
-					char *ep,*val = nv_getval(np);
-					strtol(val,&ep,10);
-					if(*ep=='.' || *ep=='e' || *ep=='E')
-					{
-						char *lp;
-						flag |= NV_DOUBLE;
-						if(*ep=='.')
-						{
-							strtol(ep+1,&lp,10);
-							if(*lp)
-								ep = lp;
-						}
-						if(*ep && *ep!='.')
-						{
-							flag |= NV_EXPNOTE;
-							size = ep-val;
-						}
-						else
-							size = strlen(ep);
-						size--;
-					}
-				}
-				nv_newattr(np,flag|NV_IMPORT|NV_EXPORT,size);
-			}
-			else
-				cp += 2;
+			dp[-1] = '=';
+			next = cp+4;
+			continue;
 		}
+		else
+		{
+			k++;
+			mp = np++;
+			mp->nvname = cp;
+			size += strlen(cp);
+		}
+			nv_onattr(mp,NV_IMPORT);
+		if(mp->nvfun || nv_isattr(mp,NV_INTEGER))
+			nv_putval(mp,dp,0);
+		else
+		{
+			mp->nvalue.cp = dp;
+			nv_onattr(mp,NV_NOFREE);
+		}
+		nv_onattr(mp,NV_EXPORT|NV_IMPORT);
 	}
+	np =  (Namval_t*)realloc((void*)np0,k*sizeof(Namval_t));
+	dp = (char*)malloc(size+k);
+	while(k-->0)
+	{
+		size = strlen(np->nvname);
+		memcpy(dp,np->nvname,size+1);
+		np->nvname[size] = '=';
+		np->nvenv = np->nvname;
+		np->nvname = dp;
+		dp += size+1;
+		dtinsert(shp->var_base,np++);
+	}
+	while(cp=next)
+	{
+		if(next = strchr(++cp,'='))
+			*next = 0;
+		np = nv_search(cp+2,shp->var_tree,NV_ADD);
+		if(np!=SHLVL && nv_isattr(np,NV_IMPORT|NV_EXPORT))
+		{
+			int flag = *(unsigned char*)cp-' ';
+			int size = *(unsigned char*)(cp+1)-' ';
+			if((flag&NV_INTEGER) && size==0)
+			{
+				/* check for floating*/
+				char *val = nv_getval(np);
+				strtol(val,&dp,10);
+				if(*dp=='.' || *dp=='e' || *dp=='E')
+				{
+					char *lp;
+					flag |= NV_DOUBLE;
+					if(*dp=='.')
+					{
+						strtol(dp+1,&lp,10);
+						if(*lp)
+							dp = lp;
+					}
+					if(*dp && *dp!='.')
+					{
+						flag |= NV_EXPNOTE;
+						size = dp-val;
+					}
+					else
+						size = strlen(dp);
+					size--;
+				}
+			}
+			nv_newattr(np,flag|NV_IMPORT|NV_EXPORT,size);
+		}
+		else
+			cp += 2;
+	}
+skip:
 #ifdef _ENV_H
 	env_delete(shp->env,e_envmarker);
 #endif

@@ -209,4 +209,5 @@ unset cc[two].name unset cc[two].colors
 cc[two].count=0
 unset cc
 done
-exit $Errors
+
+exit $((Errors<125?Errors:125))

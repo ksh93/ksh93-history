@@ -892,6 +892,24 @@ expand(register char* s, register char* e, char** p, Sfio_t* ip, char* id)
 }
 
 /*
+ * initialize the translation dictionary and flag maps
+ */
+
+static void
+initdict(void)
+{
+	register int	n;
+
+	state.vp = sfstropen();
+	state.msgdisc.key = offsetof(Msg_t, text);
+	state.msgdisc.size = -1;
+	state.msgdisc.link = offsetof(Msg_t, link);
+	if (state.msgdict = dtopen(&state.msgdisc, Dthash))
+		for (n = 0; n < elementsof(C_LC_MESSAGES_libast); n++)
+			dtinsert(state.msgdict, C_LC_MESSAGES_libast + n);
+}
+
+/*
  * initialize the attributes for pass p from opt string s
  */
 
@@ -906,20 +924,14 @@ init(register char* s, Optpass_t* p)
 	char*		e;
 	int		l;
 
-	if (!state.msgdict)
+	if (!state.localized)
 	{
+		state.localized = 1;
 #if !_PACKAGE_astsa
 		if (!ast.locale.serial)
 			setlocale(LC_ALL, "");
 #endif
-		state.vp = sfstropen();
 		state.xp = sfstropen();
-		state.msgdisc.key = offsetof(Msg_t, text);
-		state.msgdisc.size = -1;
-		state.msgdisc.link = offsetof(Msg_t, link);
-		if (state.msgdict = dtopen(&state.msgdisc, Dthash))
-			for (n = 0; n < elementsof(C_LC_MESSAGES_libast); n++)
-				dtinsert(state.msgdict, C_LC_MESSAGES_libast + n);
 		if (!map[OPT_FLAGS[0]])
 			for (n = 0, t = OPT_FLAGS; *t; t++)
 				map[*t] = ++n;
@@ -1035,7 +1047,11 @@ init(register char* s, Optpass_t* p)
 						{
 							for (; *s == '\a' || *s == '\b' || *s == '\v' || *s == ' '; s++);
 							if (*s == '\f')
-								s = expand(s + 1, NiL, &e, state.vp, p->id);
+							{
+								if (*(s + 1) == '?' && *(s + 2) == '\f')
+									break;
+								s = expand(s + 1, NiL, &e, state.xp, p->id);
+							}
 							for (t = s; *t && *t != ' ' && *t != ']'; t++);
 							if (t > s)
 							{
@@ -4430,6 +4446,8 @@ optget(register char** argv, const char* oopts)
 		 * ? always triggers internal help
 		 */
 
+		if (!state.msgdict)
+			initdict();
 		if (w)
 		{
 			if (!v && (*(w + 1) || !(v = argv[opt_info.index]) || !++opt_info.index))
@@ -4450,6 +4468,8 @@ optget(register char** argv, const char* oopts)
 		}
 		goto help;
 	}
+	else if (w && !state.msgdict)
+		initdict();
 	numopt = 0;
 	f = 0;
 	s = opts;
@@ -4611,7 +4631,7 @@ optget(register char** argv, const char* oopts)
 			}
 			if (*s == '\f')
 			{
-				psp = info(psp, s + 1, NiL, state.xp, id);
+				psp = info(psp, s + 1, NiL, xp, id);
 				if (psp->nb)
 					s = psp->nb;
 				else
