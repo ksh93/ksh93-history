@@ -1664,6 +1664,8 @@ retry1:
 			}
 			else if(type>0)
 				v = 0;
+			if(!v)
+				mp->atmode = 0;
 		}
 		else if(v)
 		{

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tee (AT&T Research) 2009-06-19 $\n]"
+"[-?\n@(#)$Id: tee (AT&T Research) 2010-12-01 $\n]"
 USAGE_LICENSE
 "[+NAME?tee - duplicate standard input]"
 "[+DESCRIPTION?\btee\b copies standard input to standard output "
@@ -177,7 +177,9 @@ b_tee(int argc, register char** argv, void* context)
 			hp = tp->fd;
 			while (cp = *argv++)
 			{
-				if ((*hp = open(cp, oflag, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
+				while ((*hp = open(cp, oflag, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0 && errno == EINTR)
+					errno = 0;
+				if (*hp < 0)
 					error(ERROR_system(0), "%s: cannot create", cp);
 				else
 					hp++;

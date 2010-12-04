@@ -1580,6 +1580,8 @@ astconflist(Sfio_t* sp, const char* path, int flags, const char* pattern)
 						continue;
 				}
 			}
+			look.standard = look.conf->standard;
+			look.section = look.conf->section;
 			print(sp, &look, NiL, path, flags, errorf);
 		}
 #ifdef _pth_getconf_a

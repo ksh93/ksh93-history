@@ -3275,12 +3275,12 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 		{
 			int n;
 			ep[n=strlen(ep)-1] = 0;
-			nv_putsub(nr, ep, 0);
+			nv_putsub(nr, ep, ARRAY_FILL);
 			ep[n] = ']';
 			if(nq = nv_opensub(nr))
 				ep = 0;
 			else
-				nq = nr;
+				ep = nv_getsub(nq=nr);
 		}
 	}
 	shp->instance = 0;

@@ -2699,6 +2699,7 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+10-12-01 astconf.c: fix look.standard undefined variable reference
 10-12-01 sfset.c: SF_LINE|SF_WCWIDTH => no need for sfsetbuf() to call isatty()
 10-12-01 sfsetbuf.c: cache /dev/null <dev,ino> to cut down /dev/null stat()'s
 10-12-01 optget.c: delay dictionary initialization until needed
@@ -4399,6 +4400,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+10-12-01 tee.c: add iterrupt logic for slow open(1) -- needs to be generalized
 10-11-30 chgrp.c: add -N,--numeric to bypass name lookup
 10-10-20 cp: add --timestamps (preserv timestamps and permissions)
 10-10-20 ln: fix 'cannot replace existing file' logic

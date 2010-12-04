@@ -2810,6 +2810,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+10-12-01 astconf.c: fix look.standard undefined variable reference
 10-12-01 sfset.c: SF_LINE|SF_WCWIDTH =&gt; no need for sfsetbuf() to call isatty()
 10-12-01 sfsetbuf.c: cache /dev/null &lt;dev,ino&gt; to cut down /dev/null stat()'s
 10-12-01 optget.c: delay dictionary initialization until needed
@@ -4513,6 +4514,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+10-12-01 tee.c: add iterrupt logic for slow open(1) -- needs to be generalized
 10-11-30 chgrp.c: add -N,--numeric to bypass name lookup
 10-10-20 cp: add --timestamps (preserv timestamps and permissions)
 10-10-20 ln: fix 'cannot replace existing file' logic
@@ -4965,7 +4967,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>December 03, 2010</TD>
+<TD align=right>December 04, 2010</TD>
 </TR>
 </TABLE>
 <P>

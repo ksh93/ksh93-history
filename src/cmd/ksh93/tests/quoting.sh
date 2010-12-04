@@ -345,6 +345,7 @@ foo="`eval echo "$"{copy$copynum"-0}"`"
 [[ $($SHELL -c 'set --  ${1+"$@"}; print $#' cmd "" '') == 2 ]] || err_exit '${1+"$@"} with two empty arguments fails'
 [[ $($SHELL -c 'set --  ${1+"$@"}; print $#' cmd "" '' '') == 3 ]] || err_exit '${1+"$@"} with three empty arguments fails'
 [[ $($SHELL -c 'set --  "$@"; print $#' cmd '') == 1 ]] || err_exit '"$@" with one empty argument fails'
+[[ $($SHELL -c 'set --  "${@:2}"; print $#' cmd '') == 0 ]] || err_exit '"$@" with one empty argument fails'
 [[ $($SHELL -c 'set --  "$@"; print $#' cmd foo '') == 2 ]] || err_exit '"$@" with one non-empty and on empty argument fails'
 [[ $($SHELL -c 'set --  "$@"; print $#' cmd "" '') == 2 ]] || err_exit '"$@" with two empty arguments fails'
 [[ $($SHELL -c 'set --  "$@"; print $#' cmd "" '' '') == 3 ]] || err_exit '"$@" with three empty arguments fails'
