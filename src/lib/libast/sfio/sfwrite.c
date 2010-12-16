@@ -135,7 +135,7 @@ size_t		n;	/* number of bytes. 		*/
 				w = (ssize_t)n;
 			if(w <= 0) /* no forward progress possible */
 				break;
-			memcpy(f->next, s, w);
+			memmove(f->next, s, w);
 			f->next += w;
 		}
 

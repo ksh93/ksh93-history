@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
+make ${PACKAGEROOT}/lib/package/ast.lic
+done ${PACKAGEROOT}/lib/package/ast.lic
 make install
 make sum
 make libsum.a archive
@@ -112,7 +112,7 @@ done sum-ast4.c
 make sum-att.c implicit
 done sum-att.c
 make FEATURE/sum implicit
-meta FEATURE/sum features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libsum/features/sum sum
+meta FEATURE/sum features/%>FEATURE/% features/sum sum
 make features/sum
 done features/sum
 prev sum.req
@@ -187,7 +187,7 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
 done sum.h
 done sumlib.c
-meta sumlib.o %.c>%.o ${PACKAGEROOT}/src/lib/libsum/sumlib.c sumlib
+meta sumlib.o %.c>%.o sumlib.c sumlib
 prev sumlib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sumlib.c
 done sumlib.o generated
