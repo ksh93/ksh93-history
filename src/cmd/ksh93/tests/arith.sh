@@ -660,4 +660,7 @@ done
 
 [[ $($SHELL 2> /dev/null -c 'print -- $(( ldexp(1, 4) ))' ) == 16 ]] || err_exit 'function ldexp not implement or not working correctly'
 
+
+$SHELL 2> /dev/null -c 'str="0x1.df768ed398ee1e01329a130627ae0000p-1";typeset -l -E x;((x=str))' || err_exit '((x=var)) fails for hexfloat with var begining with 0x1.nnn'
+
 exit $((Errors<125?Errors:125))

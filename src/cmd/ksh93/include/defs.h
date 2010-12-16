@@ -181,6 +181,7 @@ struct shared
 	pid_t		cpid; \
 	pid_t		spid; 		/* subshell process id */ \
 	pid_t		pipepid; \
+	pid_t		outpipepid; \
 	int		topfd; \
 	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
@@ -250,6 +251,7 @@ struct shared
 	Dt_t		*fpathdict; \
 	Dt_t		*typedict; \
 	Dt_t		*inpool; \
+	Dt_t		*transdict; \
 	char		ifstable[256]; \
 	unsigned long	test; \
 	Shopt_t		offoptions; \

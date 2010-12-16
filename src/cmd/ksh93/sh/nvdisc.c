@@ -105,8 +105,11 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 			str = nv_getv(np,fp?fp:nfp);
 		if(str && *str)
 		{
-			while(*str=='0')
-				str++;
+			if(nv_isattr(np,NV_LJUST|NV_RJUST) || (*str=='0' && !(str[1]=='x'||str[1]=='X')))
+			{
+				while(*str=='0')
+					str++;
+			}
 			d = sh_arith(shp,str);
 		}
 	}

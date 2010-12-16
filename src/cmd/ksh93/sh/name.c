@@ -72,6 +72,7 @@ struct adata
 {
 	Shell_t		*sh;
 	Namval_t	*tp;
+	void		*ptr;
 	char		**argnam;
 	int		attsize;
 	char		*attval;
@@ -1050,7 +1051,11 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 								sp[n-1] = ']';
 							}
 							if(n < m)
-								cp=strcpy(sp+n,cp);
+							{
+								char *dp = sp+n;
+								while(*dp++=*cp++);
+								cp = sp+n;
+							}
 						}
 						else
 						{
@@ -2808,8 +2813,11 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 	}
 	else if((str=nv_getval(np)) && *str!=0)
 	{
-		while(*str=='0')
-			str++;
+		if(nv_isattr(np,NV_LJUST|NV_RJUST) || (*str=='0' && !(str[1]=='x'||str[1]=='X')))
+		{
+			while(*str=='0')
+				str++;
+		}
 		r = sh_arith(shp,str);
 	}
 	return(r);

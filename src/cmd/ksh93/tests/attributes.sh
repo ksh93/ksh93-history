@@ -373,4 +373,6 @@ x=$($SHELL -c 'integer -s x=5;print -r -- $x')
 } 2> /dev/null
 [[ $x == 5 ]] || err_exit 'integer -s not working'
 
+[[ $(typeset -l) == *namespace*.sh* ]] && err_exit 'typeset -l should not contain namespace .sh'
+
 exit $((Errors<125?Errors:125))

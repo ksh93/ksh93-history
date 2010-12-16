@@ -93,7 +93,14 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-10-12-01  --- Release ksh93u  ---
+10-12-10  --- Release ksh93u  ---
+10-12-10  A bug in which typeset -l displayed namespaces as well as lower case
+	  variables has been fixed.
+10-12-06  A bug in which a pipeline could terminate prematurely for a pipeline
+	  whose right hand side is a builtin, and whose left hand side ends in
+	  a simple command that has standard output redirected has been fixed.
+10-12-06  A bug in hexfloat assignments when the right hand side is a string
+          variable starting with 0x has been fixed.
 10-12-01  A bug in the expansion of ${$1+"$@"} which causes the last positional
 	  parameter to disappear when it is empty has been fixed.
 10-12-01  A number of changes were made to reduce the startup time.
@@ -2699,6 +2706,7 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+10-12-09 pathprog.c: handle intermediate path != '* and fix invalid pathpath() call
 10-12-01 astconf.c: fix look.standard undefined variable reference
 10-12-01 sfset.c: SF_LINE|SF_WCWIDTH => no need for sfsetbuf() to call isatty()
 10-12-01 sfsetbuf.c: cache /dev/null <dev,ino> to cut down /dev/null stat()'s
@@ -4400,6 +4408,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+10-12-10 rm.c: fix not-writable logic
 10-12-01 tee.c: add iterrupt logic for slow open(1) -- needs to be generalized
 10-11-30 chgrp.c: add -N,--numeric to bypass name lookup
 10-10-20 cp: add --timestamps (preserv timestamps and permissions)

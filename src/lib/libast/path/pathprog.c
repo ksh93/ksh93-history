@@ -52,7 +52,7 @@ prog(const char* command, char* path, size_t size)
 #endif
 
 #ifdef _PROC_PROG
-	if ((n = readlink(_PROC_PROG, path, size)) > 0)
+	if ((n = readlink(_PROC_PROG, path, size)) > 0 && *path == '/')
 	{
 		if (n < size)
 			path[n] = 0;
@@ -60,7 +60,7 @@ prog(const char* command, char* path, size_t size)
 	}
 #endif
 #if _lib_getexecname
-	if (s = (char*)getexecname())
+	if ((s = (char*)getexecname()) && *s == '/')
 	{
 		n = strlen(s);
 		if (n < size)
@@ -105,9 +105,13 @@ prog(const char* command, char* path, size_t size)
 size_t
 pathprog(const char* command, char* path, size_t size)
 {
+	char*		rel;
 	ssize_t		n;
 
-	if ((n = prog(command, path, size)) > 0 && n <= size && *path != '/')
-		n = pathpath(path, NiL, PATH_REGULAR|PATH_EXECUTE, path, size) ? strlen(path) : 0;
+	if ((n = prog(command, path, size)) > 0 && n < size && *path != '/' && (rel = strdup(path)))
+	{
+		n = pathpath(rel, NiL, PATH_REGULAR|PATH_EXECUTE, path, size) ? strlen(path) : 0;
+		free(rel);
+	}
 	return n;
 }

@@ -1418,7 +1418,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			}
 			if(!np)
 			{
-				if(flag==0 || tname)
+				if(flag==0 || tname || (flag==1 && fn==1 && (shp->fdstatus[fn]&IONOSEEK) && shp->outpipepid && shp->outpipepid==getpid()))
 				{
 					if(fd==fn)
 					{
@@ -1533,9 +1533,9 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 			if(infile)
 				sfclose(infile);
 		}
+		sfseek(shp->heredocs,off,SEEK_SET);
 	}
 	/* close stream outfile, but save file descriptor */
-	sfseek(shp->heredocs,off,SEEK_SET);
 	fd = sffileno(outfile);
 	sfsetfd(outfile,-1);
 	sfclose(outfile);

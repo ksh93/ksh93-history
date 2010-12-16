@@ -566,6 +566,7 @@ static int expr(register struct vars *vp,register int precedence)
 	Sfdouble_t	d;
 
 	lvalue.value = 0;
+	lvalue.nargs = 0;
 	lvalue.fun = 0;
 	lvalue.shp =  vp->shp;
 again:

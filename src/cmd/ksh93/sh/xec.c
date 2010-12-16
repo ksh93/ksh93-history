@@ -2947,6 +2947,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 #if !_std_malloc
 	vmtrace(-1);
 #endif
+	shp->outpipepid = ((flags&FPOU)?getpid():0);
 	/* This is the child process */
 	if(shp->trapnote&SH_SIGTERM)
 		sh_exit(SH_EXITSIG|SIGTERM);
@@ -3031,6 +3032,7 @@ struct Tdata
 {
         Shell_t         *sh;
         Namval_t        *tp;
+	void		*extra;
 };
 
 /*

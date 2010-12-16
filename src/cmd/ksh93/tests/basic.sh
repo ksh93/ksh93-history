@@ -495,4 +495,16 @@ float sec=SECONDS
 . $tmp/foo.sh  | cat > /dev/null
 (( (SECONDS-sec) < .7 ))  && err_exit '. script does not restore output redirection with eval'
 
+file=$tmp/foobar
+builtin cat
+for ((n=0; n < 1000; n++))
+do
+	> $file
+	{ sleep .001;echo $? >$file;} | cat > /dev/null
+	if	[[ !  -s $file ]]
+	then	err_exit 'output from pipe is lost with pipe to builtin'
+		break;
+	fi
+done
+
 exit $((Errors<125?Errors:125))

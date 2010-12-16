@@ -1,3 +1,4 @@
+10-12-09 pathprog.c: handle intermediate path != '* and fix invalid pathpath() call
 10-12-01 astconf.c: fix look.standard undefined variable reference
 10-12-01 sfset.c: SF_LINE|SF_WCWIDTH => no need for sfsetbuf() to call isatty()
 10-12-01 sfsetbuf.c: cache /dev/null <dev,ino> to cut down /dev/null stat()'s

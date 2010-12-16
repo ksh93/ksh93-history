@@ -30,6 +30,9 @@ static const char usage[] =
 "	executing any embedded installation scripts.]"
 "[c:cat|uncompress?Uncompress the standard input and copy it to the standard"
 "	output.]"
+#if defined(_SEAR_EXEC)
+"[i!:install?Execute the sear installation script.]"
+#endif
 "[l:local?Reject files that traverse outside the current directory.]"
 "[m:meter?Display a one line text meter showing archive read progress.]"
 "[n!:convert?In ebcdic environments convert text archive members from ascii"
@@ -4439,7 +4442,7 @@ register char*	s;
 	return n;
 }
 
-#if defined(_SEAR_SEEK) || defined(_SEAR_EXEC)
+#if defined(_SEAR_EXEC) || defined(_SEAR_SEEK)
 
 #ifndef PATH_MAX
 #define PATH_MAX	256
@@ -4695,6 +4698,10 @@ char**	argv;
 	char*			opts[4];
 #endif
 
+#if defined(_SEAR_EXEC) || defined(_SEAR_SEEK)
+	int			install = 1;
+#endif
+
 	setmode(0, O_BINARY);
 	setmode(1, O_BINARY);
 	clear = 0;
@@ -4751,6 +4758,11 @@ char**	argv;
 		case 'c':
 			unzip = 1;
 			continue;
+#if defined(_SEAR_EXEC) || defined(_SEAR_SEEK)
+		case 'i':
+			install = 0;
+			continue;
+#endif
 		case 'l':
 			local = 1;
 			continue;
@@ -4803,6 +4815,11 @@ char**	argv;
 			case 'c':
 				unzip = 1;
 				continue;
+#if defined(_SEAR_EXEC) || defined(_SEAR_SEEK)
+			case 'i':
+				install = 0;
+				continue;
+#endif
 			case 'l':
 				local = 1;
 				continue;
@@ -4834,7 +4851,7 @@ char**	argv;
 #endif
 
 #if defined(_SEAR_SEEK)
-	if (sear_seek((off_t)_SEAR_SEEK, !list))
+	if (sear_seek((off_t)_SEAR_SEEK, install && !list))
 	{
 		Sleep(2 * 1000);
 		return 1;
@@ -5262,7 +5279,7 @@ char**	argv;
 #if !defined(_SEAR_ARGS)
 #define _SEAR_ARGS	0
 #endif
-	if (sear_exec(_SEAR_EXEC, argv, _SEAR_ARGS))
+	if (install && sear_exec(_SEAR_EXEC, argv, _SEAR_ARGS))
 	{
 		Sleep(2 * 1000);
 		return 1;

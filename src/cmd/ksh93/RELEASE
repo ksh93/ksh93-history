@@ -1,4 +1,11 @@
-10-12-01  --- Release ksh93u  ---
+10-12-10  --- Release ksh93u  ---
+10-12-10  A bug in which typeset -l displayed namespaces as well as lower case
+	  variables has been fixed.
+10-12-06  A bug in which a pipeline could terminate prematurely for a pipeline
+	  whose right hand side is a builtin, and whose left hand side ends in
+	  a simple command that has standard output redirected has been fixed.
+10-12-06  A bug in hexfloat assignments when the right hand side is a string
+          variable starting with 0x has been fixed.
 10-12-01  A bug in the expansion of ${$1+"$@"} which causes the last positional
 	  parameter to disappear when it is empty has been fixed.
 10-12-01  A number of changes were made to reduce the startup time.

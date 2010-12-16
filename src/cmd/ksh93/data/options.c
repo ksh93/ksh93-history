@@ -138,11 +138,11 @@ const Shtable_t shtab_attributes[] =
 	{"-iinteger",	NV_INTEGER},
 	{"-Hfilename",	NV_HOST},
 	{"-bbinary",    NV_BINARY},
-	{"-llowercase",	NV_UTOL},
+	{"-ltolower",	NV_UTOL},
 	{"-Zzerofill",	NV_ZFILL},
 	{"-Lleftjust",	NV_LJUST},
 	{"-Rrightjust",	NV_RJUST},
-	{"-uuppercase",	NV_LTOU},
+	{"-utoupper",	NV_LTOU},
 	{"++namespace",	NV_TABLE},
 	{"",		0}
 };
