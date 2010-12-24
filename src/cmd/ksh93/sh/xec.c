@@ -3151,7 +3151,6 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	shp->st.save_tree = shp->var_tree;
 	if(!fun)
 	{
-		Namval_t *np;
 		if(nv_isattr(fp->node,NV_TAGGED))
 			sh_onoption(SH_XTRACE);
 		else

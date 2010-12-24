@@ -288,7 +288,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		nq =  vp->disc[type=UNASSIGN];
 	if(nq && !isblocked(bp,type))
 	{
-		int bflag;
+		int bflag=0;
 		block(bp,type);
 		if (type==APPEND && (bflag= !isblocked(bp,LOOKUPS)))
 			block(bp,LOOKUPS);

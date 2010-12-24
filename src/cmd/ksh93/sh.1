@@ -2505,6 +2505,8 @@ If the first character following the opening
 .B \*(OK\^
 is a
 .B !
+or
+.B ^
 then any character not enclosed is matched.
 A
 .B \-
@@ -7131,7 +7133,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK   \*(OK \f3\+-M  \*(OK \f2mapname\fP \*(CK \*(CK \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -7216,6 +7218,25 @@ fit into the field.
 The
 .B \-R
 option is turned off.
+.TP
+.B \-M
+Use the character mapping
+.I mapping\^
+defined by
+.IR wctrans (3).
+such as
+.B tolower
+and
+.B toupper
+when assigning a value to each of the specified operands.
+When
+.I mapping\^
+is specified and there are not operands, all variables
+that use this mapping are written to standard output.
+When
+.I mapping\^
+is omitted and there are no operands, all mapped
+variables are written to standard output.
 .TP
 .B \-R
 Right justify and fill with leading blanks.
@@ -7358,11 +7379,19 @@ is non-zero, it defines the output arithmetic base,
 otherwise the output base will be ten.
 .TP
 .B \-l
-All upper-case characters are
+Used with
+.BR \-i ,
+.B \-E
+or
+.BR \-F ,
+to indicate long integer, or long float.
+Otherwise, all upper-case characters are
 converted to lower-case.
 The upper-case option,
 .BR \-u ,
 is turned off.
+Equivalent to
+.B "\-M tolower" .
 .TP
 .B \-n
 Declares
@@ -7396,11 +7425,16 @@ Tags are user definable and have no special
 meaning to the shell.
 .TP
 .B \-u
-All lower-case characters are converted
+When given along with
+.BR \-i ,
+specifies unsigned integer.
+Otherwise, all lower-case characters are converted
 to upper-case.
 The lower-case option,
 .BR \-l ,
 is turned off.
+Equivalent to
+.B "\-M toupper" .
 .TP
 .B \-x
 The given
@@ -7990,6 +8024,7 @@ sysconf(2),
 umask(2),
 ulimit(2),
 wait(2),
+wctrans(3),
 rand(3),
 a.out(5),
 profile(5),

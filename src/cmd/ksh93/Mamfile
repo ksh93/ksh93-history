@@ -938,6 +938,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done history.o generated
 make init.o
 make sh/init.c
+prev ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
 make include/version.h implicit
 done include/version.h
 prev include/lexstates.h implicit

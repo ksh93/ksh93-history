@@ -218,6 +218,7 @@ extern void		nv_typename(Namval_t*, Sfio_t*);
 extern void		nv_newtype(Namval_t*);
 extern int		nv_istable(Namval_t*);
 extern size_t		nv_datasize(Namval_t*, size_t*);
+extern Namfun_t		*nv_mapchar(Namval_t*, const char*);
 #if SHOPT_FIXEDARRAY
    extern int		nv_arrfixed(Namval_t*, Sfio_t*, int, char*);
 #endif /* SHOPT_FIXEDARRAY */
@@ -255,6 +256,11 @@ extern const char	e_redef[];
 extern const char	e_required[];
 extern const char	e_badappend[];
 extern const char	e_unknowntype[];
+extern const char	e_unknownmap[];
+extern const char	e_mapchararg[];
+extern const char	e_subcomvar[];
 extern const char	e_badtypedef[];
 extern const char	e_globalref[];
+extern const char	e_tolower[];
+extern const char	e_toupper[];
 #endif /* _NV_PRIVATE */

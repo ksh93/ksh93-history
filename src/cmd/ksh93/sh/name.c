@@ -63,8 +63,6 @@ static void	attstore(Namval_t*,void*);
     static void	pushnam(Namval_t*,void*);
     static char	*staknam(Namval_t*, char*);
 #endif
-static void	ltou(char*);
-static void	utol(char*);
 static void	rightjust(char*, int, int);
 static char	*lastdot(char*, int);
 
@@ -72,7 +70,7 @@ struct adata
 {
 	Shell_t		*sh;
 	Namval_t	*tp;
-	void		*ptr;
+	char		*mapname;
 	char		**argnam;
 	int		attsize;
 	char		*attval;
@@ -1251,7 +1249,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	Shell_t			*shp = sh_getinterp();
 	register char		*cp=(char*)name;
 	register int		c;
-	register Namval_t	*np;
+	register Namval_t	*np=0;
 	Namfun_t		fun;
 	int			append=0;
 	const char		*msg = e_varname;
@@ -1862,11 +1860,6 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		{
 			int c = cp[dot];
 			memcpy(cp,sp,dot);
-			cp[dot]=0;
-			if(nv_isattr(np, NV_LTOU))
-				ltou(cp);
-			else if(nv_isattr (np, NV_UTOL))
-				utol(cp);
 			cp[dot] = c;
 			if(nv_isattr(np, NV_RJUST) && nv_isattr(np, NV_ZFILL))
 				rightjust(cp,size,'0');
@@ -2052,6 +2045,12 @@ static void attstore(register Namval_t *np, void *data)
 	ap->tp = 0;
 	if(!(flag&NV_EXPORT) || (flag&NV_FUNCT))
 		return;
+	if((flag&(NV_UTOL|NV_LTOU|NV_INTEGER)) == (NV_UTOL|NV_LTOU))
+	{
+		data = (void*)nv_mapchar(np,0);
+		if(strcmp(data,e_tolower) && strcmp(data,e_toupper))
+			return;
+	}
 	flag &= (NV_RDONLY|NV_UTOL|NV_LTOU|NV_RJUST|NV_LJUST|NV_ZFILL|NV_INTEGER);
 	*ap->attval++ = '=';
 	if((flag&NV_DOUBLE) == NV_DOUBLE)
@@ -2156,6 +2155,7 @@ static int scanfilter(Dt_t *dict, void *arg, void *data)
 	register int k=np->nvflag;
 	register struct scan *sp = (struct scan*)data;
 	register struct adata *tp = (struct adata*)sp->scandata;
+	char	*cp;
 	NOT_USED(dict);
 #if SHOPT_TYPEDEF
 	if(!is_abuiltin(np) && tp && tp->tp && nv_type(np)!=tp->tp)
@@ -2163,6 +2163,8 @@ static int scanfilter(Dt_t *dict, void *arg, void *data)
 #endif /*SHOPT_TYPEDEF */
 	if(sp->scanmask?(k&sp->scanmask)==sp->scanflags:(!sp->scanflags || (k&sp->scanflags)))
 	{
+		if(tp && tp->mapname && (sp->scanflags==NV_UTOL||sp->scanflags==NV_LTOU) && (cp=(char*)nv_mapchar(np,0)) && strcmp(cp,tp->mapname))
+			return(0);
 		if(!np->nvalue.cp && !np->nvfun && !nv_isattr(np,~NV_DEFAULT))
 			return(0);
 		if(sp->scanfn)
@@ -3027,32 +3029,6 @@ char* sh_setenviron(const char *name)
 char* setenviron(const char *name)
 {
 	return sh_setenviron(name);
-}
-
-/*
- * convert <str> to upper case
- */
-static void ltou(register char *str)
-{
-	register int c;
-	for(; c= *((unsigned char*)str); str++)
-	{
-		if(islower(c))
-			*str = toupper(c);
-	}
-}
-
-/*
- * convert <str> to lower case
- */
-static void utol(register char *str)
-{
-	register int c;
-	for(; c= *((unsigned char*)str); str++)
-	{
-		if(isupper(c))
-			*str = tolower(c);
-	}
 }
 
 /*

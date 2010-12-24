@@ -499,6 +499,9 @@ int	b_universe(int argc, char *argv[],void *extra)
 #endif /* cmd_universe */
 
 #if SHOPT_FS_3D
+#if _UWIN
+#include <sys/mount.h>
+#endif
 #   if 0
     /* for the dictionary generator */
     int	b_vmap(int argc,char *argv[], void *extra){}
@@ -530,8 +533,12 @@ int	b_universe(int argc, char *argv[],void *extra)
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
+#ifdef MS_3D
+	flag |= MS_3D;
+#else
 	if(!shp->gd->lim.fs3d)
 		goto failed;
+#endif
 	argv += opt_info.index;
 	argc -= opt_info.index;
 	switch(argc)
@@ -569,22 +576,15 @@ int	b_universe(int argc, char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 		/*FALLTHROUGH*/
 	     case 2:
-		if(!shp->gd->lim.fs3d)
-			goto failed;
 		if(shp->subshell && !shp->subshare)
 			sh_subfork();
  		for(n=0;n<argc;n+=2)
-		{
 			if(mount(argv[n+1],argv[n],flag,0)<0)
 				goto failed;
-		}
 	}
 	return(0);
 failed:
-	if(argc>1)
-		errormsg(SH_DICT,ERROR_exit(1),e_cantset,flag==2?e_mapping:e_versions);
-	else
-		errormsg(SH_DICT,ERROR_exit(1),e_cantget,flag==2?e_mapping:e_versions);
+	errormsg(SH_DICT,ERROR_exit(1),(argc>1)?e_cantset:e_cantget,(flag&FS3D_VIEW)?e_mapping:e_versions);
 	return(1);
     }
 #endif /* SHOPT_FS_3D */

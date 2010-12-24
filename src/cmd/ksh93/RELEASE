@@ -1,4 +1,10 @@
-10-12-10  --- Release ksh93u  ---
+10-12-21  --- Release ksh93u  ---
+10-12-21  Use MS_3D in b_vpath() for setting win32 WoW mount defaults.
+10-12-17  A bug in the expansion of ${var:i:j} which caused a core dump when
+	  i > ${#var} has been fixed.
+10-12-16 +sleep now treats . as decimal point even in locales that use comma.
+10-12-16 +typeset -M mapname was added to generalize on toupper and tolowwer
+	  mapping as provided with wctrans(). 
 10-12-10  A bug in which typeset -l displayed namespaces as well as lower case
 	  variables has been fixed.
 10-12-06  A bug in which a pipeline could terminate prematurely for a pipeline

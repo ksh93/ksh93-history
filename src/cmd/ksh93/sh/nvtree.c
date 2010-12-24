@@ -503,6 +503,14 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 					if(ap && !array_assoc(ap) && (xp=(char**)(ap+1)) && *xp)
 						ip = nv_namptr(*xp,0)->nvname;
 				}
+				if(val==NV_UTOL || val==NV_UTOL)
+				{
+					if((cp = (char*)nv_mapchar(np,0)) && strcmp(cp,tp->sh_name+2))
+					{
+						sfprintf(out,"-M %s ",cp);
+						continue;
+					}
+				}
 				if(prefix)
 				{
 					if(*tp->sh_name=='-')

@@ -47,6 +47,40 @@
 #include	"lexstates.h"
 #include	"version.h"
 
+#if _hdr_wctype
+#include	<ast_wchar.h>
+#include	<wctype.h>
+#endif
+#if !_typ_wctrans_t
+#undef	wctrans_t
+#define wctrans_t	sh_wctrans_t
+typedef int wctrans_t;
+#endif
+#if !_lib_wctrans
+#undef	wctrans
+#define wctrans		sh_wctrans
+static wctrans_t wctrans(const char *name)
+{
+	if(strcmp(name,e_tolower)==0)
+		return(1);
+	else if(strcmp(name,e_toupper)==0)
+		return(2);
+	return(0);
+}
+#endif
+#if !_lib_towctrans
+#undef	towctrans
+#define towctrans	sh_towctrans
+static int towctrans(int c, wctrans_t t)
+{
+	if(t==1 && isupper(c))
+		c = tolower(c);
+	else if(t==2 && isupper(c))
+		c = toupper(c);
+	return(c);
+}
+#endif
+
 char e_version[]	= "\n@(#)$Id: Version "
 #if SHOPT_AUDIT
 #define ATTRS		1
@@ -176,6 +210,7 @@ typedef struct _init_
 #endif /* _hdr_locale */
 } Init_t;
 
+static int		lctype;
 static int		nbltins;
 static void		env_init(Shell_t*);
 static Init_t		*nv_init(Shell_t*);
@@ -415,6 +450,7 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 	{
 		if(sh_lexstates[ST_BEGIN]!=sh_lexrstates[ST_BEGIN])
 			free((void*)sh_lexstates[ST_BEGIN]);
+		lctype++;
 		if(ast.locale.set&(1<<AST_LC_CTYPE))
 		{
 			register int c;
@@ -1957,6 +1993,8 @@ static void env_init(Shell_t *shp)
 				}
 			}
 			nv_newattr(np,flag|NV_IMPORT|NV_EXPORT,size);
+			if((flag&(NV_INTEGER|NV_UTOL|NV_LTOU))==(NV_UTOL|NV_LTOU))
+				nv_mapchar(np,(flag&NV_UTOL)?e_tolower:e_toupper);
 		}
 		else
 			cp += 2;
@@ -2014,4 +2052,92 @@ void	sh_sigcheck DISABLE (void)
 Dt_t*	sh_bltin_tree DISABLE (void)
 {
 	return(sh.bltin_tree);
+}
+
+/*
+ * This code is for character mapped variables with wctrans()
+ */
+struct Mapchar
+{
+	Namfun_t	hdr;
+	const char	*name;
+	wctrans_t	trans;
+	int		lctype;
+};
+
+static void put_trans(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
+{
+	struct Mapchar *mp = (struct Mapchar*)fp;
+	int	c,offset = staktell(),off=offset;
+	if(val)
+	{
+		if(mp->lctype!=lctype)
+		{
+			mp->lctype = lctype;
+			mp->trans = wctrans(mp->name);	
+		}
+		if(!mp->trans)
+			goto skip;
+		while(c = mbchar(val))
+		{
+			c = towctrans(c,mp->trans);
+			stakseek(off+c);
+			stakseek(off);
+			c  = mbconv(stakptr(off),c);
+			off += c;
+			stakseek(off);
+		}
+		stakputc(0);
+		val = stakptr(offset);
+	}
+	else
+	{
+		nv_disc(np,fp,NV_POP);
+		if(!(fp->nofree&1))
+			free((void*)fp);
+	}
+skip:
+	nv_putv(np,val,flags,fp);
+	stakseek(offset);
+}
+
+static const Namdisc_t TRANS_disc      = {  sizeof(struct Mapchar), put_trans };
+
+Namfun_t	*nv_mapchar(Namval_t *np,const char *name)
+{
+	wctrans_t	trans = name?wctrans(name):0;
+	struct Mapchar	*mp=0;
+	int		n=0,low;
+	if(np)
+		mp = (struct Mapchar*)nv_hasdisc(np,&TRANS_disc);
+	if(!name)
+		return(mp?(Namfun_t*)mp->name:0);
+	if(!trans)
+		return(0);
+	if(!np)
+		return(((Namfun_t*)0)+1);
+	if((low=strcmp(name,e_tolower)) && strcmp(name,e_toupper))
+		n += strlen(name)+1;
+	if(mp)
+	{
+		if(strcmp(name,mp->name)==0)
+			return(&mp->hdr);
+		nv_disc(np,&mp->hdr,NV_POP);
+		if(!(mp->hdr.nofree&1))
+			free((void*)mp);
+	}
+	mp = newof(0,struct Mapchar,1,n);
+	mp->trans = trans;
+	mp->lctype = lctype;
+	if(low==0)
+		mp->name = e_tolower;
+	else if(n==0)
+		mp->name = e_toupper;
+	else
+	{
+		mp->name = (char*)(mp+1);
+		strcpy((char*)mp->name,name);
+	}
+	mp->hdr.disc =  &TRANS_disc;
+	return(&mp->hdr);
 }

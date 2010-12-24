@@ -46,7 +46,7 @@ struct tdata
 {
 	Shell_t 	*sh;
 	Namval_t	*tp;
-	char		*wctname;
+	const char	*wctname;
 	Sfio_t  	*outfile;
 	char    	*prefix;
 	char    	*tname;
@@ -297,6 +297,16 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 					flag |= (n=='L'?NV_LJUST:NV_RJUST);
 				}
 				break;
+			case 'M':
+				if((tdata.wctname = opt_info.arg) && !nv_mapchar((Namval_t*)0,tdata.wctname))
+					errormsg(SH_DICT, ERROR_exit(1),e_unknownmap, tdata.wctname);
+				if(tdata.wctname && strcmp(tdata.wctname,e_tolower)==0)
+					flag |= NV_UTOL;
+				else
+					flag |= NV_LTOU;
+				if(!tdata.wctname)
+					flag |= NV_UTOL;
+				break;
 			case 'f':
 				flag &= ~(NV_VARNAME|NV_ASSIGN);
 				troot = tdata.sh->fun_tree;
@@ -307,6 +317,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 				flag |= NV_INTEGER;
 				break;
 			case 'l':
+				tdata.wctname = e_tolower;
 				flag |= NV_UTOL;
 				break;
 			case 'p':
@@ -332,6 +343,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 				flag |= NV_TAGGED;
 				break;
 			case 'u':
+				tdata.wctname = e_toupper;
 				flag |= NV_LTOU;
 				break;
 			case 'x':
@@ -646,12 +658,40 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				nv_settype(np,tp->tp,tp->aflag=='-'?0:NV_APPEND);
 				flag = (np->nvflag&NV_NOCHANGE);
 			}
-			curflag = np->nvflag;
 			flag &= ~NV_ASSIGN;
 			if(last=strchr(name,'='))
 				*last = 0;
 			if (shp->typeinit)
 				continue;
+			if(!(flag&NV_INTEGER) && (flag&(NV_LTOU|NV_UTOL)))
+			{
+				Namfun_t *fp;
+				char  *cp;
+				if(!tp->wctname)
+					errormsg(SH_DICT,ERROR_exit(1),e_mapchararg,nv_name(np));
+				cp = (char*)nv_mapchar(np,0);
+				if(fp=nv_mapchar(np,tp->wctname))
+				{
+					if(tp->aflag=='+')
+					{
+						if(cp && strcmp(cp,tp->wctname)==0)
+						{
+							nv_disc(np,fp,NV_POP);
+							if(!(fp->nofree&1))
+								free((void*)fp);
+							nv_offattr(np,flag&(NV_LTOU|NV_UTOL));
+						}
+					}
+					else if(!cp || strcmp(cp,tp->wctname))
+					{
+						nv_disc(np,fp,NV_LAST);
+						nv_onattr(np,flag&(NV_LTOU|NV_UTOL));
+						if((cp=nv_getval(np)) && *cp)
+							nv_putval(np,cp,0);
+					}
+				}
+			}
+			curflag = np->nvflag;
 			if (tp->aflag == '-')
 			{
 				if((flag&NV_EXPORT) && (strchr(name,'.') || nv_isvtree(np)))
@@ -671,13 +711,6 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					
 					else if(!(flag&NV_LJUST))
 						newflag &= ~NV_LJUST;
-				}
-				if(!(flag&NV_INTEGER))
-				{
-					if (flag & NV_UTOL)
-						newflag &= ~NV_LTOU;
-					else if (flag & NV_LTOU)
-						newflag &= ~NV_UTOL;
 				}
 			}
 			else
@@ -743,7 +776,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	else
 	{
 		if(shp->prefix)
-			errormsg(SH_DICT,2, "%s: compound assignment requires sub-variable name",shp->prefix);
+			errormsg(SH_DICT,2, e_subcomvar,shp->prefix);
 		if(tp->aflag)
 		{
 			if(troot==shp->fun_tree)
@@ -758,6 +791,11 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					flag |= NV_ARRAY;
 				if(!(flag&~NV_ASSIGN))
 					tp->noref = 1;
+			}
+			if((flag&(NV_UTOL|NV_LTOU)) ==(NV_UTOL|NV_LTOU))
+			{
+				print_scan(sfstdout,flag&~NV_UTOL,troot,tp->aflag=='+',tp);
+				flag &= ~NV_LTOU;
 			}
 			print_scan(sfstdout,flag,troot,tp->aflag=='+',tp);
 			if(tp->noref)

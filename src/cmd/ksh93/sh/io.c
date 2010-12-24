@@ -1049,7 +1049,7 @@ static char *io_usename(char *name, int *perm, int mode)
 	sp = ep = stakptr(1);
 	if(ep = strrchr(sp,'/'))
 	{
-		memcpy(stakptr(0),sp,++ep-sp);
+		memmove(stakptr(0),sp,++ep-sp);
 		stakseek(ep-sp);
 	}
 	else

@@ -75,6 +75,14 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 			now = TMX_NOW;
 			if(*cp == 'P' || *cp == 'p')
 				ns = tmxdate(cp, &last, now);
+			else if(*last=='.' && shp->decomma && d==(unsigned long)d)
+			{
+				*(pp=last) = ',';
+				d = strtod(cp,&last);
+				*pp = '.';
+				if(*last==0)
+					goto skip;
+			}
 			else
 			{
 				if(pp = sfprints("exact %s", cp))
@@ -87,6 +95,7 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 			d = ns - now;
 			d /= TMX_RESOLUTION;
 		}
+skip:
 		if(argv[1])
 			errormsg(SH_DICT,ERROR_exit(1),e_oneoperand);
 	}

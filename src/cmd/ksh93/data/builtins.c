@@ -1570,7 +1570,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttypeset[] =
-"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2008-08-04 $\n]"
+"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2010-12-08 $\n]"
 USAGE_LICENSE
 "[+NAME?\f?\f - declare or display variables with attributes]"
 "[+DESCRIPTION?Without the \b-f\b option, \b\f?\f\b sets, unsets, "
@@ -1620,8 +1620,8 @@ USAGE_LICENSE
 "[f?Each of the options and \aname\as refers to a function.]"
 "[i]#?[base:=10?An integer. \abase\a represents the arithmetic base "
 	"from 2 to 64.]"
-"[l?Convert uppercase character to lowercase.  Unsets \b-u\b attribute.  When "
-	"used with \b-i\b, \b-E\b, or \b-F\b indicates long variant.]"
+"[l?Without \b-i\b, sets character mapping to \btolower\b. When used "
+	"with \b-i\b, \b-E\b, or \b-F\b indicates long variant.]"
 "[m?Move.  The value is the name of a variable whose value will be "
 	"moved to \aname\a.  The orignal variable will be unset.  Cannot be "
 	"used with any other options.]"
@@ -1636,8 +1636,8 @@ USAGE_LICENSE
 "[t?When used with \b-f\b, enables tracing for each of the specified "
 	"functions.  Otherwise, \b-t\b is a user defined attribute and "
 	"has no meaning to the shell.]"
-"[u?Without \b-f\b or \b-i\b, converts lowercase character to uppercase "
-	"and unsets \b-l\b.  With \b-f\b specifies that \aname\a is a function "
+"[u?Without \b-f\b or \b-i\b, sets character mapping to \btoupper\b.  When "
+	"used with \b-f\b specifies that \aname\a is a function "
 	"that hasn't been loaded yet.  With \b-i\b specifies that the "
 	"value will be displayed as an unsigned integer.]"
 "[x?Puts each \aname\a on the export list.  See \bexport\b(1).  \aname\a "
@@ -1660,6 +1660,10 @@ USAGE_LICENSE
 "[L]#?[n?Left justify.  If \an\a is given it represents the field width.  If "
 	"the \b-Z\b attribute is also specified, then leading zeros are "
 	"stripped.]"
+"[M]:?[mapping?\amapping\a is the name of a character mapping known by "
+	"\bwctrans\b(3) such as \btolower\b or \btoupper\b.  When the option "
+	"value \bmapping\b is omitted and there are no operands, all mapped "
+	"variables are displayed.]"
 "[R]#?[n?Right justify.  If \an\a is given it represents the field width.  If "
 	"the \b-Z\b attribute is also specified, then zeros will "
 	"be used as the fill character.  Otherwise, spaces are used.]"

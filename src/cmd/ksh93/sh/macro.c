@@ -34,6 +34,7 @@
 #include	"defs.h"
 #include	<fcin.h>
 #include	<pwd.h>
+#include	<ctype.h>
 #include	"name.h"
 #include	"variables.h"
 #include	"shlex.h"
@@ -1149,7 +1150,7 @@ retry1:
 			else
 #endif  /* SHOPT_FILESCAN */
 			dolmax = mp->shp->st.dolc+1;
-			mp->atmode = (v && c=='@');
+			mp->atmode = (v && mp->quoted && c=='@');
 			dolg = (v!=0);
 		}
 		break;
@@ -1430,7 +1431,7 @@ retry1:
 				}
 				else
 					v = nv_getval(np);
-				mp->atmode = (v && mode=='@');
+				mp->atmode = (v && mp->quoted && mode=='@');
 				/* special case --- ignore leading zeros */  
 				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isalnum(c)))
 					mp->zeros = 1;
@@ -1685,7 +1686,7 @@ retry1:
 #endif /* SHOPT_MULTIBYTE */
 			else
 				v += type;
-			vsize = strlen(v);
+			vsize = v?strlen(v):0;
 		}
 		if(*ptr==':')
 		{
@@ -1721,7 +1722,7 @@ retry1:
 				vsize = type;
 			}
 			else
-				vsize = strlen(v);
+				vsize = v?strlen(v):0;
 		}
 		if(*ptr)
 			mac_error(np);

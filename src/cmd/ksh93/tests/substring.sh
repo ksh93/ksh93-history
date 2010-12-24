@@ -580,4 +580,11 @@ x='a<2b|>c<3d|\>e' LC_ALL=debug $SHELL -c 'test "${x#??}" == "c<3d|\\>e" || err_
 x='a one and a two'
 [[ "${x//~(E)\<.\>/}" == ' one and  two' ]]  || err_exit "\< and \> not working in with ere's"
 
+{
+$SHELL -c 'typeset x="123" ; integer i=100 ; print -n "${x:i:5}"'
+} 2> /dev/null || err_exit '${x:i:j} fails when i > strlen(x)'
+
+got=$($SHELL -c 'A=""; B="B"; for I in ${A[@]} ${B[@]}; do echo "\"$I\""; done')
+[[ $got == $'"B"' ]] || err_exit '"\"$I\"" fails when $I is empty string'
+
 exit $((Errors<125?Errors:125))

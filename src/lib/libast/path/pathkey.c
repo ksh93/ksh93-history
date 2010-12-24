@@ -105,7 +105,7 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 		 * 3D
 		 */
 
-		if (fs3d(FS3D_TEST) && (c = mount(path, tmp, FS3D_GET|FS3D_ALL|FS3D_SIZE(PATH_MAX), NiL)) > 1 && c < PATH_MAX)
+		if (!flags && fs3d(FS3D_TEST) && (c = mount(path, tmp, FS3D_GET|FS3D_ALL|FS3D_SIZE(PATH_MAX), NiL)) > 1 && c < PATH_MAX)
 			path = tmp;
 
 		/*
@@ -125,6 +125,14 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 			attr += strlen(attr);
 #else
 		if ((k = getenv("VIRTUAL_ROOT")) && *k == '/')
+		{
+			n = memsum(k, strlen(k), n);
+			if (attr)
+				attr = strcopy(attr, k);
+		}
+#endif
+#if _UWIN
+		if (sizeof(char*) == 4 && !access(k = "/64", 0) || sizeof(char*) == 8 && !access(k = "/32", 0))
 		{
 			n = memsum(k, strlen(k), n);
 			if (attr)
