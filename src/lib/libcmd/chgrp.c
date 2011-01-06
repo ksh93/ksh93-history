@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Research) 2010-11-30 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Research) 2011-01-03 $\n]"
 USAGE_LICENSE
 ;
 
@@ -53,8 +53,8 @@ static const char usage_2[] =
     "\bmtime\b of \afile\a.]:[file]"
 "[c:changes?Describe only files whose ownership actually changes.]"
 "[f:quiet|silent?Do not report files whose ownership fails to change.]"
-"[l|h:symlink?Change the ownership of the symbolic links on systems that "
-    "support this.]"
+"[l|h:symlink?Change the ownership of symbolic links on systems that "
+    "support this. Implies \b--physical\b.]"
 "[m:map?The first operand is interpreted as a file that contains a map "
     "of space separated \afrom_uid:from_gid to_uid:to_gid\a pairs. The "
     "\auid\a or \agid\a part of each pair may be omitted to mean any \auid\a "
@@ -343,6 +343,12 @@ b_chgrp(int argc, char** argv, void* context)
 	if (error_info.errors || argc < 2)
 		error(ERROR_usage(2), "%s", optusage(NiL));
 	s = *argv;
+	if (options & OPT_LCHOWN)
+	{
+		flags &= ~FTS_META;
+		flags |= FTS_PHYSICAL;
+		logical = 0;
+	}
 	if (logical)
 		flags &= ~(FTS_META|FTS_PHYSICAL);
 	if (map)

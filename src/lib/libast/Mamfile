@@ -1019,6 +1019,7 @@ done pathfind.o generated
 make pathkey.o
 make path/pathkey.c
 prev ast_api.h implicit
+prev include/ls.h implicit
 make preroot.h implicit
 make FEATURE/preroot
 meta FEATURE/preroot features/%.sh>FEATURE/% features/preroot.sh preroot

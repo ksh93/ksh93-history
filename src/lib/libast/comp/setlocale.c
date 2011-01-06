@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -2316,7 +2316,8 @@ set_numeric(Lc_category_t* cp)
 	Lc_numeric_t*		dp;
 
 	static Lc_numeric_t	default_numeric = { '.', -1 };
-	static Lc_numeric_t	euro_numeric = { ',', '.' };
+	static Lc_numeric_t	eu_numeric = { ',', '.' };
+	static Lc_numeric_t	us_numeric = { '.', ',' };
 
 #if AHA
 	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
@@ -2325,7 +2326,7 @@ set_numeric(Lc_category_t* cp)
 	if (!LCINFO(category)->data)
 	{
 		if (locales[cp->internal]->flags & LC_local)
-			dp = locales[cp->internal]->territory == &lc_territories[0] ? &default_numeric : &euro_numeric;
+			dp = locales[cp->internal]->territory == &lc_territories[0] ? &default_numeric : *locales[cp->internal]->territory->code == 'e' ? &eu_numeric : &us_numeric;
 		else if ((lp = localeconv()) && (dp = newof(0, Lc_numeric_t, 1, 0)))
 		{
 			dp->decimal = lp->decimal_point && *lp->decimal_point ? *(unsigned char*)lp->decimal_point : '.';

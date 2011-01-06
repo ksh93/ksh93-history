@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -35,6 +35,7 @@
 #include	"jobs.h"
 #include	"path.h"
 #include	"builtins.h"
+#include	"ulimit.h"
 
 #define abortsig(sig)	(sig==SIGABRT || sig==SIGBUS || sig==SIGILL || sig==SIGSEGV)
 
@@ -644,6 +645,17 @@ void sh_done(void *ptr, register int sig)
 	if(sig)
 	{
 		/* generate fault termination code */
+		if(RLIMIT_CORE!=RLIMIT_UNKNOWN)
+		{
+#ifdef _lib_getrlimit
+			struct rlimit rlp;
+			getrlimit(RLIMIT_CORE,&rlp);
+			rlp.rlim_cur = 0;
+			setrlimit(RLIMIT_CORE,&rlp);
+#else
+			vlimit(RLIMIT_CORE,0);
+#endif
+		}
 		signal(sig,SIG_DFL);
 		sigrelease(sig);
 		kill(getpid(),sig);

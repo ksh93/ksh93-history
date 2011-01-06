@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1783,7 +1783,7 @@ retry2:
 						nmatch=substring(v,pattern,match,flag&STR_MAXIMAL);
 					else
 						nmatch=strgrpmatch(v,pattern,match,elementsof(match)/2,flag);
-					if(replen>0)
+					if(nmatch && replen>0)
 						sh_setmatch(v,vsize,nmatch,match);
 					if(nmatch)
 					{

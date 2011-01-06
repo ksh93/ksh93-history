@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -3032,7 +3032,7 @@ struct Tdata
 {
         Shell_t         *sh;
         Namval_t        *tp;
-	void		*extra;
+	void		*extra[2];
 };
 
 /*
@@ -3143,8 +3143,8 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	if(n)
 	{
 		struct Tdata tdata;
+		memset(&tdata,0,sizeof(tdata));
 		tdata.sh = shp;
-		tdata.tp = 0;
 		/* eliminate parent scope */
 		nv_scan(prevscope->save_tree, local_exports,&tdata, NV_EXPORT, NV_EXPORT|NV_NOSCOPE);
 	}

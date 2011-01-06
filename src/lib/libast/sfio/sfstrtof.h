@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -211,6 +211,8 @@ S2F_function(str, end) char* str; char** end;
 	int			decimal = 0;
 	int			thousand = 0;
 	int			part = 0;
+	int			back_part;
+	S2F_batch		back_n;
 	S2F_number		v;
 	S2F_number		p;
 	S2F_part_t		parts[16];
@@ -415,8 +417,23 @@ S2F_function(str, end) char* str; char** end;
 		else if (c != thousand)
 			break;
 		else if (!(m = digits))
+		{
+			SET(s, t, b);
 			break;
+		}
+		else
+		{
+			SET(s, t, b);
+			back_n = n;
+			back_part = part;
+		}
 		c = GET(s);
+	}
+	if (m && (digits - m) != 3)
+	{
+		REV(s, t, b);
+		n = back_n;
+		part = back_part;
 	}
 
 	/*

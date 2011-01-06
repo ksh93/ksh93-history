@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -374,5 +374,25 @@ x=$($SHELL -c 'integer -s x=5;print -r -- $x')
 [[ $x == 5 ]] || err_exit 'integer -s not working'
 
 [[ $(typeset -l) == *namespace*.sh* ]] && err_exit 'typeset -l should not contain namespace .sh'
+
+unset got
+typeset -u got
+exp=100
+((got=$exp))
+[[ $got == $exp ]] || err_exit "typeset -l fails on numeric value -- expected '$exp', got '$got'"
+
+unset s
+typeset -a -u s=( hello world chicken )
+[[ ${s[2]} == CHICKEN ]] || err_exit 'typeset -u not working with indexed arrays'
+unset s
+typeset -A -u s=( [1]=hello [0]=world [2]=chicken )
+[[ ${s[2]} == CHICKEN ]] || err_exit 'typeset -u not working with associative arrays'
+expected=$'(\n\t[0]=WORLD\n\t[1]=HELLO\n\t[2]=CHICKEN\n)'
+[[ $(print -v s) == "$expected" ]] || err_exit 'typeset -u for associative array does not display correctly'
+
+unset s
+if	command typeset -M totitle s 2> /dev/null
+then	[[ $(typeset +p s) == 'typeset -M totitle s' ]] || err_exit 'typeset -M totitle does not display correctly with typeset -p'
+fi
 
 exit $((Errors<125?Errors:125))

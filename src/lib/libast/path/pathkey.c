@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -38,6 +38,7 @@
 #include <ctype.h>
 #include <fs3d.h>
 #include <preroot.h>
+#include <ls.h>
 
 char*
 pathkey(char* key, char* attr, const char* lang, const char* tool, const char* path)
@@ -65,6 +66,9 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 	char*			env[elementsof(usr) + 3];
 	char*			ver[2];
 	char			tmp[PATH_MAX];
+#if _UWIN
+	struct stat		st;
+#endif
 
 	static char		let[] = "ABCDEFGHIJKLMNOP";
 
@@ -132,8 +136,9 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 		}
 #endif
 #if _UWIN
-		if (sizeof(char*) == 4 && !access(k = "/64", 0) || sizeof(char*) == 8 && !access(k = "/32", 0))
+		if (!stat("/", &st) && st.st_ino != 8 * sizeof(char*) && (st.st_ino == 32 || st.st_ino == 64))
 		{
+			k = sizeof(char*) == 4 ? "/64" : "/32";
 			n = memsum(k, strlen(k), n);
 			if (attr)
 				attr = strcopy(attr, k);

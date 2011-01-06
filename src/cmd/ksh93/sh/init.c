@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -428,7 +428,6 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		type= -1;
 	if(!sh_isstate(SH_INIT) && (type>=0 || type==LC_ALL || type==LC_LANG))
 	{
-		struct lconv*	lc;
 		char*		r;
 #ifdef AST_LC_setenv
 		ast.locale.set |= AST_LC_setenv;
@@ -443,7 +442,6 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 				errormsg(SH_DICT,0,e_badlocale,val);
 			return;
 		}
-		shp->decomma = (lc=localeconv()) && lc->decimal_point && *lc->decimal_point==',';
 	}
 	nv_putv(np, val, flags, fp);
 	if(CC_NATIVE!=CC_ASCII && (type==LC_ALL || type==LC_LANG || type==LC_CTYPE))
@@ -1410,6 +1408,12 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 			}
 #endif /* _WINIX */
 		}
+		if(beenhere==1)
+		{
+			struct lconv*	lc;
+			shp->decomma = (lc=localeconv()) && lc->decimal_point && *lc->decimal_point==',';
+			beenhere = 2;
+		}
 	}
 #if SHOPT_PFSH
 	if (sh_isoption(SH_PFSH))
@@ -1508,7 +1512,7 @@ int sh_reinit(char *argv[])
 	struct adata
 	{
 		Shell_t		*sh;
-		Namval_t	*tp;
+		void		*extra[2];
 	} data;
 	for(np=dtfirst(shp->fun_tree);np;np=npnext)
 	{
@@ -1536,8 +1540,8 @@ int sh_reinit(char *argv[])
 	}
 	/* remove locals */
 	sh_onstate(SH_INIT);
+	memset(&data,0,sizeof(data));
 	data.sh = shp;
-	data.tp = 0;
 	nv_scan(shp->var_tree,sh_envnolocal,(void*)&data,NV_EXPORT,0);
 	nv_scan(shp->var_tree,sh_envnolocal,(void*)&data,NV_ARRAY,NV_ARRAY);
 	sh_offstate(SH_INIT);
@@ -2076,7 +2080,7 @@ static void put_trans(register Namval_t* np,const char *val,int flags,Namfun_t *
 			mp->lctype = lctype;
 			mp->trans = wctrans(mp->name);	
 		}
-		if(!mp->trans)
+		if(!mp->trans || (flags&NV_INTEGER))
 			goto skip;
 		while(c = mbchar(val))
 		{

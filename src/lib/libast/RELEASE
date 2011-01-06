@@ -1,3 +1,4 @@
+10-12-24 sfstrtof.h: fix thousand grouping bug that did not check last group
 10-12-21 pathkey.c: add win32 { /32 /64 } preroot to hash
 10-12-09 pathprog.c: handle intermediate path != '* and fix invalid pathpath() call
 10-12-01 astconf.c: fix look.standard undefined variable reference

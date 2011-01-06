@@ -1,5 +1,13 @@
-10-12-21  --- Release ksh93u  ---
-10-12-21  Use MS_3D in b_vpath() for setting win32 WoW mount defaults.
+11-01-02  --- Release ksh93u  ---
+11-01-02  Fixed bugs with typeset -l/-u/-M and arrays.
+10-12-28  Fixed a bug with typeset -l/-u/-M values in arithmetric expressions.
+10-12-26  Fixed a time parsing bug in sleep and localeconv() initialization.
+10-12-23  Prevented the shell from generating a core dump when it sends itself
+	  a termination signal because the last command terminated with that
+	  signal.  This prevents a core dump to be overwritten by the shell.
+10-12-22  A bug in the expansion of  ${A[@]} ${B[@]}, introduced in 10-12-01
+	   when A="" B=B has been fixed.
+10-12-21 +Use MS_3D in b_vpath() for setting win32 WoW mount defaults.
 10-12-17  A bug in the expansion of ${var:i:j} which caused a core dump when
 	  i > ${#var} has been fixed.
 10-12-16 +sleep now treats . as decimal point even in locales that use comma.

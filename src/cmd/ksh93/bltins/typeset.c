@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -663,6 +663,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				*last = 0;
 			if (shp->typeinit)
 				continue;
+			curflag = np->nvflag;
 			if(!(flag&NV_INTEGER) && (flag&(NV_LTOU|NV_UTOL)))
 			{
 				Namfun_t *fp;
@@ -686,12 +687,9 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					{
 						nv_disc(np,fp,NV_LAST);
 						nv_onattr(np,flag&(NV_LTOU|NV_UTOL));
-						if((cp=nv_getval(np)) && *cp)
-							nv_putval(np,cp,0);
 					}
 				}
 			}
-			curflag = np->nvflag;
 			if (tp->aflag == '-')
 			{
 				if((flag&NV_EXPORT) && (strchr(name,'.') || nv_isvtree(np)))

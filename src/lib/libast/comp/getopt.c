@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -31,12 +31,6 @@ NoN(getopt)
 
 #else
 
-#if _BLD_ast && defined(__EXPORT__)
-#define EXTERN		__EXPORT__
-#else
-#define EXTERN		extern
-#endif
-
 #undef	_BLD_ast	/* enable ast imports since we're user static */
 
 #include <error.h>
@@ -49,7 +43,7 @@ char*		optarg = 0;
 
 static int	lastoptind;
 
-EXTERN int
+extern int
 getopt(int argc, char* const* argv, const char* optstring)
 {
 	int	n;

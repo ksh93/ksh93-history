@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1859,7 +1859,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		if(sp)
 		{
 			int c = cp[dot];
-			memcpy(cp,sp,dot);
+			memmove(cp,sp,dot);
 			cp[dot] = c;
 			if(nv_isattr(np, NV_RJUST) && nv_isattr(np, NV_ZFILL))
 				rightjust(cp,size,'0');
@@ -2119,6 +2119,7 @@ char **sh_envgen(void)
 	Shell_t	*shp = sh_getinterp();
 	data.sh = shp;
 	data.tp = 0;
+	data.mapname = 0;
 	/* L_ARGNOD gets generated automatically as full path name of command */
 	nv_offattr(L_ARGNOD,NV_EXPORT);
 	data.attsize = 6;
@@ -2838,7 +2839,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	register unsigned int n;
 	Namval_t *mp = 0;
 	Namarr_t *ap = 0;
-	int oldsize,oldatts;
+	int oldsize,oldatts,trans;
 	Namfun_t *fp= (newatts&NV_NODISC)?np->nvfun:0;
 	char *prefix = shp->prefix,*sub;
 	newatts &= ~NV_NODISC;
@@ -2848,6 +2849,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted,nv_name(np));
 	/* handle attributes that do not change data separately */
 	n = np->nvflag;
+	trans = !(n&NV_INTEGER) && (n&(NV_LTOU|NV_UTOL));
 	if(newatts&NV_EXPORT)
 		nv_offattr(np,NV_IMPORT);
 	if(((n^newatts)&NV_EXPORT))
@@ -2859,7 +2861,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 			sh_envput(shp->env,np);
 	}
 	oldsize = nv_size(np);
-	if((size==oldsize|| (n&NV_INTEGER)) && ((n^newatts)&~NV_NOCHANGE)==0)
+	if((size==oldsize|| (n&NV_INTEGER)) && !trans && ((n^newatts)&~NV_NOCHANGE)==0)
 	{
 		if(size)
 			nv_setsize(np,size);
@@ -2900,20 +2902,28 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 			if(sp && (mp=nv_opensub(np)))
 			{
 				sub = nv_getsub(mp);
+				if(trans)
+				{
+					nv_disc(np, &ap->hdr,NV_POP);
+					nv_clone(np,mp,0);
+					nv_disc(np, &ap->hdr,NV_FIRST);
+					nv_offattr(mp,NV_ARRAY);
+				}
 				nv_newattr(mp,newatts&~NV_ARRAY,size);
 			}
 			if(!mp)
 			{
 				if(ap)
 					ap->nelem &= ~ARRAY_SCAN;
-				_nv_unset(np,NV_RDONLY|NV_EXPORT);
+				if(!trans)
+					_nv_unset(np,NV_RDONLY|NV_EXPORT);
 				if(ap)
 					ap->nelem |= ARRAY_SCAN;
 			}
 			if(size==0 && (newatts&NV_HOST)!=NV_HOST && (newatts&(NV_LJUST|NV_RJUST|NV_ZFILL)))
 				size = n;
 		}
-		else
+		else if(!trans)
 			_nv_unset(np,NV_EXPORT);
 		nv_setsize(np,size);
 		np->nvflag &= NV_ARRAY;
