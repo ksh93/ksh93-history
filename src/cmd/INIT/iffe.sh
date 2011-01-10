@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2010-09-01 # update in USAGE too #
+version=2011-01-07 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -80,8 +80,13 @@ is_hdr() # [ - ] [ file.c ] hdr
 		;;
 	esac
 	case $_is_hdr_status in
-	0)	success $_is_hdr_flag ;;
-	*)	failure $_is_hdr_flag ;;
+	0)	success $_is_hdr_flag
+		;;
+	*)	case $debug in
+		3)	cat $tmp.e >&$stderr ;;
+		esac
+		failure $_is_hdr_flag
+		;;
 	esac
 	return $_is_hdr_status
 }
@@ -634,7 +639,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2010-09-01 $
+@(#)$Id: iffe (AT&T Research) 2011-01-07 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -3478,7 +3483,7 @@ int main(){printf("hello");return(0);}
 "
 								rm -f $tmp.exe
 								if	compile $cc -c $tmp.c <&$nullin >&$nullout &&
-									compile $cc -o $tmp.exe $tmp.o <&$nullin >&$nullout 2>$tmp.e &&
+									compile $cc -o $tmp.exe $tmp.o <&$nullin >&$nullout &&
 									$executable $tmp.exe
 								then	e=`wc -l $tmp.e`
 									eval set x x $binding
@@ -3489,14 +3494,14 @@ int main(){printf("hello");return(0);}
 										0)	break ;;
 										esac
 										rm -f $tmp.exe
-										compile $cc -o $tmp.exe $1 $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
+										compile $cc -o $tmp.exe $1 $tmp.o <&$nullin >&$nullout && $executable $tmp.exe || continue
 										case `wc -l $tmp.e` in
 										$e)	;;
 										*)	continue ;;
 										esac
 										d=`ls -s $tmp.exe`
 										rm -f $tmp.exe
-										compile $cc -o $tmp.exe $2 $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
+										compile $cc -o $tmp.exe $2 $tmp.o <&$nullin >&$nullout && $executable $tmp.exe || continue
 										case `wc -l $tmp.e` in
 										$e)	;;
 										*)	continue ;;

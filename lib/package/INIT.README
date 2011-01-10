@@ -93,6 +93,7 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+11-01-07 iffe.sh: check debug==3 for is_hdr() failure
 10-11-22 ditto.sh: fix timing problem between |& and exec &p
 10-11-10 package.sh: fix cc cross compile check to use checkcc absolute path
 10-10-10 package.sh: list main env vars at start of make action
