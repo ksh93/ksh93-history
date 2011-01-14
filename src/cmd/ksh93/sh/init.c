@@ -752,7 +752,7 @@ static int hasgetdisc(register Namfun_t *fp)
  */
 void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 {
-	struct match *mp = (struct match*)(SH_MATCHNOD->nvfun);
+	struct match *mp = (struct match*)(SH_MATCHNOD->nvfun->next);
 	register int i,n;
 	if(mp->nmatch = nmatch)
 	{
@@ -778,7 +778,7 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 		}
 		memcpy(mp->val,v,vsize);
 		mp->val[vsize] = 0;
-		nv_putsub(SH_MATCHNOD, NIL(char*), (nmatch-1)|ARRAY_FILL);
+		nv_putsub(SH_MATCHNOD, NIL(char*), (nmatch-1)|ARRAY_FILL|ARRAY_SETSUB);
 		mp->lastsub = -1;
 	}
 } 
@@ -1799,8 +1799,8 @@ static Init_t *nv_init(Shell_t *shp)
 	d = (shp->gd->pid&RANDMASK);
 	nv_putval(RANDNOD, (char*)&d, NV_DOUBLE);
 	nv_stack(LINENO, &ip->LINENO_init);
-	nv_putsub(SH_MATCHNOD,(char*)0,10);
 	nv_stack(SH_MATCHNOD, &ip->SH_MATCH_init.hdr);
+	nv_putsub(SH_MATCHNOD,(char*)0,10);
 	nv_stack(SH_MATHNOD, &ip->SH_MATH_init);
 	nv_stack(SH_VERSIONNOD, &ip->SH_VERSION_init);
 #ifdef _hdr_locale

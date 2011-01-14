@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -88,6 +88,7 @@ struct lexdata
 	char		dolparen;
 	char		nest;
 	char		docword;
+	char		nested_tilde;
 	char 		*docend;
 	char		noarg;
 	char		balance;
@@ -279,6 +280,7 @@ Lex_t *sh_lexopen(Lex_t *lp, Shell_t *sp, int mode)
 		lp->lexd.nocopy = lp->lexd.docword = lp->lexd.nest = lp->lexd.paren = 0;
 		lp->lexd.lex_state = lp->lexd.lastc=0;
 		lp->lexd.docend = 0;
+		lp->lexd.nested_tilde = 0;
 	}
 	lp->comsub = 0;
 	return(lp);
@@ -687,6 +689,15 @@ int sh_lex(Lex_t* lp)
 					lp->lex.reservok *= 2;
 				/* FALL THRU */
 			case S_TILDE:
+				if(c=='~' && mode==ST_NESTED)
+				{
+					if(endchar(lp)==RBRACE)
+					{
+						lp->lexd.nested_tilde++;
+						goto tilde;
+					}
+					continue;
+				}
 			case S_RES:
 				if(!lp->lexd.dolparen)
 					lp->lexd.first = fcseek(0)-LEN;
@@ -697,12 +708,23 @@ int sh_lex(Lex_t* lp)
 					fcseek(-LEN);
 				if(n!=S_TILDE)
 					continue;
+			tilde:
 				fcgetc(n);
 				if(n>0)
 				{
-					if(c=='~' && n==LPAREN && lp->lex.incase)
-						lp->lex.incase = TEST_RE;
+					if(c=='~' && n==LPAREN)
+					{
+						if(lp->lexd.nested_tilde)
+							lp->lexd.nested_tilde++;
+						else if(lp->lex.incase)
+							lp->lex.incase = TEST_RE;
+					}
 					fcseek(-LEN);
+					if(lp->lexd.nested_tilde)
+					{
+						lp->lexd.nested_tilde--;
+						continue;
+					}
 				}
 				if(n==LPAREN)
 					goto epat;
@@ -1037,7 +1059,7 @@ int sh_lex(Lex_t* lp)
 				}
 				continue;
 			case S_META:
-				if(lp->lexd.warn && endchar(lp)==RBRACE)
+				if(lp->lexd.warn && endchar(lp)==RBRACE && !lp->lexd.nested_tilde)
 					errormsg(SH_DICT,ERROR_warn(0),e_lexusequote,shp->inlineno,c);
 				continue;
 			case S_PUSH:
@@ -1068,6 +1090,8 @@ int sh_lex(Lex_t* lp)
 						fcseek(-LEN);
 					n = RPAREN;
 				}
+				if(c==RBRACE)
+					lp->lexd.nested_tilde = 0;
 				if(c==';' && n!=';')
 				{
 					if(lp->lexd.warn && n==RBRACE)
@@ -1233,6 +1257,8 @@ int sh_lex(Lex_t* lp)
 					mode = ST_NESTED;
 					continue;
 				}
+				if(lp->lexd.warn && c=='[' && n=='^')
+					errormsg(SH_DICT,ERROR_warn(0),e_lexcharclass,shp->inlineno);
 				if(n>0)
 					fcseek(-LEN);
 				if(n=='=' && c=='+' && mode==ST_NAME)

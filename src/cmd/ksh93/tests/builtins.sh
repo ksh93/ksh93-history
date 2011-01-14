@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -403,6 +403,8 @@ do	case $opt in
 	*)	err_exit "getopts $options failed -- got flag $opt" ;;
 	esac
 done
+
+[[ $($SHELL 2> /dev/null -c 'readonly foo; getopts a: foo -a blah; echo foo') == foo ]] || err_exit 'getopts with readonly variable causes script to abort'
 
 unset a
 { read -N3 a; read -N1 b;}  <<!

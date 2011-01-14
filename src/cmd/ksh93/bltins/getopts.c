@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -54,10 +54,11 @@ int	b_getopts(int argc,char *argv[],void *extra)
 {
 	register char *options=error_info.context->id;
 	register Namval_t *np;
-	register int flag, mode, r=0;
+	register int flag, mode;
 	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	char value[2], key[2];
 	int jmpval,extended;
+	volatile int r= -1;
 	struct checkpt buff, *pp;
 	struct {
 	        Optdisc_t	hdr;
@@ -109,6 +110,9 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	if(jmpval)
 	{
 		sh_popcontext(shp,&buff);
+		shp->st.opterror = 1;
+		if(r==0)
+			return(2);
 		pp = (struct checkpt*)shp->jmplist;
 		pp->mode = SH_JMPERREXIT;
 		sh_exit(2);
@@ -163,6 +167,8 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	    default:
 		options = opt_info.option + (*opt_info.option!='+');
 	}
+	if(r<0)
+		r = 0;
 	error_info.context->flags &= ~ERROR_SILENT;
 	shp->st.optindex = opt_info.index;
 	shp->st.optchar = opt_info.offset;

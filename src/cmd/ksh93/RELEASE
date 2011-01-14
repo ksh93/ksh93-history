@@ -1,4 +1,13 @@
-11-01-02  --- Release ksh93u  ---
+11-01-13  --- Release ksh93u  ---
+11-01-13  A bug in handling of arrays of compound variables inside ((...)) which
+	  reported a syntax error been fixed.
+11-01-10  A bug in arithmetic assignment operators of the form op= for array
+	  variables when the same array was referenced on the left and the
+	  right hand side with different indices has been fixed.
+11-01-10  A bug in which the output of time was lost when { time...;} 2>&1
+	  occured inside command substition has been fixed.
+11-01-07  [[ -v sh.match[i] ]] was returning false when sh.match[i] was set.
+11-01-05  Added and modified warning messages with sh -n.
 11-01-02  Fixed bugs with typeset -l/-u/-M and arrays.
 10-12-28  Fixed a bug with typeset -l/-u/-M values in arithmetric expressions.
 10-12-26  Fixed a time parsing bug in sleep and localeconv() initialization.
@@ -115,7 +124,7 @@
 10-10-07 +To reduce unwanted side effects, invoking typeset without the export
 	  option and without an assignment now causes the variables to be unset
 	  if the variable is inherited from the environment.
-10-10-06  The closing brace for ${ command } new a token no matter what
+10-10-06  The closing brace for ${ command } is now a token no matter what
 	  character follows it.
 10-10-04  The change for $'...' expansion on 10-08-09 did not expand parameters
 	  contained in the error message and this has been fixed.

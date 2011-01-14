@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -500,5 +500,8 @@ src=$'true 2>&1\n: $(true | true)\n: $(true | true)\n: $(true | true)\n'$(whence
 exp=ok
 got=$( $SHELL -c "(eval '$src'); echo $exp" )
 [[ $got == "$exp" ]] || err_exit 'subshell eval of pipeline clobbers stdout'
+
+x=$( { time $SHELL -c date >| /dev/null;} 2>&1)
+[[ $x == *real*user*sys* ]] || err_exit 'time { ...;} 2>&1 in $(...) fails'
 
 exit $((Errors<125?Errors:125))

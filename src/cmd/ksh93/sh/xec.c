@@ -2375,6 +2375,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(t->par.partre)
 			{
 				long timer_on;
+				if(shp->subshell && shp->comsub==1)
+					sh_subfork();
 				timer_on = sh_isstate(SH_TIMING);
 #ifdef timeofday
 				timeofday(&tb);

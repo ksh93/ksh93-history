@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -161,6 +161,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 	Sfdouble_t small_stack[SMALL_STACK+1],arg[9];
 	const char *ptr = "";
 	char	*lastval=0;
+	int	lastsub;
 	Math_f fun;
 	struct lval node;
 	Shell_t	*shp = ep->shp;
@@ -205,21 +206,21 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			type=0;
 			break;
 		    case A_PLUSPLUS:
-			node.nosub = 1;
+			node.nosub = -1;
 			(*ep->fun)(&ptr,&node,ASSIGN,num+1);
 			break;
 		    case A_MINUSMINUS:
-			node.nosub = 1;
+			node.nosub = -1;
 			(*ep->fun)(&ptr,&node,ASSIGN,num-1);
 			break;
 		    case A_INCR:
 			num = num+1;
-			node.nosub = 1;
+			node.nosub = -1;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
 			break;
 		    case A_DECR:
 			num = num-1;
-			node.nosub = 1;
+			node.nosub = -1;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
 			break;
 		    case A_SWAP:
@@ -231,6 +232,8 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 		    case A_POP:
 			sp--;
 			continue;
+		    case A_ASSIGNOP1:
+			node.emode |= ARITH_ASSIGNOP;
 		    case A_PUSHV:
 			cp = roundptr(ep,cp,Sfdouble_t*);
 			dp = *((Sfdouble_t**)cp);
@@ -242,7 +245,14 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				lastval = 0;
 			node.isfloat=0;
 			node.level = level;
+			node.nosub = 0;
 			num = (*ep->fun)(&ptr,&node,VALUE,num);
+			if(node.emode&ARITH_ASSIGNOP)
+			{
+				lastsub = node.nosub;
+				node.nosub = 0;
+				node.emode &= ~ARITH_ASSIGNOP;
+			}
 			if(node.value != (char*)dp)
 				arith_error(node.value,ptr,ep->emode);
 			*++sp = num;
@@ -267,7 +277,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			node.eflag = 1;
 			continue;
 		    case A_ASSIGNOP:
-			node.nosub = 1;
+			node.nosub = lastsub;
 		    case A_STORE:
 			cp = roundptr(ep,cp,Sfdouble_t*);
 			dp = *((Sfdouble_t**)cp);
@@ -642,7 +652,7 @@ again:
 				vp->stakmaxsize = vp->staksize;
 			if(op==A_EQ || op==A_NEQ)
 				stakputc(A_ENUM);
-			stakputc(A_PUSHV);
+			stakputc(assignop.value?A_ASSIGNOP1:A_PUSHV);
 			stakpush(vp,lvalue.value,char*);
 			if(lvalue.flag<0)
 				lvalue.flag = 0;

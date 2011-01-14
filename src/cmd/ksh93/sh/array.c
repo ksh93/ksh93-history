@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -248,6 +248,15 @@ int nv_arrayisset(Namval_t *np, Namarr_t *arp)
 	if(ap->cur >= ap->maxi)
 		return(0);
 	up = &(ap->val[ap->cur]);
+	if(up->cp==Empty)
+	{
+		Namfun_t *fp = &arp->hdr;
+		for(fp=fp->next; fp; fp = fp->next)
+		{
+			if(fp->disc && (fp->disc->getnum || fp->disc->getval))
+				return(1);
+		}
+	}
 	return(up->cp && up->cp!=Empty);
 }
 
@@ -1181,6 +1190,12 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 			if(!(mode&ARRAY_ADD))
 			{
 				int n;
+				if(mode&ARRAY_SETSUB)
+				{
+					for(n=0; n <= ap->maxi; n++)
+						ap->val[n].cp = 0;
+					ap->header.nelem = 0;
+				}
 				for(n=0; n <= size; n++)
 				{
 					if(!ap->val[n].cp)
