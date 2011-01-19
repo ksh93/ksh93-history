@@ -757,14 +757,9 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 	if(mp->nmatch = nmatch)
 	{
 		memcpy(mp->match,match,nmatch*2*sizeof(match[0]));
-		for(n=match[0],i=1; i < 2*nmatch; i++)
+		for(n=match[0],vsize=0,i=0; i < 2*nmatch; i++)
 		{
-			if(mp->match[i] < n)
-				n = mp->match[i];
-		}
-		for(vsize=0,i=0; i < 2*nmatch; i++)
-		{
-			if((mp->match[i] -= n) > vsize)
+			if(mp->match[i]>=0 && (mp->match[i] -= n) > vsize)
 				vsize = mp->match[i];
 		}
 		v += n;
@@ -779,6 +774,14 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 		memcpy(mp->val,v,vsize);
 		mp->val[vsize] = 0;
 		nv_putsub(SH_MATCHNOD, NIL(char*), (nmatch-1)|ARRAY_FILL|ARRAY_SETSUB);
+		for(n=match[0],i=1; i < nmatch; i++)
+		{
+			if(mp->match[2*i] < 0)
+			{
+				nv_putsub(SH_MATCHNOD,NIL(char*),i);
+				_nv_unset(SH_MATCHNOD,NV_RDONLY);
+			}
+		}
 		mp->lastsub = -1;
 	}
 } 

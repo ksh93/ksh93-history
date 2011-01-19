@@ -4678,7 +4678,9 @@ static int
 proto __PARAM__((char* file, char* license, char* options, char* package, char* copy, char* comment, int flags), (file, license, options, package, copy, comment, flags)) __OTORP__(char* file; char* license; char* options; char* package; char* copy; char* comment; int flags;){
 	char*		b;
 	char*		e;
+	char*		p;
 	int		n;
+	int		m;
 	int		x;
 	int		fd;
 	char		buf[1024];
@@ -4746,12 +4748,23 @@ proto __PARAM__((char* file, char* license, char* options, char* package, char* 
 		if (file && (flags & ((1<<13)<<2)))
 			proto_error(b, 0, "convert to", file);
 		while ((n = pppread(b)) > 0)
-			if (write(fd, b, n) != n)
+		{
+			p = b;
+			for (;;)
 			{
-				proto_error(b, 2, "write error", ((char*)0));
-				flags |= ((1<<13)<<0);
-				break;
+				if ((m = write(fd, p, n)) <= 0)
+				{
+					proto_error(b, 2, "write error", ((char*)0));
+					flags |= ((1<<13)<<0);
+					break;
+				}
+				if ((n -= m) <= 0)
+					break;
+				p += m;
 			}
+			if (m < 0)
+				break;
+		}
 		if (fd > 1)
 			close(fd);
 		if (file && (flags & ((1<<13)<<1)))

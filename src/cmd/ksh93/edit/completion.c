@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -138,10 +138,15 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 					if((c= mbchar(cp)) , c!=dot && !isaname(c))
 						break;
 				}
-				if(cp>=last && c!= '}')
+				if(cp>=last)
 				{
-					*type='$';
-					return(++xp);
+					if(c==dot || isaname(c))
+					{
+						*type='$';
+						return(++xp);
+					}
+					if(c!='}')
+						bp = cp;
 				}
 			}
 			else if(c=='(')

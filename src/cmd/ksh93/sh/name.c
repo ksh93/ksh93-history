@@ -1339,7 +1339,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 			sh_stats(STAT_NVHITS);
 			np = xp->np;
 			cp = (char*)name+xp->len;
-			if(nv_isarray(np))
+			if(nv_isarray(np) && !(flags&NV_MOVE))
 				 nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 			shp->last_table = xp->last_table;
 			shp->last_root = xp->last_root;
@@ -3086,7 +3086,7 @@ int nv_rename(register Namval_t *np, int flags)
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;
 	char			*nvenv=0,*prefix=shp->prefix;
-	Namarr_t		*ap;
+	Namarr_t		*ap,*aq=0;
 	if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
 	{
 		if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
@@ -3167,20 +3167,29 @@ int nv_rename(register Namval_t *np, int flags)
 		if(arraynp && !nv_isattr(np,NV_MINIMAL) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)))
 			ap->nelem++;
 	}
-	if(((ap=nv_arrayptr(np))||(ap=nv_arrayptr(nr))) &&  !array_assoc(ap) && !(ap->nelem&ARRAY_UNDEF))
-		r = 1;
-	if(r)
+	if(((aq=nv_arrayptr(nr)) && !arraynr) || nv_isvtree(nr))
+	{
+		if(ap=nv_arrayptr(np))
+		{
+			if(!ap->table)
+				ap->table = dtopen(&_Nvdisc,Dtoset);
+			if(ap->table)
+				mp = nv_search(nv_getsub(np),ap->table,NV_ADD);
+			nv_arraychild(np,mp,0);
+			nvenv = (void*)np;
+		}
+		else
+			mp = np;
+		nv_clone(nr,mp,(flags&NV_MOVE)|NV_COMVAR);
+		mp->nvenv = nvenv;
+		if(flags&NV_MOVE)
+			nv_delete(nr,(Dt_t*)0,NV_NOFREE);
+	}
+	else
 	{
 		nv_putval(np,nv_getval(nr),0);
 		if(flags&NV_MOVE)
 			_nv_unset(nr,0);
-	}
-	else
-	{
-		nv_clone(nr,np,(flags&NV_MOVE)|NV_COMVAR);
-		np->nvenv = nvenv;
-		if(flags&NV_MOVE)
-			nv_delete(nr,(Dt_t*)0,NV_NOFREE);
 	}
 	return(1);
 }
