@@ -93,7 +93,34 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-10-12-10  --- Release ksh93u  ---
+11-01-18  --- Release ksh93u  ---
+11-01-18  The .sh.match variable now shows elements that do not match as
+	  as not set rather than an empty string.
+11-01-18  A bug with typeset -m of an array into an element of an indexed
+	  array has been fixed.
+11-01-13  A bug in handling of arrays of compound variables inside ((...)) which
+	  reported a syntax error been fixed.
+11-01-10  A bug in arithmetic assignment operators of the form op= for array
+	  variables when the same array was referenced on the left and the
+	  right hand side with different indices has been fixed.
+11-01-10  A bug in which the output of time was lost when { time...;} 2>&1
+	  occured inside command substition has been fixed.
+11-01-07  [[ -v sh.match[i] ]] was returning false when sh.match[i] was set.
+11-01-05  Added and modified warning messages with sh -n.
+11-01-02  Fixed bugs with typeset -l/-u/-M and arrays.
+10-12-28  Fixed a bug with typeset -l/-u/-M values in arithmetric expressions.
+10-12-26  Fixed a time parsing bug in sleep and localeconv() initialization.
+10-12-23  Prevented the shell from generating a core dump when it sends itself
+	  a termination signal because the last command terminated with that
+	  signal.  This prevents a core dump to be overwritten by the shell.
+10-12-22  A bug in the expansion of  ${A[@]} ${B[@]}, introduced in 10-12-01
+	   when A="" B=B has been fixed.
+10-12-21 +Use MS_3D in b_vpath() for setting win32 WoW mount defaults.
+10-12-17  A bug in the expansion of ${var:i:j} which caused a core dump when
+	  i > ${#var} has been fixed.
+10-12-16 +sleep now treats . as decimal point even in locales that use comma.
+10-12-16 +typeset -M mapname was added to generalize on toupper and tolowwer
+	  mapping as provided with wctrans(). 
 10-12-10  A bug in which typeset -l displayed namespaces as well as lower case
 	  variables has been fixed.
 10-12-06  A bug in which a pipeline could terminate prematurely for a pipeline
@@ -196,7 +223,7 @@ All recorded changes follow.
 10-10-07 +To reduce unwanted side effects, invoking typeset without the export
 	  option and without an assignment now causes the variables to be unset
 	  if the variable is inherited from the environment.
-10-10-06  The closing brace for ${ command } new a token no matter what
+10-10-06  The closing brace for ${ command } is now a token no matter what
 	  character follows it.
 10-10-04  The change for $'...' expansion on 10-08-09 did not expand parameters
 	  contained in the error message and this has been fixed.
@@ -2706,6 +2733,9 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+11-01-25 features/wchar: change <wctype.h> <wchar.h> ordering
+10-12-24 sfstrtof.h: fix thousand grouping bug that did not check last group
+10-12-21 pathkey.c: add win32 { /32 /64 } preroot to hash
 10-12-09 pathprog.c: handle intermediate path != '* and fix invalid pathpath() call
 10-12-01 astconf.c: fix look.standard undefined variable reference
 10-12-01 sfset.c: SF_LINE|SF_WCWIDTH => no need for sfsetbuf() to call isatty()
@@ -4408,6 +4438,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+11-01-03 chgrp.c: --symlink => --physical
 10-12-10 rm.c: fix not-writable logic
 10-12-01 tee.c: add iterrupt logic for slow open(1) -- needs to be generalized
 10-11-30 chgrp.c: add -N,--numeric to bypass name lookup

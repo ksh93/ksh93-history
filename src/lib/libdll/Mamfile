@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-11-12
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2011-01-21
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -239,7 +239,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllscan.c
 meta dllscan.o %.c>%.o dllscan.c dllscan
 prev dllscan.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?}   -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
 done dllscan.o generated
 make dllcheck.o
 make dllcheck.c

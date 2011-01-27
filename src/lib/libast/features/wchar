@@ -1,3 +1,8 @@
+iff	
+cat{
+	#ifndef _AST_WCHAR_H
+	#define _AST_WCHAR_H	1
+}end
 set	prototyped
 lib	mbstowcs,wctomb,wcrtomb,wcslen,wcstombs,wcwidth stdlib.h stdio.h wchar.h
 lib	towlower,towupper stdlib.h stdio.h wchar.h
@@ -13,11 +18,11 @@ cat <<!
 	#if _typ___va_list && !defined(__va_list)
 	#define __va_list	va_list
 	#endif
-	#if _hdr_wchar && defined(_nxt_wchar)
-	#include $_nxt_wchar	/* the native wchar.h */
-	#endif
 	#if _hdr_wctype
 	#include <wctype.h>
+	#endif
+	#if _hdr_wchar && defined(_nxt_wchar)
+	#include $_nxt_wchar	/* the native wchar.h */
 	#endif
 
 	#ifndef WEOF
@@ -114,5 +119,15 @@ cat <<!
 	extern int		wscanf(const wchar_t*, ...);
 
 	#undef	extern
+
+	#else
+
+	/* on some systems <wchar.h> is included multiple times with multiple effects */
+
+	#if _hdr_wchar && defined(_nxt_wchar)
+	#include $_nxt_wchar	/* the native wchar.h */
+	#endif
+
+	#endif
 !
 }end

@@ -54,7 +54,7 @@
 #if !_typ_wctrans_t
 #undef	wctrans_t
 #define wctrans_t	sh_wctrans_t
-typedef int wctrans_t;
+typedef long wctrans_t;
 #endif
 #if !_lib_wctrans
 #undef	wctrans
