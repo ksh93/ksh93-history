@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2011-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2011-01-31
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -198,14 +198,27 @@ meta FEATURE/wchar features/%>FEATURE/% features/wchar wchar
 make features/wchar
 done features/wchar
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wchar
+make std/wctype.h implicit
+make ast_wctype.h implicit
+make FEATURE/wctype
+meta FEATURE/wctype features/%>FEATURE/% features/wctype wctype
+make features/wctype
+done features/wctype
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wctype
 prev std/endian.h implicit
+done FEATURE/wctype generated
+exec - cmp 2>/dev/null -s FEATURE/wctype ast_wctype.h || { rm -f ast_wctype.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wctype ast_wctype.h; }
+done ast_wctype.h dontcare generated
+done std/wctype.h dontcare
 make std/stdio.h implicit
 prev ast_stdio.h implicit
 done std/stdio.h dontcare
+prev std/wctype.h implicit
 prev std/stdio.h implicit
 prev ast_common.h implicit
 done FEATURE/wchar generated
 exec - cmp 2>/dev/null -s FEATURE/wchar ast_wchar.h || { rm -f ast_wchar.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wchar ast_wchar.h; }
+prev std/wctype.h implicit
 prev std/stdio.h implicit
 prev ast_common.h implicit
 done ast_wchar.h dontcare generated
@@ -285,8 +298,9 @@ done FEATURE/nl_types generated
 exec - cmp 2>/dev/null -s FEATURE/nl_types ast_nl_types.h || { rm -f ast_nl_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/nl_types ast_nl_types.h; }
 done ast_nl_types.h generated
 prev ast_wchar.h
+prev ast_wctype.h
 exec - : clean up obsolete headers :
-exec - rm -rf dirent.h iconv.h nl_types.h stdio.h wchar.h ast_hdr.h ast_types.h ast_unistd.h iffeio.h \
+exec - rm -rf dirent.h iconv.h nl_types.h stdio.h wchar.h wctype.h ast_hdr.h ast_types.h ast_unistd.h iffeio.h \
 exec - 	${INSTALLROOT}/include/ast/limits.h ${INSTALLROOT}/include/ast/unistd.h \
 exec - 	${PACKAGEROOT}/src/lib/libast/std/limits.h
 exec - set -
@@ -297,11 +311,17 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in ast iconv
+exec - for i in ast iconv w
 exec - do	case $i in
 exec - 	"ast"|ast)
 exec - 		;;
-exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
+exec - 	*)	if	test -f  ${INSTALLROOT}/lib/lib/$i
+exec - 		then	y=`cat ${INSTALLROOT}/lib/lib/$i`
+exec - 			case $y in
+exec - 			*-?*)	echo "" $y ;;
+exec - 			esac
+exec - 			continue
+exec - 		elif	test ! -f ${INSTALLROOT}/lib/lib$i.a
 exec - 		then	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 			*$x*)	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
@@ -1466,6 +1486,7 @@ done localeconv.o generated
 make setlocale.o
 make comp/setlocale.c
 prev include/ast_windows.h implicit
+prev std/wctype.h implicit
 prev include/namval.h implicit
 make include/mc.h implicit
 prev include/ast.h implicit
@@ -1721,7 +1742,8 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done fmterror.o generated
 make fmtesc.o
 make string/fmtesc.c
-prev ast_wchar.h implicit
+prev std/wctype.h implicit
+prev std/wchar.h implicit
 prev include/ccode.h implicit
 prev include/ast.h implicit
 done string/fmtesc.c
@@ -3755,6 +3777,7 @@ done mktime.o generated
 make regalloc.o
 make regex/regalloc.c
 make regex/reglib.h implicit
+prev std/wctype.h implicit
 prev std/wchar.h implicit
 prev std/stdio.h implicit
 prev include/regex.h implicit
@@ -6940,6 +6963,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wchar.h
 exec - fi
 done ${INSTALLROOT}/include/ast/wchar.h generated
+make ${INSTALLROOT}/include/ast/wctype.h
+prev std/wctype.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/wctype.h  > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wctype.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wctype.h
+exec - fi
+done ${INSTALLROOT}/include/ast/wctype.h generated
 make ${INSTALLROOT}/include/ast/align.h
 prev align.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  align.h  > 1.${COTEMP}.x
@@ -7203,6 +7234,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wchar.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_wchar.h generated
+make ${INSTALLROOT}/include/ast/ast_wctype.h
+prev ast_wctype.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_wctype.h  > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_wctype.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wctype.h
+exec - fi
+done ${INSTALLROOT}/include/ast/ast_wctype.h generated
 make ${INSTALLROOT}/lib/file
 exec - if	silent test ! -d ${INSTALLROOT}/lib/file
 exec - then	mkdir -p ${INSTALLROOT}/lib/file

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2011-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2011-01-31
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -1059,6 +1059,35 @@ exec - rm -f iconv.exe iconv
 done iconv.req generated
 exec - test '' = 'iconv.req' || ${STDCMP} 2>/dev/null -s iconv.req ${INSTALLROOT}/lib/lib/iconv || { ${STDMV} ${INSTALLROOT}/lib/lib/iconv ${INSTALLROOT}/lib/lib/iconv.old 2>/dev/null || true; ${STDCP} iconv.req ${INSTALLROOT}/lib/lib/iconv  		    		    ;}
 done ${INSTALLROOT}/lib/lib/iconv generated
+make ${INSTALLROOT}/lib/lib/w
+make w.req
+make w.c
+done w.c
+exec - r='-'
+exec - for i in w.c
+exec - do	if	${CC} -c $i > /dev/null
+exec - 	then	g=
+exec - 		for p in w -
+exec - 		do	case $p in
+exec - 			-)	if	${CC} -o w.exe $i $g > /dev/null
+exec - 				then	${CC} -o w.exe $i > /dev/null || {
+exec - 						r="$g"
+exec - 						break 2
+exec - 					}
+exec - 				fi
+exec - 				g=
+exec - 				;;
+exec - 			*)	g="$g -l$p"
+exec - 				;;
+exec - 			esac
+exec - 		done
+exec - 	fi
+exec - done 2>/dev/null
+exec - echo " $r" > w.req
+exec - rm -f w.exe w
+done w.req generated
+exec - test '' = 'w.req' || ${STDCMP} 2>/dev/null -s w.req ${INSTALLROOT}/lib/lib/w || { ${STDMV} ${INSTALLROOT}/lib/lib/w ${INSTALLROOT}/lib/lib/w.old 2>/dev/null || true; ${STDCP} w.req ${INSTALLROOT}/lib/lib/w  		    		    ;}
+done ${INSTALLROOT}/lib/lib/w generated
 make ${INSTALLROOT}/lib/lib/intl
 make intl.req
 make intl.c

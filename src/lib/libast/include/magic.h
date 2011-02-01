@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -47,6 +47,7 @@
 
 #define MAGIC_MIME	(1<<0)		/* magictype returns MIME type	*/
 #define MAGIC_VERBOSE	(1<<1)		/* verbose magic file errors	*/
+#define MAGIC_ALL	(1<<2)		/* list all table matches	*/
 
 #define MAGIC_USER	(1L<<16)	/* first user flag bit		*/
 

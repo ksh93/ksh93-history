@@ -1,3 +1,7 @@
+11-01-31 std/wctype,features/wctype: add to handle <wchar.h> interactions
+11-01-28 add -lw for ancient sunos
+11-01-28 include/magic.h,misc/magic.c: add MAGIC_ALL
+11-01-27 tm/tmxfmt.c,tmpoff.c: %_z for SHH:MM
 11-01-25 features/wchar: change <wctype.h> <wchar.h> ordering
 10-12-24 sfstrtof.h: fix thousand grouping bug that did not check last group
 10-12-21 pathkey.c: add win32 { /32 /64 } preroot to hash

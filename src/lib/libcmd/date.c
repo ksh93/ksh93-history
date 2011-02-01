@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2010-05-28 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2011-01-27 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -136,7 +136,7 @@ USAGE_LICENSE
 "		[+y?2-digit year (you'll be sorry)]"
 "		[+Y?4-digit year]"
 "		[+z?time zone \aSHHMM\a west of GMT offset where S is"
-"			\b+\b or \b-\b]"
+"			\b+\b or \b-\b, use pad _ for \aSHH:MM\a]"
 "		[+Z?time zone name]"
 "		[+=[=]][-+]]flag?set (default or +) or clear (-) \aflag\a"
 "			for the remainder of \aformat\a, or for the remainder"
@@ -168,8 +168,17 @@ USAGE_LICENSE
 "		[+&?Call the \btmdate\b(3) heuristic parser. This is"
 "			is the default when \b--parse\b is omitted.]"
 "}"
+"[R:rfc-2822?List date and time in RFC 2822 format "
+    "(%a, %-e %h %Y %H:%M:%S %z).]"
+"[T:rfc-3339?List date and time in RFC 3339 format according to "
+    "\atype\a:]:[type]"
+    "{"
+        "[d:date?(%Y-%m-%d)]"
+        "[s:seconds?(%Y-%m-%d %H:%M:%S%_z)]"
+        "[n:ns|nanoseconds?(%Y-%m-%d %H:%M:%S.%N%_z)]"
+    "}"
 "[s:show?Show the date without setting the system time.]"
-"[u:utc|gmt|zulu?Output dates in \acoordinated universal time\a (UTC).]"
+"[u:utc|gmt|zulu|universal?Output dates in \acoordinated universal time\a (UTC).]"
 "[U:unelapsed?Interpret each argument as \bfmtelapsed\b(3) elapsed"
 "	time and list the \bstrelapsed\b(3) 1/\ascale\a seconds.]#[scale]"
 "[z:list-zones?List the known time zone table and exit. The table columns"
@@ -339,8 +348,25 @@ b_date(int argc, register char** argv, void* context)
 			f->format = opt_info.arg;
 			fmts = f;
 			continue;
+		case 'R':
+			format = "%a, %-e %h %Y %H:%M:%S %z";
+			continue;
 		case 's':
 			show = 1;
+			continue;
+		case 'T':
+			switch (opt_info.num)
+			{
+			case 'd':
+				format = "%Y-%m-%d";
+				continue;
+			case 'n':
+				format = "%Y-%m-%d %H:%M:%S.%N%_z";
+				continue;
+			case 's':
+				format = "%Y-%m-%d %H:%M:%S%_z";
+				continue;
+			}
 			continue;
 		case 'u':
 			tm_info.flags |= TM_UTC;

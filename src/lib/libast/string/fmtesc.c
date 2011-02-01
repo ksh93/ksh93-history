@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -30,8 +30,8 @@
 #include <ast.h>
 #include <ccode.h>
 #include <ctype.h>
-#if _hdr_wctype
-#include <ast_wchar.h>
+#if _hdr_wchar && _hdr_wctype
+#include <wchar.h>
 #include <wctype.h>
 #endif
 
@@ -91,7 +91,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	{
 		if ((m = mbsize(s)) > 1 && (s + m) <= e)
 		{
-#if _hdr_wchar
+#if _hdr_wchar && _hdr_wctype
 			c = mbchar(s);
 			if (!spaced && !escaped && (iswspace(c) || iswcntrl(c)))
 				spaced = 1;

@@ -47,11 +47,16 @@ static char *fmtx(const char *string)
 	if(n==S_EOF && *string!='#')
 		return((char*)string);
 	stakwrite(string,--cp-string);
-	while(c=mbchar(cp))
+	for(string=cp;c=mbchar(cp);string=cp)
 	{
-		if(c<UCHAR_MAX && state[c])
-			stakputc('\\');
-		stakputc(c);
+		if((n=cp-string)==1)
+		{
+			if(state[c])
+				stakputc('\\');
+			stakputc(c);
+		}
+		else
+			stakwrite(string,n);
 	}
 	stakputc(0);
 	return(stakptr(offset));

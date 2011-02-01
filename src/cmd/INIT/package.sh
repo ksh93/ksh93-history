@@ -67,7 +67,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-11-10 $
+@(#)$Id: package (AT&T Research) 2011-01-28 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -1429,8 +1429,28 @@ hostinfo() # attribute ...
 		done
 		PATH=$PATH:$i/bin
 	done
+	case $* in
+	type)	# LD_LIBRARY_PATH may be out of sync with PATH here
+		SED=sed
+		$SED 1d < /dev/null > /dev/null 2>&1 ||
+		for dir in /bin /usr/bin
+		do	if	test -x $dir/$SED
+			then	SED=$dir/$SED
+				break
+			fi
+		done
+		TR=tr
+		$TR < /dev/null > /dev/null 2>&1 ||
+		for dir in /bin /usr/bin
+		do	if	test -x $dir/$TR
+			then	TR=$dir/$TR
+				break
+			fi
+		done
+		;;
+	esac
 	case $PACKAGE_PATH in
-	?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
+	?*)	for i in `echo $PACKAGE_PATH | $SED 's,:, ,g'`
 		do	PATH=$PATH:$i/bin
 		done
 		;;
@@ -1547,7 +1567,7 @@ hostinfo() # attribute ...
 			do	case $# in
 				0)	break ;;
 				esac
-				i=`$1 2>/dev/null | tr ' 	' '
+				i=`$1 2>/dev/null | $TR ' 	' '
 
 ' | grep -c "^$2"`
 				case $i in
@@ -1576,7 +1596,7 @@ hostinfo() # attribute ...
 			do	case $# in
 				0)	break ;;
 				esac
-				i=`$1 2>/dev/null | sed -e "${2}!d" -e "s${3}"`
+				i=`$1 2>/dev/null | $SED -e "${2}!d" -e "s${3}"`
 				case $i in
 				[123456789]*)
 					cpu=$i
@@ -1620,7 +1640,7 @@ int main()
 	name)	_name_=`hostname || uname -n || cat /etc/whoami || echo local`
 		_hostinfo_="$_hostinfo_ $_name_"
 		;;
-	rating)	for rating in `grep -i ^bogomips /proc/cpuinfo 2>/dev/null | sed -e 's,.*:[ 	]*,,' -e 's,\(...*\)\..*,\1,' -e 's,\(\..\).*,\1,'`
+	rating)	for rating in `grep -i ^bogomips /proc/cpuinfo 2>/dev/null | $SED -e 's,.*:[ 	]*,,' -e 's,\(...*\)\..*,\1,' -e 's,\(\..\).*,\1,'`
 		do	case $rating in
 			[0123456789]*)	break ;;
 			esac
@@ -1809,14 +1829,14 @@ int main()
 			esac
 			a=`arch || uname -m || att uname -m || uname -s || att uname -s`
 			case $a in 
-			*[\ \	]*)	a=`echo $a | sed "s/[ 	]/-/g"` ;;
+			*[\ \	]*)	a=`echo $a | $SED "s/[ 	]/-/g"` ;;
 			esac
 			case $a in
 			'')	a=unknown ;;
 			esac
 			m=`mach || machine || uname -p || att uname -p`
 			case $m in 
-			*[\ \	]*)	m=`echo $m | sed "s/[ 	]/-/g"` ;;
+			*[\ \	]*)	m=`echo $m | $SED "s/[ 	]/-/g"` ;;
 			esac
 			case $m in
 			'')	m=unknown ;;
@@ -1839,7 +1859,7 @@ int main()
 				esac
 				case $os in
 				[abcdefghijklmnopqrstuvwxyz]*[0123456789])
-					eval `echo $os | sed -e 's/^\([^0123456789.]*\)\.*\(.*\)/os=\1 rel=\2/'`
+					eval `echo $os | $SED -e 's/^\([^0123456789.]*\)\.*\(.*\)/os=\1 rel=\2/'`
 					;;
 				esac
 				;;
@@ -1850,7 +1870,7 @@ int main()
 		esac
 		type=unknown
 		case $host in
-		*.*)	host=`echo $host | sed -e 's/\..*//'` ;;
+		*.*)	host=`echo $host | $SED -e 's/\..*//'` ;;
 		esac
 		case $mach in
 		unknown)
@@ -1910,14 +1930,14 @@ int main()
 			9000/[78]*)
 				type=hp.pa
 				;;
-			*/*)	type=hp.`echo $arch | sed 's,/,_,g'`
+			*/*)	type=hp.`echo $arch | $SED 's,/,_,g'`
 				;;
 			*)	type=hp.$arch
 				;;
 			esac
 			;;
 		[Ii][Rr][Ii][Xx]*)
-			set xx `hinv | sed -e '/^CPU:/!d' -e 's/CPU:[ 	]*\([^ 	]*\)[ 	]*\([^ 	]*\).*/\1 \2/' -e q | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
+			set xx `hinv | $SED -e '/^CPU:/!d' -e 's/CPU:[ 	]*\([^ 	]*\)[ 	]*\([^ 	]*\).*/\1 \2/' -e q | $TR ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
 			shift
 			type=$1
 			n=
@@ -1962,7 +1982,7 @@ int main()
 			fi
 			split='
 '
-			a=`strings $a < /dev/null | sed -e 's/[^abcdefghijklmnopqrstuvwxyz0123456789]/ /g' -e 's/[ 	][ 	]*/\'"$split"'/g' | sed -e "/^${type}[0123456789]$/!d" -e "s/^${type}//" -e q`
+			a=`strings $a < /dev/null | $SED -e 's/[^abcdefghijklmnopqrstuvwxyz0123456789]/ /g' -e 's/[ 	][ 	]*/\'"$split"'/g' | $SED -e "/^${type}[0123456789]$/!d" -e "s/^${type}//" -e q`
 			case $a in
 			[0123456789])	n=$a ;;
 			esac
@@ -1998,7 +2018,7 @@ int main()
 			type=sco
 			;;
 		[Ss]ol*)
-			v=`echo $rel | sed -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
+			v=`echo $rel | $SED -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
 			case $v in
 			[6789]|[1-9][0-9])
 				;;
@@ -2017,7 +2037,7 @@ int main()
 			esac
 			type=sol$v.$arch
 			;;
-		[Ss]un*)type=`echo $arch | sed -e 's/\(sun.\).*/\1/'`
+		[Ss]un*)type=`echo $arch | $SED -e 's/\(sun.\).*/\1/'`
 			case $type in
 			sparc)	type=sun4 ;;
 			esac
@@ -2038,7 +2058,7 @@ int main()
 					esac
 					;;
 				esac
-				v=`echo $rel | sed -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
+				v=`echo $rel | $SED -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
 				case $v in
 				[6789]|[1-9][0-9])
 					;;
@@ -2095,7 +2115,7 @@ int main()
 			FTX*|ftx*)
 				case $mach in
 				*[0123456789][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]*)
-					mach=`echo $mach | sed -e 's/[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]*$//'`
+					mach=`echo $mach | $SED -e 's/[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]*$//'`
 					;;
 				esac
 				type=stratus.$mach
@@ -2105,7 +2125,7 @@ int main()
 					type=os2
 					arch=$rel
 					;;
-				*)	type=`echo $os | sed -e 's/[0123456789].*//' -e 's/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789.].*//'`
+				*)	type=`echo $os | $SED -e 's/[0123456789].*//' -e 's/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789.].*//'`
 					;;
 				esac
 				case $type in
@@ -2114,7 +2134,7 @@ int main()
 					;;
 				[Uu][Ww][Ii][Nn]*|[Ww]indows_[0123456789][0123456789]|[Ww]indows_[Nn][Tt])
 					type=win32
-					arch=`echo $arch | sed -e 's/_[^_]*$//'`
+					arch=`echo $arch | $SED -e 's/_[^_]*$//'`
 					;;
 				esac
 				case $arch in
@@ -2163,16 +2183,16 @@ int main()
 		esac
 		case $type in
 		*[-_]32|*[-_]64|*[-_]128)
-			bits=`echo $type | sed 's,.*[-_],,'`
-			type=`echo $type | sed 's,[-_][0-9]*$,,'`
+			bits=`echo $type | $SED 's,.*[-_],,'`
+			type=`echo $type | $SED 's,[-_][0-9]*$,,'`
 			;;
 		*)	bits=
 			;;
 		esac
-		type=`echo $type | sed -e 's%[-+/].*%%' | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
+		type=`echo $type | $SED -e 's%[-+/].*%%' | $TR ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
 		case $type in
-		*.*)	lhs=`echo $type | sed -e 's/\..*//'`
-			rhs=`echo $type | sed -e 's/.*\.//'`
+		*.*)	lhs=`echo $type | $SED -e 's/\..*//'`
+			rhs=`echo $type | $SED -e 's/.*\.//'`
 			case $rhs in
 			[x0123456789]*86)	rhs=i$rhs ;;
 			68*)			rhs=m$rhs ;;
@@ -2182,7 +2202,7 @@ int main()
 						rhs=i386 ;;
 			powerpc)		rhs=ppc ;;
 			s[0123456789]*[0123456789]x)
-						rhs=`echo $rhs | sed -e 's/x$/-64/'` ;;
+						rhs=`echo $rhs | $SED -e 's/x$/-64/'` ;;
 			esac
 			case $rhs in
 			arm[abcdefghijklmnopqrstuvwxyz_][0123456789]*)
@@ -2196,7 +2216,7 @@ int main()
 				?*dwarf)x=coff ;;
 				?*elf)	x=elf ;;
 				esac
-				lhs=`echo ${lhs}XXX | sed -e "s/${x}XXX//"`
+				lhs=`echo ${lhs}XXX | $SED -e "s/${x}XXX//"`
 				;;
 			esac
 			case $lhs in
@@ -2207,7 +2227,7 @@ int main()
 						;;
 			freebsd)		case $rel in
 						[01234].*)	lhs=${lhs}4 ;;
-						[123456789]*.*)	lhs=${lhs}`echo $rel | sed -e 's/\..*//'` ;;
+						[123456789]*.*)	lhs=${lhs}`echo $rel | $SED -e 's/\..*//'` ;;
 						esac
 						;;
 			hpux)			lhs=hp ;;
@@ -2260,7 +2280,7 @@ int b() { return 0; }
 								esac
 								if	$cc $abi -mips$i -c $tmp.b.c &&
 									$cc -o $tmp.exe $tmp.a.o $tmp.b.o
-								then	type=`echo $type | sed -e 's/.$//'`$i
+								then	type=`echo $type | $SED -e 's/.$//'`$i
 									break
 								fi
 							done

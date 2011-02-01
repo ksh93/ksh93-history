@@ -3004,6 +3004,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 	if(sig>0)
 		sh_fault(sig);
 	sh_sigcheck(shp);
+	usepipe=0;
 	return(0);
 }
 

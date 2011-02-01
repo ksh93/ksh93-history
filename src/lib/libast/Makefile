@@ -50,7 +50,7 @@ HEADEREXP = $(ID)_common.h
 
 HEADEROPT = fmtmsg.h libgen.h syslog.h
 
-HEADERSTD = dirent.h iconv.h nl_types.h stdio.h wchar.h
+HEADERSTD = dirent.h iconv.h nl_types.h stdio.h wchar.h wctype.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 ast.3 astsa.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
@@ -206,7 +206,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* obsolete */ \
 	sfstrtmp.c spawn.c \
-	-liconv /* this *has* to be wrong */
+	-liconv -lw /* these should be pulled in by -lc */
 
 /*
  * man is stdio.h problematic
@@ -330,7 +330,8 @@ FEATURE/common : .SCAN.IGNORE
 
 .check.hdr : .IGNORE .VIRTUAL \
 		FEATURE/standards - FEATURE/lib - FEATURE/common - FEATURE/param - \
-		ast_map.h - ast_limits.h - ast_stdio.h ast_nl_types.h - ast_wchar.h
+		ast_map.h - ast_limits.h - ast_stdio.h ast_nl_types.h - \
+		ast_wchar.h ast_wctype.h
 	: clean up obsolete headers :
 	$(RM) -rf $(HEADERSTD) ast_hdr.h ast_types.h ast_unistd.h iffeio.h \
 		$(INCLUDEDIR)/limits.h $(INCLUDEDIR)/unistd.h \
