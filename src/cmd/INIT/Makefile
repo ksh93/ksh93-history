@@ -254,7 +254,7 @@ dl :MAPLIB: dl.c
 
 iconv :MAPLIB: iconv.c
 
-w :MAPLIB: w.c
+w :MAPLIB: w.c w2.c
 
 /*
  * miscellaneous -l* checks

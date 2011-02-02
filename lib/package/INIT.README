@@ -93,8 +93,10 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+11-02-02 Makefile: add :MAPLIB: check for ancient -lw
 11-02-02 make.probe: handle -print-multi-directory => 64 => /usr/lib64 /lib64
 11-02-02 package.sh: HOSTTYPE=*,*cc*[,-*,...] sets CC [ and CCFLAGS ]
+11-02-02 make.probe: handle gcc $ORIGIN link but exec failure -- gee thanks
 11-01-25 cc.hp.ia64: bundled cc is a pile of shaving cream
 11-01-07 iffe.sh: check debug==3 for is_hdr() failure
 10-11-22 ditto.sh: fix timing problem between |& and exec &p

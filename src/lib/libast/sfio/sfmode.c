@@ -98,8 +98,9 @@ static void _sfcleanup()
 			f->mode &= ~SF_POOL;
 			if((f->flags&SF_WRITE) && !(f->mode&SF_WRITE))
 				(void)_sfmode(f,SF_WRITE,1);
-			if(((f->bits&SF_MMAP) && f->data) ||
-			   ((f->mode&SF_WRITE) && f->next == f->data) )
+			if(f->data &&
+			   ((f->bits&SF_MMAP) ||
+			    ((f->mode&SF_WRITE) && f->next == f->data) ) )
 				(void)SFSETBUF(f,NIL(Void_t*),0);
 			f->mode |= pool;
 
@@ -400,9 +401,11 @@ reg int		local;	/* a local call */
 	if(f->mode&SF_GETR)
 	{	f->mode &= ~SF_GETR;
 #ifdef MAP_TYPE
-		/* if too many getr pokes then turn off mmap to avoid page faulting */
-		if((f->bits&SF_MMAP) && !++f->tiny[0])
+		if((f->bits&SF_MMAP) && (f->tiny[0] += 1) >= (4*SF_NMAP) )
+		{	/* turn off mmap to avoid page faulting */
 			sfsetbuf(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
+			f->tiny[0] = 0;
+		}
 		else
 #endif
 		if(f->getr)

@@ -1,4 +1,6 @@
+11-02-02 sfio/sfmode.c: don't call sfsetbuf() on unbuffered stream to make it unbuffered
 11-02-02 features/wchar: handle hp.ia64 va_list interactions
+11-02-02 comp/omitted.c: fix mismatch between stat() vs _stat()
 11-01-31 std/wctype,features/wctype: add to handle <wchar.h> interactions
 11-01-28 add -lw for ancient sunos
 11-01-28 include/magic.h,misc/magic.c: add MAGIC_ALL

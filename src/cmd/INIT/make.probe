@@ -947,9 +947,11 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 						case $# in
 						0)	break ;;
 						esac
-						rm -f require.exe
-						if	$cc -o require.exe $1 $ldrunpath"$p" require.$obj
-						then	ldorigin="$1 $ldrunpath"'\$ORIGIN/$(BINDIR:P=R=$(DLLDIR))'
+						rm -f origin.exe
+						if	$cc -o origin.exe $1 $ldrunpath'$ORIGIN' require.$obj
+						then	if	./origin.exe > /dev/null 2>&1
+							then	ldorigin="$1 $ldrunpath"'\$ORIGIN/$(BINDIR:P=R=$(DLLDIR))'
+							fi
 							break
 						fi
 					done
