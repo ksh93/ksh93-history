@@ -93,7 +93,9 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-11-01-18  --- Release ksh93u  ---
+11-02-02  --- Release ksh93u  ---
+11-01-28  A bug in file name completion for files containing both multibyte
+	  characters shell special characters has been fixed.
 11-01-18  The .sh.match variable now shows elements that do not match as
 	  as not set rather than an empty string.
 11-01-18  A bug with typeset -m of an array into an element of an indexed
@@ -2733,6 +2735,11 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+11-02-02 features/wchar: handle hp.ia64 va_list interactions
+11-01-31 std/wctype,features/wctype: add to handle <wchar.h> interactions
+11-01-28 add -lw for ancient sunos
+11-01-28 include/magic.h,misc/magic.c: add MAGIC_ALL
+11-01-27 tm/tmxfmt.c,tmpoff.c: %_z for SHH:MM
 11-01-25 features/wchar: change <wctype.h> <wchar.h> ordering
 10-12-24 sfstrtof.h: fix thousand grouping bug that did not check last group
 10-12-21 pathkey.c: add win32 { /32 /64 } preroot to hash
@@ -4438,6 +4445,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+11-01-27 date: add { -R, --rfc-2822, -T, --rfc-3339=type }
 11-01-03 chgrp.c: --symlink => --physical
 10-12-10 rm.c: fix not-writable logic
 10-12-01 tee.c: add iterrupt logic for slow open(1) -- needs to be generalized

@@ -67,7 +67,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2011-01-28 $
+@(#)$Id: package (AT&T Research) 2011-02-02 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -453,7 +453,10 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
     makefile compiler workarounds, e.g., if \b$HOSTTYPE\b matches \bhp.*\b
     then turn off the optimizer for these objects. All other architecture
     dependent logic is handled either by the \bast\b \biffe\b(1) command or
-    by component specific configure scripts.]
+    by component specific configure scripts. Explicit \b$HOSTYPE\b
+    values matching *,*cc*[,-*,...]] optionally set the default \bCC\b and
+    \bCCFLAGS\b. This is handy for build farms that support different
+    compilers on the same architecture.]
 [+?Each component contains an \bast\b \bnmake\b(1) makefile (either
     \bNmakefile\b or \bMakefile\b) and a \bMAM\b (make abstract machine)
     file (\bMamfile\b.) A Mamfile contains a portable makefile description
@@ -801,7 +804,9 @@ There are a few places that match against ${bB}\$HOSTTYPE${eB} when making binar
 are limited to makefile compiler workarounds, e.g., if ${bB}\$HOSTTYPE${eB} matches
 'hp.*' then turn off the optimizer for these objects. All other architecture
 dependent logic is handled either by ${bB}\$INSTALLROOT/bin/iffe${eB} or by component
-specific configure scripts.
+specific configure scripts. Explicit ${bB}\$HOSTYPE${eB} values matching *,*cc*[,-*,...]
+optionally set the default ${bB}CC${eB} and ${bB}CCFLAGS${eB}. This is handy for build
+farms that support different compilers on the same architecture.
 ${bP}
 Each component contains an ${bB}ast${eB} ${Mnmake} makefile (either ${bB}Nmakefile${eB} or ${bB}Makefile${eB})
 and a ${bI}MAM${eI} (make abstract machine) file (${bB}Mamfile${eB}.) A Mamfile contains a portable
@@ -1209,6 +1214,43 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 	shift
 done
 
+# gather HOSTTYPE *,* options
+# 	,*cc*,-*,...	set CC and CCFLAGS
+
+hostopts()
+{
+	_ifs_=$IFS
+	IFS=,
+	set '' $HOSTTYPE
+	IFS=$_ifs_
+	shift
+	while	:
+	do	case $# in
+		0|1)	break ;;
+		esac
+		shift
+		case $1 in
+		*cc*)	CC=$1
+			while	:
+			do	case $# in
+				0|1)	break ;;
+				esac
+				case $2 in
+				-*)	case $assign_CCFLAGS in
+					?*)	assign_CCFLAGS="$assign_CCFLAGS " ;;
+					esac
+					assign_CCFLAGS="$assign_CCFLAGS$2"
+					shift
+					;;
+				*)	break
+					;;
+				esac
+			done
+			;;
+		esac
+	done
+}
+
 # collect command line targets and definitions
 
 case $_PACKAGE_HOSTTYPE_ in
@@ -1223,6 +1265,7 @@ KEEP_SHELL=0
 USER_VPATH=
 args=
 assign=
+assign_CCFLAGS=
 for i
 do	case $i in
 	*:*=*)	args="$args $i"
@@ -1240,7 +1283,7 @@ do	case $i in
 		;;
 	CCFLAGS=*)
 		eval $n='$'v
-		assign="$assign CCFLAGS=\"\$CCFLAGS\""
+		assign_CCFLAGS="CCFLAGS=\"\$CCFLAGS\""
 		;;
 	HOSTTYPE=*)
 		eval $n='$'v
@@ -1280,6 +1323,12 @@ do	case $i in
 		;;
 	esac
 done
+case $HOSTTYPE in
+*,*)	hostopts $HOSTTYPE ;;
+esac
+case $assign_CCFLAGS in
+?*)	assign="$assign $assign_CCFLAGS"
+esac
 case $CC in
 ''|cc)	;;
 *)	export CC ;;

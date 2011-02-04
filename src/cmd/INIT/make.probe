@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2010-01-01
+# @(#)make.probe (AT&T Research) 2011-02-02
 #
 # C probe for make
 #
@@ -1153,6 +1153,13 @@ case $a in
 *)	for d in `$cc -print-search-dirs 2>/dev/null | sed -e '/^libraries:/!d' -e 's/.*=//' | tr : '\n' | grep /lib/`
 	do	if	[ -d ${d}${a} ]
 		then	stdlib="$stdlib ${d}${a}"
+		else	case $d in
+			*/lib/)	d=`echo '' $d | sed -e 's,/$,,'`
+				if	[ -d ${d}${a} ]
+				then	stdlib="$stdlib ${d}${a}"
+				fi
+				;;
+			esac
 		fi
 	done
 	;;

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2011-01-31
+info mam static 00000 1994-07-17 make (AT&T Research) 5.6 2011-02-02
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -213,12 +213,10 @@ done std/wctype.h dontcare
 make std/stdio.h implicit
 prev ast_stdio.h implicit
 done std/stdio.h dontcare
-prev std/wctype.h implicit
 prev std/stdio.h implicit
 prev ast_common.h implicit
 done FEATURE/wchar generated
 exec - cmp 2>/dev/null -s FEATURE/wchar ast_wchar.h || { rm -f ast_wchar.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wchar ast_wchar.h; }
-prev std/wctype.h implicit
 prev std/stdio.h implicit
 prev ast_common.h implicit
 done ast_wchar.h dontcare generated
