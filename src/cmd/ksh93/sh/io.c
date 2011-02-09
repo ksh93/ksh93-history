@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -657,6 +657,12 @@ int sh_iorenumber(Shell_t *shp, register int f1,register int f2)
 		if(shp->fdstatus[f1]!=IOCLOSE)
 			sh_close(f1);
 	}
+	else if(sp)
+	{
+		sfsetfd(sp,f2);
+		if(f2<=2)
+			sfset(sp,SF_SHARE|SF_PUBLIC,1);
+	}
 	if(f2>=shp->gd->lim.open_max)
 		sh_iovalidfd(shp,f2);
 	return(f2);
@@ -1210,12 +1216,14 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					{
 						if(sfset(sfstdout,0,0)&SF_STRING)
 							sh_subtmpfile(shp);
-						shp->subdup |= 1<< fn;
-						
+						if(shp->comsub==1)
+							shp->subdup |= 1<<fn;
 						dupfd = sffileno(sfstdout);
 					}
 					else if(shp->sftable[dupfd])
 						sfsync(shp->sftable[dupfd]);
+					if(dupfd!=1 && fn < 10)
+						shp->subdup &= ~(1<<fn);
 				}
 				else if(fd=='-' && fname[1]==0)
 				{
@@ -1468,8 +1476,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				}
 				else
 				{
-					if(fd!=fn)
-						fd = sh_iorenumber(shp,sh_iomovefd(fd),fn);
+					fd = sh_iorenumber(shp,sh_iomovefd(fd),fn);
 					if(fn>2 && fn<10)
 						shp->inuse_bits |= (1<<fn);
 				}

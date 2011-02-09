@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -458,5 +458,8 @@ got=$(<$tmp/21.out)
 exp=$':2:printf :1:A:\n:2::\n:2:print\n:2:print :1:Z:'
 got=$(<$tmp/22.out)
 [[ $exp == "$got" ]] || err_exit "standard error garbled -- expected $(printf %q "$exp"), got $(printf %q "$got")"
+
+$SHELL 2> /dev/null -c 'exec 3<&1 ; exec 1<&- ; exec > outfile;print foobar' || error_exit 'exec 1<&- causes failure'
+[[ $(<outfile) == foobar ]] || err_exit 'outfile does not contain foobar'
 
 exit $((Errors<125?Errors:125))

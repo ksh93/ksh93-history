@@ -1,3 +1,4 @@
+11-02-08 misc/stk.c: change STK_FSIZE to (1024*sizeof(char*)) for 64 bit normalization
 11-02-02 sfio/sfmode.c: don't call sfsetbuf() on unbuffered stream to make it unbuffered
 11-02-02 features/wchar: handle hp.ia64 va_list interactions
 11-02-02 comp/omitted.c: fix mismatch between stat() vs _stat()

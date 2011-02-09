@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Research) 2010-08-25
+ * @(#)package.mk (AT&T Research) 2011-02-02
  *
  * usage:
  *

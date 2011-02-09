@@ -1434,9 +1434,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(shp->subshell)
 			{
 				sh_subtmpfile(shp);
-				subpipe[0] = -1;
-				if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK) && sh_pipe(subpipe)>=0)
-					iousepipe(shp);
+				if(!usepipe)
+				{
+					subpipe[0] = -1;
+					if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK) && sh_pipe(subpipe)>=0)
+						iousepipe(shp);
+				}
 				if((type&(FAMP|TFORK))==(FAMP|TFORK))
 					sh_subfork();
 			}
@@ -1863,7 +1866,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 #endif /* SHOPT_COSHELL */
 			job.curpgid = 0;
 			if(shp->subshell)
+			{
 				sh_subtmpfile(shp);
+				if(!usepipe)
+				{
+					subpipe[0] = -1;
+					if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK) && sh_pipe(subpipe)>=0)
+						iousepipe(shp);
+				}
+			}
 			shp->inpipe = pvo;
 			shp->outpipe = pvn;
 			pvo[1] = -1;

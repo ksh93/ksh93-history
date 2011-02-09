@@ -393,7 +393,11 @@ static char*	lookup(Namval_t *np, int type, Sfdouble_t *dp,Namfun_t *handle)
 			*dp = nv_getnum(SH_VALNOD);
 		}
 		else if(cp = nv_getval(SH_VALNOD))
-			cp = stkcopy(stkstd,cp);
+		{
+			Shell_t *shp = sh_getinterp();
+			sfputr(shp->strbuf,cp,0);
+			cp = sfstruse(shp->strbuf);
+		}
 		_nv_unset(SH_VALNOD,NV_RDONLY);
 		if(!nv_isnull(&node))
 		{

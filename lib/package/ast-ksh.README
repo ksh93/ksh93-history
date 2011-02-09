@@ -93,7 +93,11 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-11-02-02  --- Release ksh93u  ---
+11-02-08  --- Release ksh93u  ---
+11-02-08  A bug in which opening standard output after it has been closed with
+	  exec 1>&- doesn't work has been fixed.
+11-02-07  A bug on some systems for which a command subtitution could hang
+	  has been fixed.
 11-01-28  A bug in file name completion for files containing both multibyte
 	  characters shell special characters has been fixed.
 11-01-18  The .sh.match variable now shows elements that do not match as
@@ -2735,7 +2739,10 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+11-02-08 misc/stk.c: change STK_FSIZE to (1024*sizeof(char*)) for 64 bit normalization
+11-02-02 sfio/sfmode.c: don't call sfsetbuf() on unbuffered stream to make it unbuffered
 11-02-02 features/wchar: handle hp.ia64 va_list interactions
+11-02-02 comp/omitted.c: fix mismatch between stat() vs _stat()
 11-01-31 std/wctype,features/wctype: add to handle <wchar.h> interactions
 11-01-28 add -lw for ancient sunos
 11-01-28 include/magic.h,misc/magic.c: add MAGIC_ALL
