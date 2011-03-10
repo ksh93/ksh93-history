@@ -1,3 +1,6 @@
+11-03-10 sfio/sfvprintf.c: add %0<width>s to preserve <width> trailing chars in string arg
+11-03-09 misc/magic.c: add %d...%s where if %d==1 then %s=="" else %s=="s"
+11-03-09 misc/magic.tab: add windows ico
 11-02-08 misc/stk.c: change STK_FSIZE to (1024*sizeof(char*)) for 64 bit normalization
 11-02-02 sfio/sfmode.c: don't call sfsetbuf() on unbuffered stream to make it unbuffered
 11-02-02 features/wchar: handle hp.ia64 va_list interactions

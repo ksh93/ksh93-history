@@ -210,11 +210,7 @@ int	b_pwd(int argc, char *argv[],void *extra)
 {
 	register int n, flag = 0;
 	register char *cp;
-#if SHOPT_FS_3D
 	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
-#else
-	NOT_USED(extra);
-#endif
 	NOT_USED(argc);
 	while((n = optget(argv,sh_optpwd))) switch(n)
 	{

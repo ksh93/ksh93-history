@@ -29,7 +29,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Research) 2011-01-28 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Research) 2011-03-09 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -956,18 +956,21 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, char* end, struct sta
 							str = 1;
 							break;
 						}
+						else if (c == 'c' || c == 'd' || c == 'i' || c == 'u' || c == 'x' || c == 'X')
+							goto format;
 						t++;
 						c = *(t + 1);
 					}
 			}
+	format:
 		if (!str)
-			b += sfsprintf(b, end - b, q, num, 0, 0, 0, 0, 0, 0, 0);
+			b += sfsprintf(b, end - b, q, num, num == 1 ? "" : "s", 0, 0, 0, 0, 0, 0);
 		else if (ep->type == 'd' || ep->type == 'D')
 			b += sfsprintf(b, end - b, q, fmttime("%?%QL", (time_t)num), 0, 0, 0, 0, 0, 0, 0);
 		else if (ep->type == 'v')
 			b += sfsprintf(b, end - b, q, fmtversion(num), 0, 0, 0, 0, 0, 0, 0);
 		else
-			b += sfsprintf(b, end - b, q, fmtnum(num, 0), 0, 0, 0, 0, 0, 0, 0);
+			b += sfsprintf(b, end - b, q, fmtnum(num, 0), num == 1 ? "" : "s", 0, 0, 0, 0, 0, 0);
 		if (ep->mime && *ep->mime)
 			mp->mime = ep->mime;
 	checknest:

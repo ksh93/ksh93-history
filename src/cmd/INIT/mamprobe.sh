@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2011 AT&T                     #
+#          Copyright (c) 1994-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                               by AT&T                                #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -17,8 +17,8 @@
 #                 Glenn Fowler <gsf@research.att.com>                  #
 #                                                                      #
 ########################################################################
+### this script contains archaic constructs that work with all sh variants ###
 # mamprobe - generate MAM cc probe info
-# this script is written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
 
 case $-:$BASH_VERSION in
@@ -34,7 +34,7 @@ opt=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: mamprobe (AT&T Labs Research) 2007-04-11 $
+@(#)$Id: mamprobe (AT&T Labs Research) 2011-02-11 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)

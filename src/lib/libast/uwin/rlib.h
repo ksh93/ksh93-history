@@ -76,5 +76,5 @@ extern void sethostfile(char *name);
 extern void _res_close (void);
 extern void ruserpass(const char *host, char **aname, char **apass);
 extern char* index(const char*, int);
-extern int stricmp(const char*, const char*);
+extern int strcasecmp(const char*, const char*);
 extern void bcopy(const void*, void*, size_t);

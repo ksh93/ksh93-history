@@ -77,7 +77,7 @@ else
 	LIBS_req = +lshell$(RELEASE)
 end
 
-:PACKAGE: ast$(libtype):20100309 order:coshell --clobber=!($(SH))
+:PACKAGE: ast$(libtype):20100309 coshell:order --clobber=!($(SH))
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 

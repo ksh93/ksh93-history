@@ -609,6 +609,10 @@ char**		argv;
 			break;
 		}
 	}
+	if (!language_attribute_max)
+		language_attribute_max = 1;
+	if (!territory_language_max)
+		territory_language_max = 1;
 	fprintf(hf, "\n#define LC_language_attribute_max\t%d\n", language_attribute_max);
 	fprintf(hf, "#define LC_territory_language_max\t%d\n", territory_language_max);
 	fprintf(hf, "\nstruct Lc_s;\n");

@@ -723,7 +723,7 @@ loop_fmt :
 						w = v;
 #endif
 				}
-#if _has_multibyte && defined(mbwidth)
+#if defined(mbwidth)
 				else if (wc)
 				{	w = 0;
 					SFMBCLR(&mbs);
@@ -764,6 +764,50 @@ loop_fmt :
 						SFnputc(f, ' ', n);
 						n = 0;
 					}
+				}
+				if(n < 0 && (flags&SFFMT_ZERO) && precis < 0)
+				{	
+#if _has_multibyte
+					if(flags & SFFMT_LONG)
+					{	SFMBCLR(&mbs);
+						wsp = (wchar_t*)sp;
+						while(n < 0)
+						{	
+#ifdef mbwidth
+							n += mbwidth(*wsp);
+#else
+							n++;
+#endif
+							wsp++;
+							w--;
+						}
+						sp = (char*)wsp;
+					}
+					else if (wc)
+					{	SFMBCLR(&mbs);
+						osp = sp;
+						while(n < 0)
+						{
+							ssp = sp;
+							if ((k = mbchar(sp)) <= 0)
+							{	sp = ssp;
+								break;
+							}
+#if defined(mbwidth)
+							n += mbwidth(n);
+#else
+							n++;
+#endif
+						}
+						v -= (sp - osp);
+					}
+#endif
+					else
+					{
+						sp += -n;
+						v += n;
+					}
+					n = 0;
 				}
 #if _has_multibyte
 				if(flags & SFFMT_LONG)

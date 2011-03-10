@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2011 AT&T                     #
+#          Copyright (c) 1994-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                               by AT&T                                #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -17,8 +17,8 @@
 #                 Glenn Fowler <gsf@research.att.com>                  #
 #                                                                      #
 ########################################################################
+### this script contains archaic constructs that work with all sh variants ###
 # package - source and binary package control
-# this script is written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
 
 case $-:$BASH_VERSION in
@@ -28,6 +28,7 @@ esac
 command=package
 
 LC_ALL=C
+export LC_ALL
 
 src="cmd contrib etc lib"
 use="/usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
@@ -67,7 +68,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2011-02-02 $
+@(#)$Id: package (AT&T Research) 2011-03-01 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -689,7 +690,7 @@ ${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package l
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
 		url=\$URL/package
-		(wget -O bin/package \$url||curl \$url||hurl \$url) > bin/package
+		(wget -O bin/package \$url||curl -L \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
@@ -848,7 +849,7 @@ ${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package l
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
 		url=\$URL/package
-		(wget -O bin/package \$url||curl \$url||hurl \$url) > bin/package
+		(wget -O bin/package \$url||curl -L \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
@@ -3093,7 +3094,7 @@ esac
 # set up the view state
 
 VIEW_bin=$INSTALLROOT VIEW_src=$PACKAGEROOT VIEW_all="$INSTALLROOT $PACKAGEROOT"
-if	(vpath) >/dev/null 2>&1 && vpath $INSTALLROOT $PACKAGEROOT $USER_VPATH_CHAIN
+if	(vpath) >/dev/null 2>&1 && vpath $INSTALLROOT $PACKAGEROOT $USER_VPATH_CHAIN 2>/dev/null
 then	$show vpath $INSTALLROOT $PACKAGEROOT $USER_VPATH_CHAIN
 else	VPATH=$INSTALLROOT:$PACKAGEROOT$USER_VPATH
 	$show VPATH=$VPATH

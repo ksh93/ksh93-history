@@ -1,8 +1,9 @@
 :
+### this script contains archaic constructs that work with all sh variants ###
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2011-02-02
+# @(#)make.probe (AT&T Research) 2011-02-11
 #
 # C probe for make
 #

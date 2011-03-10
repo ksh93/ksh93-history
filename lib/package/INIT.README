@@ -19,7 +19,7 @@ Source Package Installation Instructions:
   (4) If the bin/package script does not exist then run:
 		test -d bin || mkdir bin
 		url=$URL/package
-		(wget -O bin/package $url||curl $url||hurl $url) > bin/package
+		(wget -O bin/package $url||curl -L $url||hurl $url) > bin/package
 		chmod +x bin/package
   (5) Determine the list of package names you want from the download site, then
       use the package(1) command to do the actual download:
@@ -93,6 +93,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+11-02-24 package.sh: change curl usage to "curl -L ..."
+11-02-11 package.sh,C+probe,make.probe,mamprobe.sh: add ###.*archiac.*###
 11-02-02 Makefile: add :MAPLIB: check for ancient -lw
 11-02-02 make.probe: handle -print-multi-directory => 64 => /usr/lib64 /lib64
 11-02-02 package.sh: HOSTTYPE=*,*cc*[,-*,...] sets CC [ and CCFLAGS ]

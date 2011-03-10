@@ -497,7 +497,7 @@ extern __MANGLE__ int		write __PROTO__((int, const __V_*, int));
 
 # endif
 
-#line 799
+#line 800
 extern __MANGLE__ void		ppassert __PROTO__((int, char*, char*));
 extern __MANGLE__ void		ppbuiltin __PROTO__((void));
 extern __MANGLE__ int		ppcall __PROTO__((struct ppsymbol*, int));
@@ -524,6 +524,7 @@ extern __MANGLE__ int		pppredargs __PROTO__((void));
 extern __MANGLE__ void		pppush __PROTO__((int, char*, char*, int));
 extern __MANGLE__ struct ppsymbol*	pprefmac __PROTO__((char*, int));
 extern __MANGLE__ int		ppsearch __PROTO__((char*, int, int));
+extern __MANGLE__ void		ppset __PROTO__((long*, long, int));
 extern __MANGLE__ char*		ppstatestr __PROTO__((long));
 extern __MANGLE__ char*		pptokstr __PROTO__((char*, int));
 extern __MANGLE__ void		pptrace __PROTO__((int));
