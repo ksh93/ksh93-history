@@ -15,6 +15,7 @@ SHCOMP := shcomp$(RELEASE)
  * override SHOPT_foo=1 can be placed one per line in the build dir Makeargs
  */
 
+SHOPT_2DMATCH == 1		/* two dimensional .sh.match for ${var//pat/str} */
 SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_AUDIT ==

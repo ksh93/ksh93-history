@@ -562,4 +562,11 @@ $SHELL 2> /dev/null -c $'typeset -a arr=(\nfor)' || err_exit 'typeset -a should 
 
 $SHELL 2> /dev/null -c $'typeset -r -a arr=(\nfor)' || err_exit 'typeset -r -a should allow reserved words as first argument'
 
+typeset arr2[6]
+[[ ${#arr2[@]} == 0 ]] || err_exit 'declartion "typeset array[6]" should not show any elements'
+
+arr2[1]=def
+[[ ${arr2[1]} == def ]] || err_exit 'declaration "typeset array[6]" causes arrays causes wrong side effects'
+
+
 exit $((Errors<125?Errors:125))

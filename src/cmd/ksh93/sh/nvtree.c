@@ -423,6 +423,12 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 		if((typep=fp->type) || (fp->disc && fp->disc->typef && (typep=(*fp->disc->typef)(np,fp))))
 			break;
 	}
+	if(np==typep)
+	{
+
+		fp = 0;
+		typep = 0;
+	}
 	if(!fp  && !nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)))
 	{
 		if(prefix && *prefix)
@@ -616,7 +622,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		}
 		if(mp && nv_isarray(mp))
 		{
-			nv_outnode(mp, out, indent+(indent>=0),0);
+			nv_outnode(mp, out, indent,0);
 			if(indent>0)
 				sfnputc(out,'\t',indent);
 			sfputc(out,')');
@@ -631,7 +637,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			nv_onattr(mp,NV_TABLE);
 		}
 		ep = nv_getval(mp?mp:np);
-		if(ep==Empty)
+		if(ep==Empty && !(ap && ap->fixed))
 			ep = 0;
 		xp = 0;
 		if(!ap && nv_isattr(np,NV_INTEGER|NV_LJUST)==NV_LJUST)

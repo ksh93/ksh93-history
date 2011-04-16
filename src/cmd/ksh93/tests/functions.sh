@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -1119,5 +1119,18 @@ x=$(
 	print ok
 )
 [[ $x == ok ]] || err_exit 'TERM signal sent to last process of function kills the script'
+
+# verify that $0 does not change with functions defined as fun()
+func1()
+{
+	[[ $0 == "$dol0" ]] || err_exit "\$0 changed in func1() to $0"
+}
+function func2
+{
+	[[ $0 == func2 ]] || err_exit "\$0 changed in func2() to $0"
+	dol0=func2
+	func1
+}
+func2
 
 exit $((Errors<125?Errors:125))

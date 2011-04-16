@@ -392,6 +392,7 @@ const char e_lexsyntax1[]	= "syntax error at line %d: `%s' %s";
 const char e_lexsyntax2[]	= "syntax error: `%s' %s";
 const char e_lexsyntax3[]	= "syntax error at line %d: duplicate label %s";
 const char e_lexsyntax4[]	= "syntax error at line %d: invalid reference list";
+const char e_lexsyntax5[]	= "syntax error at line %d: `<<%s' here-document not contained within command substitution";
 const char e_lexwarnvar[]	= "line %d: variable expansion makes arithmetic evaluation less efficient";
 const char e_lexlabignore[]	= "line %d: label %s ignored";
 const char e_lexlabunknown[]	= "line %d: %s unknown label";

@@ -504,4 +504,8 @@ got=$( $SHELL -c "(eval '$src'); echo $exp" )
 x=$( { time $SHELL -c date >| /dev/null;} 2>&1)
 [[ $x == *real*user*sys* ]] || err_exit 'time { ...;} 2>&1 in $(...) fails'
 
+x=$($SHELL -c '( function fx { export X=123;  } ; fx; ); echo $X')
+[[ $x == 123 ]] && err_exit 'global variables set from with functions inside a
+subshell can leave side effects in parent shell'
+
 exit $((Errors<125?Errors:125))

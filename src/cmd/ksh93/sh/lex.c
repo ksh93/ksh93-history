@@ -79,6 +79,7 @@ struct lexstate
 	char		reservok;	/* >0 for reserved word legal */
 	char		skipword;	/* next word can't be reserved */
 	char		last_quote;	/* last multi-line quote character */
+	char		nestedbrace;	/* ${var op {...}} */
 };
 
 struct lexdata
@@ -779,7 +780,7 @@ int sh_lex(Lex_t* lp)
 				}
 				if(mode!=ST_LIT)
 				{
-					if(lp->lexd.warn && lp->lex.last_quote && shp->inlineno > lp->lastline)
+					if(lp->lexd.warn && lp->lex.last_quote && shp->inlineno > lp->lastline && fcpeek(-2)!='$')
 						errormsg(SH_DICT,ERROR_warn(0),e_lexlongquote,lp->lastline,lp->lex.last_quote);
 					lp->lex.last_quote = 0;
 					lp->lastline = shp->inlineno;
@@ -938,6 +939,8 @@ int sh_lex(Lex_t* lp)
 						if(n!=S_ALP)
 							goto dolerr;
 					case '#':
+						if(c=='#')
+							n = S_ALP;
 					case RBRACE:
 						if(n==S_ALP)
 						{
@@ -1022,6 +1025,7 @@ int sh_lex(Lex_t* lp)
 						}
 					}
 				}
+				lp->lex.nestedbrace = 0;
 				mode = ST_NESTED;
 				continue;
 			case S_LBRA:
@@ -1068,6 +1072,11 @@ int sh_lex(Lex_t* lp)
 				continue;
 			case S_POP:
 			do_pop:
+				if(c==RBRACE && mode==ST_NESTED && lp->lex.nestedbrace)
+				{
+					lp->lex.nestedbrace--;
+					continue;
+				}
 				if(lp->lexd.level <= inlevel)
 					break;
 				if(lp->lexd.level==inlevel+1 && lp->lex.incase>=TEST_RE && !lp->lex.intest)
@@ -1210,6 +1219,11 @@ int sh_lex(Lex_t* lp)
 							return(lp->token=c);
 					}
 					break;
+				}
+				else if(mode==ST_NESTED && endchar(lp)==RBRACE)
+				{
+					lp->lex.nestedbrace++;
+					continue;
 				}
 				else if(mode==ST_BEGIN)
 				{
@@ -1644,6 +1658,8 @@ done:
 	lp->lexd.dolparen--;
 	lp->lex = save;
 	lp->assignok = (endchar(lp)==RBRACT?assignok:0);
+	if(lp->heredoc)
+		errormsg(SH_DICT,ERROR_exit(SYNBAD),e_lexsyntax5,lp->sh->inlineno,lp->heredoc->ioname);
 	return(messages);
 }
 

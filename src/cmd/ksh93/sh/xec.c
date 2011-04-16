@@ -886,6 +886,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				job_unlock();
 			pipejob = 0;
 			job.curpgid = 0;
+			job.curjobid = 0;
 			flags &= ~sh_state(SH_INTERACTIVE);
 		}
 		sh_offstate(SH_ERREXIT);
@@ -1137,7 +1138,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						if(!shp->namespace || !(np=sh_fsearch(shp,com0,0)))
 #endif /* SHOPT_NAMESPACE */
 							np=nv_search(com0,shp->fun_tree,0);
-						if(!np && !np->nvalue.ip)
+						if(!np || !np->nvalue.ip)
 						{
 							Namval_t *mp=nv_search(com0,shp->bltin_tree,0);
 							if(mp)
@@ -1844,10 +1845,16 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int	pvn[3];	/* current set up pipe */
 			int	savepipe = pipejob;
 			int	showme = t->tre.tretyp&FSHOWME;
+			int	n,waitall,savewaitall=job.waitall;
+			int	savejobid = job.curjobid;
+			int	*exitval=0,*saveexitval = job.exitval;
 			pid_t	savepgid = job.curpgid;
 #if SHOPT_COSHELL
 			int	copipe=0;
 			Shnode_t	*tt;
+#endif
+			job.exitval = 0;
+#if SHOPT_COSHELL
 			if(shp->inpool)
 			{
 				do
@@ -1879,7 +1886,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 			shp->outpipe = pvn;
 			pvo[1] = -1;
 			if(sh_isoption(SH_PIPEFAIL))
+			{
+				const Shnode_t *tn=t;
 				job.waitall = 1;
+				while((tn=tn->lst.lstrit) && tn->tre.tretyp==TFIL)
+					job.waitall++;
+				exitval = job.exitval = (int*)stakalloc(job.waitall*sizeof(int));
+				memset(exitval,0,job.waitall*sizeof(int));
+			}
 			else
 				job.waitall |= !pipejob && sh_isstate(SH_MONITOR);
 			job_lock();
@@ -1938,6 +1952,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			shp->inpipe = pvn;
 			shp->outpipe = 0;
 			pipejob = 2;
+			waitall = job.waitall;
+			job.waitall = 0;
 			if(type == 0)
 			{
 				/*
@@ -1953,11 +1969,29 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(pipejob==2)
 				job_unlock();
 			pipejob = savepipe;
+			n = shp->exitval;
+			if(job.waitall = waitall)
+				job_wait(0);
+			if(n==0 && exitval)
+			{
+				while(exitval <= --job.exitval)
+				{
+					if(*job.exitval)
+					{
+						n = *job.exitval;
+						break;
+					}
+				}
+			}
+			shp->exitval = n;
 #ifdef SIGTSTP
 			if(!pipejob && sh_isstate(SH_MONITOR))
 				tcsetpgrp(JOBTTY,shp->gd->pid);
 #endif /*SIGTSTP */
 			job.curpgid = savepgid;
+			job.exitval = saveexitval;
+			job.waitall = savewaitall;
+			job.curjobid = savejobid;
 			break;
 		    }
 
@@ -2946,6 +2980,12 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 #else
 		myjob = job_post(shp,parent,postid);
 #endif /* SHOPT_BGX */
+		if(job.waitall && (flags&FPOU))
+		{
+			job.curjobid = myjob+1;
+			if(job.exitval)
+				job.exitval++;
+		}
 		if(flags&FAMP)
 			job.curpgid = curpgid;
 		if(jobid)

@@ -201,6 +201,64 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+11-04-15  --- Release ksh93u+ ---
+11-04-15 +A compile option, SHOPT_2DMATCH, has been added which causes
+	  .sh.match to be a two dimensional array after ${var//pat/str} 
+	  where the first dimenstion is the pattern number and the second is
+	  the match instance.
+11-04-11  A bug in which readonly var, where var is exported could cause var
+	  to be unset has been fixed.
+11-04-06  A tokenizer bug in which ${x/{3}(\d)/ } would cause in infinite
+	  loop has been fixed.
+11-04-05  A bug in which ${!x.} could cause a core dump has been fixed.
+11-04-04  A bug in which cleaning out the history file could terminate before
+	  keeping all the recent history events has been fixed.
+11-03-29  A bug in which ${#array&#0091;@&#0093;} was 1 rather than 0 after issuing
+	  typeset array&#0091;7&#0093; has been fixed.
+11-03-29  The subscript out or range message for fixed arrays has been fixed.
+11-03-29  A bug in which suspend could cause a core dump has been fixed.
+11-03-24  For the showme option added 09-09-09, commands beginning with a ;
+	  inside an arithmetic for loop, no longer produce syntax errors.
+11-03-18  A bug in _WINIX ~domain/user expansion has been fixed.
+11-03-16  A bug in the pipefail option which could cause a script to hang
+	  has been fixed.
+11-03-12  The shell no longer treats ${##pattern} as a syntax error.
+11-03-11  A bug in typeset -u on systems that don't supply the towctrans()
+	  function has been fixed.
+11-03-11  A bug in which a compound assignment of the form var&#0091;sub&#0093;=(...)
+	  would evaluate sub for each assignment has been fixed.
+11-03-07  A bug in which reassigning a compound variable to an associative
+	  array index could incorrectly increase the count of the number
+	  of elements has been fixed.
+11-03-04 +The tilde expansion on windows has been modifed to handle user
+	  names of the form domain/user so that ~domain/user now expands
+	  to the home directory of that domain user.
+11-03-03  A bug in which the width of the prompt was calculated incorectly
+	  which cause the wrong line length for edit commands has been fixed.
+11-03-02  A bug in which a global variables set from within a function inside
+	  a subshell can leave side effects in parent shell has been fixed.
+11-03-01  A bug in which whence -a could dump core when the first match
+	  was due to : in PATH and the program was in the current directory.
+11-02-28  A bug in emacs mode with SHOPT_EDPREDICT (added on 10-05-20) which
+	  disabled prediction on a line starting with # when the cursor was not
+	  at the end of line has been fixed.
+11-02-28  The output format for compound variables with set has been fixed.
+11-02-25  A bug which could lead to a core dump occurred when a shell script
+	  without #! is invoked by name from a parent shell that has name
+	  references defined and the script creates name references of the
+	  same name.
+11-02-21  The shell now fails with a syntax error when a here-document in a
+	  command substition is not completed before the closing ), for
+	  example, $( foobar &lt;&lt;! )
+		here_doc
+	  !.
+11-02-18  A bug in which the value of $0 in a function defined by name()
+	  was changed to name has been fixed.
+11-02-17  A bug in which the declaration typeset var&#0091;100&#0093; did not work
+	  correctly has been fixed. 
+11-02-15  A bug in which &#0091;&#0091; -v sh.match &#0093;&#0093; did not work correctly has been
+	  fixed.
+
 11-02-08  --- Release ksh93u  ---
 11-02-08  A bug in which opening standard output after it has been closed with
 	  exec 1&gt;&amp;- doesn't work has been fixed.
@@ -2850,6 +2908,14 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+11-04-15 fmtdev.c: fix to work for non-{blk,chr} special
+11-04-12 stk: change size args to size_t and stseek() offset to ssize_t
+11-04-12 sfio: sync with kpv to optimize large SF_STRING sfputr() buffer allocation
+11-03-28 misc/fts.c: fix FTS_SLNONE logic to set it when it should!
+11-03-17 misc/stk.c: fixed bug that could delete an active stack frame
+11-03-10 sfio/sfvprintf.c: add %0&lt;width&gt;s to preserve &lt;width&gt; trailing chars in string arg
+11-03-09 misc/magic.c: add %d...%s where if %d==1 then %s=="" else %s=="s"
+11-03-09 misc/magic.tab: add windows ico
 11-02-08 misc/stk.c: change STK_FSIZE to (1024*sizeof(char*)) for 64 bit normalization
 11-02-02 sfio/sfmode.c: don't call sfsetbuf() on unbuffered stream to make it unbuffered
 11-02-02 features/wchar: handle hp.ia64 va_list interactions
@@ -4566,6 +4632,8 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+11-03-28 chmod.c,chgrp.c: fix --symlink logic
+11-03-26 rm.c: don't eaccess() check symlinks!
 11-01-27 date: add { -R, --rfc-2822, -T, --rfc-3339=type }
 11-01-03 chgrp.c: --symlink =&gt; --physical
 10-12-10 rm.c: fix not-writable logic
@@ -5022,7 +5090,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>February 09, 2011</TD>
+<TD align=right>April 15, 2011</TD>
 </TR>
 </TABLE>
 <P>

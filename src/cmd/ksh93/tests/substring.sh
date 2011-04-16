@@ -597,4 +597,23 @@ x="111 222 333 444 555 666"
 [[ -v .sh.match[4] ]] &&   err_exit '[[ -v .sh.match[4] ]] should be false'
 [[ ${#.sh.match[@]} == 4 ]] || err_exit "\${#.sh.match[@]} should be 4, not ${#.sh.match[@]}"
 
+x="foo bar"
+dummy=${x/~(E)(*)/}
+[[ ${ print -v .sh.match;} ]] && err_exit 'print -v should show .sh.match empty when there are no matches'
+
+if	$SHELL -c 'set 1 2 3 4 5 6 7 8 9 10 11 12; : ${##[0-9]}' 2>/dev/null
+then	set 1 2 3 4 5 6 7 8 9 10 11 12
+	[[ ${##[0-9]} == 2 ]] || err_exit '${##[0-9]} should be 2 with $#==12'
+	[[ ${###[0-9]} == 2 ]] || err_exit '${###[0-9]} should be 2 with $#==12'
+	[[ ${#%[0-9]} == 1 ]] || err_exit '${#%[0-9]} should be 1 with $#==12'
+	[[ ${#%%[0-9]} == 1 ]] || err_exit '${#%%[0-9]} should be 1 with $#==12'
+else	err_exit '${##[0-9]} give syntax error'
+fi
+
+{
+  $SHELL -c 'x="a123 456 789z"; : ${x//{3}(\d)/ }' &
+  sleep .5; kill $!; wait $!
+} 2> /dev/null || err_exit $'tokenizer can\'t handle ${var op {..} }'
+
+
 exit $((Errors<125?Errors:125))

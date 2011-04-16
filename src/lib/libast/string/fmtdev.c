@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -24,7 +24,7 @@
  * Glenn Fowler
  * AT&T Bell Laboratories
  *
- * idevice() formatter
+ * st_dev formatter
  */
 
 #include <ast.h>
@@ -35,11 +35,14 @@ char*
 fmtdev(struct stat* st)
 {
 	char*		buf;
+	unsigned long	mm;
+	unsigned int	ma;
+	unsigned int	mi;
 	int		z;
 
-	unsigned int	ma = major(idevice(st));
-	unsigned int	mi = minor(idevice(st));
-
+	mm = (S_ISBLK(st->st_mode) || S_ISCHR(st->st_mode)) ? idevice(st) : st->st_dev;
+	ma = major(mm);
+	mi = minor(mm);
 	buf = fmtbuf(z = 17);
 	if (ma == '#' && isalnum(mi))
 	{

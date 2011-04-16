@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -550,14 +550,22 @@ info(FTS* fts, register FTSENT* f, const char* path, struct stat* sp, int flags)
 		struct stat	sb;
 
 		f->symlink = 1;
-		if (!(flags & FTS_PHYSICAL) && stat(path, &sb) >= 0)
+		if (flags & FTS_PHYSICAL)
+		{
+			TYPE(f, DT_LNK);
+			f->fts_info = FTS_SL;
+		}
+		else if (stat(path, &sb) >= 0)
 		{
 			*sp = sb;
 			flags = FTS_PHYSICAL;
 			goto again;
 		}
-		TYPE(f, DT_LNK);
-		f->fts_info = FTS_SL;
+		else
+		{
+			TYPE(f, DT_LNK);
+			f->fts_info = FTS_SLNONE;
+		}
 	}
 #endif
 	else
@@ -651,10 +659,15 @@ toplist(FTS* fts, register char* const* pathnames)
 		 * away with calling your idea a hack
 		 */
 
-		if (metaphysical && f->fts_info == FTS_SL && stat(path, &st) >= 0)
+		if (metaphysical && f->fts_info == FTS_SL)
 		{
-			*f->fts_statp = st;
-			info(fts, f, NiL, f->fts_statp, 0);
+			if (stat(path, &st) >= 0)
+			{
+				*f->fts_statp = st;
+				info(fts, f, NiL, f->fts_statp, 0);
+			}
+			else
+				f->fts_info = FTS_SLNONE;
 		}
 #endif
 		if (bot)

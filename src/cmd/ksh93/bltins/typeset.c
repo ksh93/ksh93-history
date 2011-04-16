@@ -513,6 +513,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 		{
 			register unsigned newflag;
 			register Namval_t *np;
+			Namarr_t	*ap;
 			unsigned curflag;
 			if(troot == shp->fun_tree)
 			{
@@ -587,9 +588,15 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				path_alias(np,path_absolute(shp,nv_name(np),NIL(Pathcomp_t*)));
 				continue;
 			}
-			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|NV_FARRAY);
+			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|(iarray?NV_FARRAY:0));
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
+			else if((ap=nv_arrayptr(np)) && nv_aindex(np)>0 && ap->nelem==1 && nv_getval(np)==Empty)
+			{
+				ap->nelem++;
+				_nv_unset(np,0);
+				ap->nelem--;
+			}
 			if(tp->pflag)
 			{
 				nv_attribute(np,sfstdout,tp->prefix,1);
@@ -608,7 +615,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			}
 			if(!nv_isarray(np) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
 			{
-				if(comvar || (shp->last_root==shp->var_tree && (tp->tp || (!shp->st.real_fun && (nvflags&NV_STATIC)) || (!(flag&NV_EXPORT) && nv_isattr(np,(NV_EXPORT|NV_IMPORT))==(NV_EXPORT|NV_IMPORT)))))
+				if(comvar || (shp->last_root==shp->var_tree && (tp->tp || (!shp->st.real_fun && (nvflags&NV_STATIC)) || (!(flag&(NV_EXPORT|NV_RDONLY)) && nv_isattr(np,(NV_EXPORT|NV_IMPORT))==(NV_EXPORT|NV_IMPORT)))))
 {
 					_nv_unset(np,0);
 }
@@ -623,7 +630,6 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						nv_onattr(np,NV_ARRAY|(comvar?NV_NOFREE:0));
 					else
 					{
-						Namarr_t *ap=nv_arrayptr(np);
 						if(ap && comvar)
 							ap->nelem |= ARRAY_TREE;
 						nv_putsub(np, (char*)0, 0);
@@ -1338,6 +1344,8 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	register Namval_t *np;
 	register int namec;
 	Namval_t *onp = 0;
+	char	*name = 0;
+	int	len;
 	tp->sh->last_table=0;
 	flag &= ~NV_ASSIGN;
 	tp->scanmask = flag&~NV_NOSCOPE;
@@ -1361,6 +1369,13 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 		if((np=nv_search(*argv++,root,0)) && np!=onp && (!nv_isnull(np) || np->nvfun || nv_isattr(np,~NV_NOFREE)))
 		{
 			onp = np;
+			if(name)
+			{
+				char *newname = nv_name(np);
+				if(memcmp(name,newname,len)==0 && newname[len]== '.')
+					continue;
+				name = 0;
+			}
 			if(flag&NV_ARRAY)
 			{
 				if(nv_aindex(np)>=0)
@@ -1375,6 +1390,11 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 			tp->scanmask = flag&~NV_NOSCOPE;
 			tp->scanroot = root;
 			print_namval(file,np,option,tp);
+			if(nv_isvtree(np))
+			{
+				name = nv_name(np);
+				len = strlen(name);
+			}
 		}
 	}
 }

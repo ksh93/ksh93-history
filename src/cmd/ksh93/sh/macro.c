@@ -57,6 +57,10 @@
 #   define mbchar(p)       (*(unsigned char*)p++)
 #endif /* SHOPT_MULTIBYTE */
 
+#if _WINIX
+    static int Skip;
+#endif /*_WINIX */
+
 static int	_c_;
 typedef struct  _mac_
 {
@@ -799,6 +803,13 @@ e_badsubscript,*cp);
 					sfwrite(stkp,first,c);
 				first = fcseek(c);
 				tilde_expand2(mp->shp,tilde);
+#if _WINIX
+				if(Skip)
+				{
+					first = cp = fcseek(Skip);
+					Skip = 0;
+				}
+#endif /*_WINIX */
 				tilde = -1;
 				c=0;
 			}
@@ -1254,7 +1265,7 @@ retry1:
 			}
 		}
 		while(type && c=='.');
-		if(c==RBRACE && type &&  fcpeek(-2)=='.')
+		if(type!=M_VNAME && c==RBRACE && type &&  fcpeek(-2)=='.')
 		{
 			/* ${x.} or ${x..} */
 			if(fcpeek(-3) == '.')
@@ -1771,6 +1782,7 @@ retry2:
 				v= "";
 			if(c=='/' || c=='#' || c== '%')
 			{
+				int index = 0;
 				flag = (type || c=='/')?(STR_GROUP|STR_MAXIMAL):STR_GROUP;
 				if(c!='/')
 					flag |= STR_LEFT;
@@ -1784,7 +1796,7 @@ retry2:
 					else
 						nmatch=strgrpmatch(v,pattern,match,elementsof(match)/2,flag);
 					if(nmatch && replen>0)
-						sh_setmatch(v,vsize,nmatch,match);
+						sh_setmatch(mp->shp,v,vsize,nmatch,match,index++);
 					if(nmatch)
 					{
 						vlast = v;
@@ -1816,7 +1828,7 @@ retry2:
 					break;
 				}
 				if(replen==0)
-					sh_setmatch(vlast,vsize_last,nmatch,match);
+					sh_setmatch(mp->shp,vlast,vsize_last,nmatch,match,index++);
 			}
 			if(vsize)
 				mac_copy(mp,v,vsize>0?vsize:strlen(v));
@@ -2622,10 +2634,40 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 			cp = nv_getval(sh_scoped(shp,OLDPWDNOD));
 		return(cp);
 	}
+#if _WINIX
+	if(fcgetc(c)=='/')
+	{
+		char	*str;
+		int	n=0,offset=staktell();
+		stakputs(string);
+		do
+		{
+			stakputc(c);
+			n++;
+		}
+		while (fcgetc(c) && c!='/');
+		stakputc(0);
+		if(c)
+			fcseek(-1);
+		str = stakseek(offset);
+		Skip = n;
+		if(logins_tree && (np=nv_search(str,logins_tree,0)))
+			return(nv_getval(np));
+		if(pw = getpwnam(str))
+		{
+			string = str;
+			goto skip;
+		}
+		Skip = 0;
+	}
+#endif /* _WINIX */
 	if(logins_tree && (np=nv_search(string,logins_tree,0)))
 		return(nv_getval(np));
 	if(!(pw = getpwnam(string)))
 		return(NIL(char*));
+#if _WINIX
+skip:
+#endif /* _WINIX */
 	if(!logins_tree)
 		logins_tree = dtopen(&_Nvdisc,Dtbag);
 	if(np=nv_search(string,logins_tree,NV_ADD))

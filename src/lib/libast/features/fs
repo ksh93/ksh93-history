@@ -63,7 +63,6 @@ extern	mkdir		int	(const char*, mode_t)
 extern	mkfifo		int	(const char*, mode_t)
 extern	mknod		int	(const char*, mode_t, dev_t)
 extern	stat		int	(const char*, struct stat*)
-extern	mkfifo		mode_t	(mode_t)
 
 define	FS_default	"ufs"
 

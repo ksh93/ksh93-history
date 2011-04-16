@@ -1,3 +1,8 @@
+11-04-15 fmtdev.c: fix to work for non-{blk,chr} special
+11-04-12 stk: change size args to size_t and stseek() offset to ssize_t
+11-04-12 sfio: sync with kpv to optimize large SF_STRING sfputr() buffer allocation
+11-03-28 misc/fts.c: fix FTS_SLNONE logic to set it when it should!
+11-03-17 misc/stk.c: fixed bug that could delete an active stack frame
 11-03-10 sfio/sfvprintf.c: add %0<width>s to preserve <width> trailing chars in string arg
 11-03-09 misc/magic.c: add %d...%s where if %d==1 then %s=="" else %s=="s"
 11-03-09 misc/magic.tab: add windows ico

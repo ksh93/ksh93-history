@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2011 AT&T                     #
+#          Copyright (c) 1994-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                               by AT&T                                #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2011-01-07 # update in USAGE too #
+version=2011-03-17 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -639,7 +639,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2011-01-07 $
+@(#)$Id: iffe (AT&T Research) 2011-03-17 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -1215,7 +1215,7 @@ case $debug in
 	fi
 	;;
 esac
-trap "rm -f $core $tmp*.*" EXIT
+trap "rm -f $core $tmp*" EXIT
 if	(:>$tmp.c) 2>/dev/null
 then	rm -f $tmp.c
 else	echo "$command: cannot create tmp files in current dir" >&2

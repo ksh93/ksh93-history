@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -659,7 +659,10 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 					if(c=='\a' || c==ESC || c=='\r')
 						break;
 					if(skip || (c>='0' && c<='9'))
+					{
+						skip = 0;
 						continue;
+					}
 					if(n>1 && c==';')
 						skip = 1;
 					else if(n>2 || (c!= '[' &&  c!= ']'))

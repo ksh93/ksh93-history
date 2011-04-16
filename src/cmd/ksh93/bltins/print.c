@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -557,7 +557,7 @@ static void *fmtbase64(char *string, ssize_t *sz, int alt)
 			return(n?n:size);
 		}
 	}
-	else if(nv_isarray(np) && (ap=nv_arrayptr(np)) && (ap->nelem&(ARRAY_UNDEF|ARRAY_SCAN)))
+	else if(nv_isarray(np) && (ap=nv_arrayptr(np)) && array_elem(ap) && (ap->nelem&(ARRAY_UNDEF|ARRAY_SCAN)))
 	{
 		nv_outnode(np,iop,(alt?-1:0),0);
 		sfputc(iop,')');

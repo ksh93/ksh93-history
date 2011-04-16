@@ -494,7 +494,10 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 					}
 					if(*cp!='.' && *cp!='[' && strchr(cp,'['))
 					{
+						cp = stakcopy(nv_name(np));
 						nv_close(np);
+						if(!(arg->argflag&ARG_APPEND))
+                                                        flag &= ~NV_ARRAY;
 						np = nv_open(cp,shp->var_tree,flag);
 					}
 					if(arg->argflag&ARG_APPEND)
@@ -1196,6 +1199,13 @@ void nv_delete(Namval_t* np, Dt_t *root, int flags)
 			xp->root = 0;
 	}
 #endif
+	if(!np && !root && flags==0)
+	{
+		if(Refdict)
+			dtclose(Refdict);
+		Refdict = 0;
+		return;
+	}
 	if(root || !(flags&NV_NOFREE))
 	{
 		if(!(flags&NV_FUNCTION) && Refdict)
@@ -1715,7 +1725,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	else
 	{
 		const char *tofree=0;
-		int offset;
+		int offset,append;
 #if _lib_pathnative
 		char buff[PATH_MAX];
 #endif /* _lib_pathnative */
@@ -1773,16 +1783,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				size = ja_size((char*)sp,size,nv_isattr(np,NV_RJUST|NV_ZFILL));
 #endif /* SHOPT_MULTIBYTE */
 		}
-		if(!up->cp)
+		if(!up->cp || *up->cp==0)
 			flags &= ~NV_APPEND;
-		if((flags&NV_APPEND) && !nv_isattr(np,NV_BINARY))
-		{
-			offset = staktell();
-			stakputs(up->cp);
-			stakputs(sp);
-			stakputc(0);
-			sp = stakptr(offset);
-		}
 		if(!nv_isattr(np, NV_NOFREE))
 		{
 			/* delay free in case <sp> points into free region */
@@ -1794,6 +1796,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			tofree = 0;
        	 	if (sp)
 		{
+			append=0;
 			dot = strlen(sp);
 #if (_AST_VERSION>=20030127L)
 			if(nv_isattr(np,NV_BINARY))
@@ -1831,12 +1834,34 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			}
 			else
 #endif
-			if(size==0 && nv_isattr(np,NV_HOST)!=NV_HOST &&nv_isattr(np,NV_LJUST|NV_RJUST|NV_ZFILL))
-				nv_setsize(np,size=dot);
-			else if(size > dot)
-				dot = size;
-			else if(nv_isattr(np,NV_LJUST|NV_RJUST)==NV_LJUST && dot>size)
-				dot = size;
+			{
+				if(size==0 && nv_isattr(np,NV_HOST)!=NV_HOST &&nv_isattr(np,NV_LJUST|NV_RJUST|NV_ZFILL))
+					nv_setsize(np,size=dot);
+				else if(size > dot)
+					dot = size;
+				else if(nv_isattr(np,NV_LJUST|NV_RJUST)==NV_LJUST && dot>size)
+					dot = size;
+				if(flags&NV_APPEND)
+				{
+					if(dot==0)
+						return;
+					append = strlen(up->cp);
+					if(!tofree || size)
+					{
+						offset = staktell();
+						stakputs(up->cp);
+						stakputs(sp);
+						stakputc(0);
+						sp = stakptr(offset);
+						dot += append;
+						append = 0;
+					}
+					else
+					{
+						flags &= ~NV_APPEND;
+					}
+				}
+			}
 			if(size==0 || tofree || !(cp=(char*)up->cp))
 			{
 				if(dot==0 && !nv_isattr(np,NV_LJUST|NV_RJUST))
@@ -1846,8 +1871,14 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				}
 				else
 				{
-					cp = (char*)malloc(((unsigned)dot+1));
-					cp[dot] = 0;
+					if(tofree && tofree!=Empty && tofree!=Null)
+					{
+						cp = (char*)realloc((void*)tofree,((unsigned)dot+append+1));
+						tofree = 0;
+					}
+					else
+						cp = (char*)malloc(((unsigned)dot+1));
+					cp[dot+append] = 0;
 					nv_offattr(np,NV_NOFREE);
 				}
 			}
@@ -1858,9 +1889,9 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		up->cp = cp;
 		if(sp)
 		{
-			int c = cp[dot];
-			memmove(cp,sp,dot);
-			cp[dot] = c;
+			int c = cp[dot+append];
+			memmove(cp+append,sp,dot);
+			cp[dot+append] = c;
 			if(nv_isattr(np, NV_RJUST) && nv_isattr(np, NV_ZFILL))
 				rightjust(cp,size,'0');
 			else if(nv_isattr(np, NV_LJUST|NV_RJUST)==NV_RJUST)
@@ -2256,6 +2287,8 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 		return;
 	if(np == tp->sh->namespace)
 		return;
+	if(nv_isref(np))
+		nv_unref(np);
 	if(nv_isattr(np,NV_EXPORT) && nv_isarray(np))
 	{
 		nv_putsub(np,NIL(char*),0);

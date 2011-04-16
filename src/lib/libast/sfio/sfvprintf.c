@@ -723,7 +723,7 @@ loop_fmt :
 						w = v;
 #endif
 				}
-#if defined(mbwidth)
+#ifdef mbwidth
 				else if (wc)
 				{	w = 0;
 					SFMBCLR(&mbs);
@@ -793,7 +793,7 @@ loop_fmt :
 							{	sp = ssp;
 								break;
 							}
-#if defined(mbwidth)
+#ifdef mbwidth
 							n += mbwidth(n);
 #else
 							n++;

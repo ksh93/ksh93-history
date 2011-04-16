@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Research) 2010-10-20 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2011-03-28 $\n]"
 USAGE_LICENSE
 ;
 
@@ -118,7 +118,7 @@ static const char usage_tail[] =
     "variable, or the default value \b~\b.]:[suffix]"
 "[b?\b--backup\b using the type in the \bVERSION_CONTROL\b environment "
     "variable.]"
-"[x|X|l:xdev|local|mount|one-file-system?Do not descend into directories "
+"[x|X:xdev|local|mount|one-file-system?Do not descend into directories "
     "in different filesystems than their parents.]"
 
 "\n"

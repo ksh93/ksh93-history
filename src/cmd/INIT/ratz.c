@@ -4513,6 +4513,7 @@ sear_rm_r(char* dir)
 	if (!SetCurrentDirectory(dir))
 		return;
 	if ((hp = FindFirstFile("*.*", &info)) != INVALID_HANDLE_VALUE)
+	{
 		do
 		{
 			if (!(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -4524,7 +4525,8 @@ sear_rm_r(char* dir)
 			else if (info.cFileName[0] != '.' || info.cFileName[1] != 0 && (info.cFileName[1] != '.' || info.cFileName[2] != 0))
 				sear_rm_r(info.cFileName);
 		} while(FindNextFile(hp, &info));
-	FindClose(hp);
+		FindClose(hp);
+	}
 	if (SetCurrentDirectory(".."))
 		RemoveDirectory(dir);
 }

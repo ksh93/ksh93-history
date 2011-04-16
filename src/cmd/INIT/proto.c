@@ -382,11 +382,11 @@ struct ppglobals
 
 
 
-	struct ppcontext* context; long state; long mode; long option; long test; struct { char* sp; long flags; } filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; struct pathid cdir; struct pathid hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;		 
+	struct ppcontext* context; long state; long mode; long option; long test; struct { char* sp; long flags; } filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; long ro_op[2]; struct pathid cdir; struct pathid hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;		 
 
 
 
-	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* optflags; int lastout; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; struct { long ro_state; long ro_mode; long ro_option; int on; char* symtab; } reset; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; struct ppdirs* found; int vendor; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
+	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* optflags; int lastout; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; struct { long ro_state; long ro_mode; long ro_option; long ro_op[2]; int on; char* symtab; } reset; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; struct ppdirs* found; int vendor; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
 
 
 };
@@ -415,11 +415,11 @@ extern __MANGLE__ void		pppragma __PROTO__((char*, char*, char*, char*, int));
 extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 extern __MANGLE__ int		ppsync __PROTO__((void));
 
-#line 366 "../../lib/libpp/pplib.h"
+#line 368 "../../lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppdef.h"
  
-#line 367 "../../lib/libpp/pplib.h"
+#line 369 "../../lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppkey.h"
  
@@ -428,13 +428,13 @@ extern __MANGLE__ int		ppsync __PROTO__((void));
 #line 125
 extern __MANGLE__ struct ppkeyword	ppkey[];
 
-#line 368 "../../lib/libpp/pplib.h"
+#line 370 "../../lib/libpp/pplib.h"
   
-#line 681
+#line 683
 struct ppcontext			 
 {
 	struct ppdirs* lcldirs; struct ppdirs* stddirs; int flags; char* symtab;
-	struct ppcontext* context; long state; long mode; long option; long test; struct { char* sp; long flags; } filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; struct pathid cdir; struct pathid hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;
+	struct ppcontext* context; long state; long mode; long option; long test; struct { char* sp; long flags; } filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; long ro_op[2]; struct pathid cdir; struct pathid hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;
 };
 
 struct ppfile 
@@ -463,7 +463,7 @@ struct ppsymkey
 	int		lex;		 
 };
 
-#line 727
+#line 729
 # ifdef __STDC__
 
 # include <stdlib.h>
@@ -497,7 +497,7 @@ extern __MANGLE__ int		write __PROTO__((int, const __V_*, int));
 
 # endif
 
-#line 800
+#line 802
 extern __MANGLE__ void		ppassert __PROTO__((int, char*, char*));
 extern __MANGLE__ void		ppbuiltin __PROTO__((void));
 extern __MANGLE__ int		ppcall __PROTO__((struct ppsymbol*, int));
@@ -524,7 +524,7 @@ extern __MANGLE__ int		pppredargs __PROTO__((void));
 extern __MANGLE__ void		pppush __PROTO__((int, char*, char*, int));
 extern __MANGLE__ struct ppsymbol*	pprefmac __PROTO__((char*, int));
 extern __MANGLE__ int		ppsearch __PROTO__((char*, int, int));
-extern __MANGLE__ void		ppset __PROTO__((long*, long, int));
+extern __MANGLE__ int		ppset __PROTO__((long*, long, int));
 extern __MANGLE__ char*		ppstatestr __PROTO__((long));
 extern __MANGLE__ char*		pptokstr __PROTO__((char*, int));
 extern __MANGLE__ void		pptrace __PROTO__((int));

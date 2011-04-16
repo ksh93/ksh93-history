@@ -1402,9 +1402,9 @@ static char *array_fixed(Namval_t *np, char *sub, char *cp,int mode)
 	else
 		fp->curi = 0;
 	size = (int)sh_arith(shp,(char*)sub);
+	fp->cur[n] = size;
 	if(size >= fp->max[n] || (size < 0))
 		errormsg(SH_DICT,ERROR_exit(1),e_subscript, nv_name(np));
-	fp->cur[n] = size;
 	*cp++ = ']';
 	sz = fp->curi + fp->cur[n]*fp->incr[n];
 	for(n++,ep=cp;*ep=='['; ep=cp,n++)

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -21,7 +21,10 @@
 ***********************************************************************/
 #include	"sfhdr.h"
 
-/*	Write with discipline.
+/*	Write data with discipline.
+**	In the case of a string stream, this is used mainly to extend
+**	the buffer. However, this is done here so that exception handling
+**	is done uniformly across all stream types.
 **
 **	Written by Kiem-Phong Vo.
 */
@@ -155,7 +158,7 @@ Sfdisc_t*	disc;
 		f->flags &= ~(SF_EOF|SF_ERROR);
 
 		dc = disc;
-		if(f->flags&SF_STRING)	/* total required buffer */
+		if(f->flags&SF_STRING)	/* just asking to extend buffer */
 			w = n + (f->next - f->data);
 		else
 		{	/* warn that a write is about to happen */

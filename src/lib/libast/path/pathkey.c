@@ -136,9 +136,9 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 		}
 #endif
 #if _UWIN
-		if (!stat("/", &st) && st.st_ino != 8 * sizeof(char*) && (st.st_ino == 32 || st.st_ino == 64))
+		if (!stat("/", &st) && st.st_ino == 64)
 		{
-			k = sizeof(char*) == 4 ? "/64" : "/32";
+			k = "/64";
 			n = memsum(k, strlen(k), n);
 			if (attr)
 				attr = strcopy(attr, k);

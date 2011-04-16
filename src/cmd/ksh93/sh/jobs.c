@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -945,6 +945,7 @@ int job_walk(Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[
 			if(!(pw = job_bypid(pid)))
 			{
 				pw = &dummy;
+				pw->p_shp = sh_getinterp();
 				pw->p_pid = pid;
 				pw->p_pgrp = pid;
 			}
@@ -1334,6 +1335,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 		pw->p_nxtjob = job.pwlist;
 		pw->p_nxtproc = 0;
 	}
+	pw->p_exitval = job.exitval; 
 #if SHOPT_COSHELL
 	pw->p_cojob = 0;
 	if(shp->coshell && (pid&COPID_BIT))
@@ -1346,7 +1348,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 	pw->p_shp = shp;
 	pw->p_env = shp->curenv;
 	pw->p_pid = pid;
-	if(!shp->outpipe || (sh_isoption(SH_PIPEFAIL) && job.waitall))
+	if(!shp->outpipe)
 		pw->p_flag = P_EXITSAVE;
 	pw->p_exitmin = shp->xargexit;
 	pw->p_exit = 0;
@@ -1467,14 +1469,23 @@ int	job_wait(register pid_t pid)
 	register int	jobid = 0;
 	int		nochild = 1;
 	char		intr = 0;
-	if(pid <= 0)
+	if(pid < 0)
 	{
-		if(pid==0)
-			goto done;
 		pid = -pid;
 		intr = 1;
 	}
 	job_lock();
+	if(pid==0)
+	{
+		if(!job.waitall || !job.curjobid || !(pw = job_byjid(job.curjobid-1)))
+		{
+			job_unlock();
+			goto done;
+		}
+		jobid = pw->p_job;
+		if(!(pw->p_flag&(P_DONE|P_STOPPED)))
+			job_reap(job.savesig);
+	}
 	if(pid > 1)
 	{
 		if(pid==shp->spid)
@@ -1565,18 +1576,7 @@ int	job_wait(register pid_t pid)
 				{
 					px = job_byjid(jobid);
 					/* last process in job */
-					if(sh_isoption(SH_PIPEFAIL))
-					{
-						/* last non-zero exit */
-						for(;px;px=px->p_nxtproc)
-						{
-							if(px->p_exit)
-								break;
-						}
-						if(!px)
-							px = pw;
-					}
-					else if(px!=pw)
+					if(px!=pw)
 						px = 0;
 					if(px)
 					{
@@ -1588,7 +1588,7 @@ int	job_wait(register pid_t pid)
 					}
 				}
 				px = job_unpost(pw,1);
-				if(!px || (!sh_isoption(SH_PIPEFAIL) && !job.waitall))
+				if(!px || !job.waitall)
 					break;
 				pw = px;
 				continue;
@@ -1780,8 +1780,12 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 		return(pw);
 	/* all processes complete, unpost job */
 	job_unlink(pwtop);
+	if(pwtop->p_job == job.curjobid-1)
+		job.curjobid = 0;
 	for(pw=pwtop; pw; pw=pw->p_nxtproc)
 	{
+		if(pw && pw->p_exitval)
+			*pw->p_exitval = pw->p_exit;
 		/* save the exit status for background jobs */
 		if((pw->p_flag&P_EXITSAVE) ||  pw->p_pid==sh.spid)
 		{

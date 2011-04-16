@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -272,7 +272,10 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				else
 					pp = 0;
 				if(tofree)
+				{
 					free((char*)cp);
+					tofree = 0;
+				}
 			}
 			else if(aflag<=1) 
 			{

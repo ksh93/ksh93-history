@@ -133,6 +133,7 @@ extern const char e_lexsyntax1[];
 extern const char e_lexsyntax2[];
 extern const char e_lexsyntax3[];
 extern const char e_lexsyntax4[];
+extern const char e_lexsyntax5[];
 extern const char e_lexwarnvar[];
 extern const char e_lexobsolete1[];
 extern const char e_lexobsolete2[];

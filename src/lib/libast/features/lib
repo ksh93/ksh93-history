@@ -3,7 +3,7 @@ ref	-D_def_map_ast=1
 cmd	universe
 
 hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen,limits
-hdr	locale,ndir,nl_types,process,spawn,syslog,utime,vfork,wctype
+hdr	locale,ndir,nl_types,process,spawn,syslog,utime,vfork
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
 	int
@@ -13,6 +13,7 @@ hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 		return iswalnum(w) == 0;
 	}
 }end
+hdr	wctype wchar.h
 
 dat	_tzname,tzname
 

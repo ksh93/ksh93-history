@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -334,6 +334,7 @@ retry:
 		int first,last;
 		off_t mark,size = (HIST_MAX/4)+maxlines*HIST_LINE;
 		hp->histind = first = hist_nearend(hp,hp->histfp,hsize-size);
+		histinit = 1;
 		hist_eof(hp);	 /* this sets histind to last command */
 		if((hist_start = (last=(int)hp->histind)-maxlines) <=0)
 			hist_start = 1;
@@ -671,10 +672,10 @@ again:
 							hp->histmarker=count+2;
 							cp += (HIST_MARKSZ-1);
 							hp->histind--;
-							if(cp <= endbuff)
+							if(!histinit && (cp <= endbuff))
 							{
 								unsigned char *marker = (unsigned char*)(cp-4);
-								hp->histind = ((marker[0]<<16)|(marker[1]<<8)|marker[2]);
+								hp->histind = ((marker[0]<<16)|(marker[1]<<8)|marker[2] -1);
 							}
 						}
 						break;

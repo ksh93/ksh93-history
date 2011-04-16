@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -635,5 +635,26 @@ compound -A c.b=( [2]=( bb=2 ) )
 typeset -m "c.b[9]=c.a[1]"
 exp='typeset -C c=(typeset -C -a a;typeset -C -A b=( [2]=(bb=2;)[9]=(aa=1));)'
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to a compound associative array element fails'
+
+zzz=(
+	foo=(
+		bar=4
+	)
+)
+[[ $(set | grep "^zzz\.") ]] && err_exit 'set displays compound variables incorrectly'
+
+typeset -A stats
+stats[1]=(a=1 b=2)
+stats[2]=(a=1 b=2)
+stats[1]=(c=3 d=4)
+(( ${#stats[@]} == 2 )) || err_exit "stats[1] should contain 2 element not ${#stats[@]}"
+
+integer i=1
+foo[i++]=(x=3 y=4)
+[[ ${foo[1].x} == 3 ]] || err_exit "\${foo[1].x} should be 3"
+[[ ${foo[1].y} == 4 ]] || err_exit "\${foo[1].y} should be 4"
+
+# ${!x.} caused core dump in ks93u and earlier
+{ $SHELL -c 'compound x=(y=1); : ${!x.}' ; ((!$?));} || err_exit '${!x.} not working'
 
 exit $((Errors<125?Errors:125))

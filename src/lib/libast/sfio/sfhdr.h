@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -495,6 +495,7 @@
 #define SF_PRIVATE	00000100	/* private stream to Sfio, no mutex	*/
 #define SF_ENDING	00000200	/* no re-io on interrupts at closing	*/
 #define SF_WIDE		00000400	/* in wide mode - stdio only		*/
+#define SF_PUTR		00001000	/* in sfputr()				*/
 
 /* "bits" flags that must be cleared in sfclrlock */
 #define SF_TMPBITS	00170000
@@ -556,9 +557,6 @@
 #define SECOND		1000	/* millisecond units */
 
 /* macros do determine stream types from sfstat_t data */
-#ifndef S_IFMT
-#define S_IFMT	0
-#endif
 #ifndef S_IFDIR
 #define S_IFDIR	0
 #endif
@@ -570,6 +568,13 @@
 #endif
 #ifndef S_IFIFO
 #define S_IFIFO	0
+#endif
+#ifndef S_ISOCK
+#define S_ISOCK	0
+#endif
+
+#ifndef S_IFMT
+#define S_IFMT	(S_IFDIR|S_IFREG|S_IFCHR|S_IFIFO|S_ISOCK)
 #endif
 
 #ifndef S_ISDIR
@@ -583,7 +588,7 @@
 #endif
 
 #ifndef S_ISFIFO
-#	ifdef S_IFIFO
+#	if S_IFIFO
 #		define S_ISFIFO(m)	(((m)&S_IFMT) == S_IFIFO)
 #	else
 #		define S_ISFIFO(m)	(0)

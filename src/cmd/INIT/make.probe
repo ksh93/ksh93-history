@@ -3,7 +3,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2011-02-11
+# @(#)make.probe (AT&T Research) 2011-04-14
 #
 # C probe for make
 #
@@ -18,6 +18,8 @@ probe_ccs="strip size nm ld ar" # longest to shortest
 probe_debug="-g"
 probe_dll="'-G 0' -Wc,dll,exportall,longname,rent -Wc,exportall -dynamic $cc_dll_def"
 probe_export_dynamic="-rdynamic -export-dynamic -Wl,-export-dynamic -Wl,-E -bexpall -force_flat_namespace"
+probe_gcc_optimize="-O2"
+probe_gcc_version="*[Gg][Cc][Cc]*"
 probe_include_local="'-ignore-source-dir -iquote' -iquote -I-"
 probe_ldlazy='-zlazyload -znolazyload -Wl,-zlazyload -Wl,-znolazyload'
 probe_ldlib="LD_LIBRARY_PATH LIBPATH LPATH"
@@ -1536,6 +1538,9 @@ then	e=`wc -c < e`
 		esac
 	done
 
+	case $version_string in
+	$probe_gcc_version)	probe_optimize="$probe_gcc_optimize $probe_optimize" ;;
+	esac
 	eval set x $probe_optimize
 	while	:
 	do	shift
