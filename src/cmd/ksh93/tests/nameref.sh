@@ -493,4 +493,105 @@ read line << \!
 set -A ls -- $line
 [[ $a == 3 ]] || err_exit 'name reference to ls[0] when ls is not an array fails'
 
+$SHELL  2> /dev/null <<-\EOF || err_exit 'nameref to array element fails'
+	set -o errexit
+	function bf {
+		nameref treename=$1
+		nodepath="treename" ;
+		nameref x="$nodepath"
+		compound -A x.nodes
+		nameref node=treename.nodes[4]
+		node=()
+		typeset +p node.elements
+	}
+	compound c
+	bf c
+EOF
+
+function add_compound
+{
+	nameref arr=$1
+	arr[34]+=( float val=1.1 )
+}
+compound -a rootcpv
+nameref mycpv=rootcpv[4][8][16][32][64]
+compound -a mycpv.myindexedcompoundarray
+add_compound mycpv.myindexedcompoundarray
+(( mycpv.myindexedcompoundarray[34].val == 1.1 )) ||  err_exit 'nameref scoping error'
+
+function add_file_to_tree
+{
+	nameref node=$1
+	compound -A node.elements
+	node.elements[/]=(filepath=foobar)
+}
+function main
+{	
+	compound filetree
+	add_file_to_tree filetree
+}
+main 2> /dev/null
+[[ $? == 0 ]] || err_exit 'nameref binding to calling function compound variable failed'
+
+unset l
+typeset -a -C l
+printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l[4][6]
+exp=$(print -v l)
+unset l
+typeset -a -C l
+nameref l4=l[4]
+printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l4[6]
+[[ $(print -v l) == "$exp" ]] || err_exit  'nameref l4=l[4] not working'
+unset l
+typeset -a -C l
+nameref l46=l[4][6]
+printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l46
+[[ $(print -v l) == "$exp" ]] || err_exit  'nameref l46=l[4][6] not working'
+
+exp=$'(\n\t[4]=(\n\t\ttypeset -a ar=(\n\t\t\t1\n\t\t\t2\n\t\t)\n\t\tb=1\n\t)\n)'
+unset l
+typeset +n l4
+typeset -a -C l
+nameref l4=l[4]
+printf "( typeset -a ar=( 1\n2\n) b=1 )\n" | read -C l4
+[[ $(print -v l) == "$exp" ]] || err_exit  'nameref l4=l[4] not working with indexed array read'
+
+unset l
+typeset +n l4
+typeset -A -C l
+nameref l4=l[4]
+printf "( typeset -a ar=( 1\n2\n) b=1 )\n" | read -C l4
+[[ $(print -v l) == "$exp" ]] || err_exit  'nameref l4=l[4] not working with associative array read'
+
+exp=$'(\n\t[9]=(\n\t\tfish=4\n\t)\n)'
+function add_eval
+{
+	nameref pos=$1
+	source /dev/stdin <<<"$2"
+	typeset -m pos=addvar
+}
+function do_local_plain
+{
+	compound -A local_tree
+	add_eval local_tree[9].fish "typeset -i addvar=4"
+	[[ $(print -v local_tree) == "$exp" ]] || err_exit 'do_local_plain failed'
+}
+function do_global_throughnameref
+{
+	nameref tr=global_tree
+	add_eval tr[9].fish "typeset -i addvar=4"
+	[[ $(print -v tr) == "$exp" ]] || err_exit 'do_global_throughnameref failed'
+}
+function do_local_throughnameref
+{
+	compound -A local_tree
+	nameref tr=local_tree
+	add_eval tr[9].fish "typeset -i addvar=4"
+	[[ $(print -v tr) == "$exp" ]] || err_exit 'do_local_throughnameref failed'
+}
+compound -A global_tree
+do_global_throughnameref
+do_local_throughnameref
+do_local_plain
+
 exit $((Errors<125?Errors:125))

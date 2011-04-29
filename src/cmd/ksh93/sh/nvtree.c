@@ -603,7 +603,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	mp = nv_opensub(np);
 	while(1)
 	{
-		if(mp && special && nv_isvtree(mp))
+		if(mp && special && nv_isvtree(mp) && !nv_isarray(mp))
 		{
 			if(!nv_nextsub(np))
 				break;
@@ -742,11 +742,9 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	if(!wp->out)
 	{
 		_nv_unset(np,NV_RDONLY);
-		nv_close(np);
-#if 0
-		if(sh.subshell==0 && !(wp->flags&NV_RDONLY) && !nv_isattr(np,NV_MINIMAL|NV_NOFREE))
-			nv_delete(np,wp->root,0);
-#endif
+		if(sh.subshell || (wp->flags!=NV_RDONLY) || nv_isattr(np,NV_MINIMAL|NV_NOFREE))
+			wp->root = 0;
+		nv_delete(np,wp->root,NV_NOFREE);
 		return;
 	}
 	if(isarray==1 && !nq)

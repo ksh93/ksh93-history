@@ -616,4 +616,17 @@ fi
 } 2> /dev/null || err_exit $'tokenizer can\'t handle ${var op {..} }'
 
 
+function foo
+{
+	typeset x="123 456 789 abc"
+	typeset dummy="${x/~(E-g)([[:digit:]][[:digit:]])((X)|([[:digit:]]))([[:blank:]])/_}"
+	exp=$'(\n\t[0]=\'123 \'\n\t[1]=12\n\t[2]=3\n\t[4]=3\n\t[5]=\' \'\n)'
+	[[ $(print -v .sh.match) == "$exp" ]] || err_exit '.sh.match not correct with alternations'
+}
+foo
+
+x="a 1 b"
+d=${x/~(E)(([[:digit:]])[[:space:]]*|([[:alpha:]]))/X}
+[[ $(print -v .sh.match) == $'(\n\t[0]=a\n\t[1]=a\n\t[3]=a\n)' ]] || err_exit '.sh.match not sparse'
+
 exit $((Errors<125?Errors:125))

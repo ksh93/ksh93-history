@@ -64,6 +64,20 @@ static struct jobsave *job_savelist;
 static int njob_savelist;
 static struct process *pwfg;
 
+pid_t	pid_fromstring(char *str)
+{
+	pid_t	pid;
+	char	*last;
+	errno = 0;
+	if(sizeof(pid)==sizeof(Sflong_t))
+		pid = (pid_t)strtoll(str, &last, 10);
+	else
+		pid = (pid_t)strtol(str, &last, 10);
+	if(errno==ERANGE || *last)
+		errormsg(SH_DICT,ERROR_exit(1),"%s: invalid process id",str);
+	return(pid);
+}
+
 static void init_savelist(void)
 {
 	register struct jobsave *jp;
@@ -283,7 +297,7 @@ static struct jobsave *jobsave_create(pid_t pid)
 		errormsg(SH_DICT,ERROR_exit(1),e_jobusage,name);
 	if(cp)
 	{
-		n = strtol(cp+1, &cp, 10);
+		n = pid_fromstring(cp+1);
 		val = (csp->id<<16)|n|COPID_BIT;
 	}
 	job_reap(SIGCHLD);
@@ -873,7 +887,7 @@ void job_bwait(char **jobs)
 #   endif /* SHOPT_COSHELL */
 		else
 #endif /* JOBS */
-			pid = (int)strtol(jp, (char**)0, 10);
+			pid = pid_fromstring(jp);
 		job_wait(-pid);
 	}
 }
@@ -935,13 +949,7 @@ int job_walk(Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[
 			pw = job_bystring(jobid);
 		else
 		{
-			int pid = (int)strtol(jobid, (char**)0, 10);
-			if(pid<0)
-				jobid++;
-			while(isdigit(*jobid))
-				jobid++;
-			if(*jobid)
-				errormsg(SH_DICT,ERROR_exit(1),e_jobusage,job_string);
+			int pid = pid_fromstring(jobid);
 			if(!(pw = job_bypid(pid)))
 			{
 				pw = &dummy;

@@ -33,20 +33,20 @@ contributor=(
 )
 
 license=(
-	type=cpl
-	version=1.0
-	package=ast
-	since=1986
-	author=gsf+dgk+kpv
-
 	organization="Information and Software Systems Research"
-
 	domain=research.att.com
 	parent="AT&T"
 	corporation="Intellectual Property"
 	company="Research"
 	location="Florham Park NJ"
 
+	package=ast
+	since=1986
+	author=gsf+dgk+kpv
+
+	type=cpl
+	name="Common Public License"
+	version=1.0
 	url=http://www.opensource.org/licenses/${license.type}${license.version}.txt
 	urlmd5=059e8cd6165cb4c31e351f2b69388fd9
 )

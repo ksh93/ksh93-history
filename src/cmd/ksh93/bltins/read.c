@@ -223,7 +223,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	int			jmpval=0;
 	ssize_t			size = 0;
 	int			binary;
-	int			oflags=NV_NOASSIGN|NV_VARNAME;
+	int			oflags=NV_ASSIGN|NV_VARNAME;
 	struct	checkpt		buff;
 	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd)))
 		return(1);

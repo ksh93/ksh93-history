@@ -1,6 +1,6 @@
 : ksh regression test harness :
 
-USAGE_LICENSE="[-author?David Korn <dgk@research.att.com>][-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2000-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt]"
+USAGE_LICENSE="[-author?David Korn <dgk@research.att.com>][-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2000-2011 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt]"
 
 command=shtests
 
@@ -9,13 +9,13 @@ timesensitive='*@(options|sigchld|subshell).sh'
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2010-12-01 $
+@(#)$Id: shtests (AT&T Research) 2011-04-26 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
 [+DESCRIPTION?\bshtests\b is the \bksh\b(1) regression test harness for
-    \b$SHELL\b or \bksh\b if \bSHELL\b is not defined. If none of
-    \b--compile --script\b are specified then \b--compile --script\b are
+    \b$SHELL\b or \bksh\b if \bSHELL\b is not defined and exported. If none
+    of \b--compile --script\b are specified then \b--compile --script\b are
     assumed.]
 [+INPUT FILES?\bshtests\b regression test files are shell scripts that
     run in an environment controlled by \bshtests\b. An identification
@@ -47,7 +47,7 @@ USAGE=$'
     \bVMALLOC_OPTIONS\b unset.]
 [x:trace?Enable script execution trace.]
 
-[ test.sh ... ] [ name=value ...
+[ test.sh ... ] [ name=value ... ]
 
 [+SEE ALSO?\bksh\b(1), \bregress\b(1), \brt\b(1)]
 '
@@ -152,6 +152,9 @@ fi
 PATH=$PATH:$d
 if	[[ $INSTALLROOT && -r $INSTALLROOT/bin/.paths ]]
 then	PATH=$INSTALLROOT/bin:$PATH
+fi
+if	[[ ${SHELL%/*} != $INSTALLROOT/bin ]]
+then	PATH=${SHELL%/*}:$PATH
 fi
 if	[[ ! $SHCOMP ]]
 then	s=${SHELL:##*sh}

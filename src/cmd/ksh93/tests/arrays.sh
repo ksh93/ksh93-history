@@ -568,5 +568,8 @@ typeset arr2[6]
 arr2[1]=def
 [[ ${arr2[1]} == def ]] || err_exit 'declaration "typeset array[6]" causes arrays causes wrong side effects'
 
+unset foo
+typeset foo[7]
+[[ ${#foo[@]} == 0 ]] || err_exit 'typeset foo[7] should not have one element' 
 
 exit $((Errors<125?Errors:125))

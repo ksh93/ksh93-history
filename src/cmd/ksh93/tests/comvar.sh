@@ -657,4 +657,11 @@ foo[i++]=(x=3 y=4)
 # ${!x.} caused core dump in ks93u and earlier
 { $SHELL -c 'compound x=(y=1); : ${!x.}' ; ((!$?));} || err_exit '${!x.} not working'
 
+$SHELL -c 'typeset -A a=([b]=c)' 2> /dev/null || err_exit 'typeset -A a=([b]=c) fails'
+
+compound -a a
+compound c=( name="container1" )
+a[4]=c 
+[[ ${a[4]} == $'(\n\tname=container1\n)' ]] || err_exit 'assignment of compound variable to compound array element not working'
+
 exit $((Errors<125?Errors:125))

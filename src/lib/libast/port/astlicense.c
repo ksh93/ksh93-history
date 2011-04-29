@@ -66,19 +66,21 @@
 #define CONTRIBUTOR		3
 #define CORPORATION		4
 #define DOMAIN			5
-#define INCORPORATION		6
-#define LICENSE			7
-#define LOCATION		8
-#define NOTICE			9
-#define ORGANIZATION		10
-#define PACKAGE			11
-#define PARENT			12
-#define QUERY			13
-#define SINCE			14
-#define STYLE			15
-#define URL			16
-#define URLMD5			17
-#define VERSION			18
+#define ID			6
+#define INCORPORATION		7
+#define LICENSE			8
+#define LOCATION		9
+#define NAME			10
+#define NOTICE			11
+#define ORGANIZATION		12
+#define PACKAGE			13
+#define PARENT			14
+#define QUERY			15
+#define SINCE			16
+#define STYLE			17
+#define URL			18
+#define URLMD5			19
+#define VERSION			20
 
 #define IDS			64
 
@@ -132,9 +134,11 @@ static const Item_t	key[] =
 	KEY("contributor"),
 	KEY("corporation"),
 	KEY("domain"),
+	KEY("id"),
 	KEY("incorporation"),
 	KEY("license"),
 	KEY("location"),
+	KEY("name"),
 	KEY("notice"),
 	KEY("organization"),
 	KEY("package"),
@@ -284,20 +288,28 @@ expand(Notice_t* notice, register Buffer_t* b, const Item_t* item)
 	register char*	z;
 	register int	c;
 	int		m;
+	int		i;
+	int		k;
 
 	if (t = item->data)
 	{
 		q = item->quote;
 		e = t + item->size;
+		i = 0;
 		while (t < e)
 		{
 			if (*t == '$' && t < (e + 2) && *(t + 1) == '{')
 			{
-				m = 0;
+				k = m = 0;
 				x = t += 2;
 				while (t < e && (c = *t++) != '}')
 					if (c == '.')
 						x = t;
+					else if (c == '-')
+					{
+						k = 1;
+						break;
+					}
 					else if (c == '/')
 					{
 						m = 1;
@@ -313,11 +325,28 @@ expand(Notice_t* notice, register Buffer_t* b, const Item_t* item)
 							PUT(b, c);
 					}
 				}
-				if (m)
-					while (t < e && *t++ != '}');
+				else if (k)
+				{
+					k = 0;
+					i++;
+				}
+				if (k || m)
+				{
+					k = 1;
+					while (t < e)
+						if ((c = *t++) == '{')
+							k++;
+						else if (c == '}' && !--k)
+							break;
+				}
 			}
 			else if (q > 0 && *t == '\\' && (*(t + 1) == q || *(t + 1) == '\\'))
 				t++;
+			else if (*t == '}' && i)
+			{
+				t++;
+				i--;
+			}
 			else
 				PUT(b, *t++);
 		}

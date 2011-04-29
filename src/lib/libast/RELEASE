@@ -1,3 +1,4 @@
+11-04-20 port/astlicense.c: add { id name } keys
 11-04-15 fmtdev.c: fix to work for non-{blk,chr} special
 11-04-12 stk: change size args to size_t and stseek() offset to ssize_t
 11-04-12 sfio: sync with kpv to optimize large SF_STRING sfputr() buffer allocation

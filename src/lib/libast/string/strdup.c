@@ -24,7 +24,23 @@
 #undef	VMDEBUG
 #define	VMDEBUG		0
 
+#if defined(_MSVCRT_H)
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide strdup
+#else
+#define strdup		______strdup
+#endif
+#endif
+
 #include <ast.h>
+
+#if defined(_MSVCRT_H)
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide strdup
+#else
+#undef	strdup
+#endif
+#endif
 
 /*
  * return a copy of s using malloc

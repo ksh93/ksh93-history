@@ -765,6 +765,7 @@ void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],
 	shp->subshell = 0;
 #ifndef SHOPT_2DMATCH
 	index = 0;
+#else
 	if(index==0)
 #endif /* SHOPT_2DMATCH */
 	{
@@ -795,7 +796,7 @@ void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],
 		mp->v = v;
 		mp->first = match[0];
 	}
-#ifndef SHOPT_2DMATCH
+#ifdef SHOPT_2DMATCH
 	else
 	{
 		if(index==1)

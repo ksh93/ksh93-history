@@ -507,4 +507,6 @@ do
 	fi
 done
 
+$SHELL -c 'kill -0 123456789123456789123456789' 2> /dev/null && err_exit 'kill not catching process id overflows'
+
 exit $((Errors<125?Errors:125))

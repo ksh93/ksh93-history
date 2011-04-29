@@ -201,7 +201,25 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-11-04-15  --- Release ksh93u+ ---
+11-04-28  --- Release ksh93u+ ---
+11-04-28  The shell now checks for numerical overflows with process ids.
+11-04-28  Another scoping bug with compound variables defined by name references
+	  inside a function has been fixed.
+11-04-28  A bug which caused a core dump on 32 bit systems with the basic.sh
+	  regression test has been fixed.
+11-04-27  A scope binding error for name references has been fixed.
+11-04-27  Assignment of compound variable to compound array element by name
+	  is now working.
+11-04-26  I fixed a bug with SHOPT_FIXEDARRAY compilation that could cause
+	  an a core dump for not fixed arrays.
+11-04-25  A bug in the references to two domensional compound arrays has
+	  been fixed.
+11-04-20  A bug in which a name reference to a multidimentional index array
+	  index, nameref x=foo&#0091;3&#0093;&#0091;4&#0093;, did not work correctly has been fixed.
+11-04-18  Changes were added to allow fixed size arrays of variable sized
+	  objects when the SHOPT_FIXEDARRAY compile option defined on 10-09-28.
+11-04-18  A bug in which name references to array elements could fail has
+	  been fixed.
 11-04-15 +A compile option, SHOPT_2DMATCH, has been added which causes
 	  .sh.match to be a two dimensional array after ${var//pat/str} 
 	  where the first dimenstion is the pattern number and the second is
@@ -2908,6 +2926,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+11-04-20 port/astlicense.c: add { id name } keys
 11-04-15 fmtdev.c: fix to work for non-{blk,chr} special
 11-04-12 stk: change size args to size_t and stseek() offset to ssize_t
 11-04-12 sfio: sync with kpv to optimize large SF_STRING sfputr() buffer allocation
@@ -5090,7 +5109,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>April 15, 2011</TD>
+<TD align=right>April 29, 2011</TD>
 </TR>
 </TABLE>
 <P>

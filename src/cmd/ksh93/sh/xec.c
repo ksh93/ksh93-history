@@ -1888,7 +1888,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(sh_isoption(SH_PIPEFAIL))
 			{
 				const Shnode_t *tn=t;
-				job.waitall = 1;
+				job.waitall = 2;
 				while((tn=tn->lst.lstrit) && tn->tre.tretyp==TFIL)
 					job.waitall++;
 				exitval = job.exitval = (int*)stakalloc(job.waitall*sizeof(int));

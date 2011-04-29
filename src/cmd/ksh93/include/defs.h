@@ -185,6 +185,7 @@ struct shared
 	int		topfd; \
 	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
+	char		openmatch; \
 	char		intrap; \
 	char		login_sh; \
 	char		lastbase; \
@@ -246,6 +247,8 @@ struct shared
 	void		*mktype; \
 	Sfio_t		*strbuf; \
 	Sfio_t		*strbuf2; \
+	Dt_t		*first_root; \
+	Dt_t		*prefix_root; \
 	Dt_t		*last_root; \
 	Dt_t		*prev_root; \
 	Dt_t		*fpathdict; \

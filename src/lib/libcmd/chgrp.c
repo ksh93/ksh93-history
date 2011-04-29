@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Research) 2011-03-28 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Research) 2011-04-28 $\n]"
 USAGE_LICENSE
 ;
 
@@ -406,7 +406,7 @@ b_chgrp(int argc, char** argv, void* context)
 				op = "lchown";
 				goto commit;
 #else
-				if (!force)
+				if (!(options & OPT_FORCE))
 				{
 					errno = ENOSYS;
 					error(ERROR_system(0), "%s: cannot change symlink owner/group", ent->fts_path);

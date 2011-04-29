@@ -163,6 +163,7 @@ extern const char	e_running[];
 extern const char	e_coredump[];
 extern const char	e_no_proc[];
 extern const char	e_no_job[];
+extern const char	e_badpid[];
 extern const char	e_jobsrunning[];
 extern const char	e_nlspace[];
 extern const char	e_access[];

@@ -153,6 +153,7 @@ const char is_ufunction[]	= " is an undefined function";
     const char e_jobsrunning[]	= "You have running jobs";
     const char e_no_job[]	= "no such job";
     const char e_no_proc[]	= "no such process";
+    const char e_badpid[]	= "%s: invalid process id";
 #   if SHOPT_COSHELL
         const char e_jobusage[]	= "%s: Arguments must be %%job, process ids, or job pool names";
 #   else
