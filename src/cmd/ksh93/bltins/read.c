@@ -302,7 +302,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	{
 		if(nfp->disc && nfp->disc->readf)
 		{
-			if((c=(*nfp->disc->readf)(np,iop,delim,nfp))>=0)
+			Namval_t *mp = nv_open(name,shp->var_tree,oflags|NV_NOREF);
+			if((c=(*nfp->disc->readf)(mp,iop,delim,nfp))>=0)
 				return(c);
 		}
 	}

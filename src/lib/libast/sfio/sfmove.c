@@ -47,8 +47,8 @@ reg int		rc;	/* record separator */
 	Sfoff_t		n_move, sk, cur;
 	uchar		*rbuf = NIL(uchar*);
 	ssize_t		rsize = 0;
-	SFMTXDECL(fr);
-	SFMTXDECL2(fw);
+	SFMTXDECL(fr);	/* declare a shadow stream variable for from stream */
+	SFMTXDECL2(fw);	/* declare a shadow stream variable for to stream */
 
 	SFMTXENTER(fr, (Sfoff_t)0);
 	if(fw)

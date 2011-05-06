@@ -1973,20 +1973,18 @@ void job_subrestore(void* ptr)
 	register struct jobsave *jp;
 	register struct back_save *bp = (struct back_save*)ptr;
 	register struct process *pw, *px, *pwnext;
-	struct jobsave *jpnext;
+	struct jobsave *end=NULL;
 	job_lock();
-	for(jp=bck.list; jp; jp=jpnext)
-	{
-		jpnext = jp->next;
-		if(jp->pid==sh.spid)
-		{
-			jp->next = bp->list;
-			bp->list = jp;
-			bp->count++;
-		}
-		else
-			job_chksave(jp->pid);
-	}
+	for(jp=bck.list; jp; jp=jp->next)
+		if (!jp->next)
+			end = jp;
+
+	if(end)
+		end->next = bp->list;
+	else
+		bck.list = bp->list;
+	bck.count += bp->count;
+
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -1997,11 +1995,6 @@ void job_subrestore(void* ptr)
 		job_unpost(pw,0);
 	}
 
-	/*
-	 * queue up old lists for disposal by job_reap()
-	 */
-
-	bck = *bp;
 	free((void*)bp);
 	job_unlock();
 }

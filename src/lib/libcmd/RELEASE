@@ -1,3 +1,4 @@
+10-05-03 cp.c: do not delete src if mv to dest fails -- doh
 11-03-28 chmod.c,chgrp.c: fix --symlink logic
 11-03-26 rm.c: don't eaccess() check symlinks!
 11-01-27 date: add { -R, --rfc-2822, -T, --rfc-3339=type }

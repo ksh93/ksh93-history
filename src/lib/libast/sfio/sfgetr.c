@@ -40,7 +40,7 @@ int		type;
 	uchar		*s, *ends, *us;
 	int		found;
 	Sfrsrv_t*	rsrv;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f, NIL(char*));
 

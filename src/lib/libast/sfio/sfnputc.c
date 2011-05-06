@@ -39,7 +39,7 @@ size_t		n;	/* number of time to repeat */
 	reg ssize_t	p, w;
 	uchar		buf[128];
 	reg int		local;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f,-1);
 

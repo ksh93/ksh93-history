@@ -117,7 +117,7 @@ Sfdisc_t*	disc;
 	Sfseek_f	oseekf;
 	ssize_t		n;
 	Dccache_t	*dcca = NIL(Dccache_t*);
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f, NIL(Sfdisc_t*));
 

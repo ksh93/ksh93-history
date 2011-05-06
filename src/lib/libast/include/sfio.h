@@ -22,7 +22,7 @@
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20080717L
+#define SFIO_VERSION	20090915L
 
 /*	Public header file for the sfio library
 **
@@ -197,8 +197,6 @@ struct _sffmt_s
 
 _BEGIN_EXTERNS_
 
-/* standard in/out/err streams */
-
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern		extern __EXPORT__
 #endif
@@ -209,6 +207,7 @@ _BEGIN_EXTERNS_
 extern ssize_t		_Sfi;
 extern ssize_t		_Sfmaxr;
 
+/* standard in/out/err streams */
 extern Sfio_t*		sfstdin;
 extern Sfio_t*		sfstdout;
 extern Sfio_t*		sfstderr;
@@ -259,8 +258,10 @@ extern ssize_t		sfnputc _ARG_((Sfio_t*, int, size_t));
 extern int		sfungetc _ARG_((Sfio_t*, int));
 extern int		sfprintf _ARG_((Sfio_t*, const char*, ...));
 extern char*		sfprints _ARG_((const char*, ...));
+extern ssize_t		sfaprints _ARG_((char**, const char*, ...));
 extern ssize_t		sfsprintf _ARG_((char*, size_t, const char*, ...));
 extern ssize_t		sfvsprintf _ARG_((char*, size_t, const char*, va_list));
+extern ssize_t		sfvasprints _ARG_((char**, const char*, va_list));
 extern int		sfvprintf _ARG_((Sfio_t*, const char*, va_list));
 extern int		sfscanf _ARG_((Sfio_t*, const char*, ...));
 extern int		sfsscanf _ARG_((const char*, const char*, ...));

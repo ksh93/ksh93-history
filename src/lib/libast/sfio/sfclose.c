@@ -35,7 +35,7 @@ Sfio_t*	f;
 {
 	reg int		local, ex, rv;
 	Void_t*		data = NIL(Void_t*);
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f, -1);
 
@@ -120,7 +120,15 @@ Sfio_t*	f;
 	if(_Sfnotify)
 		(*_Sfnotify)(f, SF_CLOSING, (void*)((long)f->file));
 	if(f->file >= 0 && !(f->flags&SF_STRING))
-		CLOSE(f->file);
+	{	while(sysclosef(f->file) < 0 )
+		{	if(errno == EINTR)
+				errno = 0;
+			else
+			{	rv = -1;
+				break;
+			}
+		}
+	}
 	f->file = -1;
 
 	SFKILL(f);
@@ -136,8 +144,8 @@ Sfio_t*	f;
 	}
 
 	/* delete any associated sfpopen-data */
-	if(f->proc)
-		rv = _sfpclose(f);
+	if(f->proc && _sfpclose(f) < 0 )
+		rv = -1;
 
 	/* destroy the mutex */
 	if(f->mutex)

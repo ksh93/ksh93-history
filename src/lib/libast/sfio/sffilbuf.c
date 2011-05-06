@@ -41,7 +41,7 @@ reg int	n;	/* see above */
 {
 	reg ssize_t	r;
 	reg int		first, local, rcrv, rc, justseek;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f,-1);
 

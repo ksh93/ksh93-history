@@ -2491,10 +2491,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done tvtouch.o generated
 make cmdarg.o
 make misc/cmdarg.c
-make include/cmdarg.h implicit
-done include/cmdarg.h
 prev include/proc.h implicit
+prev ast_api.h implicit
+make include/cmdarg.h implicit
 prev include/error.h implicit
+done include/cmdarg.h
 prev include/ast.h implicit
 done misc/cmdarg.c
 meta cmdarg.o %.c>%.o misc/cmdarg.c cmdarg

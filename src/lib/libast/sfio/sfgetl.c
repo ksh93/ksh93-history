@@ -36,7 +36,7 @@ Sfio_t*	f;
 	Sflong_t	v;
 	uchar		*s, *ends, c;
 	int		p;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f,(Sflong_t)(-1));
 

@@ -594,4 +594,51 @@ do_global_throughnameref
 do_local_throughnameref
 do_local_plain
 
+unset ar
+compound -a ar
+function read_c
+{
+	nameref v=$1
+	read -C v
+}
+print "( typeset -i x=36 ) " | read_c ar[5][9][2]
+exp=$'(\n\t[5]=(\n\t\t[9]=(\n\t\t\t[2]=(\n\t\t\t\ttypeset -i x=36\n\t\t\t)\n\t\t)\n\t)\n)'
+[[ $(print -v ar) == "$exp" ]] || err_exit 'read into nameref of global array instance from within a function fails'
+
+function read_c
+{
+	nameref v=$1
+	read -C v
+}
+function main
+{
+	compound -a ar
+	nameref nar=ar
+	print "( typeset -i x=36 ) " | read_c nar[5][9][2]
+	exp=$'(\n\t[5]=(\n\t\t[9]=(\n\t\t\t[2]=(\n\t\t\t\ttypeset -i x=36\n\t\t\t)\n\t\t)\n\t)\n)'
+	[[ $(print -v nar) == "$exp" ]] || err_exit 'read from a nameref variable from calling scope fails'
+}
+main
+
+function rf2
+{
+	nameref val=$1
+	read -C val
+}
+function rf
+{
+	nameref val=$1
+	rf2 val
+}
+function main
+{
+	compound c
+	typeset -A -C c.l
+	nameref l4=c.l[4]
+	printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | rf l4
+	exp=$'(\n\ttypeset -C -A l=(\n\t\t[4]=(\n\t\t\ttypeset -a ar=(\n\t\t\t\t1\n\t\t\t\t2\n\t\t\t\t3\n\t\t\t)\n\t\t\tb=1\n\t\t)\n\t)\n)'
+	[[ $(print -v c) == "$exp" ]] || err_exit 'read -C with nameref to array element fails'
+}
+main
+
 exit $((Errors<125?Errors:125))

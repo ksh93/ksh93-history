@@ -59,7 +59,7 @@ int		c;	/* the value to be pushed back */
 	reg Sfio_t*	uf;
 	SFMTXDECL(f);
 
-	SFMTXENTER(f, -1)
+	SFMTXENTER(f, -1);
 
 	if(c < 0 || (f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0))
 		SFMTXRETURN(f, -1);

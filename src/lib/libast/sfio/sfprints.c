@@ -96,7 +96,7 @@ va_list	args;
 	{	if(!(*sp = (char*)malloc(n = strlen(s)+1)) )
 			return -1;
 		memcpy(*sp, s, n);
-		return n - 1;
+		return n-1;
 	}
 }
 

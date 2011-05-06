@@ -508,4 +508,11 @@ x=$($SHELL -c '( function fx { export X=123;  } ; fx; ); echo $X')
 [[ $x == 123 ]] && err_exit 'global variables set from with functions inside a
 subshell can leave side effects in parent shell'
 
+date=$(whence -p date)
+err() { return $1; }
+( err 12 ) & pid=$!
+: $( $date)
+wait $pid
+[[ $? == 12 ]] || err_exit 'exit status from subshells not being preserved'
+
 exit $((Errors<125?Errors:125))

@@ -38,7 +38,7 @@ Sfdisc_t*	disc;	/* discipline in use */
 	reg int		ev, local, lock;
 	reg ssize_t	size;
 	reg uchar*	data;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f,-1);
 

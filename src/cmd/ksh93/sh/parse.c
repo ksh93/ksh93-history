@@ -42,7 +42,7 @@
 #include	"test.h"
 #include	"history.h"
 
-#define HERE_MEM	1024	/* size of here-docs kept in memory */
+#define HERE_MEM	SF_BUFSIZE	/* size of here-docs kept in memory */
 
 #define hash	nvlink.hl._hash
 

@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Research) 2011-03-28 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2011-05-03 $\n]"
 USAGE_LICENSE
 ;
 
@@ -605,29 +605,28 @@ visit(State_t* state, register FTSENT* ent)
 					error(ERROR_SYSTEM|2, "%s: %s read stream error", ent->fts_path, state->path);
 					close(rfd);
 					close(wfd);
+					return 0;
 				}
-				else
+				if (!(op = sfnew(NiL, NiL, SF_UNBOUND, wfd, SF_WRITE)))
 				{
-					n = 0;
-					if (!(op = sfnew(NiL, NiL, SF_UNBOUND, wfd, SF_WRITE)))
-					{
-						error(ERROR_SYSTEM|2, "%s: %s write stream error", ent->fts_path, state->path);
-						close(wfd);
-						sfclose(ip);
-					}
-					else
-					{
-						if (sfmove(ip, op, (Sfoff_t)SF_UNBOUND, -1) < 0)
-							n |= 3;
-						if (!sfeof(ip))
-							n |= 1;
-						if (sfsync(op) || state->sync && fsync(wfd) || sfclose(op))
-							n |= 2;
-						if (sfclose(ip))
-							n |= 1;
-						if (n)
-							error(ERROR_SYSTEM|2, "%s: %s %s error", ent->fts_path, state->path, n == 1 ? ERROR_translate(0, 0, 0, "read") : n == 2 ? ERROR_translate(0, 0, 0, "write") : ERROR_translate(0, 0, 0, "io"));
-					}
+					error(ERROR_SYSTEM|2, "%s: %s write stream error", ent->fts_path, state->path);
+					close(wfd);
+					sfclose(ip);
+					return 0;
+				}
+				n = 0;
+				if (sfmove(ip, op, (Sfoff_t)SF_UNBOUND, -1) < 0)
+					n |= 3;
+				if (!sfeof(ip))
+					n |= 1;
+				if (sfsync(op) || state->sync && fsync(wfd) || sfclose(op))
+					n |= 2;
+				if (sfclose(ip))
+					n |= 1;
+				if (n)
+				{
+					error(ERROR_SYSTEM|2, "%s: %s %s error", ent->fts_path, state->path, n == 1 ? ERROR_translate(0, 0, 0, "read") : n == 2 ? ERROR_translate(0, 0, 0, "write") : ERROR_translate(0, 0, 0, "io"));
+					return 0;
 				}
 			}
 			else

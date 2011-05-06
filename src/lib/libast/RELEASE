@@ -1,3 +1,5 @@
+11-05-05 cmdarg: update to cmdopen_20110505 api
+11-05-03 sfio/sfclose.c: make sure close() errors propagate to sfclose() return value
 11-04-20 port/astlicense.c: add { id name } keys
 11-04-15 fmtdev.c: fix to work for non-{blk,chr} special
 11-04-12 stk: change size args to size_t and stseek() offset to ssize_t

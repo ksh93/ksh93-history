@@ -1,4 +1,11 @@
-11-04-28  --- Release ksh93u+ ---
+11-05-03  --- Release ksh93u+ ---
+11-05-03  Two more scoping bug with name references and read -C were fixed.
+11-05-03  A potential race condition which occurs when here-documents are
+	  processed in asynchronous blocks has been eliminated.
+11-05-02  Another scoping bug with name references defined in a function has
+	  been fixed.
+11-05-02  A bug in which the shell discards saved exit status of a job if it is
+	  followed by a subshell execution has been fixed.
 11-04-28  The shell now checks for numerical overflows with process ids.
 11-04-28  Another scoping bug with compound variables defined by name references
 	  inside a function has been fixed.

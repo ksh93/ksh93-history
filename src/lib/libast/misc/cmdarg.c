@@ -27,12 +27,32 @@
  * xargs/tw command arg list support
  */
 
-#include <ast.h>
-#include <ctype.h>
-#include <error.h>
-#include <proc.h>
+#define _AST_API_H	1
 
-#include "cmdarg.h"
+#include <ast.h>
+#include <cmdarg.h>
+
+Cmdarg_t*
+cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
+{
+	Error_f	ef;
+
+	if (flags & CMD_SILENT)
+		ef = 0;
+	else
+	{
+		ef = errorf;
+		flags |= CMD_EXIT;
+	}
+	return cmdopen_20110505(argv, argmax, size, argpat, flags, ef);
+}
+
+#undef	_AST_API_H
+
+#include <ast_api.h>
+
+#include <ctype.h>
+#include <proc.h>
 
 #ifndef ARG_MAX
 #define ARG_MAX		(64*1024)
@@ -50,7 +70,7 @@ static const char*	echo[] = { "echo", 0 };
  */
 
 Cmdarg_t*
-cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
+cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flags, Error_f errorf)
 {
 	register Cmdarg_t*	cmd;
 	register int		n;
@@ -93,7 +113,8 @@ cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
 	m = roundof(m, sizeof(char**));
 	if (size < m)
 	{
-		error(2, "size must be at least %d", m);
+		if (errorf)
+			(*errorf)(NiL, sh, 2, "size must be at least %d", m);
 		return 0;
 	}
 	if ((m = x / 10) > 2048)
@@ -104,9 +125,11 @@ cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
 	m = ((flags & CMD_INSERT) && argpat) ? (strlen(argpat) + 1) : 0;
 	if (!(cmd = newof(0, Cmdarg_t, 1, n + m)))
 	{
-		error(ERROR_SYSTEM|2, "out of space");
+		if (errorf)
+			(*errorf)(NiL, sh, ERROR_SYSTEM|2, "out of space");
 		return 0;
 	}
+	cmd->errorf = errorf;
 	c = n / sizeof(char**);
 	if (argmax <= 0 || argmax > c)
 		argmax = c;
@@ -125,11 +148,11 @@ cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
 	{
 		if (!pathpath(argv[0], NiL, PATH_REGULAR|PATH_EXECUTE, s, n + m))
 		{
-			if (!(flags & CMD_SILENT))
-			{
-				error(ERROR_SYSTEM|2, "%s: command not found", argv[0]);
-				exit(EXIT_NOTFOUND);
-			}
+			n = EXIT_NOTFOUND;
+			if (errorf)
+				(*cmd->errorf)(NiL, cmd, ERROR_SYSTEM|2, "%s: command not found", argv[0]);
+			if (flags & CMD_EXIT)
+				(*error_info.exit)(n);
 			free(cmd);
 			return 0;
 		}
@@ -189,8 +212,8 @@ cmdflush(register Cmdarg_t* cmd)
 		return 0;
 	if ((cmd->flags & CMD_MINIMUM) && cmd->argcount < cmd->argmax)
 	{
-		if (!(cmd->flags & CMD_SILENT))
-			error(2, "%d arg command would be too long", cmd->argcount);
+		if (cmd->errorf)
+			(*cmd->errorf)(NiL, cmd, 2, "%d arg command would be too long", cmd->argcount);
 		return -1;
 	}
 	cmd->total.args += cmd->argcount;
@@ -244,8 +267,8 @@ cmdflush(register Cmdarg_t* cmd)
 			}
 		if (b >= e)
 		{
-			if (!(cmd->flags & CMD_SILENT))
-				error(2, "%s: command too large after insert", a);
+			if (cmd->errorf)
+				(*cmd->errorf)(NiL, cmd, 2, "%s: command too large after insert", a);
 			return -1;
 		}
 	}
@@ -271,22 +294,22 @@ cmdflush(register Cmdarg_t* cmd)
 	}
 	else if ((n = procrun(*cmd->argv, cmd->argv, PROC_ARGMOD|PROC_IGNOREPATH)) == -1)
 	{
-		if (!(cmd->flags & CMD_SILENT))
-		{
-			error(ERROR_SYSTEM|2, "%s: command exec error", *cmd->argv);
-			exit(EXIT_NOTFOUND - 1);
-		}
-		return -1;
+		n = EXIT_NOTFOUND - 1;
+		if (cmd->errorf)
+			(*cmd->errorf)(NiL, cmd, ERROR_SYSTEM|2, "%s: command exec error", *cmd->argv);
+		if (cmd->flags & CMD_EXIT)
+			(*error_info.exit)(n);
+		return n;
 	}
 	else if (n >= EXIT_NOTFOUND - 1)
 	{
-		if (!(cmd->flags & CMD_SILENT))
-			exit(n);
+		if (cmd->flags & CMD_EXIT)
+			(*error_info.exit)(n);
 	}
 	else if (!(cmd->flags & CMD_IGNORE))
 	{
-		if (n == EXIT_QUIT && !(cmd->flags & CMD_SILENT))
-			exit(2);
+		if (n == EXIT_QUIT && (cmd->flags & CMD_EXIT))
+			(*error_info.exit)(2);
 		if (n)
 			error_info.errors++;
 	}
@@ -310,7 +333,8 @@ cmdarg(register Cmdarg_t* cmd, const char* file, register int len)
 		{
 			if (cmd->nextarg == cmd->firstarg)
 			{
-				error(2, "%s: path too long for exec args", file);
+				if (cmd->errorf)
+					(*cmd->errorf)(NiL, cmd, 2, "%s: path too long for exec args", file);
 				return -1;
 			}
 			if (i = cmdflush(cmd))
@@ -342,8 +366,8 @@ cmdclose(Cmdarg_t* cmd)
 
 	if ((cmd->flags & CMD_EXACT) && cmd->argcount < cmd->argmax)
 	{
-		if (!(cmd->flags & CMD_SILENT))
-			error(2, "only %d arguments for last command", cmd->argcount);
+		if (cmd->errorf)
+			(*cmd->errorf)(NiL, cmd, 2, "only %d arguments for last command", cmd->argcount);
 		return -1;
 	}
 	cmd->flags &= ~CMD_MINIMUM;

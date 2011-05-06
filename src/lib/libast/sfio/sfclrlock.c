@@ -35,7 +35,7 @@ Sfio_t	*f;
 #endif
 {
 	int	rv;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	/* already closed */
 	if(f && (f->mode&SF_AVAIL))

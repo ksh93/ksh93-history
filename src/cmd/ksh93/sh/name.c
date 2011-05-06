@@ -355,12 +355,10 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 				error_info.line = fp->fortyp-shp->st.firstline;
 				if(!array && tp->tre.tretyp!=TLST && tp->com.comset && !tp->com.comarg && tp->com.comset->argval[0]==0 && tp->com.comset->argval[1]=='[')
 					array |= (tp->com.comset->argflag&ARG_MESSAGE)?NV_IARRAY:NV_ARRAY;
-				if(shp->fn_depth && (Namval_t*)tp->com.comnamp==SYSTYPESET)
-			                flag |= NV_NOSCOPE;
 				if(prefix && tp->com.comset && *cp=='[')
 				{
 					shp->prefix = 0;
-					np = nv_open(prefix,shp->var_tree,flag);
+					np = nv_open(prefix,shp->last_root,flag);
 					shp->prefix = prefix;
 					if(np)
 					{

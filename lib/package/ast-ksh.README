@@ -93,7 +93,14 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-11-04-28  --- Release ksh93u+ ---
+11-05-03  --- Release ksh93u+ ---
+11-05-03  Two more scoping bug with name references and read -C were fixed.
+11-05-03  A potential race condition which occurs when here-documents are
+	  processed in asynchronous blocks has been eliminated.
+11-05-02  Another scoping bug with name references defined in a function has
+	  been fixed.
+11-05-02  A bug in which the shell discards saved exit status of a job if it is
+	  followed by a subshell execution has been fixed.
 11-04-28  The shell now checks for numerical overflows with process ids.
 11-04-28  Another scoping bug with compound variables defined by name references
 	  inside a function has been fixed.
@@ -2815,6 +2822,8 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+11-05-05 cmdarg: update to cmdopen_20110505 api
+11-05-03 sfio/sfclose.c: make sure close() errors propagate to sfclose() return value
 11-04-20 port/astlicense.c: add { id name } keys
 11-04-15 fmtdev.c: fix to work for non-{blk,chr} special
 11-04-12 stk: change size args to size_t and stseek() offset to ssize_t
@@ -4537,6 +4546,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+10-05-03 cp.c: do not delete src if mv to dest fails -- doh
 11-03-28 chmod.c,chgrp.c: fix --symlink logic
 11-03-26 rm.c: don't eaccess() check symlinks!
 11-01-27 date: add { -R, --rfc-2822, -T, --rfc-3339=type }

@@ -1501,7 +1501,7 @@ fail:
  */
 static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name, int traceon)
 {
-	register Sfio_t	*infile = 0, *outfile;
+	register Sfio_t	*infile = 0, *outfile, *tmp;
 	register int		fd;
 	Sfoff_t			off;
 	if(!(iop->iofile&IOSTRG) && (!shp->heredocs || iop->iosize==0))
@@ -1517,6 +1517,19 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 	}
 	else
 	{
+		/*
+		 * the locking is only needed in case & blocks process
+		 * here-docs so this can be eliminted in some cases
+		 */
+		static struct flock	lock;
+		int	fno = sffileno(shp->heredocs);
+		if(fno>=0)
+		{
+			lock.l_type = F_WRLCK;
+			lock.l_whence = SEEK_SET;
+			fcntl(fno,F_SETLKW,&lock);
+			lock.l_type = F_UNLCK;
+		}
 		off = sftell(shp->heredocs);
 		infile = subopen(shp,shp->heredocs,iop->iooffset,iop->iosize);
 		if(traceon)
@@ -1526,13 +1539,21 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 			sfprintf(sfstderr," %c%s\n",fd,cp);
 			sfdisc(outfile,&tee_disc);
 		}
-		if(iop->iofile&IOQUOTE)
+		tmp = outfile;
+		if(fno>=0 && !(iop->iofile&IOQUOTE))
+			tmp = sftmp(IOBSIZE);
+		if(fno>=0 || (iop->iofile&IOQUOTE))
 		{
 			/* This is a quoted here-document, not expansion */
-			sfmove(infile,outfile,SF_UNBOUND,-1);
+			sfmove(infile,tmp,SF_UNBOUND,-1);
 			sfclose(infile);
+			sfseek(shp->heredocs,off,SEEK_SET);
+			if(fno>=0)
+				fcntl(fno,F_SETLK,&lock);
+			sfseek(tmp,(off_t)0,SEEK_SET);
+			infile = tmp;
 		}
-		else
+		if(!(iop->iofile&IOQUOTE))
 		{
 			char *lastpath = shp->lastpath;
 			sh_machere(shp,infile,outfile,iop->ioname);
@@ -1540,7 +1561,6 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 			if(infile)
 				sfclose(infile);
 		}
-		sfseek(shp->heredocs,off,SEEK_SET);
 	}
 	/* close stream outfile, but save file descriptor */
 	fd = sffileno(outfile);

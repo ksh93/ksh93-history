@@ -36,7 +36,7 @@ Sfio_t*	f;
 	reg uchar	*s, *ends, c;
 	reg int		p, sign, exp;
 	Sfdouble_t	v;
-	SFMTXDECL(f);
+	SFMTXDECL(f); /* declare a local stream variable for multithreading */
 
 	SFMTXENTER(f,-1.);
 
