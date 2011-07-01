@@ -462,6 +462,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	int jmpval,nsig=0,duped=0;
 	int savecurenv = shp->curenv;
 	int savejobpgid = job.curpgid;
+	int *saveexitval = job.exitval;
 	int16_t subshell;
 	char *savsig;
 	Sfio_t *iop=0;
@@ -501,7 +502,11 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 #endif /* SHOPT_COSHELL */
 	/* make sure initialization has occurred */ 
 	if(!shp->pathlist)
+	{
+		shp->pathinit = 1;
 		path_get(shp,".");
+		shp->pathinit = 0;
+	}
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
 	if(!shp->pwd)
 		path_pwd(shp,0);
@@ -653,6 +658,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	job_subrestore(sp->jobs);
 	shp->jobenv = savecurenv;
 	job.curpgid = savejobpgid;
+	job.exitval = saveexitval;
 	shp->bckpid = sp->bckpid;
 	if(sp->shpwd)	/* restore environment if saved */
 	{

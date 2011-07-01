@@ -52,7 +52,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2011-05-01 $
+@(#)$Id: package (AT&T Research) 2011-05-29 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -291,16 +291,18 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
             packages is updated. This action requires \bwget\b(1), \blynx\b(1),
             \bcurl\b(1) or a shell that supports io to
 	    \b/dev/tcp/\b\ahost\a/\aport\a.]
-        [+use\b [ \auid\a | \apackage\a | - ]] [ command ...]]?Run
+        [+use\b [ \auid\a | \apackage\a | . [ 32 | 64 ]] | 32 | 64 | - ]] [ command ...]]?Run
             \acommand\a, or an interactive shell if \acommand\a is omitted,
             with the environment initialized for using the package (can you
             say \ashared\a \alibrary\a or \adll\a without cussing?) If
-            either \auid\a or \apackage\a is specified then it is used to
-            determine a \b$PACKAGEROOT\b, possibly different from the
-            current directory. For example, to try out bozo`s package:
+            \auid\a or \apackage\a or \a.\a is specified then it is used
+	    to determine a \b$PACKAGEROOT\b, possibly different from
+	    the current directory. For example, to try out bozo`s package:
             \bpackage use bozo\b. The \buse\b action may be run from any
             directory. If the file \b$INSTALLROOT/lib/package/profile\b is
-            readable then it is sourced to initialize the environment.]
+            readable then it is sourced to initialize the environment. 32 or 64
+	    implies \b$PACKAGEROOT\b of . and specifies the target architecture
+	    word size (which may be silently ignored.)]
         [+verify\b [ \apackage\a ]]?Verify installed binary files
             against the checksum files in
             \b$INSTALLROOT/lib/\b\apackage\a\b/gen/*.sum\b. The checksum
@@ -502,6 +504,7 @@ action=
 admin_all=1
 admin_on=
 authorize=
+bit=
 exec=
 flat=0
 force=0
@@ -607,8 +610,8 @@ do	case $# in
 			bH="<CENTER><H3><FONT face=courier color=red>"
 			eH='</FONT></H3></CENTER>'
 			bP='<P>'
-			bL='<P><TABLE cellpadding=0 cellspacing=2>'		
-			bL2='<P><TABLE border=0 cellpadding=0 cellspacing=2>'		
+			bL='<P><TABLE cellpadding=0 cellspacing=2>'
+			bL2='<P><TABLE border=0 cellpadding=0 cellspacing=2>'
 			eL='</TABLE><P>'
 			bT='<TR><TD align=right valign=top><B>'
 			bD='</B></TD><TD align=left>'	eD='</TD></TR>'
@@ -1102,16 +1105,18 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		the closure of required packages is updated. This action
 		requires wget(1), lynx(1), curl(1) or a shell that supports
 		io to /dev/tcp/HOST/PORT.
-   	use [ uid | PACKAGE | - ] [ COMMAND ... ]
+   	use [ uid | PACKAGE | . [ 32 | 64 ] | 32 | 64 | - ] [ COMMAND ... ]
    		Run COMMAND or an interactive shell if COMMAND is omitted, with
 		the environment initialized for using the package (can you say
-		shared library without cussing?) If either uid or PACKAGE is
+		shared library without cussing?) If uid or PACKAGE or . is
 		specified then it is used to determine a \$PACKAGEROOT,
 		possibly different from the current directory. For example, to
 		try out bozo's package: \"package use bozo\". In this case the
 		command may be run from any directory. If the file
 		\$INSTALLROOT/lib/package/profile is readable then it is
-		sourced to initialize the environment.]
+		sourced to initialize the environment. 32 or 64 implies
+		\$PACKAGEROOT of . and specifies the target architecture word
+		size (which may be silently ignored.)
 	verify [ PACKAGE ]
 		Verify installed binary files against the checksum files in
 		\$INSTALLROOT/lib/package/gen/*.sum. The checksum files contain
@@ -1368,6 +1373,78 @@ setup)	PACKAGEROOT=${PWD:-`pwd`}
 	export PACKAGEROOT
 	KEEP_PACKAGEROOT=1
 	;;
+use)	case $1 in
+	.|32|64)case $1 in
+		32|64)	bit=$1 ;;
+		esac
+		shift
+
+		# HOSTTYPE specific setup
+
+		case $HOSTTYPE in
+		win32.*)sys=uwin
+			wow=`uname -i`
+			case $bit in
+			32)	case $HOSTTYPE in
+				*-64)	HOSTTYPE=${HOSTTYPE%-64} ;;
+				esac
+				case $wow in
+				*/32)	;;
+				*)	vpath / /$bit ;;
+				esac
+				;;
+			64)	case $HOSTTYPE in
+				*-64)	;;
+				*)	HOSTTYPE=$HOSTTYPE-64 ;;
+				esac
+				case $wow in
+				*/32)	echo $command: cannot build $bit-bit on $wow $sys >&2; exit 2 ;;
+				*)	vpath / /$bit ;;
+				esac
+				;;
+			esac
+			case $bit in
+			'')	PS1="($sys) " ;;
+			*)	PS1="($sys-$bit) " ;;
+			esac
+
+			$exec umask 002
+			$exec unset MAKESKIP
+
+			$exec export P=$PWD
+			$exec export A=$P/arch/$HOSTTYPE
+
+			$exec export CDPATH=:..:$A/src/cmd:$A/src/lib:$A/src/uwin:$P/lib/package
+			$exec export INSTALLROOT=$A
+			$exec export PACKAGEROOT=$P
+			$exec export PATH=$A/bin:$P/bin:$PATH
+			$exec export PS1="$PS1"
+			$exec export VPATH=$A:$P
+			$exec export nativepp=/usr/lib
+
+			if	test '' != "$INSTALLROOT" -a -d $INSTALLROOT/include/ast
+			then	$exec export PACKAGE_ast=$INSTALLROOT
+			elif	test -d ${PWD%/*}/ast/arch/$HOSTTYPE
+			then	$exec export PACKAGE_ast=${PWD%/*}/ast/arch/$HOSTTYPE
+			fi
+
+			# run the command
+
+			case $# in
+			0)	case $show in
+				':')	$exec exec $SHELL ;;
+				esac
+				;;
+			*)	$exec exec $SHELL -c "$@"
+				;;
+			esac
+			exit
+			;;
+		esac
+		PACKAGEROOT=${PWD:-`pwd`}
+		$show export PACKAGEROOT
+	esac
+	;;
 esac
 
 # true if arg is a valid PACKAGEROOT
@@ -1533,7 +1610,7 @@ hostinfo() # attribute ...
 
 	_hostinfo_=
 	for info
-	do	
+	do
 	case $info in
 	cpu)	case $NPROC in
 		[123456789]*)
@@ -1862,14 +1939,14 @@ int main()
 			'')	h=local ;;
 			esac
 			a=`arch || uname -m || att uname -m || uname -s || att uname -s`
-			case $a in 
+			case $a in
 			*[\ \	]*)	a=`echo $a | $SED "s/[ 	]/-/g"` ;;
 			esac
 			case $a in
 			'')	a=unknown ;;
 			esac
 			m=`mach || machine || uname -p || att uname -p`
-			case $m in 
+			case $m in
 			*[\ \	]*)	m=`echo $m | $SED "s/[ 	]/-/g"` ;;
 			esac
 			case $m in
@@ -2634,7 +2711,7 @@ case $x in
 		# no $INITROOT means INIT already installed elsewhere
 
 		if	test -d $INITROOT
-		then	
+		then
 			# update the basic package commands
 
 			for i in execrate ignore mamprobe silent
@@ -2673,7 +2750,7 @@ cat $INITROOT/$i.sh
 	PATH=$path
 	case $cc in
 	?*)	if	test -f $INITROOT/hello.c
-		then	
+		then
 			# check if $CC (full path $cc) is a cross compiler
 
 			(
@@ -4173,7 +4250,7 @@ checksrc()
 {
 	case $package_src in
 	'')	package_src=$src
-		for _i_ in `cd $PACKAGESRC; ls *.lic 2>/dev/null | sed 's/[-.].*//'`
+		for _i_ in `cd $PACKAGESRC; ls *.def *.lic 2>/dev/null | sed 's/[-.].*//'`
 		do	case " $package_src " in
 			*" $_i_ "*)
 				;;
@@ -4595,7 +4672,7 @@ admin)	while	test ! -f $admin_db
 			case $admin_binary:$sync in
 			:?*)	eval syncname='$'${sync}_name
 				test -x $PACKAGEROOT/bin/package && $admin_ditto $admin_ditto_update --remote=$rsh --expr="name=='package'" $PACKAGEROOT/bin $user$syncname:$root/bin
-				test -d $PACKAGESRC && $admin_ditto $admin_ditto_update --remote=$rsh --expr="if(level>1&&path!='LICENSES/*')status=SKIP;path=='LICENSES*|*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
+				test -d $PACKAGESRC && $admin_ditto $admin_ditto_update --remote=$rsh --expr="if(level>1&&path!='LICENSES/*')status=SKIP;path=='LICENSES*|*.(pkg|lic|def)'" $PACKAGESRC $user$syncname:$root/lib/package
 				for dir in $package_src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
@@ -4632,7 +4709,7 @@ admin)	while	test ! -f $admin_db
 		*)	echo "{"
 			case $admin_binary:$sync in
 			:?*)	eval syncname='$'${sync}_name
-				test -d $PACKAGESRC && echo $admin_ditto $admin_ditto_update --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
+				test -d $PACKAGESRC && echo $admin_ditto $admin_ditto_update --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic|def)'" $PACKAGESRC $user$syncname:$root/lib/package
 				for dir in $package_src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
@@ -5143,29 +5220,46 @@ license)# all work in $PACKAGESRC/LICENSES
 			;;
 		esac
 		;;
+	*)	checkaout proto || exit
+		a=
+		for i
+		do	while	:
+			do	if	test -f ../$i.lic
+				then	j=`proto -df -l ../$i.lic -o query=type /dev/null 2>/dev/null`
+					case $j in
+					?*)	if	test -f $j
+						then	case " $a " in
+							*" $j "*)	;;
+							*)		a="$a $j" ;;
+							esac
+						fi
+						break
+						;;
+					esac
+				fi
+				case $i in
+				*-*)	i=`echo $i | sed 's/-[^-]*$//'`
+					;;
+				*)	echo "$command: $i: package license not found" >&2
+					break
+					;;
+				esac
+			done
+		done
+		set '' $a
+		shift
+		;;
 	esac
 	for i
-	do	j=$i
-		while	:
-		do	if	test -f $j
-			then	case $exec in
-				'')	echo
-					echo "		--- $j package source license ---"
-					echo
-					cat $j
-					;;
-				*)	echo $PACKAGESRC/LICENSES/$j
-				esac
-				break
-			fi
-			case $j in
-			*-*)	j=`echo $j | sed -e 's,-[^-]*$,,'`
-				;;
-			*)	echo "$command: $i: no package license" >&2
-				break
-				;;
-			esac
-		done
+	do	case $exec in
+		'')	echo
+			echo "		--- $i source license ---"
+			echo
+			cat $i
+			;;
+		*)	echo $PACKAGESRC/LICENSES/$i
+			;;
+		esac
 	done
 	;;
 
@@ -5175,7 +5269,7 @@ make|view)
 	'')	lic="lib/package/*.lic"
 		;;
 	*) 	for i in $package
-		do	lic=lib/package/$i.lic
+		do	lic="$lic lib/package/$i.lic"
 			case $i in
 			*-*)	lic="$lic lib/package/"`echo $i | sed 's,-.*,,'`".lic" ;;
 			esac
@@ -5273,8 +5367,25 @@ make|view)
 			done
 		fi
 	done
+	def=
 	for i in $lic
 	do	test -f $i || continue
+		cmp -s $i $INSTALLROOT/$i 2>/dev/null ||
+		$exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
+		for j in `grep '^. .*\.def$' $i`
+		do	case $j in
+			.)	;;
+			*)	case " $def " in
+				*" $i "*)	;;
+				*)		def="$def $i" ;;
+				esac
+				;;
+			esac
+		done
+	done
+	for i in $def
+	do	i=lib/package/$i
+		test -f $i || continue
 		cmp -s $i $INSTALLROOT/$i 2>/dev/null ||
 		$exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
 	done
@@ -5446,7 +5557,7 @@ make|view)
 	# no $INITROOT means INIT already installed elsewhere
 
 	if	test -d $INITROOT
-	then	
+	then
 		# update probe scripts
 
 		for i in lib/probe lib/probe/C lib/probe/C/make
@@ -5536,7 +5647,7 @@ cat $j $k
 		esac
 		;;
 	esac
- 
+
 	# separate flags from target list
 
 	case $target in

@@ -1667,6 +1667,7 @@ int sh_reinit(char *argv[])
 	nv_offattr(SHLVL,NV_IMPORT);
 	shp->st.filename = strdup(shp->lastarg);
 	nv_delete((Namval_t*)0, (Dt_t*)0, 0);
+	job.exitval = 0;
 	return(1);
 }
 

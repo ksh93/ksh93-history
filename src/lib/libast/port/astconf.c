@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2010-11-30 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2011-05-18 $\0\n";
 
 #include "univlib.h"
 
@@ -36,6 +36,8 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2010-11-30 $\0\n";
 #include <ctype.h>
 #include <regex.h>
 #include <proc.h>
+#include <ls.h>
+#include <sys/utsname.h>
 
 #include "conftab.h"
 #include "FEATURE/libpath"
@@ -116,7 +118,19 @@ typedef struct Lookup_s
 
 static Feature_t	dynamic[] =
 {
-#define OP_conformance	0
+#define OP_architecture	0
+	{
+		&dynamic[OP_architecture+1],
+		"ARCHITECTURE",
+		&null[0],
+		0,
+		0,
+		12,
+		CONF_AST,
+		0,
+		OP_architecture
+	},
+#define OP_conformance	1
 	{
 		&dynamic[OP_conformance+1],
 		"CONFORMANCE",
@@ -128,7 +142,7 @@ static Feature_t	dynamic[] =
 		0,
 		OP_conformance
 	},
-#define OP_fs_3d	1
+#define OP_fs_3d	2
 	{
 		&dynamic[OP_fs_3d+1],
 		"FS_3D",
@@ -140,7 +154,7 @@ static Feature_t	dynamic[] =
 		0,
 		OP_fs_3d
 	},
-#define OP_getconf	2
+#define OP_getconf	3
 	{
 		&dynamic[OP_getconf+1],
 		"GETCONF",
@@ -156,7 +170,7 @@ static Feature_t	dynamic[] =
 		CONF_READONLY,
 		OP_getconf
 	},
-#define OP_hosttype	3
+#define OP_hosttype	4
 	{
 		&dynamic[OP_hosttype+1],
 		"HOSTTYPE",
@@ -168,7 +182,7 @@ static Feature_t	dynamic[] =
 		CONF_READONLY,
 		OP_hosttype
 	},
-#define OP_libpath	4
+#define OP_libpath	5
 	{
 		&dynamic[OP_libpath+1],
 		"LIBPATH",
@@ -184,7 +198,7 @@ static Feature_t	dynamic[] =
 		0,
 		OP_libpath
 	},
-#define OP_libprefix	5
+#define OP_libprefix	6
 	{
 		&dynamic[OP_libprefix+1],
 		"LIBPREFIX",
@@ -200,7 +214,7 @@ static Feature_t	dynamic[] =
 		0,
 		OP_libprefix
 	},
-#define OP_libsuffix	6
+#define OP_libsuffix	7
 	{
 		&dynamic[OP_libsuffix+1],
 		"LIBSUFFIX",
@@ -216,7 +230,7 @@ static Feature_t	dynamic[] =
 		0,
 		OP_libsuffix
 	},
-#define OP_path_attributes	7
+#define OP_path_attributes	8
 	{
 		&dynamic[OP_path_attributes+1],
 		"PATH_ATTRIBUTES",
@@ -232,7 +246,7 @@ static Feature_t	dynamic[] =
 		CONF_READONLY,
 		OP_path_attributes
 	},
-#define OP_path_resolve	8
+#define OP_path_resolve	9
 	{
 		&dynamic[OP_path_resolve+1],
 		"PATH_RESOLVE",
@@ -244,7 +258,7 @@ static Feature_t	dynamic[] =
 		0,
 		OP_path_resolve
 	},
-#define OP_universe	9
+#define OP_universe	10
 	{
 		0,
 		"UNIVERSE",
@@ -495,6 +509,9 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 #endif
 	switch (fp->op)
 	{
+	case OP_architecture:
+		ok = 1;
+		break;
 	case OP_conformance:
 		ok = getenv(state.strict) != 0;
 		break;
@@ -605,6 +622,11 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 {
 	register Feature_t*	sp;
 	register int		n;
+#if _UWIN && ( _X86_ || _X64_ )
+	struct stat		st;
+#else
+	static struct utsname	uts;
+#endif
 
 #if DEBUG_astconf
 	error(-2, "astconf format name=%s path=%s value=%s flags=%04x fp=%p%s", fp->name, path, value, flags, fp, state.synthesizing ? " SYNTHESIZING" : "");
@@ -615,6 +637,34 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 		return fp->value;
 	switch (fp->op)
 	{
+
+	case OP_architecture:
+#if _UWIN && ( _X86_ || _X64_ )
+		if (!stat("/", &st))
+		{
+			if (st.st_ino == 64)
+			{
+				fp->value = "x64";
+				break;
+			}
+			if (st.st_ino == 32)
+			{
+				fp->value = "x86";
+				break;
+			}
+		}
+#if _X64_
+		fp->value = "x64";
+#else
+		fp->value = "x86";
+#endif
+#else
+		if (!uname(&uts))
+			return fp->value = uts.machine;
+		if (!(fp->value = getenv("HOSTNAME")))
+			fp->value = "unknown";
+#endif
+		break;
 
 	case OP_conformance:
 		if (value && STANDARD(value))
@@ -953,6 +1003,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 {
 	register Conf_t*	p = look->conf;
 	register unsigned int	flags = look->flags;
+	Feature_t*		fp;
 	char*			call;
 	char*			f;
 	const char*		s;
@@ -1303,6 +1354,10 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		return call;
 	}
  bad:
+	if (!(listflags & ~(ASTCONF_error|ASTCONF_system)))
+		for (fp = state.features; fp; fp = fp->next)
+			if (streq(name, fp->name))
+				return format(fp, path, 0, listflags, conferror);
 	return (listflags & ASTCONF_error) ? (char*)0 : null;
 }
 

@@ -1312,10 +1312,14 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 		init_savelist();
 	if(pw = job_bypid(pid))
 		job_unpost(pw,0);
-	if(join && (pw=job_bypid(join)))
+	if(join)
 	{
+		if(pw=job_bypid(join))
+			val = pw->p_job;
+		else
+			val = job.curjobid;
 		/* if job to join is not first move it to front */
-		if((pw=job_byjid(pw->p_job)) != job.pwlist)
+		if(val && (pw=job_byjid(val)) != job.pwlist)
 		{
 			job_unlink(pw);
 			pw->p_nxtjob = job.pwlist;
@@ -1485,12 +1489,13 @@ int	job_wait(register pid_t pid)
 	job_lock();
 	if(pid==0)
 	{
-		if(!job.waitall || !job.curjobid || !(pw = job_byjid(job.curjobid-1)))
+		if(!job.waitall || !job.curjobid || !(pw = job_byjid(job.curjobid)))
 		{
 			job_unlock();
 			goto done;
 		}
 		jobid = pw->p_job;
+		job.curjobid = 0;
 		if(!(pw->p_flag&(P_DONE|P_STOPPED)))
 			job_reap(job.savesig);
 	}
@@ -1786,10 +1791,10 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 	for(; pw && (pw->p_flag&P_DONE)&&(notify||!(pw->p_flag&P_NOTIFY)||pw->p_env); pw=pw->p_nxtproc);
 	if(pw)
 		return(pw);
+	if(pwtop->p_job == job.curjobid)
+		return(0);
 	/* all processes complete, unpost job */
 	job_unlink(pwtop);
-	if(pwtop->p_job == job.curjobid-1)
-		job.curjobid = 0;
 	for(pw=pwtop; pw; pw=pw->p_nxtproc)
 	{
 		if(pw && pw->p_exitval)
@@ -2020,7 +2025,6 @@ void job_fork(pid_t parent)
 		job.in_critical = 0;
 		break;
 	default:
-		job_chksave(parent);
 		job_unlock();
 		break;
 	}

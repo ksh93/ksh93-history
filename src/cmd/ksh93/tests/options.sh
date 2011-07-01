@@ -526,4 +526,14 @@ EOF
 # showme with arithmetic for loops
 $SHELL -n -c $'for((;1;))\ndo ; nothing\ndone'  2>/dev/null  || err_exit 'showme commands give syntax error inside arithmetic for loops'
 
+#set -x
+float t1=SECONDS
+set -o pipefail
+print  | while read
+do		if	{ date | true;} ; true
+		then	sleep 2 &
+		fi
+done
+(( (SECONDS-t1) > .5 )) && err_exit 'pipefail should not wait for background processes'
+
 exit $((Errors<125?Errors:125))

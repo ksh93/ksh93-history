@@ -40,6 +40,10 @@
 #define iview(p)	((p)->st_spare4[0])
 #define IVIEW(p,v)	((p)->st_spare4[0]=(v))
 #else
+#if _ary_st_extra
+#define iview(p)	((p)->st_extra[0])
+#define IVIEW(p,v)	((p)->st_extra[0]=(v))
+#else
 #if _ary_st_pad4
 #define iview(p)	((p)->st_pad4[0])
 #define IVIEW(p,v)	((p)->st_pad4[0]=(v))
@@ -50,6 +54,7 @@
 #else
 #define iview(p)	0
 #define IVIEW(p,v)
+#endif
 #endif
 #endif
 #endif

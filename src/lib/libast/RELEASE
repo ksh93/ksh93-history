@@ -1,3 +1,8 @@
+11-06-14 spawnveg.c: pgid -1: new session -2: setpgrp()&&tcsetpgid()
+11-06-14 pathprog.c: add darwin _NSGetExecutablePath
+11-05-14 features/common,features/align.c: { _X86_ _X64_ } conditionals for generic uwin
+11-05-13 tm/tminit.c: tweak tzname[] prototype
+11-05-09 astlicense.c: add ". file" parent-relative include and depth 4 input stack
 11-05-05 cmdarg: update to cmdopen_20110505 api
 11-05-03 sfio/sfclose.c: make sure close() errors propagate to sfclose() return value
 11-04-20 port/astlicense.c: add { id name } keys

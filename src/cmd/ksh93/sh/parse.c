@@ -1484,7 +1484,6 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 		tok = sh_lex(lexp);
 		if(tok==LABLSYM && (flag&SH_ASSIGN))
 			lexp->token = tok = 0;
-#if SHOPT_DEVFD
 		if((tok==IPROCSYM || tok==OPROCSYM))
 		{
 			argp = process_sub(lexp,tok);
@@ -1493,7 +1492,6 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			argtail = &(argp->argnxt.ap);
 			goto retry;
 		}
-#endif	/* SHOPT_DEVFD */
 		if(tok==LPAREN)
 		{
 			if(argp->argflag&ARG_ASSIGN)

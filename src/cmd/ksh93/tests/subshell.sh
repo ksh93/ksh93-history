@@ -345,8 +345,7 @@ TST=(
 	( CMD='cat $tmp/buf | read v; print $v'		LIM=4*1024	)
 )
 
-command exec 3<> /dev/null
-if	cat /dev/fd/3 >/dev/null 2>&1
+if	cat /dev/fd/3 3</dev/null >/dev/null 2>&1 || whence mkfifo > /dev/null
 then	T=${#TST[@]}
 	TST[T].CMD='$cat <(print foo)'
 	TST[T].EXP=3
@@ -514,5 +513,28 @@ err() { return $1; }
 : $( $date)
 wait $pid
 [[ $? == 12 ]] || err_exit 'exit status from subshells not being preserved'
+
+if	cat /dev/fd/3 3</dev/null >/dev/null 2>&1 || whence mkfifo > /dev/null
+then	x="$(sed 's/^/Hello /' <(print "Fred" | sort))"
+	[[ $x == 'Hello Fred' ]] || err_exit  "process substitution of pipeline in command substitution not working"
+fi
+
+{
+$SHELL <<- \EOF
+	function foo
+	{
+		integer i
+		print -u2 foobar
+		for	((i=0; i < 8000; i++))
+		do	print abcdefghijk
+		done
+		print -u2 done
+	}
+	out=$(eval "foo | cat" 2>&1)
+	(( ${#out} == 96011 )) || err_exit "\${#out} is ${#out} should be 96011"
+EOF
+} & pid=$!
+$SHELL -c "{ sleep 2 && kill $pid ;}" 2> /dev/null
+(( $? == 0 )) &&  err_exit 'process has hung'
 
 exit $((Errors<125?Errors:125))

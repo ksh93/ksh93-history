@@ -345,4 +345,16 @@ then	rm=${ whence rm;}
 	(( exitval==0 )) || err_exit "whence -a has exitval $exitval"
 fi
 
+[[ ! -d bin ]] && mkdir bin
+[[ ! -d fun ]] && mkdir fun
+print 'FPATH=../fun' > bin/.paths
+cat <<- \EOF > fun/myfun
+	function myfun
+	{
+		print myfun
+	}
+EOF
+x=$(FPATH= PATH=$PWD/bin $SHELL -c  ': $(whence less);myfun') 2> /dev/null
+[[ $x == myfun ]] || err_exit 'function myfun not found'
+
 exit $((Errors<125?Errors:125))

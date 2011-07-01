@@ -79,4 +79,7 @@ esac') != b ]] && err_exit 'bug in ;& at end of script'
 	done
 ') == foo.h ]] || err_exit "optimizer bug"
 
+x=$($SHELL -ec 'case a in a) echo 1; false; echo 2 ;& b) echo 3;; esac')
+[[ $x == 1 ]] || err_exit 'set -e ignored on case fail through'
+
 exit $((Errors<125?Errors:125))

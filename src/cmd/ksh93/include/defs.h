@@ -176,6 +176,7 @@ struct shared
 	char		*comdiv;	/* points to sh -c argument */ \
 	char		*prefix;	/* prefix for compound assignment */ \
 	sigjmp_buf	*jmplist;	/* longjmp return stack */ \
+	char		*fifo;		/* fifo name for process sub */ \
 	int		oldexit; \
 	pid_t		bckpid;		/* background process id */ \
 	pid_t		cpid; \
@@ -199,6 +200,7 @@ struct shared
 	char		indebug; 	/* set when in debug trap */ \
 	unsigned char	ignsig;		/* ignored signal in subshell */ \
 	unsigned char	lastsig;	/* last signal received */ \
+	char		pathinit;	/* pathinit called from subshell */ \
 	char		comsub;		/* set when in $() comsub */ \
 	char		subshare;	/* set when in ${..} comsub */ \
 	char		toomany;	/* set when out of fd's */ \

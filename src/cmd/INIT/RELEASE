@@ -1,3 +1,4 @@
+11-06-01 make.probe: add more /lib64 logic
 11-05-01 package.sh: fix admin ditto to sync LICENSES too
 11-03-25 package.sh: initialize { $SED $TR } before first use!
 11-03-21 package.sh: fix vpath probes

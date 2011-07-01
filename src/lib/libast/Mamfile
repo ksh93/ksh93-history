@@ -3011,6 +3011,7 @@ exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '
 done FEATURE/vfork generated
 exec - cmp 2>/dev/null -s FEATURE/vfork ast_vfork.h || { rm -f ast_vfork.h; silent test -d . || mkdir .; ${STDCP} FEATURE/vfork ast_vfork.h; }
 done ast_vfork.h dontcare generated
+prev ast_tty.h implicit
 prev sig.h implicit
 make process.h implicit
 done process.h dontcare virtual
@@ -5579,6 +5580,7 @@ exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '
 done FEATURE/libpath generated
 make conftab.h implicit
 done conftab.h
+prev include/ls.h implicit
 prev include/proc.h implicit
 prev include/regex.h implicit
 prev include/fs3d.h implicit

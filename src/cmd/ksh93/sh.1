@@ -919,10 +919,6 @@ parentheses preceded by a dollar sign (
 is replaced by the value of the arithmetic expression
 within the double parentheses.
 .SS Process Substitution.
-This feature is only available on
-versions of the UNIX operating system that support the
-.B /dev/fd
-directory for naming open files.
 Each command argument of the form
 \f3<(\fP\f2list\^\fP\f3)\fP
 or
@@ -930,7 +926,8 @@ or
 will run process
 .I list
 asynchronously connected to some file in
-.BR /dev/fd .
+.B /dev/fd
+if this directory exists, or else a fifo a temporary directory.
 The name of this file will become the argument to the command.
 If the form with
 .B >

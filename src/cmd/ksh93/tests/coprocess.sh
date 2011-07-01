@@ -175,7 +175,7 @@ r=
 	exec 6>&p
 	print -u6 ok
 	exec 6>&-
-	sleep 1
+	sleep 2
 	kill $! 2> /dev/null
 ) && err_exit 'coprocess with subshell would hang'
 for sig in IOT ABRT

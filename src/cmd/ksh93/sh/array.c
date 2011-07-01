@@ -613,6 +613,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 #endif /* SHOPT_FIXEDARRAY */
 	do
 	{
+		int xfree = is_associative(ap)?0:array_isbit(aq->bits,aq->cur,ARRAY_NOFREE);
 		mp = array_find(np,ap,string?ARRAY_ASSIGN:ARRAY_DELETE);
 		scan = ap->nelem&ARRAY_SCAN;
 		if(mp && mp!=np)
@@ -628,7 +629,8 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 					nv_delete(mp,ap->table,0);
 				goto skip;
 			}
-			nv_putval(mp, string, flags);
+			if(!xfree)
+				nv_putval(mp, string, flags);
 			if(string)
 			{
 #if SHOPT_TYPEDEF
@@ -654,7 +656,8 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 					{
 						array_clrbit(aq->bits,aq->cur,ARRAY_CHILD);
 						aq->val[aq->cur].cp = 0;
-						nv_delete(mp,ap->table,0);
+						if(!xfree)
+							nv_delete(mp,ap->table,0);
 					}
 					if(!array_covered(np,(struct index_array*)ap))
 					{
@@ -825,7 +828,10 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		ap->header = arp->header;
 		ap->header.hdr.dsize = sizeof(*ap) + i;
 		for(i=0;i < arp->maxi;i++)
+		{
+			ap->bits[i] = arp->bits[i];
 			ap->val[i].cp = arp->val[i].cp;
+		}
 		memcpy(ap->bits, arp->bits, arp->maxi);
 		array_setptr(np,arp,ap);
 		free((void*)arp);
@@ -1245,7 +1251,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 				if(n=ap->maxi-ap->maxi)
 					memset(&ap->val[size],0,n*sizeof(union Value));
 			}
-			else if(!ap->val[size].cp)
+			else if(!(sp=(char*)ap->val[size].cp) || sp==Empty)
 			{
 				if(sh.subshell)
 					np = sh_assignok(np,1);
@@ -1264,7 +1270,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 				}
 				else
 					ap->val[size].cp = Empty;
-				if(!array_covered(np,ap))
+				if(!sp && !array_covered(np,ap))
 					ap->header.nelem++;
 			}
 		}

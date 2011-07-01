@@ -81,6 +81,19 @@ struct funenv
 
 /* ========	command execution	========*/
 
+#if !SHOPT_DEVFD
+    static void fifo_check(void *handle)
+    {
+	Shell_t	*shp = (Shell_t*)handle;
+	pid_t pid = getppid();
+	if(pid==1)
+	{
+		unlink(shp->fifo);
+		sh_done(shp,0);
+	}
+    }
+#endif /* !SHOPT_DEVFD */
+
 /*
  * The following two functions allow command substituion for non-builtins
  * to use a pipe and to wait for the pipe to close before restoring to a
@@ -537,8 +550,10 @@ int sh_eval(register Sfio_t *iop, int mode)
 	static Sfio_t *io_save;
 	volatile int traceon=0, lineno=0;
 	int binscript=shp->binscript;
+	char comsub = shp->comsub;
 	io_save = iop; /* preserve correct value across longjmp */
 	shp->binscript = 0;
+	shp->comsub = 0;
 #define SH_TOPFUN	0x8000	/* this is a temporary tksh hack */
 	if (mode & SH_TOPFUN)
 	{
@@ -578,6 +593,7 @@ int sh_eval(register Sfio_t *iop, int mode)
 	}
 	sh_popcontext(shp,&buff);
 	shp->binscript = binscript;
+	shp->comsub = comsub;
 	if(traceon)
 		sh_onoption(SH_XTRACE);
 	if(lineno)
@@ -1048,6 +1064,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 							flgs |= NV_COMVAR;
 						if(checkopt(com,'S'))
 							flgs |= NV_STATIC;
+						if(checkopt(com,'m'))
+							flgs |= NV_MOVE;
 						if(checkopt(com,'n'))
 							flgs |= NV_NOREF;
 						else if(!shp->typeinit && (checkopt(com,'L') || checkopt(com,'R') || checkopt(com,'Z')))
@@ -1055,6 +1073,17 @@ int sh_exec(register const Shnode_t *t, int flags)
 #if SHOPT_TYPEDEF
 						else if(argn>=3 && checkopt(com,'T'))
 						{
+#   if SHOPT_NAMESPACE
+							if(shp->namespace)
+							{
+								if(!shp->strbuf2)
+									shp->strbuf2 = sfstropen();
+								sfprintf(shp->strbuf2,"%s%s%c",NV_CLASS,nv_name(shp->namespace),0);
+								shp->prefix = strdup(sfstruse(shp->strbuf2));
+								nv_open(shp->prefix,shp->var_base,NV_VARNAME);
+							}
+							else
+#   endif /* SHOPT_NAMESPACE */
 							shp->prefix = NV_CLASS;
 							flgs |= NV_TYPE;
 			
@@ -1341,7 +1370,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 					volatile int indx;
 					int jmpval=0;
 					struct checkpt buff;
+#if SHOPT_NAMESPACE
+					Namval_t node,*namespace=shp->namespace;
+#else
 					Namval_t node;
+#endif /* SHOPT_NAMESPACE */
 					struct Namref	nr;
 					long		mode;
 					register struct slnod *slp;
@@ -1395,8 +1428,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 					{
 						if(io)
 							indx = sh_redirect(shp,io,execflg);
+#if SHOPT_NAMESPACE
+						if(nq && nv_istable(nq))
+							shp->namespace = nq;
+#endif /* SHOPT_NAMESPACE */
 						sh_funct(shp,np,argn,com,t->com.comset,(flags&~OPTIMIZE_FLAG));
 					}
+#if SHOPT_NAMESPACE
+					shp->namespace = namespace;
+#endif /* SHOPT_NAMESPACE */
 					if(io)
 					{
 						if(buff.olist)
@@ -1631,6 +1671,22 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if((type&FAMP) && sh_isoption(SH_BGNICE))
 					nice(4);
 #endif /* _lib_nice */
+#if !SHOPT_DEVFD
+				if(shp->fifo && (type&(FPIN|FPOU)))
+				{
+					int	fn,fd = (type&FPIN)?0:1;
+					void	*fifo_timer=sh_timeradd(500,1,fifo_check,(void*)shp);
+					fn = sh_open(shp->fifo,fd?O_WRONLY:O_RDONLY);
+					timerdel(fifo_timer);
+					sh_iorenumber(shp,fn,fd);
+					sh_close(fn);
+					sh_delay(.001);
+					unlink(shp->fifo);
+					free(shp->fifo);
+					shp->fifo = 0;
+					type &= ~(FPIN|FPOU);
+				}
+#endif /* !SHOPT_DEVFD */
 				if(type&FPIN)
 				{
 #if SHOPT_COSHELL
@@ -1852,7 +1908,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 #if SHOPT_COSHELL
 			int	copipe=0;
 			Shnode_t	*tt;
-#endif
+#endif /* SHOPT_COSHELL */
 			job.exitval = 0;
 #if SHOPT_COSHELL
 			if(shp->inpool)
@@ -1871,7 +1927,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			}
 			pvo[2] = pvn[2] = 0;
 #endif /* SHOPT_COSHELL */
-			job.curpgid = 0;
+			job.curjobid = 0;
 			if(shp->subshell)
 			{
 				sh_subtmpfile(shp);
@@ -1887,8 +1943,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 			pvo[1] = -1;
 			if(sh_isoption(SH_PIPEFAIL))
 			{
-				const Shnode_t *tn=t;
+				const Shnode_t* tn=t;
 				job.waitall = 2;
+				job.curpgid = 0;
 				while((tn=tn->lst.lstrit) && tn->tre.tretyp==TFIL)
 					job.waitall++;
 				exitval = job.exitval = (int*)stakalloc(job.waitall*sizeof(int));
@@ -1971,7 +2028,16 @@ int sh_exec(register const Shnode_t *t, int flags)
 			pipejob = savepipe;
 			n = shp->exitval;
 			if(job.waitall = waitall)
-				job_wait(0);
+			{
+				if(sh_isstate(SH_MONITOR))
+					job_wait(0);
+				else
+				{
+					shp->intrap++;
+					job_wait(0);
+					shp->intrap--;
+				}
+			}
 			if(n==0 && exitval)
 			{
 				while(exitval <= --job.exitval)
@@ -2377,7 +2443,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						(!type && (strmatch(r,s)
 						|| trim_eq(r,s))))
 					{
-						do	sh_exec(t->reg.regcom,(t->reg.regflag?0:flags));
+						do	sh_exec(t->reg.regcom,(t->reg.regflag?(flags&sh_state(SH_ERREXIT)):flags));
 						while(t->reg.regflag &&
 							(t=(Shnode_t*)t->reg.regnxt));
 						t=0;
@@ -2971,6 +3037,8 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 			job.curpgid = parent;
 		if(flags&FCOOP)
 			shp->cpid = parent;
+		if(!postid && job.curjobid && (flags&FPOU))
+			postid = job.curpgid;
 #ifdef SHOPT_BGX
 		if(!postid && (flags&(FAMP|FINT)) == (FAMP|FINT))
 			postid = 1;
@@ -2982,7 +3050,8 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 #endif /* SHOPT_BGX */
 		if(job.waitall && (flags&FPOU))
 		{
-			job.curjobid = myjob+1;
+			if(!job.curjobid)
+				job.curjobid = myjob;
 			if(job.exitval)
 				job.exitval++;
 		}
@@ -3223,7 +3292,6 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	errorpush(&buff.err,0);
 	error_info.id = argv[0];
 	shp->st.var_local = shp->var_tree;
-	jmpval = sigsetjmp(buff.buff,0);
 	if(!fun)
 	{
 		shp->st.filename = fp->node->nvalue.rp->fname;
@@ -3232,6 +3300,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		nv_putval(SH_PATHNAMENOD,shp->st.filename,NV_NOFREE);
 		nv_putval(SH_FUNNAMENOD,shp->st.funname,NV_NOFREE);
 	}
+	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
 	{
 		if(shp->fn_depth++ > MAXDEPTH)

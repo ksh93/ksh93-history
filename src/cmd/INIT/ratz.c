@@ -5091,7 +5091,7 @@ char**	argv;
 				}
 				else
 				{
-					n = strlen(s = path);
+					n = (int)strlen(s = path);
 					p = (state.blocks * 100) / total;
 					if (n > (METER_width - METER_parts - 1))
 					{

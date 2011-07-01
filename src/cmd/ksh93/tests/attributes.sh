@@ -395,4 +395,18 @@ if	command typeset -M totitle s 2> /dev/null
 then	[[ $(typeset +p s) == 'typeset -M totitle s' ]] || err_exit 'typeset -M totitle does not display correctly with typeset -p'
 fi
 
+{ $SHELL  <<-  \EOF
+	compound -a a1
+	for ((i=1 ; i < 100 ; i++ ))
+        do	[[ "$( typeset + a1[$i] )" == '' ]] && a1[$i].text='hello'
+	done
+	[[ ${a1[70].text} == hello ]]
+EOF
+} 2> /dev/null
+(( $? )) && err_exit  'typeset + a[i] not working'
+
+typeset groupDB="" userDB=""
+typeset -l -L1 DBPick=""
+[[ -n "$groupDB" ]]  && err_exit 'typeset -l -L1 causes unwanted side effect'
+
 exit $((Errors<125?Errors:125))

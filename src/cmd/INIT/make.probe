@@ -3,7 +3,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2011-04-14
+# @(#)make.probe (AT&T Research) 2011-06-01
 #
 # C probe for make
 #
@@ -1179,6 +1179,14 @@ case $stdlib in
 			fi
 		done`
 	;;
+*)	eval set x $probe_verbose
+	shift
+	for o in "$@"
+	do	stdlib="$stdlib "`$cc $o doti.$src 2>&1 |
+		sed 's/  */\n/g' |
+		sed -e '/^-L/!d' -e '/\/lib64$/!d' -e 's/^-L//'`
+	done
+	;;
 esac
 case $stdlib in
 ?*)	keepstdlib=1
@@ -1988,7 +1996,8 @@ case $keepstdlib in
 	# favor lib64 over lib
 	#
 	case $hosttype in
-	*64)	o=$stdlib
+	*64|*[!0-9]64[!a-zA-Z0-9]*)
+		o=$stdlib
 		stdlib=
 		for i in $o
 		do	case " $stdlib " in

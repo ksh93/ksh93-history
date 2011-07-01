@@ -260,6 +260,7 @@ extern const char	e_unknownmap[];
 extern const char	e_mapchararg[];
 extern const char	e_subcomvar[];
 extern const char	e_badtypedef[];
+extern const char	e_typecompat[];
 extern const char	e_globalref[];
 extern const char	e_tolower[];
 extern const char	e_toupper[];

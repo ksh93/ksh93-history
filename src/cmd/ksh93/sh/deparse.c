@@ -401,7 +401,15 @@ static void p_arg(register const struct argnod *arg,register int endchar,int opt
 		else if(opts)
 			flag = ' ';
 		cp = arg->argval;
-		if(*cp==0 && opts==POST && arg->argchn.ap)
+		if(*cp==0 && (arg->argflag&ARG_EXP)  && arg->argchn.ap)
+		{
+			int c = (arg->argflag&ARG_RAW)?'>':'<';
+			sfputc(outfile,c);
+			sfputc(outfile,'(');
+			p_tree((Shnode_t*)arg->argchn.ap,0);
+			sfputc(outfile,')');
+		}
+		else if(*cp==0 && opts==POST && arg->argchn.ap)
 		{
 			/* compound assignment */
 			struct fornod *fp=(struct fornod*)arg->argchn.ap;

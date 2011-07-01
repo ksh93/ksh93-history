@@ -309,6 +309,7 @@ inetopen(const char* path, int flags, Inetintr_f onintr, void* handle)
 #else
 
 #undef	O_SERVICE
+#undef	SHOPT_COSHELL
 
 #endif
 
@@ -1521,10 +1522,11 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 		 * the locking is only needed in case & blocks process
 		 * here-docs so this can be eliminted in some cases
 		 */
-		static struct flock	lock;
+		struct flock	lock;
 		int	fno = sffileno(shp->heredocs);
 		if(fno>=0)
 		{
+			memset((void*)&lock,0,sizeof(lock));
 			lock.l_type = F_WRLCK;
 			lock.l_whence = SEEK_SET;
 			fcntl(fno,F_SETLKW,&lock);
@@ -1541,7 +1543,7 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 		}
 		tmp = outfile;
 		if(fno>=0 && !(iop->iofile&IOQUOTE))
-			tmp = sftmp(IOBSIZE);
+			tmp = sftmp(iop->iosize<IOBSIZE?iop->iosize:0);
 		if(fno>=0 || (iop->iofile&IOQUOTE))
 		{
 			/* This is a quoted here-document, not expansion */

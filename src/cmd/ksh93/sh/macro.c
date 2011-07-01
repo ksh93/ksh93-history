@@ -505,7 +505,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					int		i;
 					unsigned char	mb[8];
 
-					n = wctomb((char*)mb, c);
+					n = mbconv((char*)mb, c);
 					for(i=0;i<n;i++)
 						sfputc(stkp,mb[i]);
 				}
@@ -2005,7 +2005,10 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	struct slnod            *saveslp = mp->shp->st.staklist;
 	struct _mac_		savemac;
 	int			savtop = stktell(stkp);
-	char			lastc, *savptr = stkfreeze(stkp,0);
+	char			lastc=0, *savptr = stkfreeze(stkp,0);
+#if SHOPT_MULTIBYTE
+	wchar_t			lastw=0;
+#endif /* SHOPT_MULTIBYTE */
 	int			was_history = sh_isstate(SH_HISTORY);
 	int			was_verbose = sh_isstate(SH_VERBOSE);
 	int			was_interactive = sh_isstate(SH_INTERACTIVE);
@@ -2128,7 +2131,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	mp->ifsp = nv_getval(np);
 	stkset(stkp,savptr,savtop);
 	newlines = 0;
-	lastc = 0;
 	sfsetbuf(sp,(void*)sp,0);
 	bufsize = sfvalue(sp);
 	/* read command substitution output and put on stack or here-doc */
@@ -2179,6 +2181,17 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		}
 		else if(lastc)
 		{
+#if SHOPT_MULTIBYTE
+			if(lastw)
+			{
+				int	n;
+				char	mb[8];
+				n = mbconv(mb, lastw);
+				mac_copy(mp,mb,n);
+				lastw = 0;
+			}
+			else
+#endif /* SHOPT_MULTIBYTE */
 			mac_copy(mp,&lastc,1);
 			lastc = 0;
 		}
@@ -2187,8 +2200,22 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			str[c] = 0;
 		else
 		{
+			ssize_t len = 1;
+
 			/* can't write past buffer so save last character */
-			lastc = str[--c];
+#if SHOPT_MULTIBYTE
+			if ((len = mbsize(str))>1)
+			{
+				len = mb2wc(lastw,str,len);
+				if (len < 0)
+				{
+					lastw = 0;
+					len = 1;
+				}
+			}
+#endif /* SHOPT_MULTIBYTE */
+			c -= len;
+			lastc = str[c];
 			str[c] = 0;
 		}
 		mac_copy(mp,str,c);
@@ -2206,7 +2233,21 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			sfnputc(stkp,'\n',newlines);
 	}
 	if(lastc)
+	{
+#if SHOPT_MULTIBYTE
+		if(lastw)
+		{
+			int	n;
+			char	mb[8];
+			n = mbconv(mb, lastw);
+			mac_copy(mp,mb,n);
+			lastw = 0;
+		}
+		else
+#endif /* SHOPT_MULTIBYTE */
 		mac_copy(mp,&lastc,1);
+		lastc = 0;
+	}
 	sfclose(sp);
 	return;
 }

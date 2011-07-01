@@ -804,12 +804,19 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 	ap = (struct argnod*)stkseek(shp->stk,ARGVAL);
 	ap->argflag |= ARG_MAKE;
 	ap->argflag &= ~ARG_RAW;
-	sfwrite(shp->stk,e_devfdNN,8);
-	pv[2] = 0;
-	sh_pipe(pv);
 	fd = argp->argflag&ARG_RAW;
 	if(fd==0 && shp->subshell)
 		sh_subtmpfile(shp);
+#if SHOPT_DEVFD
+	sfwrite(shp->stk,e_devfdNN,8);
+	pv[2] = 0;
+	sh_pipe(pv);
+#else
+	pv[0] = -1;
+	shp->fifo = pathtemp(0,0,0,"ksh.fifo",0);
+	mkfifo(shp->fifo,S_IRUSR|S_IWUSR);
+	sfputr(shp->stk,shp->fifo,0);
+#endif /* SHOPT_DEVFD */
 	sfputr(shp->stk,fmtbase((long)pv[fd],10,0),0);
 	ap = (struct argnod*)stkfreeze(shp->stk,0);
 	shp->inpipe = shp->outpipe = 0;
@@ -829,8 +836,13 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 	shp->subshell = subshell;
 	if(monitor)
 		sh_onstate(SH_MONITOR);
+#if SHOPT_DEVFD
 	close(pv[1-fd]);
 	sh_iosave(shp,-pv[fd], shp->topfd, (char*)0);
+#else
+	free(shp->fifo);
+	shp->fifo = 0;
+#endif /* SHOPT_DEVFD */
 	return(ap);
 }
 
@@ -839,7 +851,6 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 {
 	register int count = 0;
 	argp->argflag &= ~ARG_MAKE;
-#if SHOPT_DEVFD
 	if(*argp->argval==0 && (argp->argflag&ARG_EXP))
 	{
 		struct argnod *ap;
@@ -849,7 +860,6 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 		count++;
 	}
 	else
-#endif	/* SHOPT_DEVFD */
 	if(!(argp->argflag&ARG_RAW))
 	{
 #if SHOPT_OPTIMIZE

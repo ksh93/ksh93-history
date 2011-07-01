@@ -645,9 +645,11 @@ static void funload(Shell_t *shp,int fno, const char *name)
 	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),SH_FUNEVAL);
 	sh_close(fno);
 	shp->readscript = 0;
+#if SHOPT_NAMESPACE
 	if(shp->namespace)
 		np = sh_fsearch(shp,name,0);
 	else
+#endif /* SHOPT_NAMESPACE */
 		np = nv_search(name,shp->fun_tree,0);
 	if(!np || !np->nvalue.ip)
 		pname = stakcopy(shp->st.filename);
@@ -1456,7 +1458,7 @@ static Pathcomp_t *path_addcomp(Shell_t *shp,Pathcomp_t *first, Pathcomp_t *old,
 		strcpy(pp->blib,LIBCMD);
 		return(first);
 	}
-	if(old && ((flag&(PATH_PATH|PATH_SKIP))==PATH_PATH))
+	if((old||shp->pathinit) &&  ((flag&(PATH_PATH|PATH_SKIP))==PATH_PATH))
 		path_chkpaths(shp,first,old,pp,offset);
 	return(first);
 }

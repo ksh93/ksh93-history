@@ -212,7 +212,9 @@ static struct argnod *r_arg(Shell_t *shp)
 		else
 #endif
 			ap = (struct argnod*)stkfreeze(stkp,0);
-		if(*ap->argval==0 && (ap->argflag&~(ARG_APPEND|ARG_MESSAGE|ARG_QUOTED))==0)
+		if(*ap->argval==0 && (ap->argflag&ARG_EXP))
+			ap->argchn.ap = (struct argnod*)r_tree(shp);
+		else if(*ap->argval==0 && (ap->argflag&~(ARG_APPEND|ARG_MESSAGE|ARG_QUOTED))==0)
 		{
 			struct fornod *fp = (struct fornod*)getnode(shp->stk,fornod);
 			fp->fortyp = sfgetu(infile);

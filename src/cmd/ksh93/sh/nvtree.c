@@ -567,6 +567,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 
 struct Walk
 {
+	Shell_t	*shp;
 	Sfio_t	*out;
 	Dt_t	*root;
 	int	noscope;
@@ -581,7 +582,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	char		*fmtq,*ep,*xp;
 	Namval_t	*mp;
 	Namarr_t	*ap = nv_arrayptr(np);
-	int		tabs=0,c,more,associative = 0;
+	int		scan,tabs=0,c,more,associative = 0;
 	int		saveI = Indent;
 	Indent = indent;
 	if(ap)
@@ -620,6 +621,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			sfprintf(out,"[%s]",sh_fmtq(fmtq));
 			sfputc(out,'=');
 		}
+		if(ap && !array_assoc(ap))
+			scan = ap->nelem&ARRAY_SCAN;
 		if(mp && nv_isarray(mp))
 		{
 			nv_outnode(mp, out, indent,0);
@@ -627,6 +630,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 				sfnputc(out,'\t',indent);
 			sfputc(out,')');
 			sfputc(out,indent>=0?'\n':' ');
+			if(ap && !array_assoc(ap))
+				ap->nelem |= scan;
 			more = nv_nextsub(np);
 			goto skip;
 		}
@@ -665,6 +670,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 				fmtq = ep;
 			}
 		}
+		if(ap && !array_assoc(ap))
+			ap->nelem |= scan;
 		more = nv_nextsub(np);
 		c = '\n';
 		if(indent<0)
@@ -688,13 +695,18 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 
 static void outval(char *name, const char *vname, struct Walk *wp)
 {
-	register Namval_t *np, *nq;
+	register Namval_t *np, *nq, *last_table=wp->shp->last_table;
         register Namfun_t *fp;
 	int isarray=0, special=0,mode=0;
 	if(*name!='.' || vname[strlen(vname)-1]==']')
 		mode = NV_ARRAY;
 	if(!(np=nv_open(vname,wp->root,mode|NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL|wp->noscope)))
+	{
+		wp->shp->last_table = last_table;
 		return;
+	}
+	if(!wp->out)
+		wp->shp->last_table = last_table;
 	fp = nv_hasdisc(np,&treedisc);
 	if(*name=='.')
 	{
@@ -960,6 +972,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 	Namval_t	*mp=0;
 	Shell_t		*shp = sh_getinterp();
 	char		*xpname = xp?stakcopy(nv_name(xp)):0;
+	walk.shp = shp;
 	if(xp)
 	{
 		shp->last_root = shp->prev_root;
@@ -1005,7 +1018,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 			stakputs(cp+len);
 			stakputc(0);
 			shp->var_tree = save_tree;
-			mq = nv_open(stakptr(0),save_tree,NV_VARNAME|NV_NOASSIGN|NV_NOFAIL);
+			mq = nv_open(stakptr(0),shp->prev_root,NV_VARNAME|NV_NOASSIGN|NV_NOFAIL);
 			shp->var_tree = dp;
 			if(nq && mq)
 			{

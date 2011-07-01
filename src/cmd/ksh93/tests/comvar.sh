@@ -664,4 +664,13 @@ compound c=( name="container1" )
 a[4]=c 
 [[ ${a[4]} == $'(\n\tname=container1\n)' ]] || err_exit 'assignment of compound variable to compound array element not working'
 
+unset c
+compound  c
+compound  -a c.board
+for ((i=2; i < 4; i++))
+do	c.board[1][$i]=(foo=bar)
+done
+exp=$'(\n\ttypeset -C -a board=(\n\t\t[1]=(\n\t\t\t[2]=(\n\t\t\t\tfoo=bar\n\t\t\t)\n\t\t\t[3]=(\n\t\t\t\tfoo=bar\n\t\t\t)\n\t\t)\n\t)\n)'
+[[ "$(print -v c)" == "$exp" ]] || err_exit 'compound variable assignment to two dimensional array not working'
+
 exit $((Errors<125?Errors:125))

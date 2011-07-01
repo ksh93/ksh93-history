@@ -181,6 +181,8 @@ static int p_arg(register const struct argnod *arg)
 			sfputu(outfile,fp->fortyp);
 			p_tree(fp->fortre);
 		}
+		else if(n==0 && (arg->argflag&ARG_EXP) && arg->argchn.ap)
+			p_tree((Shnode_t*)arg->argchn.ap);
 		arg = arg->argnxt.ap;
 	}
 	return(sfputu(outfile,0));

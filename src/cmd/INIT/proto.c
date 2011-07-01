@@ -1735,6 +1735,76 @@ copyright __PARAM__((Notice_t* notice, register Buffer_t* b), (notice, b)) __OTO
 	}
 }
 
+typedef struct Stack_s
+{
+	char*	info;
+	char*	file;
+	int	line;
+	int	size;
+} Stack_t;
+
+static int
+push __PARAM__((Stack_t* sp, char* file, char* parent, char* info, int size, Buffer_t* buf), (sp, file, parent, info, size, buf)) __OTORP__(Stack_t* sp; char* file; char* parent; char* info; int size; Buffer_t* buf;){
+	char*		s;
+	char*		t;
+	int		i;
+	int		n;
+	char		path[1024];
+
+	if (size <= 8)
+	{
+		copy(buf, file, -1);
+		copy(buf, ": no space", -1);
+		((( buf)->nxt<( buf)->end)?(*( buf)->nxt++=( 0)):(( 0),(-1)));
+		return -1;
+	}
+	if (*file != '/' && parent && (s = strrchr(parent, '/')))
+	{
+		n = s - parent + 1;
+		if ((sstrlen( file) + n + 1) <= sizeof(path))
+		{
+			memcopy( path, parent, n);
+			strcopy( path + n, file);
+			file = path;
+		}
+	}
+	if ((i = open(file, O_RDONLY)) < 0)
+	{
+ 
+		if (file == path)
+			for (s = path; *s; s++)
+				if (s[0] == '/' && s[1] == 'a' && s[2] == 'r' && s[3] == 'c' && s[4] == 'h' && s[5] == '/')
+				{
+					t = s;
+					for (s += 6; *s && *s != '/'; s++);
+					while (*t++ = *s++);
+					i = open(file, O_RDONLY);
+				}
+		if (i < 0)
+		{
+			copy(buf, file, -1);
+			copy(buf, ": cannot open", -1);
+			((( buf)->nxt<( buf)->end)?(*( buf)->nxt++=( 0)):(( 0),(-1)));
+			return -1;
+		}
+	}
+	n = read(i, info, size - 1);
+	close(i);
+	if (n < 0)
+	{
+		copy(buf, file, -1);
+		copy(buf, ": cannot read", -1);
+		((( buf)->nxt<( buf)->end)?(*( buf)->nxt++=( 0)):(( 0),(-1)));
+		return -1;
+	}
+	info[n++] = 0;
+	sp->file = file;
+	sp->info = info;
+	sp->line = 0;
+	sp->size = n;
+	return 0;
+}
+
  
 
 
@@ -1754,10 +1824,12 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	int		q;
 	int		contributor;
 	int		first;
-	int		line;
+	int		level;
 	int		quote;
+	char*		data;
 	char		tmpbuf[(70+4)];
 	char		info[8 * 1024];
+	Stack_t		input[4];
 	Notice_t	notice;
 	Item_t		item;
 	Buffer_t	buf;
@@ -1765,34 +1837,25 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 
 	buf.end = (buf.buf = buf.nxt = p) + size;
 	tmp.end = (tmp.buf = tmp.nxt = tmpbuf) + sizeof(tmpbuf);
+	level = 0;
+	data = info;
+	level = -1;
+	if (options)
+	{
+		level++;
+		input[level].file = "<options>";
+		input[level].info = options;
+		input[level].line = 0;
+	}
 	if (file && *file)
 	{
-		if ((i = open(file, O_RDONLY)) < 0)
-		{
-			copy(&buf, file, -1);
-			copy(&buf, ": cannot open", -1);
-			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(( 0),(-1)));
+		if (push(&input[++level], file, 0, data, &info[sizeof(info)] - data, &buf))
 			return -1;
-		}
-		n = read(i, info, sizeof(info) - 1);
-		close(i);
-		if (n < 0)
-		{
-			copy(&buf, file, -1);
-			copy(&buf, ": cannot read", -1);
-			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(( 0),(-1)));
-			return -1;
-		}
-		s = info;
-		s[n] = 0;
+		data += input[level].size;
 	}
-	else if (!options)
+	if (level < 0)
 		return 0;
-	else
-	{
-		s = options;
-		options = 0;
-	}
+	s = input[level].info;
 	notice.test = 0;
 	notice.type = 0;
 	notice.verbose = 0;
@@ -1805,13 +1868,12 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	notice.item[17] = notice.item[1] = lic[notice.type];
 	notice.item[17].quote = notice.item[1].quote = 0;
 	contributor = i = k = 0;
-	line = 0;
 	for (;;)
 	{
 		first = 1;
 		while (c = *s)
 		{
-			while (c == ' ' || c == '\t' || c == '\n' && ++line || c == '\r' || c == ',' || c == ';' || c == ')')
+			while (c == ' ' || c == '\t' || c == '\n' && ++input[level].line || c == '\r' || c == ',' || c == ';' || c == ')')
 				c = *++s;
 			if (!c)
 				break;
@@ -1820,24 +1882,43 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				while (*++s && *s != '\n');
 				if (*s)
 					s++;
-				line++;
+				input[level].line++;
+				continue;
+			}
+			if (c == '.')
+			{
+				while ((c = *++s) && (c == ' ' || c == '\t'));
+				file = s;
+				while (c && c != ' ' && c != '\t' && c != '\r' && c != '\n')
+					c = *++s;
+				*s = 0;
+				while (c && c != '\n')
+					c = *++s;
+				if (*file)
+				{
+					input[level].info = s + (c != 0);
+					if (++level >= (sizeof(input) / sizeof(input[0])) || push(&input[level], file, input[level-1].file, data, &info[sizeof(info)] - data, &buf))
+						return -1;
+					data += input[level].size;
+					s = input[level].info;
+				}
 				continue;
 			}
 			if (c == '\n')
 			{
 				s++;
-				line++;
+				input[level].line++;
 				continue;
 			}
 			if (c == '[')
 				c = *++s;
 			x = s;
 			n = 0;
-			while (c && c != '=' && c != ']' && c != ')' && c != ',' && c != ' ' && c != '\t' && c != '\n' && c != '\r')
+			while (c && c != '+' && c != '=' && c != ']' && c != ')' && c != ',' && c != ' ' && c != '\t' && c != '\n' && c != '\r')
 				c = *++s;
 			n = s - x;
 			h = lookup(key, x, n);
-			if (c == ']')
+			if (c == '+' || c == ']')
 				c = *++s;
 			quote = 0;
 			if (c == '=' || first)
@@ -1883,7 +1964,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 										i++;
 									continue;
 								case '\n':
-									line++;
+									input[level].line++;
 									continue;
 								default:
 									continue;
@@ -1897,7 +1978,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 					while ((c = *s) && (q == '"' && (c == '\\' && (*(s + 1) == '"' || *(s + 1) == '\\') && s++ && (quote = q)) || q && c != q || !q && c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != ';'))
 					{
 						if (c == '\n')
-							line++;
+							input[level].line++;
 						s++;
 					}
 				}
@@ -1907,7 +1988,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 					v = x;
 				}
 				if (c == '\n')
-					line++;
+					input[level].line++;
 				if (contributor)
 				{
 					for (i = 0; i < notice.ids; i++)
@@ -2003,15 +2084,15 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			}
 			else
 			{
-				if (file)
+				if (input[level].file)
 				{
 					copy(&buf, "\"", -1);
-					copy(&buf, file, -1);
+					copy(&buf, input[level].file, -1);
 					copy(&buf, "\", line ", -1);
 					x = &tmpbuf[sizeof(tmpbuf)];
 					*--x = 0;
-					line++;
-					do *--x = ("0123456789")[line % 10]; while (line /= 10);
+					n = ++input[level].line;
+					do *--x = ("0123456789")[n % 10]; while (n /= 10);
 					copy(&buf, x, -1);
 					copy(&buf, ": ", -1);
 				}
@@ -2023,9 +2104,9 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				s++;
 			first = 0;
 		}
-		if (!options || !*(s = options))
+		if (!level--)
 			break;
-		options = 0;
+		s = input[level].info;
 	}
 	if (!k)
 		return 0;

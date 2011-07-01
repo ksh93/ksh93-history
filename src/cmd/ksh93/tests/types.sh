@@ -577,4 +577,56 @@ u_t -a x | read z
 { z=$($SHELL 2> /dev/null 'typeset -T foo=bar; typeset -T') ;} 2> /dev/null
 [[ $z ]] && err_exit '"typeset -T foo=bar" should not creates type foo'
 
+{
+$SHELL << \EOF
+	typeset -T board_t=(
+		compound -a board_y
+		function binsert
+		{
+			nameref figure=$1
+			integer y=$2 x=$3
+			typeset -m "_.board_y[y].board_x[x].field=figure"
+		}
+	)
+	function main
+	{
+		compound c=(
+			 board_t b
+		)
+		for ((i=0 ; i < 2 ; i++ )) ; do
+			 compound p=( hello=world )
+			 c.b.binsert p 1 $i
+		done
+		exp='typeset -C c=(board_t b=(typeset -a board_y=( [1]=(typeset -a board_x=( [0]=(field=(hello=world;))[1]=(field=(hello=world)));));))'
+		[[ $(typeset -p c) == "$exp" ]] || exit 1
+	}
+	main
+EOF
+} 2> /dev/null
+if	(( exitval=$?))
+then	if	[[ $(kill -l $exitval) == SEGV ]]
+	then	err_exit 'typeset -m in type discipline causes exception'
+	else	err_exit 'typeset -m in type discipline gives wrong value'
+	fi
+fi
+
+typeset -T pawn_t=(
+	print_debug()
+	{
+		print 'PAWN'
+	}
+)
+function main
+{
+	compound c=(
+		compound -a board
+	)
+
+	for ((i=2 ; i < 8 ; i++ )) ; do
+		pawn_t c.board[1][$i]
+	done
+	
+}
+main 2> /dev/null && err_exit 'type assignment to compound array instance should generate an error'
+
 exit $((Errors<125?Errors:125))

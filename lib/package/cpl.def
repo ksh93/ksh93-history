@@ -1,0 +1,7 @@
+license+=(
+	type=cpl
+	name="Common Public License"
+	version=1.0
+	url=http://www.opensource.org/licenses/${license.type}${license.version}.txt
+	urlmd5=059e8cd6165cb4c31e351f2b69388fd9
+)

@@ -46,7 +46,7 @@
 #			endif
 #		endif
 #	endif
-#	if _dat_tzname
+#	if _dat_tzname && !defined(tzname)
 		extern char*		tzname[];
 #	endif
 #endif

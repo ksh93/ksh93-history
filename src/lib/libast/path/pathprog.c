@@ -37,18 +37,25 @@
 
 #include "FEATURE/prog"
 
+#if _hdr_macho_o_dyld && _lib__NSGetExecutablePath
+#include <mach-o/dyld.h>
+#else
+#undef	_lib__NSGetExecutablePath
+#endif
+
 static size_t
 prog(const char* command, char* path, size_t size)
 {
 	ssize_t		n;
-#if _WINIX || _lib_getexecname
 	char*		s;
-#endif
 #if _WINIX
 	char*		t;
 	char*		e;
 	int		c;
 	int		q;
+#endif
+#if _lib__NSGetExecutablePath
+	uint32_t	z;
 #endif
 
 #ifdef _PROC_PROG
@@ -61,12 +68,12 @@ prog(const char* command, char* path, size_t size)
 #endif
 #if _lib_getexecname
 	if ((s = (char*)getexecname()) && *s == '/')
-	{
-		n = strlen(s);
-		if (n < size)
-			strcpy(path, s);
-		return n;
-	}
+		goto found;
+#endif
+#if _lib__NSGetExecutablePath
+	z = size;
+	if (!_NSGetExecutablePath(path, &z) && *s == '/')
+		return strlen(s);
 #endif
 #if _WINIX
 	if (s = GetCommandLine())
@@ -95,11 +102,15 @@ prog(const char* command, char* path, size_t size)
 #endif
 	if (command)
 	{
-		if ((n = strlen(command) + 1) <= size)
-			memcpy(path, command, n);
-		return n;
+		s = (char*)command;
+		goto found;
 	}
 	return 0;
+ found:
+	n = strlen(s);
+	if (n < size)
+		memcpy(path, s, n + 1);
+	return n;
 }
 
 size_t

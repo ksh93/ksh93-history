@@ -1,5 +1,46 @@
-11-05-03  --- Release ksh93u+ ---
-11-05-03  Two more scoping bug with name references and read -C were fixed.
+11-06-22  --- Release ksh93u+ ---
+11-06-22  The shell compiler now supports process substitution.
+11-06-22 +Added code to support process substitution on systems that do
+	  not supply the /dev/fd directory.
+11-06-21  Fixed extraneous jobs Done messages when builin is at the end of a
+	  pipeline.
+11-06-20  Fixed two regression tests.
+11-06-20  Fixed a bug introduced on last update.
+11-06-14  A bug with pipefail in which the shell would wait for background
+	  jobs to complete has been fixed.
+11-06-09  A bug which caused the options.sh regression test to fail on OS390
+	  Linux has been fixed.  The bug could also have affected other systems.
+11-06-07 +A number of changes to support the still undocuments namespace option
+	  have been added.
+11-06-06  A bug in which command substitution of eval would hang when it  had
+	  standard error redirected to standard output has been fixed.
+11-06-01  A bug in case statement fall through (;&) ignoring set -e was fixed.
+11-06-01  A bug in which creating a left or right justified upper or lowercase
+          variable with an empty string has been fixed.
+11-06-01  A bug in which the .paths directory wasn't read when a subshell was
+	  executed before any other command has been fixed.
+11-05-31  The shell now gives an error when a type variable is assigned to
+	  an array instance when the array has been declared a compound variable
+	  array.
+11-05-31  A bug in which typeset -m of an array instance did not remove the
+	  original instance has been fixed. 
+11-05-28  A bug in which typeset -m dest=src fails when src and are passed as
+	  name references was fixed.
+11-05-28  A bug in which typeset -m "c.board[1][i]=el", where el is a compound
+	  variable core dumps has been fixed.
+11-05-28  Two bugs in the display of arrays of compound variables with print -v
+	  have been fixed.
+11-05-27  A bug with command substitution with the shift jis locale has been
+	  fixed.
+11-05-25  A bug in which unset -f foo, called within function foo could cause
+	  the shell to core dump has been fixed.
+11-05-24  A bug in unsetting arrays of compound variables that could lead to
+	  a core dump has been fixed.
+11-05-24  A scoping bug in with typeset -m for variables passed as references
+	  has been fixed. 
+11-05-09  A bug in which 'typeset +p array[$i]' in a subshell could cause an
+	  exception has been fixed.
+11-05-03  Two more scoping bugs with name references and read -C were fixed.
 11-05-03  A potential race condition which occurs when here-documents are
 	  processed in asynchronous blocks has been eliminated.
 11-05-02  Another scoping bug with name references defined in a function has

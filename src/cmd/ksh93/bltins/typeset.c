@@ -408,14 +408,29 @@ endargs:
 	if(flag&NV_TYPE)
 	{
 		Stk_t *stkp = tdata.sh->stk;
-		int offset = stktell(stkp);
+		int off=0,offset = stktell(stkp);
 		if(!tdata.prefix)
 			return(sh_outtype(tdata.sh,sfstdout));
 		sfputr(stkp,NV_CLASS,-1);
+#if SHOPT_NAMESPACE
+		if(tdata.sh->namespace)
+		{
+			off = stktell(stkp)+1;
+			sfputr(stkp,nv_name(tdata.sh->namespace),'.');
+		}
+		else
+#endif /* SHOPT_NAMESPACE */
 		if(NV_CLASS[sizeof(NV_CLASS)-2]!='.')
 			sfputc(stkp,'.');
 		sfputr(stkp,tdata.prefix,0);
 		tdata.tp = nv_open(stkptr(stkp,offset),tdata.sh->var_tree,NV_VARNAME|NV_NOARRAY|NV_NOASSIGN);
+#if SHOPT_NAMESPACE
+		if(!tdata.tp && off)
+		{
+			*stkptr(stkp,off)=0;
+			tdata.tp = nv_open(stkptr(stkp,offset),tdata.sh->var_tree,NV_VARNAME|NV_NOARRAY|NV_NOASSIGN);
+		}
+#endif /* SHOPT_NAMESPACE */
 		stkseek(stkp,offset);
 		if(!tdata.tp)
 			errormsg(SH_DICT,ERROR_exit(1),"%s: unknown type",tdata.prefix);
@@ -445,8 +460,9 @@ static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
 	}
 	else if(nv_istable(np))
 	{
-		Dt_t	*root = nv_dict(np);
-		name = nv_name(np);
+		Dt_t	*root = tp->sh->last_root;
+		Namval_t *nsp = tp->sh->namespace;
+		char *cp = name = nv_name(np);
 		if(*name=='.')
 			name++;
 		if(tp->indent)
@@ -456,9 +472,22 @@ static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
 			sfnputc(iop,'\t',tp->indent);
 		sfprintf(iop,"{\n", name);
 		tp->indent++;
-		print_scan(iop,NV_NOSCOPE,root,aflag=='+',tp);
-		tp->indent--;
-		if(tp->indent)
+		/* output types from namespace */
+		tp->sh->namespace = 0;
+		tp->sh->prefix = nv_name(np)+1;
+		sh_outtype(tp->sh,iop);
+		tp->sh->prefix = 0;
+		tp->sh->namespace = np;
+		tp->sh->last_root = root;
+		/* output variables from namespace */
+		print_scan(iop,NV_NOSCOPE,nv_dict(np),aflag=='+',tp);
+		tp->wctname = cp;
+		tp->sh->namespace = 0;
+		/* output functions from namespace */
+		print_scan(iop,NV_FUNCTION|NV_NOSCOPE,tp->sh->fun_tree,aflag=='+',tp);
+		tp->wctname = 0;
+		tp->sh->namespace = nsp;
+		if(--tp->indent)
 			sfnputc(iop,'\t',tp->indent);
 		sfwrite(iop,"}\n",2);
 		return;
@@ -497,6 +526,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	}
 	else if(*shp->prefix==0)
 		shp->prefix = 0;
+	if(*argv[0]=='+')
+		nvflags |= NV_NOADD;
 	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_STATIC|NV_COMVAR|NV_IARRAY);
 	if(argv[1])
 	{
@@ -514,6 +545,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			register unsigned newflag;
 			register Namval_t *np;
 			Namarr_t	*ap;
+			Namval_t	*mp;
 			unsigned curflag;
 			if(troot == shp->fun_tree)
 			{
@@ -589,8 +621,16 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				continue;
 			}
 			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|((iarray|(nvflags&NV_REF))?NV_FARRAY:0));
+			if(!np)
+				continue;
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
+			else if(tp->tp && !nv_isattr(np,NV_MINIMAL|NV_EXPORT) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)) && (ap->nelem&ARRAY_TREE))
+#if 0
+				errormsg(SH_DICT,ERROR_exit(1),e_typecompat,nv_name(np));
+#else
+				errormsg(SH_DICT,ERROR_exit(1),"%s: typecompat",nv_name(np));
+#endif
 			else if((ap=nv_arrayptr(np)) && nv_aindex(np)>0 && ap->nelem==1 && nv_getval(np)==Empty)
 			{
 				ap->nelem++;
@@ -599,7 +639,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			}
 			if(tp->pflag)
 			{
-				nv_attribute(np,sfstdout,tp->prefix,1);
+				if(!nv_istable(np))
+					nv_attribute(np,sfstdout,tp->prefix,1);
 				print_value(sfstdout,np,tp);
 				continue;
 			}
@@ -1203,7 +1244,7 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, struct tdata *tp)
 {
 	register char *cp;
-	int	indent=tp->indent, outname=0;
+	int	indent=tp->indent, outname=0, isfun;
 	sh_sigcheck(tp->sh);
 	if(flag)
 		flag = '\n';
@@ -1220,20 +1261,24 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 			sfputr(file,nv_name(np),'\n');
 		return(0);
 	}
+	isfun = is_afunction(np);
 	if(tp->prefix)
 	{
 		outname = (*tp->prefix=='t' &&  (!nv_isnull(np) || nv_isattr(np,NV_FLOAT|NV_RDONLY|NV_BINARY|NV_RJUST|NV_NOPRINT)));
-		if(indent && (outname || *tp->prefix!='t'))
+		if(indent && (isfun || outname || *tp->prefix!='t'))
 		{
 			sfnputc(file,'\t',indent);
 			indent = 0;
 		}
-		if(*tp->prefix=='t')
+		if(!isfun)
+		{
+			if(*tp->prefix=='t')
 			nv_attribute(np,tp->outfile,tp->prefix,tp->aflag);
-		else
-			sfputr(file,tp->prefix,' ');
+			else
+				sfputr(file,tp->prefix,' ');
+		}
 	}
-	if(is_afunction(np))
+	if(isfun)
 	{
 		Sfio_t *iop=0;
 		char *fname=0;
@@ -1243,7 +1288,10 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 			sfputr(file,"typeset -fu",' ');
 		else if(!flag && !nv_isattr(np,NV_FPOSIX))
 			sfputr(file,"function",' ');
-		sfputr(file,nv_name(np),-1);
+		cp = nv_name(np);
+		if(tp->wctname)
+			cp += strlen(tp->wctname)+1;
+		sfputr(file,cp,-1);
 		if(nv_isattr(np,NV_FPOSIX))
 			sfwrite(file,"()",2);
 		if(np->nvalue.ip && np->nvalue.rp->hoffset>=0)
@@ -1344,7 +1392,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	register Namval_t *np;
 	register int namec;
 	Namval_t *onp = 0;
-	char	*name = 0;
+	char	*name=0;
 	int	len;
 	tp->sh->last_table=0;
 	flag &= ~NV_ASSIGN;
@@ -1364,7 +1412,12 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag&~NV_IARRAY);
 	if(mbcoll())
 		strsort(argv,namec,strcoll);
-	while(namec--)
+	if(namec==0 && tp->sh->namespace && nv_dict(tp->sh->namespace)==root)
+	{
+		sfnputc(file,'\t',tp->indent);
+		sfwrite(file,":\n",2);
+	}
+	else while(namec--)
 	{
 		if((np=nv_search(*argv++,root,0)) && np!=onp && (!nv_isnull(np) || np->nvfun || nv_isattr(np,~NV_NOFREE)))
 		{

@@ -130,6 +130,7 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #include <error.h>
 #include <wait.h>
 #include <sig.h>
+#include <ast_tty.h>
 #include <ast_vfork.h>
 
 #ifndef ENOSYS
@@ -204,14 +205,24 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 		n = errno;
 	else if (!pid)
 	{
-		if (pgid < 0)
+		if (pgid == -1)
 			setsid();
-		else if (pgid > 0)
+		else if (pgid)
 		{
-			if (pgid == 1)
-				pgid = 0;
-			if (setpgid(0, pgid) < 0 && pgid && errno == EPERM)
-				setpgid(0, 0);
+			m = 0;
+			if (pgid == 1 || pgid == -2 && (m = 1))
+				pgid = getpid();
+			if (setpgid(pgid, pgid) < 0 && pgid && errno == EPERM)
+				setpgid(pgid, 0);
+#if _lib_tcgetpgrp
+			if (m)
+				tcsetpgrp(2, pgid);
+#else
+#ifdef TIOCSPGRP
+			if (m)
+				ioctl(2, TIOCSPGRP, &pgid);
+#endif
+#endif
 		}
 		execve(path, argv, envv);
 #if _real_vfork

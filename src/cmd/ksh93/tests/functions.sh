@@ -1133,4 +1133,15 @@ function func2
 }
 func2
 
+{ $SHELL <<- \EOF
+	function foo
+	{
+	        typeset rc=0
+		unset -f foo
+		return $rc;
+	}
+	foo
+EOF
+} 2> /dev/null || err_exit  'problem with unset -f  foo within function foo'
+
 exit $((Errors<125?Errors:125))
