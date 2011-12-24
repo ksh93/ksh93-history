@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -857,6 +857,8 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 			sh_delay(.05);
 			astwinsize(2,&rows,&newsize);
 			ep->e_winsz = newsize-1;
+			if(ep->e_winsz < MINWINDOW)
+				ep->e_winsz = MINWINDOW;
 			if(!ep->e_multiline && ep->e_wsize < MAXLINE)
 				ep->e_wsize = ep->e_winsz-2;
 			ep->e_nocrnl=1;
@@ -1447,6 +1449,7 @@ void	ed_genncpy(register genchar *dp,register const genchar *sp, int n)
 	while(n-->0 && (*dp++ = *sp++));
 }
 
+#endif /* SHOPT_MULTIBYTE */
 /*
  * find the string length of <str>
  */
@@ -1458,7 +1461,6 @@ int	ed_genlen(register const genchar *str)
 	while(*sp++);
 	return(sp-str-1);
 }
-#endif /* SHOPT_MULTIBYTE */
 #endif /* SHOPT_ESH || SHOPT_VSH */
 
 #ifdef future
@@ -1702,7 +1704,7 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 			ac++;
 		}
 	}
-	if(ac>1)
+	if(ac>0)
 	{
 		l = ac;
 		argv = av  = (char**)stakalloc((ac+1)*sizeof(char*));
@@ -1734,7 +1736,7 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 		mplast->next = 0;
 	}
 	ep->hlist = (Histmatch_t**)argv;
-	ep->hfirst = ep->hlist[0];
+	ep->hfirst = ep->hlist?ep->hlist[0]:0;
 	return(ep->hmax=ac);
 }
 

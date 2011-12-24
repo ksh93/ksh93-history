@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2011-03-09
+# @(#)magic (AT&T Research) 2011-11-02
 #
 # magic number database for file(1) and magic(3)
 #
@@ -58,6 +58,8 @@ o{
 }
 0	long		0177535		make object, old magic		application/x-nmake
 o()
+0	long		0x090f0301	jmake project db		application/x-jmake
++4	string		*		, version %s
 0	long		0x0b130800	ksh binary script		application/ksh
 +4	byte		*		, version %ld
 0	string		vkda		delta				application/x-vdelta

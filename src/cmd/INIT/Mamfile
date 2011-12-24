@@ -1,8 +1,8 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.6 2011-02-02
+info mam static 00000 1994-07-17 make (AT&T Research) 5.6 2011-12-13
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
-setv ARFLAGS -cr
+setv ARFLAGS rc
 setv AS as
 setv ASFLAGS
 setv CC cc
@@ -532,7 +532,7 @@ done ast.h dontcare virtual
 done mamake.c
 meta mamake.o %.c>%.o mamake.c mamake
 prev mamake.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2011 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c mamake.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2011 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o mamake mamake.o
 done mamake generated
@@ -542,7 +542,7 @@ make proto.c
 done proto.c
 meta proto.o %.c>%.o proto.c proto
 prev proto.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c proto.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   -c proto.c
 done proto.o generated
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o proto proto.o
 done proto generated
@@ -567,7 +567,7 @@ prev ast.h implicit
 done ratz.c
 meta ratz.o %.c>%.o ratz.c ratz
 prev ratz.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c ratz.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   -c ratz.c
 done ratz.o generated
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o ratz ratz.o
 done ratz generated
@@ -578,7 +578,7 @@ prev ast.h implicit
 done release.c
 meta release.o %.c>%.o release.c release
 prev release.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2011 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c release.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2011 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c release.c
 done release.o generated
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o release release.o
 done release generated
@@ -1050,14 +1050,15 @@ prev ${INSTALLROOT}/lib/lib
 make dl.req
 make dl.c
 done dl.c
+exec - set -
 exec - r='-'
 exec - for i in dl.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in dl -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o dl.exe $i $g > /dev/null
-exec - 				then	${CC} -o dl.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o dl.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o dl.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1079,14 +1080,15 @@ make ${INSTALLROOT}/lib/lib/iconv
 make iconv.req
 make iconv.c
 done iconv.c
+exec - set -
 exec - r='-'
 exec - for i in iconv.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in iconv -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o iconv.exe $i $g > /dev/null
-exec - 				then	${CC} -o iconv.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o iconv.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o iconv.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1110,14 +1112,15 @@ make w.c
 done w.c
 make w2.c
 done w2.c
+exec - set -
 exec - r='-'
 exec - for i in w.c w2.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in w -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o w.exe $i $g > /dev/null
-exec - 				then	${CC} -o w.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o w.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o w.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1139,14 +1142,15 @@ make ${INSTALLROOT}/lib/lib/intl
 make intl.req
 make intl.c
 done intl.c
+exec - set -
 exec - r='-'
 exec - for i in intl.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in intl -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o intl.exe $i $g > /dev/null
-exec - 				then	${CC} -o intl.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o intl.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o intl.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1178,14 +1182,15 @@ make m5.c
 done m5.c
 make m6.c
 done m6.c
+exec - set -
 exec - r='-'
 exec - for i in m.c m2.c m3.c m4.c m5.c m6.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in m -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o m.exe $i $g > /dev/null
-exec - 				then	${CC} -o m.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o m.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o m.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1207,14 +1212,15 @@ make ${INSTALLROOT}/lib/lib/nsl
 make nsl.req
 make nsl.c
 done nsl.c
+exec - set -
 exec - r='-'
 exec - for i in nsl.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in nsl -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o nsl.exe $i $g > /dev/null
-exec - 				then	${CC} -o nsl.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o nsl.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o nsl.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1237,14 +1243,15 @@ make socket.req
 make socket.c
 done socket.c
 prev nsl.c
+exec - set -
 exec - r='-'
 exec - for i in socket.c nsl.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in socket -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o socket.exe $i $g > /dev/null
-exec - 				then	${CC} -o socket.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o socket.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o socket.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}
@@ -1276,14 +1283,15 @@ make gdbm2.c
 make ndbm.h implicit
 done ndbm.h dontcare virtual
 done gdbm2.c
+exec - set -
 exec - r='-'
 exec - for i in db.c gdbm.c gdbm1.c gdbm2.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in db - gdbm_compat - gdbm - ndbm - dbm -
 exec - 		do	case $p in
-exec - 			-)	if	${CC} -o dbm.exe $i $g > /dev/null
-exec - 				then	${CC} -o dbm.exe $i > /dev/null || {
+exec - 			-)	if	${CC} -o dbm.exe $i $g > /dev/null 2>&1
+exec - 				then	${CC} -o dbm.exe $i > /dev/null 2>&1 || {
 exec - 						r="$g"
 exec - 						break 2
 exec - 					}

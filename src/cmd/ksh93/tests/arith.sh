@@ -3,12 +3,12 @@
 #               This software is part of the ast package               #
 #          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
-#                  Common Public License, Version 1.0                  #
+#                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
-#            http://www.opensource.org/licenses/cpl1.0.txt             #
-#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -674,5 +674,12 @@ x=([0]=3 [1]=6 [2]=12)
 got=$($SHELL 2> /dev/null -c 'compound -a x;compound -a x[0].y; integer -a x[0].y[0].z; (( x[0].y[0].z[2]=3 )); typeset -p x')
 exp='typeset -C -a x=((typeset -C -a y=( [0]=(typeset -a -l -i z=([2]=3);));))'
 [[ $got == "$exp" ]] || err_exit '(( x[0].y[0].z[2]=3 )) not working'
+
+unset x
+let x=010
+[[ $x == 10 ]] || err_exit 'let treating 010 as octal'
+set -o letoctal
+let x=010
+[[ $x == 8 ]] || err_exit 'let not treating 010 as octal with letoctal on'
 
 exit $((Errors<125?Errors:125))

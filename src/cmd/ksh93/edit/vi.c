@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -1543,6 +1543,11 @@ static void getline(register Vi_t* vp,register int mode)
 		case '\t':		/** command completion **/
 			if(mode!=SEARCH && last_virt>=0 && (vp->ed->e_tabcount|| !isblank(cur_virt)) && vp->ed->sh->nextprompt)
 			{
+				if(virtual[cur_virt]=='\\')
+				{
+					virtual[cur_virt] = '\t';
+					break;
+				}
 				if(vp->ed->e_tabcount==0)
 				{
 					ed_ungetchar(vp->ed,'\\');
@@ -1866,15 +1871,14 @@ static void putstring(register Vi_t *vp,register int col, register int nchars)
 static void refresh(register Vi_t* vp, int mode)
 {
 	register int p;
-	register int regb;
+	register int v;
 	register int first_w = vp->first_wind;
 	int p_differ;
 	int new_lw;
 	int ncur_phys;
 	int opflag;			/* search optimize flag */
 
-#	define	w	regb
-#	define	v	regb
+#	define	w	v
 
 	/*** find out if it's necessary to start translating at beginning ***/
 
@@ -1886,7 +1890,7 @@ static void refresh(register Vi_t* vp, int mode)
 	}
 	v = cur_virt;
 #if SHOPT_EDPREDICT
-	if(mode==INPUT && v>0 && virtual[0]=='#' && virtual[v]!='*')
+	if(mode==INPUT && v>0 && virtual[0]=='#' && virtual[v]!='*' && sh_isoption(SH_VI))
 	{
 		int		n;
 		virtual[last_virt+1] = 0;

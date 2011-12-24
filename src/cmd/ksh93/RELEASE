@@ -1,8 +1,72 @@
-11-06-22  --- Release ksh93u+ ---
+11-12-13  --- Release ksh93u+ ---
+11-12-13  In vi edit mode a lteral <TAB> can now be entered by preceding it
+	  with a backshash.
+11-12-13  When tab is entered for completion after a ' or ", the ' and "
+	  characters are no longer deleted.
+11-12-07  A bug in which a program in the current direcotry with a . in the
+	  name could fail to execute when both PATH and FPATH end with :. has
+	  been fixed.
+11-12-07  I fixed a bug in which a variable expansion in a large here-document
+	  could be expanded to a null string.
+11-12-06  An optimization to read was added in the case the the read command
+	  was redirected from a file.
+11-12-06  Changes were made to make the line limit for read unlimited by
+	  default.
+11-12-05  A bug in which unsetting an array variable did not completely clear
+	  the variable in some cases has been fixed.
+11-12-02 +The printf alternative character # when applied to the %q format will
+	  quote argument in a form suitable for a field in a .csv format file.
+11-12-02 +A -S option was added to read to be able to read .csv format files.
+11-11-28  A bug in which redirection of standard error in a function called from
+	  command substitution caused standard error to be lost has ben fixed.
+11-11-21  [[ (-n foo) ]] no longer requires a space before (.
+11-11-11  The readonly attribute for a variable now applies to compound
+	  assignments to that variable.
+11-11-07  Changes were made to reduce the stack size to allow deeper function
+	  recursion.
+11-10-10 +Added alternate flag to printf %H for encoding of URI's.
+11-10-10  A bug which could lead to a core dump when the shell was invoked
+	  with more than twenty five open files has been fixed.
+11-10-06  A bug in the scoping of name references in functions called by other
+	  functions has been fixed.
+11-10-05  A bug in which wait on a pid may return the exit status of an
+	  earlier background job with that pid instead has been fixed.
+11-09-22  A bug in which a read timed out with TMOUT did not always restore
+	  the terminal state has been fixed.
+11-09-21  An optimization that allowed the last command in a script to use
+	  the same process id as the script has been eliminated.
+11-09-21  Added letoctal option that enables the let command to recognize
+	  octal constants starting with 0.
+11-09-20  A bug in which ${var.} could cause a core dump has been fixed.
+11-09-20  A bug with SHOPT_EDPREDICT when neither vi or emacs was enabled for
+	  lines beginning with # when in a multibyte locale has been fixed.
+11-09-20  A bug in emacs edit mode with SHOPT_EDPREDICT that would cause
+	  history searches matching comments lines to generate predictions
+	  has been fixed.  Only user typed comment lines generate predictions.
+11-09-20  A bug in emacs edit mode with a search that matches a comment line
+	  that could cause a core dump has been fixed.
+11-09-16  A bug in which a command name ending in .. could cause the shell to
+	  abort has been fixed.
+11-09-16  The characters ! + - % and @ in file names are no longer escaped with
+	  file name completion.
+11-09-13  The let command no longer treats numbers starting with 0 as octal
+	  constants.  
+11-09-08  A bug in which printf "%R" could cause a core dump for invalid shell
+	  patterns has been fixed.
+11-08-09  With set -u, ${var#pattern} reported that var was unset for special
+	  variables.
+11-08-03  A bug in which the shell did not preserve the exit status for a
+	  coprocess has been fixed.
+11-08-02  A bug in the saving and restoring of IFS in command substitution that
+	  cause case a core dump has been fixed.
+11-07-21  Modified the 10-08-27 bug fix so that background jobs started in for
+	  and while loops created interactively generate completion messages.
+11-07-20  I fixed a bug in here documents in which multi-byte characters that
+	  crossed buffer boundaries were not processed correctly.
 11-06-22  The shell compiler now supports process substitution.
 11-06-22 +Added code to support process substitution on systems that do
 	  not supply the /dev/fd directory.
-11-06-21  Fixed extraneous jobs Done messages when builin is at the end of a
+11-06-21  Fixed extraneous jobs Done messages when builtin is at the end of a
 	  pipeline.
 11-06-20  Fixed two regression tests.
 11-06-20  Fixed a bug introduced on last update.
@@ -57,7 +121,7 @@
 	  is now working.
 11-04-26  I fixed a bug with SHOPT_FIXEDARRAY compilation that could cause
 	  an a core dump for not fixed arrays.
-11-04-25  A bug in the references to two domensional compound arrays has
+11-04-25  A bug in the references to two dimensional compound arrays has
 	  been fixed.
 11-04-20  A bug in which a name reference to a multidimentional index array
 	  index, nameref x=foo[3][4], did not work correctly has been fixed.
@@ -67,7 +131,7 @@
 	  been fixed.
 11-04-15 +A compile option, SHOPT_2DMATCH, has been added which causes
 	  .sh.match to be a two dimensional array after ${var//pat/str} 
-	  where the first dimenstion is the pattern number and the second is
+	  where the first dimension is the pattern number and the second is
 	  the match instance.
 11-04-11  A bug in which readonly var, where var is exported could cause var
 	  to be unset has been fixed.
@@ -93,7 +157,7 @@
 11-03-07  A bug in which reassigning a compound variable to an associative
 	  array index could incorrectly increase the count of the number
 	  of elements has been fixed.
-11-03-04 +The tilde expansion on windows has been modifed to handle user
+11-03-04 +The tilde expansion on windows has been modified to handle user
 	  names of the form domain/user so that ~domain/user now expands
 	  to the home directory of that domain user.
 11-03-03  A bug in which the width of the prompt was calculated incorectly
@@ -139,11 +203,11 @@
 	  variables when the same array was referenced on the left and the
 	  right hand side with different indices has been fixed.
 11-01-10  A bug in which the output of time was lost when { time...;} 2>&1
-	  occured inside command substition has been fixed.
+	  occurred inside command substition has been fixed.
 11-01-07  [[ -v sh.match[i] ]] was returning false when sh.match[i] was set.
 11-01-05  Added and modified warning messages with sh -n.
 11-01-02  Fixed bugs with typeset -l/-u/-M and arrays.
-10-12-28  Fixed a bug with typeset -l/-u/-M values in arithmetric expressions.
+10-12-28  Fixed a bug with typeset -l/-u/-M values in arithmetic expressions.
 10-12-26  Fixed a time parsing bug in sleep and localeconv() initialization.
 10-12-23  Prevented the shell from generating a core dump when it sends itself
 	  a termination signal because the last command terminated with that
@@ -195,7 +259,7 @@
 10-11-18  Fixed a bug in which typeset -T foo; typeset -T could cause a
 	  core dump.
 10-11-17  Fixed a bug in which the error message for set -u could come out
-	  garbeled.
+	  garbelled.
 10-11-17  Modified the parser so that typeset -a var=(...) no longer checks
 	  the first index for aliases and reserved words.
 10-11-17  A bug in which a subshell command consisted of only a for or until
@@ -212,7 +276,7 @@
 	  been fixed.
 10-11-12  A bug in which the unset discipline function for a type is called
 	  when the type is initialized has been fixed.
-10-11-12  The sequences \< and \> are now preserved after patterns contaning
+10-11-12  The sequences \< and \> are now preserved after patterns containing
 	  ~(E) in ${var/pattern/string} expansions.
 10-11-11  A bug in typeset -m when the variables were compound arrary instances
 	  has been fixed.
@@ -265,7 +329,7 @@
 10-10-04  A bug in which a declaration of indexed array (-a_ in a type
 	  definition would be displayed as a compound indexed array (-C -a)
 	  has been fixed.
-10-09-30  The C99 math funtion ldexp has been added.
+10-09-30  The C99 math function ldexp has been added.
 10-09-30  A bug with two dimensional arrays with expansion of the form
 	  ${ref[0..5]} where ref is a nameref to array[i] has been fixed.
 10-09-29  A bug in which an eval with redirections invoked from a dot script
@@ -278,7 +342,7 @@
 	  are used the same way indexed arrays are.  Currently, only fixed
 	  arrays of fixed objects (float, int, and justifies objects) are
 	  supported.
-10-09-22  A bug which could cause an excpetion when a function with static
+10-09-22  A bug which could cause an exception when a function with static
 	  variables was redefined has been fixed.
 10-09-21  A bug in the processing of (command&) which created a job in the
 	  parent process has been fixed.
@@ -288,8 +352,8 @@
 	  lead to an exception fixed after 8 levels of recursion has been
 	  fixed.
 10-09-18  A bug in which the count of elements in an array was wrong leading
-	  to an excpetion has been fixed.
-10-09-13  A bug which occured when both xtrace and showme options where
+	  to an exception has been fixed.
+10-09-13  A bug which occurred when both xtrace and showme options where
 	  specified in which the xtrace option disabled showme has been fixed.
 10-09-13  A bug in which creating a reference to an array variable with any
 	  elements could cause subsequent array elements to be treated as
@@ -320,7 +384,7 @@
 	  those names are handled by the shell.
 10-08-24  A bug in the running of a compiled dot script in which only the
 	  first command was executed has been fixed.
-10-08-23  A bug which sometimes caused a core dump with a confgire script
+10-08-23  A bug which sometimes caused a core dump with a configure script
 	  has been fixed.
 10-08-20  A bug in command substitution which caused a configure script to
 	  hang has been fixed.
@@ -366,9 +430,9 @@
 	  to an array instance.
 10-07-22  Fixed a bug in which discipline functions were not being invoked it
 	  was invoked on a two dimensional array, i.e., arr[5][9].discipline.
-10-07-19  Fixed a buffering problem which occured when running a script with
+10-07-19  Fixed a buffering problem which occurred when running a script with
 	  ssh and the parent ssh process is killed.
-10-07-14  Modifed the parser to treat ((...)) inside [[...]] as ( (...) ) to
+10-07-14  Modified the parser to treat ((...)) inside [[...]] as ( (...) ) to
 	  that it is a nested (...).
 10-07-09  A bug in the handling of process substitution inside command
 	  substitution as part of a pipeline has been fixed.
@@ -398,11 +462,11 @@
 10-06-09 +Made changes to the NAMESPACE compile option so that it now seems
 	  to work.  With this option, namespace <name> { command;} will
 	  run command in the namespace .name so that all variables and
-	  functions created by command are accessable outside the name
+	  functions created by command are accessible outside the name
 	  space via .name.var and .name.fun.  Variables and functions that
-	  are not in the namespace are not modifed when runnning command.
+	  are not in the namespace are not modified when running command.
 10-06-07  Change most internal interfaces to take Sh_t* argument.
-10-06-03 +Types can be loaded on first reference by putting defintions in
+10-06-03 +Types can be loaded on first reference by putting definitions in
 	  PFPATH.
 10-06-03 +The shell is now able to parse commands which use type statements
 	  before the typeset -T command to define the type executes.
@@ -424,7 +488,7 @@
 	  arithmetic expressions has been fixed.
 10-05-28  Fixed bugs in changing attributes for two dimensional arrays.
 10-05-28  Eliminated a few unreferenced variables and a reference to
-	  uninitialized memroy.
+	  uninitialized memory.
 10-05-27  Rewrote the subshell code to avoid using pipes an many cases.
 10-05-24  Fixed a bug which cause an exception when both -l and -s were
 	  specified with typeset -i.
@@ -439,7 +503,7 @@
 	  are treated as a shell pattern and cause matching lines from the
 	  history file to be displayed as a numbered list as you type.
 	  You can scroll up and down this list or you can use <ESC>nTAB
-	  to make this the current line (n defaults to 1 of ommitted) or
+	  to make this the current line (n defaults to 1 of omitted) or
 	  <ESC>n<cr> to execute.
 10-05-20  A bug which caused an exception when multiple levels of composite
 	  functions in arithemtic expressions has been fixed.
@@ -448,7 +512,7 @@
 	  instance was used has been fixed. 
 10-05-14  A bug in which the shell treats a valid index array assignment,
 	  typeset -a x=(foo (x=3;y=4) bar) as a syntax error has been fixed.
-10-05-13  A bug in creating name references to assocative array variable
+10-05-13  A bug in creating name references to associative array variable
 	  after a lookup of one of its elements has been fixed.
 10-05-12  Two bugs in the handling of function static type variables in
 	  subshells have been fixed.  One could cause an exception and the
@@ -456,10 +520,10 @@
 10-05-10  A bug in which static variables in functions were not being saved and
 	  restored properly when running subshells has been fixed.
 10-05-05  A bug in which print -v did not work correctly when an operand was an
-	  indexed array element refering to a compound variable has been fixed.
-10-05-05  A change to improve performace by special casing empty string
+	  indexed array element referring to a compound variable has been fixed.
+10-05-05  A change to improve performance by special casing empty string
 	  assignments to avoid repeated malloc() and free().
-10-05-05  A bug in which creating a name reference to a non-existant associative
+10-05-05  A bug in which creating a name reference to a non-existent associative
 	  array element would create the array element has been fixed.
 10-05-04  A bug in which name references to static variables in the static
 	  scope were not found has been fixed.
@@ -490,13 +554,13 @@
 	  reads that did not use a delimiter has been fixed.
 10-04-19  The display of a compound variable with an embedded array with
 	  attributes was sometimes not working correctly and has been fixed.
-10-04-16  A bug in which attributes were not be propogated to elements in
+10-04-16  A bug in which attributes were not be propagated to elements in
 	  an associative array has been fixed.
 10-04-15  A bug which caused scripts containing user defined math functions to
 	  fail to compile with shcomp has been fixed.
 10-04-15 +Job pools have been added with the SHOPT_COSHELL compilation option.
 	  A job pool allows a collection of background jobs to run either locally 
-	  or remotetly and to be managed as a unit.  The command '& name ...'
+	  or remotely and to be managed as a unit.  The command '& name ...'
 	  creates or uses a named job pool for subsequent background jobs.
 	  kill, wait, and jobs allow the pool name as operands.
 10-04-14  A bug in which a coprocess connection could terminate prematurely
@@ -557,14 +621,14 @@
 10-03-12  A bug in which a here-document containing command substitutions
 	  that contained here-documents did not process correctly has been
 	  fixed.
-10-03-12  A bug in which the terminal is not restored to cannonical mode
+10-03-12  A bug in which the terminal is not restored to canonical mode
 	  after read times out when in a multibyte locale with no edit mode
 	  enabled has been fixed.
 
 10-03-05  --- Release ksh93t+  ---
-10-03-05  A varibale unset memory leak has been fixed and tests/leaks.sh
+10-03-05  A variable unset memory leak has been fixed and tests/leaks.sh
 	  has been added to verify the fix.
-10-03-04  Documentation, comment, and disgnostic spelling typos corrected.
+10-03-04  Documentation, comment, and diagnostic spelling typos corrected.
 10-02-14  Fix sh_getenv() initialization to cooperate with the 3d fs.
 10-02-12  A bug in which the get discipline function was not invoked for
 	  associative array subscripts for unset array elements has been fixed.
@@ -1911,7 +1975,7 @@
 02-09-09  A bug in which a background job was not removed from the job list
 	  when a subshell completed has been fixed, for example (prog&). 
 02-09-03  A bug in which an assignment of the form name=(integer x=3)
-	  could be interpretted as an array assignment rather than a
+	  could be interpreted as an array assignment rather than a
 	  compound variable assignment has been fixed.
 02-08-19  A command completion bug which occurred on file systems that
 	  are case insensitive has been fixed.

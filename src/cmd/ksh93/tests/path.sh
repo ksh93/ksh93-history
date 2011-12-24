@@ -3,12 +3,12 @@
 #               This software is part of the ast package               #
 #          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
-#                  Common Public License, Version 1.0                  #
+#                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
-#            http://www.opensource.org/licenses/cpl1.0.txt             #
-#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -329,11 +329,13 @@ kill $! 2> /dev/null && err_exit 'whence -q appears to be hung'
 FPATH=$PWD
 print  'function foobar { :;}' > foobar
 autoload foobar;
+exec {m}< /dev/null
 for ((i=0; i < 25; i++))
 do	( foobar )
 done
+exec {m}<& -
 exec {n}< /dev/null
-(( n > 24 )) && err_exit 'autoload function in subshell leaves file open'
+(( n > m )) && err_exit 'autoload function in subshell leaves file open'
 
 # whence -a bug fix
 rmdir=rmdir
@@ -357,4 +359,10 @@ EOF
 x=$(FPATH= PATH=$PWD/bin $SHELL -c  ': $(whence less);myfun') 2> /dev/null
 [[ $x == myfun ]] || err_exit 'function myfun not found'
 
+cp $(whence -p echo) user_to_group_relationship.hdr.query
+FPATH=/foobar:
+PATH=$FPATH:$PATH:.
+[[ $(user_to_group_relationship.hdr.query foobar) == foobar ]] 2> /dev/null || err_exit 'Cannot execute command with . in name when PATH and FPATH end in :.'
+
 exit $((Errors<125?Errors:125))
+

@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1990-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -198,7 +198,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 #line 1 "../../lib/libpp/ppproto.c"
  
 #line 13
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2008-05-11 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2011-08-30 $\000\n";
 
 #line 1 "../../lib/libpp/ppfsm.c"
  
@@ -4417,7 +4417,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 
 
-		n = (8*1024);
+		n = (16*1024);
 		if (!(proto = (( 0)?( struct proto*)realloc((char*)( 0),sizeof( struct proto)*( 1)+( 5 * n + 2)):( struct proto*)calloc(1,sizeof( struct proto)*( 1)+( 5 * n + 2)))))
 			return 0;
 		proto->iz = n;
@@ -4463,7 +4463,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 	pragma = -1;
 	s = proto->ip;
-	m = 64;
+	m = 80;
 	while (m-- > 0 && *s)
 	{
 		while (*s == ' ' || *s == '\t') s++;

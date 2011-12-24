@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2011-03-17 # update in USAGE too #
+version=2011-12-13 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -367,19 +367,34 @@ noisy()
 
 here_broken=0
 
-copy() # output-file data
+literal() # line that echo might process
 {
-	case $shell in
-	ksh)	case $1 in
-		-)	print -r - "$2" ;;
-		*)	print -r - "$2" > "$1" ;;
+	if	cat <<!
+$*
+!
+	then	: old here doc botch not present
+	else	case $here_broken in
+		0)	here_broken=1
+			echo "$command: your shell botches here documents; this was fixed back in the 80's" >&$stderr
+			;;
 		esac
-		;;
-	*)	case $1 in
-		-)	if	cat <<!
+		sh -c "cat <<!
+$*
+!
+"
+	fi
+}
+
+copy() # "output-file" "data-that-must-not-be-processed-by-echo"
+{
+	case $1 in
+	-)	case $shell in
+		ksh)	print -r - "$2"
+			;;
+		*)	if	cat <<!
 $2
 !
-			then	: old here doc botch not present
+			then	: ancient here doc botch not present
 			else	case $here_broken in
 				0)	here_broken=1
 					echo "$command: your shell botches here documents; this was fixed back in the 80's" >&$stderr
@@ -391,16 +406,21 @@ $2
 "
 			fi
 			;;
+		esac
+		;;
+	*)	case $shell in
+		ksh)	print -r - "$2" > "$1"
+			;;
 		*)	if	cat > "$1" <<!
 $2
 !
-			then	: old here doc botch not present
+			then	: ancient here doc botch not present
 			else	case $here_broken in
 				0)	here_broken=1
 					echo "$command: your shell botches here documents; this was fixed back in the 80's" >&$stderr
 					;;
 				esac
-				sh -c "cat > '$1' <<!
+				sh -c "cat > \"$1\" <<!
 $2
 !
 "
@@ -639,7 +659,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2011-03-17 $
+@(#)$Id: iffe (AT&T Research) 2011-12-13 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -1215,7 +1235,7 @@ case $debug in
 	fi
 	;;
 esac
-trap "rm -f $core $tmp*" EXIT
+trap "rm -f $core $tmp*" 0
 if	(:>$tmp.c) 2>/dev/null
 then	rm -f $tmp.c
 else	echo "$command: cannot create tmp files in current dir" >&2
@@ -1244,7 +1264,7 @@ std='#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
 #define _NIL_(x)	((x)0)'
 tst=
 ext="#include <stdio.h>"
-noext='*[<"][Ss][Tt][Dd][Ii][Oo].[Hh][">]*|*<ast.h>*|*<sfio.h>*'
+noext='*[<"][Ss][Tt][Dd][Ii][Oo].[Hh][">]*|*<ast.h>*|*<sfio.h>*|*/[*]<NOSTDIO>[*]/*'
 
 # loop on op [ arg [ ... ] ] [ : op [ arg [ ... ] ] ]
 
@@ -1717,8 +1737,25 @@ do	case $in in
 			continue
 			;;
 		stdio)	case $arg in
-			'')	ext= ;;
-			*)	ext="#include \"$arg\"" ;;
+			'')	ext=
+				;;
+			*)	ext=
+				sep=
+				for i in $arg
+				do	case $i in
+					-)	case $ext in
+						'')	continue ;;
+						*)	break ;;
+						esac
+						;;
+					esac
+					echo "#include \"$i\"" > t.c
+					if	$cc -E t.c > /dev/null 2>&1
+					then	ext="$ext$sep#include \"$arg\""
+						sep=$nl
+					fi
+				done
+				;;
 			esac
 			continue
 			;;
@@ -2239,9 +2276,7 @@ $lin
 			;;
 		iff|ini)arg=-
 			;;
-		comment)cat <<!
-/* $* */
-!
+		comment)copy - "/* $* */"
 			continue
 			;;
 		define)	x=$1
@@ -2280,9 +2315,7 @@ int x;
 			if	compile $cc -c $tmp.c <&$nullin >&$nullout
 			then	success -
 			else	failure -
-				cat <<!
-#define $x$arg	$v
-!
+				copy - "#define $x$arg	$v"
 				usr="$usr${nl}#define $x$arg  $v"
 			fi
 			continue
@@ -2334,9 +2367,7 @@ _END_EXTERNS_
 				*)	v=$*
 					;;
 				esac
-				cat <<!
-extern $t	$x$v;
-!
+				copy - "extern $t	$x$v;"
 				# NOTE: technically if prototyped is on all tests should
 				#	be run through proto(1), but we'd like iffe to
 				#	work sans proto -- so we drop the extern's in
@@ -2379,9 +2410,7 @@ extern $t	$x$v;
 					*)	case $op in
 						reference)
 							;;
-						*)	cat <<!
-#include <$x>
-!
+						*)	copy - "#include <$x>"
 							;;
 						esac
 						usr="$usr${nl}#include <$x>"
@@ -2398,9 +2427,7 @@ int x;
 						case $op in
 						reference)
 							;;
-						*)	cat <<!
-#include <$x>
-!
+						*)	copy - "#include <$x>"
 							;;
 						esac
 						usr="$usr${nl}#include <$x>"
@@ -2428,9 +2455,7 @@ int x;
 			*)	v=$*
 				;;
 			esac
-			cat <<!
-$*
-!
+			copy - "$*"
 			usr="$usr${nl}$v"
 			continue
 			;;
@@ -2964,7 +2989,12 @@ $*
 									sep=
 									eval syms='"${'api_sym_${api}'}"'
 									# old solaris requires -k<space><junk> #
-									set x x `echo "$syms" | sort -t: -u -k 1,1 -k 2,2nr | sed 's/\(.*\):\(.*\)/\1 \2/'`
+									set x x `echo "$syms" | sort -t: -u -k 1,1 -k 2,2nr 2>/dev/null | sed 's/:/ /'`
+									case $# in
+									2)	# ancient sort doesn't have -k #
+										set x x `echo "$syms" | sort -t: -u +0 -1 +1 -2nr 2>/dev/null | sed 's/:/ /'`
+										;;
+									esac
 									sym=
 									while	:
 									do	shift 2
@@ -4275,10 +4305,8 @@ $inc"
 						execute $tmp.exe $opt <&$nullin
 						;;
 					*.sh)	{
-						cat <<!
-:
-set "cc='$cc' executable='$executable' id='$m' static='$static' tmp='$tmp'" $opt $hdr $test
-!
+						copy - ":
+set \"cc='$cc' executable='$executable' id='$m' static='$static' tmp='$tmp'\" $opt $hdr $test"
 						cat $a
 						} > $tmp.sh
 						chmod +x $tmp.sh

@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -414,7 +414,7 @@ int  sh_iovalidfd(Shell_t *shp, int fd)
 	if(n > max)
 		n = max;
 	max = shp->gd->lim.open_max;
-	shp->sftable = (Sfio_t**)calloc(n*(sizeof(int*)+sizeof(Sfio_t*)+1),1);
+	shp->sftable = (Sfio_t**)calloc((n+1)*(sizeof(int*)+sizeof(Sfio_t*)+1),1);
 	if(max)
 		memcpy(shp->sftable,sftable,max*sizeof(Sfio_t*));
 	shp->fdptrs = (int**)(&shp->sftable[n]);
@@ -836,6 +836,8 @@ int sh_open(register const char *path, int flags, ...)
 		mode = (IOREAD|IOWRITE);
 	else
 		mode = IOREAD;
+	if(fd >= shp->gd->lim.open_max)
+		sh_iovalidfd(shp,fd);
 	shp->fdstatus[fd] = mode;
 	return(fd);
 }
@@ -859,6 +861,8 @@ int sh_iomovefd(register int fdold)
 {
 	Shell_t *shp = sh_getinterp();
 	register int fdnew;
+	if(fdold >= shp->gd->lim.open_max)
+		sh_iovalidfd(shp,fdold);
 	if(fdold<0 || fdold>2)
 		return(fdold);
 	fdnew = sh_iomovefd(dup(fdold));
@@ -1111,6 +1115,8 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 		fn = (iof&IOUFD);
 		if(fn==1 && shp->subshell && !shp->subshare && (flag==2 || isstring))
 			sh_subfork();
+		if(shp->redir0 && fn==0 && !(iof&IOMOV))
+			shp->redir0 = 2;
 		io_op[0] = '0'+(iof&IOUFD);
 		if(iof&IOPUT)
 		{
@@ -1549,6 +1555,11 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 			/* This is a quoted here-document, not expansion */
 			sfmove(infile,tmp,SF_UNBOUND,-1);
 			sfclose(infile);
+			if(sffileno(tmp)>0)
+			{
+				sfsetbuf(tmp,malloc(IOBSIZE+1),IOBSIZE);
+				sfset(tmp,SF_MALLOC,1);
+			}
 			sfseek(shp->heredocs,off,SEEK_SET);
 			if(fno>=0)
 				fcntl(fno,F_SETLK,&lock);
@@ -1880,7 +1891,7 @@ static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 	if(sh_isstate(SH_INTERACTIVE) && sffileno(iop)==0 && io_prompt(shp,iop,shp->nextprompt)<0 && errno==EIO)
 		return(0);
 	sh_onstate(SH_TTYWAIT);
-	if(!(shp->fdstatus[sffileno(iop)]&IOCLEX) && (sfset(iop,0,0)&SF_SHARE))
+	if(!(shp->fdstatus[fd]&IOCLEX) && (sfset(iop,0,0)&SF_SHARE))
 		size = ed_read(shgd->ed_context, fd, (char*)buff, size,0);
 	else
 		size = sfrd(iop,buff,size,handle);
@@ -2167,7 +2178,7 @@ static void	sftrack(Sfio_t* sp, int flag, void* data)
 		return;
 	}
 #endif
-	if(fd<0 || (fd>=shp->gd->lim.open_max && !sh_iovalidfd(shp,fd)))
+	if(fd<0 || fd==PSEUDOFD || (fd>=shp->gd->lim.open_max && !sh_iovalidfd(shp,fd)))
 		return;
 	if(sh_isstate(SH_NOTRACK))
 		return;

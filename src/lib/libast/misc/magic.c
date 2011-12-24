@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -1185,7 +1185,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, char* end, struct stat
 							}
 							if (!mp->idtab)
 							{
-								if (mp->idtab = dtnew(mp->vm, &mp->dtdisc, Dthash))
+								if (mp->idtab = dtnew(mp->vm, &mp->dtdisc, Dtset))
 									for (q = 0; q < elementsof(dict); q++)
 										dtinsert(mp->idtab, &dict[q]);
 								else if (mp->disc->errorf)
@@ -2348,7 +2348,7 @@ magicopen(Magicdisc_t* disc)
 	mp->redisc.re_resizehandle = (void*)mp->vm;
 	mp->dtdisc.key = offsetof(Info_t, name);
 	mp->dtdisc.link = offsetof(Info_t, link);
-	if (!(mp->tmp = sfstropen()) || !(mp->infotab = dtnew(mp->vm, &mp->dtdisc, Dthash)))
+	if (!(mp->tmp = sfstropen()) || !(mp->infotab = dtnew(mp->vm, &mp->dtdisc, Dtoset)))
 		goto bad;
 	for (n = 0; n < elementsof(info); n++)
 		dtinsert(mp->infotab, &info[n]);

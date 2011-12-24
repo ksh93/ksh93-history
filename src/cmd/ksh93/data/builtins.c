@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -18,6 +18,7 @@
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
+
 
 #include	<shell.h>
 #include	<signal.h>
@@ -223,6 +224,8 @@ const char sh_set[] =
 		"[+ignoreeof?Prevents an interactive shell from exiting on "
 			"reading an end-of-file.]"
 		"[+keyword?Equivalent to \b-k\b.]"
+		"[+letoctal?The \blet\b builtin recognizes octal constants "
+			"with leading 0.]"
 		"[+markdirs?A trailing \b/\b is appended to directories "
 			"resulting from pathname expansion.]"
 		"[+monitor?Equivalent to \b-m\b.]"
@@ -1140,7 +1143,8 @@ USAGE_LICENSE
 		"variables of type \b-b\b.]"
 	"[+%H?Output \astring\a with characters \b<\b, \b&\b, \b>\b, "
 		"\b\"\b, and non-printable characters properly escaped for "
-		"use in HTML and XML documents.]"
+		"use in HTML and XML documents.  The alternate flag \b#\b "
+		"formats the output for use as a URI.]"
 	"[+%P?Treat \astring\a as an extended regular expression and  "
 		"convert it to a shell pattern.]"
 	"[+%R?Treat \astring\a as an shell pattern expression and  "
@@ -1260,6 +1264,7 @@ USAGE_LICENSE
 	"can be created.]"
 "[r?Do not treat \b\\\b specially when processing the input line.]"
 "[s?Save a copy of the input as an entry in the shell history file.]"
+"[S?Treat the input as if it was saved from a spreasheet in csv format.]"
 "[u]#[fd:=0?Read from file descriptor number \afd\a instead of standard input.]"
 "[t]:[timeout?Specify a timeout \atimeout\a in seconds when reading from "
 	"a terminal or pipe.]"

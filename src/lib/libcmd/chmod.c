@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1992-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -107,7 +107,7 @@ USAGE_LICENSE
 "[R:recursive?Change the mode for files in subdirectories recursively.]"
 "[c:changes?Describe only files whose permission actually change.]"
 "[f:quiet|silent?Do not report files whose permissioins fail to change.]"
-"[h:symlink?Change the mode of symbolic links on systems that "
+"[h|l:symlink?Change the mode of symbolic links on systems that "
     "support \blchmod\b(2). Implies \b--physical\b.]"
 "[i:ignore-umask?Ignore the \bumask\b(2) value in symbolic mode "
 	"expressions. This is probably how you expect \bchmod\b to work.]"

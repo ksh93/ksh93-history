@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -91,22 +91,22 @@ typedef struct ______mstats Mstats_t;
 /*	malloc compatibility functions
 **
 **	These are aware of debugging/profiling and are driven by the
-**	VMALLOC_OPTIONS environment variable which is a space-separated
-**	list of [no]name[=value] options:
+**	VMALLOC_OPTIONS environment variable which is a comma or space
+**	separated list of [no]name[=value] options:
 **
 **	    abort	if Vmregion==Vmdebug then VM_DBABORT is set,
-**			otherwise _BLD_debug enabled assertions abort()
+**			otherwise _BLD_DEBUG enabled assertions abort()
 **			on failure
 **	    check	if Vmregion==Vmbest then the region is checked every op
+**	    free	disable addfreelist()
+**	    keep	disable free -- if code works with this enabled then it
+**	    		probably accesses free'd data
 **	    method=m	sets Vmregion=m if not defined, m (Vm prefix optional)
 **			may be one of { best debug last profile }
-**	    mmap	prefer mmap() over brk() for region allocation
 **	    period=n	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug the region is checked every n ops
 **	    profile=f	sets Vmregion=Vmprofile if not set, if
 **			Vmregion==Vmprofile then profile info printed to file f
-**	    region	if Vmregion==Vmbest then block free verifies
-**			that the block belongs to the region
 **	    start=n	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug region checking starts after n ops
 **	    trace=f	enables tracing to file f
@@ -120,7 +120,7 @@ typedef struct ______mstats Mstats_t;
 **	in a file name is replaced by the process ID.
 **
 **	VMALLOC_OPTIONS combines the features of these previously used env vars:
-**	    { VMDEBUG VMETHOD VMPROFILE VMTRACE }
+**	    { VMCHECK VMDEBUG VMETHOD VMPROFILE VMTRACE }
 **
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
@@ -244,6 +244,220 @@ static int vmflinit()
 	return 0;
 }
 
+/* use multiple regions to reduce blocking by concurrent threads  */
+#if _mem_mmap_anon || _mem_mmap_zero
+static Vmalloc_t	*Region[64];	/* list of concurrent regions	*/
+static unsigned int	Regmax = 64;	/* max number of regions	*/
+#else
+static Vmalloc_t*	Region[1];	/* list of concurrent regions	*/
+static unsigned int	Regmax = 0;
+#endif
+static unsigned int	Regnum = 0; 	/* current #concurrent regions	*/
+
+/* statistics */
+static unsigned int	Regopen = 0; 	/* #allocation calls opened	*/
+static unsigned int	Reglock = 0; 	/* #allocation calls locked	*/
+static unsigned int	Regprobe = 0; 	/* #probes to find a region	*/
+
+int setregmax(int regmax)
+{
+	int	oldmax = Regmax;
+
+	if(regmax >= Regnum && regmax <= sizeof(Region)/sizeof(Region[0]))
+		Regmax = regmax;
+
+	return oldmax;
+}
+
+/* return statistics */
+int _mallocstat(Vmstat_t* st)
+{
+	Vmstat_t	vmst;
+	int		k;
+
+	if(vmstat(Vmregion, st) < 0) /* add up all stats */
+		return -1;
+	for(k = 0; k < Regnum; ++k)
+	{	if(!Region[k])
+			continue;
+		if(vmstat(Region[k], &vmst) < 0 )
+			return -1;
+		st->n_busy += vmst.n_busy;
+		st->n_free += vmst.n_free;
+		st->s_busy += vmst.s_busy;
+		st->s_free += vmst.s_free;
+		st->m_busy += vmst.m_busy;
+		st->m_free += vmst.m_free;
+		st->n_seg  += vmst.n_seg;
+		st->extent += vmst.extent;
+	}
+
+	st->n_region = Regnum+1;
+	st->n_open = Regopen;
+	st->n_lock = Reglock;
+	st->n_probe = Regprobe;
+
+	return 0;
+}
+
+/* find the region that a block was allocated from */
+static Vmalloc_t* regionof(Void_t* addr)
+{
+	int	k;
+
+#if USE_NATIVE
+#define CAUTIOUS	1
+#else
+#define CAUTIOUS	0
+#endif
+	if(CAUTIOUS || Vmregion->meth.meth != VM_MTBEST )
+	{	/* addr will not be dereferenced here */
+		if(vmaddr(Vmregion,addr) == 0 )
+			return Vmregion;
+		for(k = 0; k < Regnum; ++k)
+			if(Region[k] && vmaddr(Region[k], addr) == 0 )
+				return Region[k];
+		return NIL(Vmalloc_t*);
+	}
+	else
+	{	/* fast, but susceptible to bad data */
+		Vmdata_t *vd = SEG(BLOCK(addr))->vmdt;
+		if(Vmregion->data == vd )
+			return Vmregion;
+		for(k = 0; k < Regnum; ++k)
+			if(Region[k] && Region[k]->data == vd)
+				return Region[k];
+		return NIL(Vmalloc_t*);
+	}
+}
+
+/* manage a cache of free objects */
+typedef struct _regfree_s
+{	struct _regfree_s*	next;
+} Regfree_t;
+static Regfree_t	*Regfree;
+
+static void addfreelist(Regfree_t* data)
+{
+	unsigned int	k;
+	Regfree_t	*head;
+
+	for(k = 0;; ASOLOOP(k) )
+	{	data->next = head = Regfree;
+		if(asocasptr(&Regfree, head, data) == (Void_t*)head )
+			return;
+	}
+}
+
+static void clrfreelist()
+{
+	Regfree_t	*list, *next;
+	Vmalloc_t	*vm;
+
+	if(!(list = Regfree) )
+		return; /* nothing to do */
+
+	if(asocasptr(&Regfree, list, NIL(Regfree_t*)) != list )
+		return; /* somebody else is doing it */
+
+	for(; list; list = next)
+	{	next = list->next;
+
+		vm = regionof((Void_t*)list);
+		if(asocasint(&vm->data->lock, 0, 1) == 0) /* can free this now */
+		{	(void)(*vm->meth.freef)(vm, (Void_t*)list, 1);
+			vm->data->lock = 0;
+		}
+		else	addfreelist(list); /* ah well, back in the queue */
+	}
+}
+
+/* get a suitable region to allocate from */
+typedef struct _regdisc_s
+{	Vmdisc_t	disc;
+	char		slop[64]; /* to absorb any extra data in Vmdcsystem */
+} Regdisc_t;
+
+static int regexcept(Vmalloc_t* vm, int type, Void_t* data, Vmdisc_t* disc)
+{
+	if(type == VM_OPEN)
+	{	if(data) /* make vmopen allocate all memory using discipline */
+			*(Void_t**)data = data; /* just make it non-NULL */
+		return 0;
+	}
+	return 0;
+}
+
+static Vmalloc_t* getregion(int* local)
+{
+	Vmalloc_t		*vm;
+	int			p, pos;
+
+	static unsigned int	Rand = 0xdeadbeef; /* a cheap prng */
+#define RAND()			(Rand = Rand*16777617 + 3)
+
+	clrfreelist();
+
+	if(asocasint(&Vmregion->data->lock, 0, 1) == 0 )
+	{	*local = 1; /* Vmregion is open, so use it */
+		asoincint(&Regopen);
+		return Vmregion;
+	}
+	else if(Regmax <= 0 || Vmregion != Vmheap )
+	{	*local = 0; /* forbidden from making new regions */
+		asoincint(&Reglock);
+		return Vmregion;
+	}
+
+	asoincint(&Regprobe); /* probe Region[] to find an open region */
+	if(Regnum == 0)
+		pos = 0;
+	else for(pos = p = RAND()%Regnum;; )
+	{	if(Region[p] && asocasint(&Region[p]->data->lock, 0, 1) == 0 )
+		{	*local = 1;
+			asoincint(&Regopen);
+			return Region[p];
+		}
+		if((p = (p+1)%Regnum) == pos )
+			break;
+	}
+
+	/* grab the next open slot for a new region */
+	while((p = Regnum) < Regmax)
+		if(asocasint(&Regnum, p, p+1) == p )
+			break;
+	if(p < Regmax) /* this slot is now ours */
+	{	static Regdisc_t	Regdisc;
+		if(!Regdisc.disc.exceptf) /* one time initialization */
+		{	GETPAGESIZE(_Vmpagesize);
+			memcpy(&Regdisc, Vmdcsystem, Vmdcsystem->size);
+			Regdisc.disc.round = ROUND(_Vmpagesize, 64*1024);
+			Regdisc.disc.exceptf = regexcept;
+		}
+
+		/**/ASSERT(Region[p] == NIL(Vmalloc_t*));
+		if((vm = vmopen(&Regdisc.disc, Vmbest, VM_SHARE)) != NIL(Vmalloc_t*) )
+		{	vm->data->lock = 1; /* lock new region now */
+			*local = 1;
+			asoincint(&Regopen);
+			return (Region[p] = vm);
+		}
+		else	Region[p] = Vmregion; /* better than nothing */
+	}
+
+	/* must return something */
+	vm = Region[pos] ? Region[pos] : Vmregion;
+	if(asocasint(&vm->data->lock, 0, 1) == 0)
+	{	*local = 1;
+		asoincint(&Regopen);
+	}
+	else
+	{	*local = 0;
+		asoincint(&Reglock);
+	}
+	return vm;
+}
+
 #if __STD_C
 extern Void_t* calloc(reg size_t n_obj, reg size_t s_obj)
 #else
@@ -252,8 +466,18 @@ reg size_t	n_obj;
 reg size_t	s_obj;
 #endif
 {
+	Void_t		*addr;
+	Vmalloc_t	*vm;
+	int		local = 0;
 	VMFLINIT();
-	return VMRECORD((*Vmregion->meth.resizef)(Vmregion,NIL(Void_t*),n_obj*s_obj,VM_RSZERO));
+
+	vm = getregion(&local);
+	addr = (*vm->meth.resizef)(vm, NIL(Void_t*), n_obj*s_obj, VM_RSZERO, local);
+	if(local)
+	{	/**/ASSERT(vm->data->lock == 1);
+		vm->data->lock = 0;
+	}
+	return VMRECORD(addr);
 }
 
 #if __STD_C
@@ -263,8 +487,18 @@ extern Void_t* malloc(size)
 reg size_t	size;
 #endif
 {
+	Void_t		*addr;
+	Vmalloc_t	*vm;
+	int		local = 0;
 	VMFLINIT();
-	return VMRECORD((*Vmregion->meth.allocf)(Vmregion,size));
+
+	vm = getregion(&local);
+	addr = (*vm->meth.allocf)(vm, size, local);
+	if(local)
+	{	/**/ASSERT(vm->data->lock == 1);
+		vm->data->lock = 0;
+	}
+	return VMRECORD(addr);
 }
 
 #if __STD_C
@@ -275,44 +509,49 @@ reg Void_t*	data;	/* block to be reallocated	*/
 reg size_t	size;	/* new size			*/
 #endif
 {
-#if USE_NATIVE
-#undef	realloc
-#if __STD_C
-	extern Void_t*	realloc(Void_t*, size_t);
-#else
-	extern Void_t*	realloc();
-#endif
-#endif
-
+	ssize_t		copy;
+	Void_t		*addr;
+	Vmalloc_t	*vm;
 	VMFLINIT();
 
-#if _PACKAGE_ast
-	if(data && Vmregion->meth.meth != VM_MTDEBUG &&
-#if !USE_NATIVE
-	   !(Vmregion->data->mode&VM_TRUST) &&
-#endif
-	   (*Vmregion->meth.addrf)(Vmregion,data) != 0 )
-	{	
+	if(!data)
+		return malloc(size);
+	else if((vm = regionof(data)) )
+	{	if(vm == Vmregion && vm != Vmheap) /* no multiple region usage here */
+		{	addr = (*vm->meth.resizef)(vm, data, size, VM_RSCOPY|VM_RSMOVE, 0);
+			return VMRECORD(addr);
+		}
+		if(asocasint(&vm->data->lock, 0, 1) == 0 ) /* region is open */
+		{	addr = (*vm->meth.resizef)(vm, data, size, VM_RSCOPY|VM_RSMOVE, 1);
+			vm->data->lock = 0;
+			return VMRECORD(addr);
+		}
+		else if(Regmax > 0 && Vmregion == Vmheap && (addr = malloc(size)) )
+		{	if((copy = SIZE(BLOCK(data))&~BITS) > size )
+				copy = size;	
+			memcpy(addr, data, copy);
+			addfreelist((Regfree_t*)data);
+			return VMRECORD(addr);
+		}
+		else /* this may block but it is the best that we can do now */
+		{	addr = (*vm->meth.resizef)(vm, data, size, VM_RSCOPY|VM_RSMOVE, 0);
+			return VMRECORD(addr);
+		}
+	}
+	else /* not our data */
+	{
 #if USE_NATIVE
+#undef	realloc /* let the native realloc() take care of it */
+#if __STD_C
+		extern Void_t*	realloc(Void_t*, size_t);
+#else
+		extern Void_t*	realloc();
+#endif
 		return realloc(data, size);
-#else
-		Void_t*	newdata;
-		if((newdata = (*Vmregion->meth.allocf)(Vmregion,size)) )
-			memcpy(newdata,data,size);
-		return VMRECORD(newdata);
+#else 
+		return NIL(Void_t*);
 #endif
 	}
-#endif
-
-#if USE_NATIVE
-	{	Void_t*	newdata;
-		if (newdata = (*Vmregion->meth.resizef)(Vmregion,data,size,VM_RSCOPY|VM_RSMOVE))
-			return newdata;
-		return VMRECORD(realloc(data, size));
-	}
-#else
-	return VMRECORD((*Vmregion->meth.resizef)(Vmregion,data,size,VM_RSCOPY|VM_RSMOVE));
-#endif
 }
 
 #if __STD_C
@@ -322,37 +561,31 @@ extern void free(data)
 reg Void_t*	data;
 #endif
 {
-#if USE_NATIVE
-#undef	free
-#if __STD_C
-	extern void	free(Void_t*);
-#else
-	extern void	free();
-#endif
-#endif
-
+	Vmalloc_t	*vm;
 	VMFLINIT();
 
-#if _PACKAGE_ast
-	if(data && Vmregion->meth.meth != VM_MTDEBUG &&
-#if !USE_NATIVE
-	   !(Vmregion->data->mode&VM_TRUST) &&
-#endif
-	   (*Vmregion->meth.addrf)(Vmregion,data) != 0)
+	if(!data || (_Vmassert & VM_keep))
+		return;
+	else if((vm = regionof(data)) )
+	{	
+		if(vm == Vmregion && Vmregion != Vmheap || (_Vmassert & VM_free))
+			(void)(*vm->meth.freef)(vm, data, 0);
+		else	addfreelist((Regfree_t*)data);
+		return;
+	}
+	else /* not our data */
 	{
 #if USE_NATIVE
+#undef	free /* let the native free() take care of it */
+#if __STD_C
+		extern void	free(Void_t*);
+#else
+		extern void	free();
+#endif
 		free(data);
 #endif
 		return;
 	}
-#endif
-
-#if USE_NATIVE
-	if ((*Vmregion->meth.freef)(Vmregion,data) != 0)
-		free(data);
-#else
-	(void)(*Vmregion->meth.freef)(Vmregion,data);
-#endif
 }
 
 #if __STD_C
@@ -373,13 +606,20 @@ reg size_t	align;
 reg size_t	size;
 #endif
 {
-	Void_t*	addr;
-
+	Void_t		*addr;
+	Vmalloc_t	*vm;
+	int		local = 0;
 	VMFLINIT();
+
+	vm = getregion(&local);
 	VMBLOCK
-	addr = VMRECORD((*Vmregion->meth.alignf)(Vmregion,size,align));
+	addr = (*vm->meth.alignf)(vm, size, align, local);
+	if(local)
+	{	/**/ASSERT(vm->data->lock == 1);
+		vm->data->lock = 0;
+	}
 	VMUNBLOCK
-	return addr;
+	return VMRECORD(addr);
 }
 
 #if __STD_C
@@ -411,8 +651,9 @@ reg size_t	size;
 #endif
 {
 	VMFLINIT();
+
 	GETPAGESIZE(_Vmpagesize);
-	return VMRECORD((*Vmregion->meth.alignf)(Vmregion,size,_Vmpagesize));
+	return VMRECORD(memalign(_Vmpagesize, size));
 }
 
 #if __STD_C
@@ -423,8 +664,9 @@ reg size_t	size;
 #endif
 {
 	VMFLINIT();
+
 	GETPAGESIZE(_Vmpagesize);
-	return VMRECORD((*Vmregion->meth.alignf)(Vmregion,ROUND(size,_Vmpagesize),_Vmpagesize));
+	return VMRECORD(memalign(_Vmpagesize, ROUND(size,_Vmpagesize)) );
 }
 
 #if !_PACKAGE_ast
@@ -476,26 +718,32 @@ size_t	size;
 	char*		file;
 	int		line;
 	Void_t*		func;
-	reg Alloca_t*	f;
+	Alloca_t*	f;
+	Vmalloc_t	*vm;
 	static Alloca_t* Frame;
 
 	VMFLINIT();
-	VMFLF(Vmregion,file,line,func);
-	while(Frame)
+
+	VMFLF(Vmregion,file,line,func); /* save info before freeing frames */
+
+	while(Frame) /* free unused frames */
 	{	if(( _stk_down && &array[0] > Frame->head.head.addr) ||
 		   (!_stk_down && &array[0] < Frame->head.head.addr) )
-		{	f = Frame;
-			Frame = f->head.head.next;
-			(void)(*Vmregion->meth.freef)(Vmregion,f);
+		{	f = Frame; Frame = f->head.head.next;
+			if((vm = regionof(f)) )
+				(void)(*vm->meth.freef)(vm, f, 0);
+			/* else: something bad happened. just keep going */
 		}
 		else	break;
 	}
 
-	Vmregion->file = file;
+	Vmregion->file = file; /* restore file/line info before allocation */
 	Vmregion->line = line;
 	Vmregion->func = func;
-	f = (Alloca_t*)(*Vmregion->meth.allocf)(Vmregion,size+sizeof(Alloca_t)-1);
 
+	f = (Alloca_t*)(*Vmregion->meth.allocf)(Vmregion, size+sizeof(Alloca_t)-1, 0);
+
+	/* if f is NULL, this mimics a stack overflow with a memory error! */
 	f->head.head.addr = &array[0];
 	f->head.head.next = Frame;
 	Frame = f;
@@ -920,13 +1168,13 @@ void _vmoptions()
 		s = buf;
 		for (;;)
 		{
-			while (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n')
+			while (*s == ',' || *s == ' ' || *s == '\t' || *s == '\r' || *s == '\n')
 				s++;
 			if (!*(t = s))
 				break;
 			v = 0;
 			while (*s)
-				if (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n')
+				if (*s == ',' || *s == ' ' || *s == '\t' || *s == '\r' || *s == '\n')
 				{
 					*s++ = 0;
 					break;
@@ -945,7 +1193,7 @@ void _vmoptions()
 			{
 			case 'a':		/* abort */
 				if (!vm)
-					vm = vmopen(Vmdcsbrk, Vmdebug, 0);
+					vm = vmopen(Vmdcsystem, Vmdebug, 0);
 				if (vm && vm->meth.meth == VM_MTDEBUG)
 					vmset(vm, VM_DBABORT, 1);
 				else
@@ -954,29 +1202,25 @@ void _vmoptions()
 			case 'c':		/* check */
 				_Vmassert |= VM_check;
 				break;
+			case 'f':		/* free */
+				_Vmassert |= VM_free;
+				break;
+			case 'k':		/* keep */
+				_Vmassert |= VM_keep;
+				break;
 			case 'm':
-				switch (t[1])
+				if (v && !vm)
 				{
-				case 'e':	/* method=<method> */
-					if (v && !vm)
-					{
-						if ((v[0] == 'V' || v[0] == 'v') && (v[1] == 'M' || v[1] == 'm'))
-							v += 2;
-						if (strcmp(v, "debug") == 0)
-							vm = vmopen(Vmdcsbrk, Vmdebug, 0);
-						else if (strcmp(v, "profile") == 0)
-							vm = vmopen(Vmdcsbrk, Vmprofile, 0);
-						else if (strcmp(v, "last") == 0)
-							vm = vmopen(Vmdcsbrk, Vmlast, 0);
-						else if (strcmp(v, "best") == 0)
-							vm = Vmheap;
-					}
-					break;
-				case 'm':	/* mmap */
-#if _mem_mmap_anon || _mem_mmap_zero
-					_Vmassert |= VM_mmap;
-#endif
-					break;
+					if ((v[0] == 'V' || v[0] == 'v') && (v[1] == 'M' || v[1] == 'm'))
+						v += 2;
+					if (strcmp(v, "debug") == 0)
+						vm = vmopen(Vmdcsystem, Vmdebug, 0);
+					else if (strcmp(v, "profile") == 0)
+						vm = vmopen(Vmdcsystem, Vmprofile, 0);
+					else if (strcmp(v, "last") == 0)
+						vm = vmopen(Vmdcsystem, Vmlast, 0);
+					else if (strcmp(v, "best") == 0)
+						vm = Vmheap;
 				}
 				break;
 			case 'p':
@@ -985,24 +1229,21 @@ void _vmoptions()
 					{
 					case 'e':	/* period=<count> */
 						if (!vm)
-							vm = vmopen(Vmdcsbrk, Vmdebug, 0);
+							vm = vmopen(Vmdcsystem, Vmdebug, 0);
 						if (vm && vm->meth.meth == VM_MTDEBUG)
 							_Vmdbcheck = atou(&v);
 						break;
 					case 'r':	/* profile=<path> */
 						if (!vm)
-							vm = vmopen(Vmdcsbrk, Vmprofile, 0);
+							vm = vmopen(Vmdcsystem, Vmprofile, 0);
 						if (v && vm && vm->meth.meth == VM_MTPROFILE)
 							_Vmpffd = createfile(v);
 						break;
 					}
 				break;
-			case 'r':		/* region */
-				_Vmassert |= VM_region;
-				break;
 			case 's':		/* start=<count> */
 				if (!vm)
-					vm = vmopen(Vmdcsbrk, Vmdebug, 0);
+					vm = vmopen(Vmdcsystem, Vmdebug, 0);
 				if (v && vm && vm->meth.meth == VM_MTDEBUG)
 					_Vmdbstart = atou(&v);
 				break;
@@ -1015,13 +1256,13 @@ void _vmoptions()
 					{
 					case 'r':	/* warn=<path> */
 						if (!vm)
-							vm = vmopen(Vmdcsbrk, Vmdebug, 0);
+							vm = vmopen(Vmdcsystem, Vmdebug, 0);
 						if (v && vm && vm->meth.meth == VM_MTDEBUG && (fd = createfile(v)) >= 0)
 							vmdebug(fd);
 						break;
 					case 't':	/* watch=<addr> */
 						if (!vm)
-							vm = vmopen(Vmdcsbrk, Vmdebug, 0);
+							vm = vmopen(Vmdcsystem, Vmdebug, 0);
 						if (v && vm && vm->meth.meth == VM_MTDEBUG && (n = atou(&v)) >= 0)
 							vmdbwatch((Void_t*)n);
 						break;
@@ -1062,6 +1303,37 @@ void _vmoptions()
 		close(_Vmpffd);
 		_Vmpffd = -1;
 	}
+}
+
+/*
+ * ast semi-private workaround for system functions
+ * that misbehave by passing bogus addresses to free()
+ *
+ * not prototyped in any header to keep it ast semi-private
+ *
+ * to keep malloc() data by disabling free()
+ *	extern _vmkeep(int);
+ *	int r = _vmkeep(1);
+ * and to restore to the previous state
+ *	(void)_vmkeep(r);
+ */
+
+int
+#if __STD_C
+_vmkeep(int v)
+#else
+_vmkeep(v)
+int	v;
+#endif
+{
+	int	r;
+
+	r = !!(_Vmassert & VM_keep);
+	if (v)
+		_Vmassert |= VM_keep;
+	else
+		_Vmassert &= ~VM_keep;
+	return v;
 }
 
 #endif /*_UWIN*/

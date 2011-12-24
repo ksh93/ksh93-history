@@ -70,7 +70,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2011-06-28 $
+@(#)$Id: package (AT&T Research) 2011-10-26 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -3971,20 +3971,17 @@ package_verify() # sum
 
 make_recurse() # dir
 {
-	_make_recurse_k=0
 	for _make_recurse_j in $makefiles
 	do	if	view - $1/$_make_recurse_j
-		then	_make_recurse_k=1
-			break
+		then	return
 		fi
 	done
-	case $_make_recurse_k in
-	0)	case $exec in
+	if	test -d $1
+	then	case $exec in
 		'')	echo :MAKE: > $1/Makefile || exit ;;
 		*)	$exec "echo :MAKE: > $1/Makefile" ;;
 		esac
-		;;
-	esac
+	fi
 }
 
 get() # host path [ file size ]
@@ -4271,7 +4268,7 @@ checksrc()
 {
 	case $package_src in
 	'')	package_src=$src
-		for _i_ in `cd $PACKAGESRC; ls *.def *.lic 2>/dev/null | sed 's/[-.].*//'`
+		for _i_ in `cd $PACKAGESRC; ls *.def *.lic *.pkg 2>/dev/null | sed 's/[-.].*//'`
 		do	case " $package_src " in
 			*" $_i_ "*)
 				;;
@@ -4804,7 +4801,7 @@ admin)	while	test ! -f $admin_db
 					M=$6 T=$7 W=$8
 					case $admin_action in
 					make|view)
-						M=`grep -c ']:.* \*\*\*.* code ' $admin_log/$2` ;;
+						M=`egrep -c ']:.* (\*\*\*.* code|don'\''t know) | \*\*\* termination code ' $admin_log/$2` ;;
 					test)	T=`grep -ci 'fail[es]' $admin_log/$2` ;;
 					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:.' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:|: package not found|whence: command not found'` ;;
 					esac
@@ -5355,7 +5352,10 @@ make|view)
 
 	# verify the top view
 
-	if	test ! -d $INSTALLROOT/src
+	if	test ! -d $PACKAGEROOT/src
+	then	note no source packages to make
+		exit 0
+	elif	test ! -d $INSTALLROOT/src
 	then	note initialize the $INSTALLROOT view
 	fi
 	for i in arch arch/$HOSTTYPE

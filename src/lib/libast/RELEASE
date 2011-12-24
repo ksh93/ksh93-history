@@ -1,3 +1,25 @@
+11-12-21 plug up some meory links -- thanks mhlavink
+11-12-21 vmprivate.c: enclose VM_NONMEM exception in CLRLOCK(vm,0) ... SETLOCK(vm,0)
+11-12-13 aso: in -lposix for uwin, not -last -- just like vmalloc
+11-12-13 sfpoll.c: all streams SF_IOINTR => don't ignore EINTR
+11-12-13 sfdcslow.c: set SF_IOINTR
+11-12-09 malloc.c: add _vmkeep() for setlocale() intercept _SYS_setlocale_free_OK
+11-12-04 sfio: _Sfmaxr=0 (unlimited) by default; use ulimit -M|-d or SFIO_OPTIONS
+11-12-01 aso: sync to new api
+11-11-11 optget.c: move .TH to the top for --nroff to get our macros first
+11-11-11 aso,cdt,vmalloc: resync with kpv
+11-11-11 cdt: preserve bits and Dt_link_t for CDT_VERSION < 20111111
+11-10-24 sfvprintf.c: %.-ns truncate from left to n chars
+11-10-21 sfvprintf.c: fix %0s (no width) core dump
+11-10-10 aso: add _WIN32 support
+11-09-26 vmalloc: sync with kpv
+11-08-29 features/{dirent,wchar,wctype}: eliminate #include with no header
+11-08-25 #pragma prototyped tweaks -- sun4 is dead, long live sun4
+11-08-25 ftwalk.c: FTS_SLNONE => FTW_SL
+11-08-11 features/wchar: fix #include _nxt_wchar for K&R C
+11-08-04 optget.c: tweak --html rendering
+11-07-24 mime.c: add %(default)[st] default if arg == ""
+11-07-21 setlocale.c: fix debug locale to treat "<<" as two single byte chars
 11-06-14 spawnveg.c: pgid -1: new session -2: setpgrp()&&tcsetpgid()
 11-06-14 pathprog.c: add darwin _NSGetExecutablePath
 11-05-14 features/common,features/align.c: { _X86_ _X64_ } conditionals for generic uwin

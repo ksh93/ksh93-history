@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1985-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -299,7 +299,13 @@ loop_fmt :
 			}
 
 		case '-' :
-			flags = (flags & ~(SFFMT_CENTER|SFFMT_ZERO)) | SFFMT_LEFT;
+			if(dot == 1)
+			{	dot = 0;
+				precis = -1;
+				flags |= SFFMT_CHOP;
+			}
+			else
+				flags = (flags & ~(SFFMT_CENTER|SFFMT_ZERO)) | SFFMT_LEFT;
 			goto loop_flags;
 		case '0' :
 			if(!(flags&(SFFMT_LEFT|SFFMT_CENTER)) )
@@ -330,11 +336,11 @@ loop_fmt :
 			flags |= SFFMT_THOUSAND;
 			goto loop_flags;
 
-		case '.' :
+		case '.':
 			dot += 1;
 			if(dot == 1)
 			{	/* so base can be defined without setting precis */
-				if(*form != '.')
+				if(*form != '.' && !(flags & SFFMT_CHOP))
 					precis = 0;
 			}
 			else if(dot == 2)
@@ -760,12 +766,11 @@ loop_fmt :
 						SFnputc(f, ' ', k);
 					}
 					else
-					{
-						SFnputc(f, ' ', n);
+					{	SFnputc(f, ' ', n);
 						n = 0;
 					}
 				}
-				if(n < 0 && (flags&SFFMT_ZERO) && precis < 0)
+				if(n < 0 && (flags & SFFMT_CHOP) && width > 0 && precis < 0)
 				{	
 #if _has_multibyte
 					if(flags & SFFMT_LONG)
@@ -787,14 +792,13 @@ loop_fmt :
 					{	SFMBCLR(&mbs);
 						osp = sp;
 						while(n < 0)
-						{
-							ssp = sp;
+						{	ssp = sp;
 							if ((k = mbchar(sp)) <= 0)
 							{	sp = ssp;
 								break;
 							}
 #ifdef mbwidth
-							n += mbwidth(n);
+							n += mbwidth(k);
 #else
 							n++;
 #endif
@@ -803,8 +807,7 @@ loop_fmt :
 					}
 #endif
 					else
-					{
-						sp += -n;
+					{	sp += -n;
 						v += n;
 					}
 					n = 0;

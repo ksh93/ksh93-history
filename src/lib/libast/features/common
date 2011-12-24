@@ -137,6 +137,21 @@ cat{
 	#endif
 }end
 
+if	tst - note{ <stdarg.h>+<wchar.h> works }end compile{
+		/*<NOSTDIO>*/
+		#include <stdarg.h>
+		#include <wchar.h>
+	}end 
+elif	tst - note{ explicit <sys/va_list.h> before <stdarg.h>+<wchar.h> }end compile{
+		/*<NOSTDIO>*/
+		#include <sys/va_list.h>
+		#include <stdarg.h>
+		#include <wchar.h>
+	}end {
+		#include <sys/va_list.h>
+	}
+endif
+
 tst	ast_LL note{ LL numeric suffix supported }end compile{
 	int i = 1LL;
 	unsigned int u = 1ULL; /* NOTE: some compilers choke on 1LLU */
@@ -297,6 +312,7 @@ tst	- output{
 		"short",	sizeof(short),		0,
 		"int",		sizeof(int),		0,
 		"long",		sizeof(long),		0,
+		"size_t",	sizeof(size_t),		0,
 		"pointer",	sizeof(void*),		COND * 4,
 		"float",	sizeof(float),		0,
 		"double",	sizeof(double),		0,
@@ -441,7 +457,7 @@ typ uintmax_t stdint.h inttypes.h no{
 typ uintptr_t stdint.h inttypes.h no{
 	#undef	_typ_uintptr_t
 	#define	_typ_uintptr_t	1
-	#if _ast_sizeof_pointer == 8 && _ast_int8_t
+	#if _ast_sizeof_pointer == 8 && defined(_ast_int8_t)
 	typedef unsigned _ast_int8_t uintptr_t;
 	#else
 	typedef unsigned _ast_int4_t uintptr_t;

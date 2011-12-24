@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -429,36 +429,49 @@ static char *genformat(char *format)
 	return(fp);
 }
 
-static char *fmthtml(const char *string)
+static char *fmthtml(const char *string, int flags)
 {
 	register const char *cp = string;
 	register int c, offset = staktell();
-	while(c= *(unsigned char*)cp++)
+	if(!(flags&SFFMT_ALTER))
 	{
-#if SHOPT_MULTIBYTE
-		register int s;
-		if((s=mbsize(cp-1)) > 1)
+		while(c= *(unsigned char*)cp++)
 		{
-			cp += (s-1);
-			continue;
-		}
+#if SHOPT_MULTIBYTE
+			register int s;
+			if((s=mbsize(cp-1)) > 1)
+			{
+				cp += (s-1);
+				continue;
+			}
 #endif /* SHOPT_MULTIBYTE */
-		if(c=='<')
-			stakputs("&lt;");
-		else if(c=='>')
-			stakputs("&gt;");
-		else if(c=='&')
-			stakputs("&amp;");
-		else if(c=='"')
-			stakputs("&quot;");
-		else if(c=='\'')
-			stakputs("&apos;");
-		else if(c==' ')
-			stakputs("&nbsp;");
-		else if(!isprint(c) && c!='\n' && c!='\r')
-			sfprintf(stkstd,"&#%X;",CCMAPC(c,CC_NATIVE,CC_ASCII));
-		else
-			stakputc(c);
+			if(c=='<')
+				stakputs("&lt;");
+			else if(c=='>')
+				stakputs("&gt;");
+			else if(c=='&')
+				stakputs("&amp;");
+			else if(c=='"')
+				stakputs("&quot;");
+			else if(c=='\'')
+				stakputs("&apos;");
+			else if(c==' ')
+				stakputs("&nbsp;");
+			else if(!isprint(c) && c!='\n' && c!='\r')
+				sfprintf(stkstd,"&#%X;",CCMAPC(c,CC_NATIVE,CC_ASCII));
+			else
+				stakputc(c);
+		}
+	}
+	else
+	{
+		while(c= *(unsigned char*)cp++)
+		{
+			if(strchr("!*'();@&+$,#[]<>~.\"{}|\\-`^% ",c) || (!isprint(c) && c!='\n' && c!='\r'))
+				sfprintf(stkstd,"%%%02X",CCMAPC(c,CC_NATIVE,CC_ASCII));
+			else
+				stakputc(c);
+		}
 	}
 	stakputc(0);
 	return(stakptr(offset));
@@ -630,7 +643,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 	struct printf*	pp = (struct printf*)fe;
 	Shell_t		*shp = pp->sh;
 	register char*	argp = *pp->nextarg;
-	char*		w;
+	char		*w,*s;
 
 	if(fe->n_str>0 && varname(fe->t_str,fe->n_str) && (!argp || varname(argp,-1)))
 	{
@@ -902,23 +915,22 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		fe->flags |= SFFMT_SHORT;
 		break;
 	case 'H':
-		value->s = fmthtml(value->s);
+		value->s = fmthtml(value->s, fe->flags);
 		break;
 	case 'q':
 		value->s = sh_fmtqf(value->s, !!(fe->flags & SFFMT_ALTER), fold);
 		break;
 	case 'P':
-	{
-		char *s = fmtmatch(value->s);
+		s = fmtmatch(value->s);
 		if(!s || *s==0)
 			errormsg(SH_DICT,ERROR_exit(1),e_badregexp,value->s);
 		value->s = s;
 		break;
-	}
 	case 'R':
-		value->s = fmtre(value->s);
-		if(*value->s==0)
+		s = fmtre(value->s);
+		if(!s || *s==0)
 			errormsg(SH_DICT,ERROR_exit(1),e_badregexp,value->s);
+		value->s = s;
 		break;
 	case 'Q':
 		if (fe->n_str>0)

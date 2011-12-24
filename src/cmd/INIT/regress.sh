@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2010-06-12 $
+@(#)$Id: regress (AT&T Research) 2011-10-28 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -1207,13 +1207,14 @@ function VIEW # var [ file ]
 
 function INCLUDE # file ...
 {
-	typeset f v
+	typeset f v x
 	for f
 	do	if	VIEW v $f || [[ $PREFIX && $f != /* ]] && VIEW v $PREFIX$f
-		then	. $v
+		then	x=$x$'\n'". $v"
 		else	FATAL $f: not found
 		fi
 	done
+	[[ $x ]] && trap "$x" 0
 }
 
 function UMASK # [ mask ]

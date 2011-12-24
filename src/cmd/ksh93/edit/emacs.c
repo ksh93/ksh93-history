@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -188,6 +188,7 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 	genchar *kptr;
 	char prompt[PRSIZE];
 	genchar Screen[MAXLINE];
+	memset(Screen,0,sizeof(Screen));
 	if(!ep)
 	{
 		ep = ed->e_emacs = newof(0,Emacs_t,1,0);
@@ -1401,7 +1402,7 @@ static void draw(register Emacs_t *ep,Draw_t option)
 		if(ep->ed->hlist)
 			ed_histlist(ep->ed,0);
 	}
-	else if(option!=REFRESH && drawbuff[0]=='#' && cur>1 && cur==eol && drawbuff[cur-1]!='*')
+	else if(option==UPDATE && drawbuff[0]=='#' && cur>1 && cur==eol && drawbuff[cur-1]!='*')
 	{
 		int		n;
 		drawbuff[cur+1]=0;

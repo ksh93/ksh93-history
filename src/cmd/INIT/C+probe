@@ -3,7 +3,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2011-02-11
+# @(#)C probe (AT&T Research) 2011-11-11
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -28,7 +28,7 @@ probe_src="cxx C cc c"
 probe_sa=".sa"
 probe_sd=".dll .lib .dll .x"
 probe_sdb=".pdb"
-probe_so=".dylib .sl .so"
+probe_so=".dylib .so .sl"
 probe_symprefix="_"
 probe_verbose="'-v -v' '-# -#' '-d -d' -dryrun '-V -V'"
 probe_version="--version -V -version -v"

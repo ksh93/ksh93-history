@@ -17,8 +17,10 @@
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                                                                      *
 ***********************************************************************/
+#ifndef DONTCARE
 #include <wchar.h>
 #include <wctype.h>
+#endif
 
 int
 main()

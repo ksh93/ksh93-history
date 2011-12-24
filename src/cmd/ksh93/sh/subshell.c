@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -304,7 +304,7 @@ static void nv_restore(struct subshell *sp)
 	register Namval_t *mp, *np;
 	const char *save = sp->shpwd;
 	Namval_t	*mpnext;
-	int		flags;
+	int		flags,nofree;
 	sp->shpwd = 0;	/* make sure sh_assignok doesn't save with nv_unset() */
 	for(lp=sp->svar; lp; lp=lq)
 	{
@@ -327,7 +327,9 @@ static void nv_restore(struct subshell *sp)
 		nv_setsize(mp,nv_size(np));
 		if(!(flags&NV_MINIMAL))
 			mp->nvenv = np->nvenv;
-		mp->nvfun = np->nvfun;
+		nofree = mp->nvfun?mp->nvfun->nofree:0;
+		if((mp->nvfun = np->nvfun) && nofree)
+			mp->nvfun->nofree = nofree;
 		if(nv_isattr(np,NV_IDENT))
 		{
 			nv_offattr(np,NV_IDENT);
@@ -635,6 +637,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 					((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
 					errormsg(SH_DICT,ERROR_system(1),e_toomany);
 				}
+				if(fd >= shp->gd->lim.open_max)
+					sh_iovalidfd(shp,fd);
 				shp->sftable[fd] = iop;
 				fcntl(fd,F_SETFD,FD_CLOEXEC);
 				shp->fdstatus[fd] = (shp->fdstatus[1]|IOCLEX);

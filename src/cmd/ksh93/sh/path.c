@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -409,7 +409,7 @@ static void path_checkdup(Shell_t *shp,register Pathcomp_t *pp)
 	pp->dev = statb.st_dev;
 	if(*name=='/' && onstdpath(name))
 		flag = PATH_STD_DIR;
-	first = (pp->flags&PATH_CDPATH)?shp->cdpathlist:path_get(shp,"");
+	first = (pp->flags&PATH_CDPATH)?(Pathcomp_t*)shp->cdpathlist:path_get(shp,"");
 	for(oldpp=first; oldpp && oldpp!=pp; oldpp=oldpp->next)
 	{
 		if(pp->ino==oldpp->ino && pp->dev==oldpp->dev && pp->mtime==oldpp->mtime)
@@ -615,12 +615,19 @@ static void funload(Shell_t *shp,int fno, const char *name)
 {
 	char		*pname,*oldname=shp->st.filename, buff[IOBSIZE+1];
 	Namval_t	*np;
-	struct Ufunction *rp;
+	struct Ufunction *rp,*rpfirst;
 	int		 savestates = sh_getstate(), oldload=shp->funload;
 	pname = path_fullname(shp,stakptr(PATH_OFFSET));
 	if(shp->fpathdict && (rp = dtmatch(shp->fpathdict,(void*)pname)))
 	{
 		Dt_t	*funtree = sh_subfuntree(1);
+		while(1)
+		{
+			rpfirst = dtprev(shp->fpathdict,rp);
+			if(!rpfirst || strcmp(pname,rpfirst->fname))
+				break;
+			rp = rpfirst;
+		}
 		do
 		{
 			if((np = dtsearch(funtree,rp->np)) && is_afunction(np))
@@ -756,6 +763,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 	int		noexec=0;
 	Pathcomp_t	*oldpp;
 	Namval_t	*np;
+	char		*cp;
 	shp->path_err = ENOENT;
 	if(!pp && !(pp=path_get(shp,"")))
 		return(0);
@@ -841,6 +849,13 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 		}
 		sh_stats(STAT_PATHS);
 		f = canexecute(shp,stakptr(PATH_OFFSET),isfun);
+		if(isfun && f>=0 && (cp = strrchr(name,'.')))
+		{
+			*cp = 0;
+			if(nv_open(name,sh_subfuntree(1),NV_NOARRAY|NV_IDENT|NV_NOSCOPE))
+				f = -1;
+			*cp = '.';
+		}
 		if(isfun && f>=0)
 		{
 			nv_onattr(nv_open(name,sh_subfuntree(1),NV_NOARRAY|NV_IDENT|NV_NOSCOPE),NV_LTOU|NV_FUNCTION);

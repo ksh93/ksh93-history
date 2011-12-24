@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -63,6 +63,7 @@ struct jobsave
 static struct jobsave *job_savelist;
 static int njob_savelist;
 static struct process *pwfg;
+static int jobfork;
 
 pid_t	pid_fromstring(char *str)
 {
@@ -94,6 +95,7 @@ struct back_save
 {
 	int		count;
 	struct jobsave	*list;
+	struct back_save *prev;
 };
 
 #define BYTE(n)		(((n)+CHAR_BIT-1)/CHAR_BIT)
@@ -421,6 +423,8 @@ int job_reap(register int sig)
 		}
 		if(pid<=0)
 			break;
+		if(wstat==0)
+			job_chksave(pid);
 		flags |= WNOHANG;
 		job.waitsafe++;
 		jp = 0;
@@ -1360,7 +1364,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 	pw->p_shp = shp;
 	pw->p_env = shp->curenv;
 	pw->p_pid = pid;
-	if(!shp->outpipe)
+	if(!shp->outpipe || shp->cpid==pid)
 		pw->p_flag = P_EXITSAVE;
 	pw->p_exitmin = shp->xargexit;
 	pw->p_exit = 0;
@@ -1384,7 +1388,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 	else
 		pw->p_name = -1;
 #endif /* JOBS */
-	if ((val = job_chksave(pid)) >= 0)
+	if ((val = job_chksave(pid))>=0 && !jobfork)
 	{
 		pw->p_exit = val;
 		if(pw->p_exit==SH_STOPSIG)
@@ -1931,6 +1935,8 @@ static int job_chksave(register pid_t pid)
 	register struct jobsave *jp = bck.list, *jpold=0;
 	register int r= -1;
 	register int count=bck.count;
+	struct back_save *bp= &bck;
+again:
 	while(jp && count-->0)
 	{
 		if(jp->pid==pid)
@@ -1940,6 +1946,12 @@ static int job_chksave(register pid_t pid)
 		jpold = jp;
 		jp = jp->next;
 	}
+	if(!jp && pid && (bp=bp->prev))
+	{
+		count = bp->count;
+		jp = bp->list;
+		goto again;
+	}
 	if(jp)
 	{
 		r = 0;
@@ -1948,8 +1960,8 @@ static int job_chksave(register pid_t pid)
 		if(jpold)
 			jpold->next = jp->next;
 		else
-			bck.list = jp->next;
-		bck.count--;
+			bp->list = jp->next;
+		bp->count--;
 		if(njob_savelist < NJOB_SAVELIST)
 		{
 			njob_savelist++;
@@ -1967,29 +1979,34 @@ void *job_subsave(void)
 	struct back_save *bp = new_of(struct back_save,0);
 	job_lock();
 	*bp = bck;
+	bp->prev = bck.prev;
 	bck.count = 0;
 	bck.list = 0;
+	bck.prev = bp;
 	job_unlock();
 	return((void*)bp);
 }
 
 void job_subrestore(void* ptr)
 {
-	register struct jobsave *jp;
+	register struct jobsave *jp, *jpnext;
 	register struct back_save *bp = (struct back_save*)ptr;
 	register struct process *pw, *px, *pwnext;
 	struct jobsave *end=NULL;
 	job_lock();
 	for(jp=bck.list; jp; jp=jp->next)
+	{
 		if (!jp->next)
 			end = jp;
-
+	}
 	if(end)
 		end->next = bp->list;
 	else
 		bck.list = bp->list;
 	bck.count += bp->count;
-
+	bck.prev = bp->prev;
+	while(bck.count > shgd->lim.child_max)
+		job_chksave(0);
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -2018,13 +2035,16 @@ void job_fork(pid_t parent)
 	{
 	case -1:
 		job_lock();
+		jobfork++;
 		break;
 	case 0:
+		jobfork--;
 		job_unlock();
 		job.waitsafe = 0;
 		job.in_critical = 0;
 		break;
 	default:
+		jobfork--;
 		job_unlock();
 		break;
 	}

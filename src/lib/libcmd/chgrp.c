@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1992-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -54,7 +54,7 @@ static const char usage_2[] =
 "[c:changes?Describe only files whose ownership actually changes.]"
 "[f:quiet|silent?Do not report files whose ownership fails to change.]"
 "[h|l:symlink?Change the ownership of symbolic links on systems that "
-    "support \blchmod\b(2). Implies \b--physical\b.]"
+    "support \blchown\b(2). Implies \b--physical\b.]"
 "[m:map?The first operand is interpreted as a file that contains a map "
     "of space separated \afrom_uid:from_gid to_uid:to_gid\a pairs. The "
     "\auid\a or \agid\a part of each pair may be omitted to mean any \auid\a "
@@ -285,7 +285,7 @@ b_chgrp(int argc, char** argv, void* context)
 			memset(&mapdisc, 0, sizeof(mapdisc));
 			mapdisc.key = offsetof(Map_t, key);
 			mapdisc.size = sizeof(Key_t);
-			if (!(map = dtopen(&mapdisc, Dthash)))
+			if (!(map = dtopen(&mapdisc, Dtset)))
 				error(ERROR_exit(1), "out of space [id map]");
 			continue;
 		case 'n':

@@ -13,7 +13,7 @@
 .TH SH 1
 .\}
 .if \nZ=1 \{\
-.TH KSH 1 "User Environment Utilities" "RDS Standard"
+.TH KSH 1
 .\}
 .if \nZ=2 \{\
 .TH KSH93 1
@@ -6200,6 +6200,14 @@ Each
 is a separate
 .I "arithmetic expression"
 to be evaluated.
+.B let
+only recognizes octal constants starting with
+.B 0
+when the
+.B set
+option
+.B letoctal
+is on.
 See
 .I "Arithmetic Evaluation"
 above, for a description of arithmetic expression evaluation.
@@ -6394,6 +6402,9 @@ to cause characters in
 .I arg\^
 that are special in HTML and XML
 to be output as their entity name.
+The alternate flag
+.B #
+formats the output for use as a URI.
 .TP
 .B %P
 A
@@ -6404,26 +6415,6 @@ to cause
 .I arg\^
 to be interpreted as an extended regular
 expression and be printed as a shell pattern.
-.TP
-The format modifier
-.B L
-can be used with the
-.B %c
-and
-.B %s
-formats to treat 
-precision as character width instead of byte count.
-.TP
-The format modifier
-.B ,
-can be used with the
-.B %d
-and
-.B %f
-formats to treat 
-separate groups of digits with the grouping delimiter which is
-.B %d
-in the C locale.
 .TP
 .B %R
 A
@@ -6442,6 +6433,13 @@ format can be used instead of
 .B %s
 to cause the resulting string to be quoted in a manner than can
 be reinput to the shell.
+When
+.B q
+is preceded by the alternative format specifier,
+.BR # ,
+The string is quoted in manner suitable as a field in a
+.B .csv
+format file.
 .TP
 .BI %( date-format )T
 A
@@ -6473,24 +6471,40 @@ to be prepended.
 .B #
 The
 .B #
-flag when used with the
-.B d
-specifier without an output base,
-causes the output to be displayed in thousands units with one of the suffixes
-.B "k M G T P E"
-to indicate the unit.
-The
-.B #
-flag when used with the
-.B i
-specifier causes the output to be displayed in 1024 with one of the suffixes
-.B "Ki Mi Gi Ti Pi Ei"
-to indicate the unit.
+flag, when used with the
+.B %d
+format without an output base,
+displays the output in powers of 1000 inidicated by one of the following suffixes:
+.BR "k M G T P E" ,
+and when used with the
+.B %i
+format displays the output in powers of 1024 inidicated by one of the following suffixes:
+.BR "Ki Mi Gi Ti Pi Ei" .
 .TP
 .B =
 The
 .B =
-flag has been added to center the output within the specified field width.
+flag centers the output within the specified field width.
+.TP
+.B L
+The
+.B L
+flag, when used with the
+.B %c
+or
+.B %s
+formats, treats precision as character width instead of byte count.
+.TP
+.B ,
+The
+.B ,
+flag, when used with the
+.B %d
+or
+.B %f
+formats, separates groups of digits with the grouping delimiter
+.RB  ( ,
+on groups of 3 in the C locale.)
 .PD
 .PP
 .RE
@@ -6512,7 +6526,7 @@ or
 on the command line
 determines which method is used.
 .TP
-\f3read\fP \*(OK \f3\-ACprsv\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-n\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-N\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
+\f3read\fP \*(OK \f3\-ACSprsv\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-n\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-N\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
 The shell input mechanism.
 One line is read and
 is broken up into fields using the characters in
@@ -6583,6 +6597,11 @@ option causes the variable
 .I vname\^
 to be read as a compound variable.  Blanks will be ignored when
 finding the beginning open parenthesis.
+The \-S
+option causes the line to be treated like a record in a
+.B .csv
+format file so that double quotes can be used to allow the delimiter
+character and the new-line character to appear within a field.
 The
 .B \-p
 option causes the input line
@@ -6813,6 +6832,12 @@ must be used.
 .B keyword
 Same as
 .BR \-k .
+.TP 8
+.B letoctal
+The
+.B let
+command allows octal constants starting with
+.BR 0 .
 .TP 8
 .B markdirs
 All directory names resulting from file name generation have a trailing
@@ -7130,7 +7155,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK   \*(OK \f3\+-M  \*(OK \f2mapname\fP \*(CK \*(CK \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSfblmnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK   \*(OK \f3\+-M  \*(OK \f2mapname\fP \*(CK \*(CK \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -7390,6 +7415,13 @@ is turned off.
 Equivalent to
 .B "\-M tolower" .
 .TP
+.B \-m
+moves or renames the variable.
+The value is the name of a variable whose value will be moved to
+.IR vname\^ .
+The orignal variable will be unset.
+Cannot be used with any other options.
+.TP
 .B \-n
 Declares
 .I vname\^
@@ -7398,6 +7430,7 @@ defined by the value of variable
 .IR vname .
 This is usually used to reference a variable inside
 a function whose name has been passed as an argument.
+Cannot be used with any other options.
 .TP
 .B \-p
 The name, attributes and values for the given

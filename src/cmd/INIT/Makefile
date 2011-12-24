@@ -48,7 +48,7 @@ cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 	cc.darwin ldd.darwin \
 	cc.hp.ia64 cc.hp.pa cc.hp.pa64 ld.hp.pa ldd.hp.pa \
 	cc.ibm.risc ldd.ibm.risc \
-	cc.linux.ia64-icc \
+	cc.linux.ia64-icc cc.linux.i386-icc cc.linux.i386-64-icc \
 	cc.lynxos.i386 cc.lynxos.ppc ldd.lynxos \
 	cc.mvs.390 cc.next.i386 cc.next.m68k ldd.mvs.390 \
 	cc.osf.alpha \

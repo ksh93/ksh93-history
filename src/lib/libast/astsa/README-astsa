@@ -1,6 +1,8 @@
-astsa implements a small subset of the ast library using X/Open interfaces.
-To get better performance and functionality download and install the
-ast-base package from
+astsa implements a small subset of the ast library for other ast
+standalone commands and libraries using X/Open interfaces. 
+
+To get better performance and functionality, consider using any of
+the full-featured ast-* packages at
 
 	http://www.research.att.com/sw/download/
 

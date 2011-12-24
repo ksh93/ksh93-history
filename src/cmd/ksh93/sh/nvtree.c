@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -901,7 +901,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 				argv = genvalue(argv,cp,cp-arg ,wp);
 				sfputc(outfile,wp->indent<0?';':'\n');
 			}
-			else if(outfile && *cp=='[')
+			else if(outfile && *cp=='[' && cp[-1]!='.')
 			{
 				/* skip multi-dimensional arrays */
 				if(*nv_endsubscript((Namval_t*)0,cp,0)=='[')
@@ -1083,7 +1083,7 @@ Namfun_t *nv_isvtree(Namval_t *np)
  */
 char *nv_getvtree(register Namval_t *np, Namfun_t *fp)
 {
-	int flags=0, dsize=fp->dsize;
+	int flags=0, dsize=fp?fp->dsize:0;
 	for(; fp && fp->next; fp=fp->next)
 	{
 		if(fp->next->disc && (fp->next->disc->getnum || fp->next->disc->getval))

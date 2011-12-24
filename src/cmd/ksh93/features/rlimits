@@ -1,3 +1,3 @@
-hdr,sys	resource,vlimit
+hdr,sys	resource,vlimit sys/time.h
 lib	getrlimit,ulimit,vlimit
-typ	rlim_t sys/types.h sys/resource.h
+typ	rlim_t sys/types.h sys/time.h sys/resource.h

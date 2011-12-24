@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -29,10 +29,13 @@
 #include	"name.h"
 #include	"streval.h"
 #include	"variables.h"
+#include	"builtins.h"
 
 #ifndef LLONG_MAX
 #define LLONG_MAX	LONG_MAX
 #endif
+
+typedef Sfdouble_t (*Math_f)(Sfdouble_t, ...);
 
 extern const Namdisc_t	ENUM_disc;
 static Sfdouble_t	NaN, Inf, Fun;
@@ -251,7 +254,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				if(np=nv_search(stkptr(shp->stk,off),shp->fun_tree,0))
 				{
 						lvalue->nargs = -np->nvalue.rp->argc;
-						lvalue->fun = (Sfdouble_t(*)(Sfdouble_t,...))np;
+						lvalue->fun = (Math_f)np;
 						break;
 				}
 				if(fsize<=(sizeof(tp->fname)-2)) for(tp=shtab_math; *tp->fname; tp++)
@@ -364,6 +367,11 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			char	lastbase=0, *val = xp, oerrno = errno;
 			lvalue->eflag = 0;
 			errno = 0;
+			if(shp->bltindata.bnode==SYSLET && !sh_isoption(SH_LETOCTAL))
+			{
+				while(*val=='0' && isdigit(val[1]))
+					val++;
+			}
 			r = strtonll(val,&str, &lastbase,-1);
 			if(*str=='8' || *str=='9')
 			{

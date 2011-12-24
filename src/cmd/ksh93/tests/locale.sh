@@ -1,14 +1,14 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
-#                  Common Public License, Version 1.0                  #
+#                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
-#            http://www.opensource.org/licenses/cpl1.0.txt             #
-#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -290,5 +290,22 @@ unset LANG
 LC_ALL=C
 x=$"hello"
 [[ $x == hello ]] || err_exit 'assignment of message strings not working'
+
+# tests for multibyte characteer at buffer boundary
+{
+	print 'cat << \\EOF'
+	for ((i=1; i < 164; i++))
+	do	print 123456789+123456789+123456789+123456789+123456789
+	done 
+	print $'next character is multibyte<2b|>c<3d|\>foo'
+	for ((i=1; i < 10; i++))
+	do	print 123456789+123456789+123456789+123456789+123456789
+	done
+	print EOF
+} > script$$.1
+chmod +x script$$.1
+x=$(  LC_ALL=debug $SHELL ./script$$.1)
+[[ ${#x} == 8641 ]] || err_exit 'here doc contains wrong number of chars with multibyte locale'
+[[ $x == *$'next character is multibyte<2b|>c<3d|\>foo'* ]] || err_exit "here_doc doesn't contain line with multibyte chars"
 
 exit $((Errors<125?Errors:125))

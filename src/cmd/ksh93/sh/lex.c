@@ -3,12 +3,12 @@
 *               This software is part of the ast package               *
 *          Copyright (c) 1982-2011 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -1258,7 +1258,7 @@ int sh_lex(Lex_t* lp)
 				/* FALL THRU */
 			case S_EPAT:
 			epat:
-				if(fcgetc(n)==LPAREN)
+				if(fcgetc(n)==LPAREN && c!='[')
 				{
 					if(lp->lex.incase==TEST_RE)
 					{
@@ -1560,7 +1560,7 @@ static int comsub(register Lex_t *lp, int endtok)
 		{
 
 			if(first==lp->lexd.first)
-				fcseek(cp+1-fcseek(0));
+				fcseek(cp+1-(char*)fcseek(0));
 			count++;
 			lp->lexd.paren = 0;
 			fcgetc(c);
@@ -1813,18 +1813,46 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 		if(n!=S_NL)
 		{
 			/* skip over regular characters */
+#if SHOPT_MULTIBYTE
+			do
+			{
+				if(fcleft()< MB_LEN_MAX && mbsize(fcseek(0))<0)
+				{
+					n = S_EOF;
+					LEN = -fcleft();
+					break;
+				}
+			}
+#endif /* SHOPT_MULTIBYTE */
+
 			while((n=STATE(state,c))==0);
 		}
 		if(n==S_EOF || !(c=fcget()))
 		{
-			if(!lp->lexd.dolparen && (c=(fcseek(0)-1)-bufp))
+			if(LEN < 0)
+				c = fclast()-bufp;
+			else
+				c= (fcseek(0)-1)-bufp;
+			if(!lp->lexd.dolparen && c)
 			{
 				if(n==S_ESC)
 					c--;
 				if(!lp->lexd.dolparen && (c=sfwrite(sp,bufp,c))>0)
 					iop->iosize += c;
 			}
-			if((c=lexfill(lp))<=0)
+#if SHOPT_MULTIBYTE
+			if(LEN==0)
+				LEN=1;
+			if(LEN < 0)
+			{
+				n = LEN;
+				c = fcmbget(&LEN);
+				LEN += n;
+			}
+			else
+#endif /* SHOPT_MULTIBYTE */
+				c = lexfill(lp);
+			if(c<0)
 				break;
 			if(n==S_ESC)
 			{
@@ -1840,7 +1868,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 					sfputc(sp,'\\');
 				}
 			}
-			bufp = fcseek(-1);
+			bufp = fcseek(-LEN);
 		}
 		else
 			fcseek(-LEN);
