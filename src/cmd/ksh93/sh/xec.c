@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -71,6 +71,7 @@ static void	coproc_init(Shell_t*, int pipes[]);
 static void	*timeout;
 static char	pipejob;
 static char	nopost;
+static int	restorefd;
 
 struct funenv
 {
@@ -1524,6 +1525,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				}
 #endif /* SHOPT_BGX */
 				nv_getval(RANDNOD);
+				restorefd = shp->topfd;
 				if(type&FCOOP)
 				{
 					pipes[2] = 0;
@@ -1607,8 +1609,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 					shp->bckpid = parent;
 				else if(!(type&(FAMP|FPOU)))
 				{
-					if(shp->topfd > topfd)
-						sh_iorestore(shp,topfd,0);
 					if(!sh_isoption(SH_MONITOR))
 					{
 						if(!(shp->sigflag[SIGINT]&(SH_SIGFAULT|SH_SIGOFF)))
@@ -1619,6 +1619,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						shp->pipepid = parent;
 					else
 						job_wait(parent);
+					if(shp->topfd > topfd)
+						sh_iorestore(shp,topfd,sh.exitval);
 					if(usepipe && tsetio &&  subdup)
 						iounpipe(shp);
 					if(!sh_isoption(SH_MONITOR))
@@ -3063,7 +3065,11 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 		if(shp->comsub==1 && subpipe[0]>=0)
 		{
 			if(!tsetio || !subdup)
+			{
+				if(shp->topfd > restorefd)
+					sh_iorestore(shp,restorefd,sh.exitval);
 				iounpipe(shp);
+			}
 		}
 		return(parent);
 	}
@@ -3569,7 +3575,7 @@ static int run_subshell(Shell_t *shp,const Shnode_t *t,pid_t grp)
 	register int i, fd, trace = sh_isoption(SH_XTRACE);
 	int pin,pout;
 	pid_t pid;
-	char *arglist[2], *envlist[2], devfd[12], *cp;
+	char *arglist[3], *envlist[2], devfd[12], *cp;
 	Sfio_t *sp = sftmp(0);
 	envlist[0] = "_=" SH_ID;
 	envlist[1] = 0;
@@ -3934,7 +3940,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		if(jmpval==SH_JMPSCRIPT)
 			nv_setlist(t->com.comset,NV_EXPORT|NV_IDENT|NV_ASSIGN,0);
 	}
-	if(t->com.comio)
+	if(t->com.comio && (jmpval || spawnpid<=0))
 		sh_iorestore(shp,buffp->topfd,jmpval);
 	if(jmpval>SH_JMPCMD)
 		siglongjmp(*shp->jmplist,jmpval);

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1103,6 +1103,7 @@ static int varsub(Mac_t *mp)
 	Namarr_t	*ap=0;
 	int		dolmax=0, vsize= -1, offset= -1, nulflg, replen=0, bysub=0;
 	char		idbuff[3], *id = idbuff, *pattern=0, *repstr, *arrmax=0;
+	char		*idx = 0;
 	int		var=1,addsub=0,oldpat=mp->pattern,idnum=0,flag=0,d;
 	Stk_t		*stkp = mp->shp->stk;
 retry1:
@@ -1492,7 +1493,7 @@ retry1:
 		if(type==M_NAMESCAN || type==M_NAMECOUNT)
 		{
 			mp->shp->last_root = mp->shp->var_tree;
-			id = prefix(mp->shp,id);
+			id = idx = prefix(mp->shp,id);
 			stkseek(stkp,offset);
 			if(type==M_NAMECOUNT)
 			{
@@ -1920,8 +1921,6 @@ retry2:
 		}
 		if(arrmax)
 			free((void*)arrmax);
-		if(pattern)
-			free((void*)pattern);
 	}
 	else if(argp)
 	{
@@ -1976,6 +1975,10 @@ retry2:
 	}
 	if(np)
 		nv_close(np);
+	if(pattern)
+		free(pattern);
+	if(idx)
+		free(idx);
 	return(1);
 nosub:
 	if(type==M_BRACE && sh_lexstates[ST_NORM][c]==S_BREAK)

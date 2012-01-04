@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -441,7 +441,11 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 #else
 						if(!nv_isarray(np) || ((ap=nv_arrayptr(np)) && (ap->nelem&ARRAY_MASK)))
 #endif /* SHOPT_FIXEDARRAY */
+						{
+							if(ap)
+								ap->nelem |= ARRAY_UNDEF;
 							_nv_unset(np,0);
+						}
 					}
 					nv_setvec(np,(arg->argflag&ARG_APPEND),argc,argv);
 					if(traceon || trap)

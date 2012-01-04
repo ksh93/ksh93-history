@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -590,10 +590,10 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 	struct tms tp;
 	if(!val)
 	{
+		nv_putv(np, val, flags, fp);
 		fp = nv_stack(np, NIL(Namfun_t*));
 		if(fp && !fp->nofree)
 			free((void*)fp);
-		nv_putv(np, val, flags, fp);
 		return;
 	}
 	if(!np->nvalue.dp)
@@ -1221,7 +1221,7 @@ static void put_mode(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
 	if(val)
 	{
 		mode_t mode;
-		char *last;
+		char *last=0;
 		if(flag&NV_INTEGER)
 		{
 			if(flag&NV_LONG)
@@ -1298,7 +1298,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		error_info.id = path_basename(argv[0]);
 	}
 	else
-		newof(0,Shell_t,1,0);
+		shp = newof(0,Shell_t,1,0);
 	umask(shp->mask=umask(0));
 	shp->gd = shgd;
 	shp->mac_context = sh_macopen(shp);
@@ -1769,7 +1769,7 @@ static void stat_init(Shell_t *shp)
 	Namval_t	*np;
 	sp->numnodes = nstat;
 	sp->nodes = (char*)(sp+1);
-	shgd->stats = (int*)calloc(sizeof(int*),nstat);
+	shgd->stats = (int*)calloc(sizeof(int),nstat);
 	sp->sh = shp;
 	for(i=0; i < nstat; i++)
 	{
@@ -2175,9 +2175,12 @@ static void put_trans(register Namval_t* np,const char *val,int flags,Namfun_t *
 	}
 	else
 	{
+		nv_putv(np,val,flags,fp);
 		nv_disc(np,fp,NV_POP);
 		if(!(fp->nofree&1))
 			free((void*)fp);
+		stakseek(offset);
+		return;
 	}
 skip:
 	nv_putv(np,val,flags,fp);

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1890,7 +1890,7 @@ static void refresh(register Vi_t* vp, int mode)
 	}
 	v = cur_virt;
 #if SHOPT_EDPREDICT
-	if(mode==INPUT && v>0 && virtual[0]=='#' && virtual[v]!='*' && sh_isoption(SH_VI))
+	if(mode==INPUT && v>0 && virtual[0]=='#' && v==last_virt && virtual[v]!='*' && sh_isoption(SH_VI))
 	{
 		int		n;
 		virtual[last_virt+1] = 0;
@@ -2278,6 +2278,7 @@ static int search(register Vi_t* vp,register int mode)
 	}
 	cur_virt = i;
 	strncpy(lsearch, ((char*)virtual)+1, SEARCHSIZE);
+	lsearch[SEARCHSIZE-1] = 0;
 	if( (curhline=location.hist_command) >=0 )
 	{
 		vp->ocur_virt = INVALID;

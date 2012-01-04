@@ -1,4 +1,10 @@
-11-12-13  --- Release ksh93u+ ---
+12-01-01  --- Release ksh93u+ ---
+12-01-01  A timing problem with >; has been fixed.
+12-01-01  A macro expansion memory leak has been fixed.
+11-12-26  A bug in array assignments of the form arr=( $arr[i] ...) in which
+	  arr was not unset before the assignment has been fixed. 
+11-12-20  A number of code changes were made based on the results of errors
+	  indicated by static code analysis.
 11-12-13  In vi edit mode a lteral <TAB> can now be entered by preceding it
 	  with a backshash.
 11-12-13  When tab is entered for completion after a ' or ", the ' and "

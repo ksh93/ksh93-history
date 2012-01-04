@@ -668,6 +668,9 @@ between \f3=\fP and \fIword\^\fP.
 .TP
 \f2varname\^\fP\f3=(\fP\f2assign_list\^\fP\f3)\fP
 No space is permitted between \f2varname\^\fP and the \f3=\fP.
+The variable
+.I varname
+is unset before the assignment.
 An \f2assign_list\^\fP can be one of the following:
 .RS 15
 .PD 0
@@ -742,6 +745,8 @@ quoting characters,
 file expansion characters,
 parameter expansion and command substitution
 characters,
+the characters
+.B /
 and
 .BR = .
 The replacement string can contain any

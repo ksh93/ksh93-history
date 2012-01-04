@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -217,10 +217,16 @@ static pid_t path_xargs(Shell_t *shp,const char *path, char *argv[],char *const 
 		else if(spawn && !sh_isoption(SH_PFSH))
 		{
 			shp->xargexit = exitval;
+			if(saveargs)
+				free((void*)saveargs);
 			return(_spawnveg(shp,path,argv,envp,spawn>>1));
 		}
 		else
+		{
+			if(saveargs)
+				free((void*)saveargs);
 			return(path_pfexecve(shp,path,argv,envp,spawn));
+		}
 	}
 	if(!spawn)
 		exit(exitval);

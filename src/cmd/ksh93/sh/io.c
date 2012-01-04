@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -262,7 +262,7 @@ inetopen(const char* path, int flags, Inetintr_f onintr, void* handle)
 	{
 		*t++ = 0;
 		if (streq(s, "local"))
-			s = "localhost";
+			s = strdup("localhost");
 		fd = getaddrinfo(s, t, &hint, &addr);
 	}
 	else

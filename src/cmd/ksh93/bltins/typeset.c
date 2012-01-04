@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -376,6 +376,8 @@ endargs:
 	if((flag&NV_MOVE) && (flag&~(NV_MOVE|NV_VARNAME|NV_ASSIGN)))
 		error_info.errors++;
 	if((flag&NV_REF) && (flag&~(NV_REF|NV_IDENT|NV_ASSIGN)))
+		error_info.errors++;
+	if((flag&NV_TYPE) && (flag&~(NV_TYPE|NV_VARNAME|NV_ASSIGN)))
 		error_info.errors++;
 	if(troot==tdata.sh->fun_tree && ((isfloat || flag&~(NV_FUNCT|NV_TAGGED|NV_EXPORT|NV_LTOU))))
 		error_info.errors++;
@@ -910,12 +912,12 @@ int sh_addlib(Shell_t *shp,void* library)
 		if (liblist)
 		{
 			liblist = (void**)realloc((void*)liblist, (maxlib+1)*sizeof(void**));
-			libattr = (unsigned short*)realloc((void*)liblist, (maxlib+1)*sizeof(unsigned short*));
+			libattr = (unsigned short*)realloc((void*)liblist, (maxlib+1)*sizeof(unsigned short));
 		}
 		else
 		{
 			liblist = (void**)malloc((maxlib+1)*sizeof(void**));
-			libattr = (unsigned short*)malloc((maxlib+1)*sizeof(unsigned short*));
+			libattr = (unsigned short*)malloc((maxlib+1)*sizeof(unsigned short));
 		}
 	}
 	libattr[nlib] = (sp->nosfio?BLT_NOSFIO:0);

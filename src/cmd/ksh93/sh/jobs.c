@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -262,17 +262,18 @@ static struct jobsave *jobsave_create(pid_t pid)
 
     char  *sh_pid2str(Shell_t *shp,pid_t pid)
     {
+	struct cosh  *csp=0;
 	if(pid&COPID_BIT)
 	{
 		int id = (pid>>16) &0x3f;
-		struct cosh  *csp;
 		for(csp=job.colist; csp; csp = csp->next)
 		{
 			if(csp->id == id)
 				break;
 		}
-		sfprintf(shp->strbuf,"%s.%d%c",csp->name,pid&0xff,0);
 	}
+	if(csp)
+		sfprintf(shp->strbuf,"%s.%d%c",csp->name,pid&0xff,0);
 	else
 		sfprintf(shp->strbuf,"%d%c",pid,0);
 	return(sfstruse(shp->strbuf));
