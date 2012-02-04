@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -30,7 +30,8 @@
 
 #include	<ast.h>
 #include	<cdt.h>
-#include	"shtable.h"
+
+typedef int (*Nambfp_f)(int, char**, void*);
 
 /* Nodes can have all kinds of values */
 union Value
@@ -52,7 +53,7 @@ union Value
 	struct Ufunction 	*rp;	/* shell user defined functions */
 	struct Namfun		*funp;	/* discipline pointer */
 	struct Namref		*nrp;	/* name reference */
-	int			(*bfp)(int,char*[],void*);/* builtin entry point function pointer */
+	Nambfp_f		bfp;	/* builtin entry point function pointer */
 };
 
 #include	"nval.h"

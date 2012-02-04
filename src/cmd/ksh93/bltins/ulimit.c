@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -38,11 +38,11 @@
 #endif
 
 #ifdef _no_ulimit
-	int	b_ulimit(int argc,char *argv[],void *extra)
+	int	b_ulimit(int argc,char *argv[],Shbltin_t *context)
 	{
 		NOT_USED(argc);
 		NOT_USED(argv);
-		NOT_USED(extra);
+		NOT_USED(context);
 		errormsg(SH_DICT,ERROR_exit(2),e_nosupport);
 		return(0);
 	}
@@ -65,12 +65,12 @@ static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 #define HARD	2
 #define SOFT	4
 
-int	b_ulimit(int argc,char *argv[],void *extra)
+int	b_ulimit(int argc,char *argv[],Shbltin_t *context)
 {
 	register char *limit;
 	register int mode=0, n;
 	register unsigned long hit = 0;
-	Shell_t *shp = ((Shbltin_t*)extra)->shp;
+	Shell_t *shp = context->shp;
 #ifdef _lib_getrlimit
 	struct rlimit rlp;
 #endif /* _lib_getrlimit */

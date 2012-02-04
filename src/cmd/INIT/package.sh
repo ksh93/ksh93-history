@@ -1,14 +1,14 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2012 AT&T                     #
+#          Copyright (c) 1994-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
-#                  Common Public License, Version 1.0                  #
-#                               by AT&T                                #
+#                 Eclipse Public License, Version 1.0                  #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
-#            http://www.opensource.org/licenses/cpl1.0.txt             #
-#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -70,7 +70,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2011-10-26 $
+@(#)$Id: package (AT&T Research) 2012-01-21 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2722,12 +2722,16 @@ case $x in
 			esac
 		}
 
-		for i in arch arch/$HOSTTYPE
-		do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
-		done
-		for i in lib
-		do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
-		done
+		case $action in
+		admin)	;;
+		*)	for i in arch arch/$HOSTTYPE
+			do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
+			done
+			for i in lib
+			do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
+			done
+			;;
+		esac
 
 		# no $INITROOT means INIT already installed elsewhere
 
@@ -4382,6 +4386,7 @@ admin)	while	test ! -f $admin_db
 			*)	user=
 				;;
 			esac
+			: type=$type host=$host root=$root date=$date time=$time make=$make test=$test write=$write :
 			name=$host
 			host=`echo $name | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789],__,g'`
 			eval x='$'${host}_index
@@ -4607,6 +4612,30 @@ admin)	while	test ! -f $admin_db
 		remote_hosts=$remote
 		;;
 	esac
+	for host in $remote_hosts $local_hosts
+	do	eval share=\$${host}_share
+		case $share in
+		?*)	while	:
+			do	oshare=$share
+				for s in $share
+				do	eval r='$'${s}_share
+					case $r in
+					?*)	case " $share " in
+						*" $r "*)	;;
+						*)		share="$share $r" ;;
+						esac
+						;;
+					esac
+				done
+				case $share in
+				$oshare)	eval ${host}_share="'$share'"
+						break
+						;;
+				esac
+			done
+			;;
+		esac
+	done
 	for host in $remote_hosts
 	do	eval type=\$${host}_type
 		case " $local_types " in

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -148,7 +148,7 @@ visit(Vmalloc_t* vm, void* addr, size_t size, Vmdisc_t* disc, void* handle)
 }
 
 int
-b_vmstate(int argc, char** argv, void* context)
+b_vmstate(int argc, char** argv, Shbltin_t* context)
 {
 	register int	i;
 	State_t		state;

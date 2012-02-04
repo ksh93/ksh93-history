@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -193,7 +193,9 @@ do	if	( trap - $sig ) 2> /dev/null
 					sleep 2
 					kill $$
 				) &
-				read -p
+				while	read -p || (($? > 256))
+				do	:
+				done
 			++EOF++
 			} ) != $'TRAP\nTRAP' ]] 2> /dev/null
 		then	err_exit 'traps when reading from coprocess not working'

@@ -1,3 +1,13 @@
+12-02-02 astlicense.c: add license.component for component-specific licenses
+12-01-31 spawnveg.c: fix transient bug that made invalid setpgid() call
+12-01-27 pathpath.c: fix buffer size math when internal allocation requested
+12-01-24 malloc.c: fix _vmkeep() bug that did not return previous state
+12-01-23 malloc.c: add VMALLOC_OPTIONS=break to try sbrk() block allocator first
+12-01-21 astlicense.c: option style only overrides default license.type
+12-01-18 malloc.c: disable multiple regions for tracing or !vmbest or ASO_SIGNAL
+12-01-12 sfpkrd.c: add __sun I_PEEK+rsh runtime workaround
+12-01-10 shcmd.h: void* => Shbltin_t*
+12-01-10 tmxdate.c: handle { n>=1000 } TM_PARTS
 11-12-21 plug up some meory links -- thanks mhlavink
 11-12-21 vmprivate.c: enclose VM_NONMEM exception in CLRLOCK(vm,0) ... SETLOCK(vm,0)
 11-12-13 aso: in -lposix for uwin, not -last -- just like vmalloc

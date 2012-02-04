@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -320,6 +320,13 @@ done
 [[ $ok ]] || err_exit 'whence -a not finding all executables'
 rm -f ls
 PATH=${PATH%:}
+
+#whence -p bug fix
+function foo
+{
+	:
+}
+[[ $(whence -p foo) == foo ]] && err_exit 'whence -p foo should not find function foo'
 
 # whence -q bug fix
 $SHELL -c 'whence -q cat' & pid=$!

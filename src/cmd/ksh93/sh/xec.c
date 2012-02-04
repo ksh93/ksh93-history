@@ -264,7 +264,7 @@ static int p_comarg(register struct comnod *com)
 		bp->ptr = nv_context(np);
 		bp->data = com->comstate;
 		bp->flags = SH_END_OPTIM;
-		(*funptr(np))(0,(char**)0, bp);
+		((Shbltin_f)funptr(np))(0,(char**)0, bp);
 		bp->ptr = save_ptr;
 		bp->data = save_data;
 	}
@@ -1264,7 +1264,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						error_info.id = *com;
 						if(argn)
 							shp->exitval = 0;
-						shp->bltinfun = funptr(np);
+						shp->bltinfun = (Shbltin_f)funptr(np);
 						bp->bnode = np;
 						bp->vnode = nq;
 						bp->ptr = nv_context(np);
@@ -1289,7 +1289,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 							tty_check(ERRIO);
 						((Shnode_t*)t)->com.comstate = shp->bltindata.data;
 						bp->data = (void*)save_data;
-						if(!nv_isattr(np,BLT_EXIT) && shp->exitval!=SH_RUNPROG)
+						if(sh.exitval && errno==EINTR && shp->lastsig)
+							sh.exitval = SH_EXITSIG|shp->lastsig;
+						else if(!nv_isattr(np,BLT_EXIT) && shp->exitval!=SH_RUNPROG)
 							shp->exitval &= SH_EXITMASK;
 					}
 					else
@@ -1719,7 +1721,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					sh_iounsave(shp);
 				topfd = shp->topfd;
 				sh_redirect(shp,t->tre.treio,1);
-				if(shp->topfd > topfd)
+				if(!no_fork && shp->topfd > topfd)
 				{
 					job_lock();
 					while((parent = vfork()) < 0)
@@ -3490,7 +3492,7 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 			opt_info.index = opt_info.offset = 0;
 			opt_info.disc = 0;
 			shp->exitval = 0;
-			shp->exitval = (*funptr(np))(n,argv,(void*)bp);
+			shp->exitval = ((Shbltin_f)funptr(np))(n,argv,bp);
 		}
 		sh_popcontext(shp,buffp);
 		if(jmpval>SH_JMPCMD)

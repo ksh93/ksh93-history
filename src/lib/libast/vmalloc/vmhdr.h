@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -79,6 +79,7 @@
 
 #include	"FEATURE/vmalloc"
 
+#include	<aso.h>		/* atomic scalor operations		*/
 #include	<setjmp.h>	/* use the type jmp_buf for alignment	*/
 
 /* extra information needed about methods to get memory from the system */
@@ -120,9 +121,10 @@ typedef struct _pfobj_s	Pfobj_t;
 #define MULTIPLE(x,y)	((x)%(y) == 0 ? (x) : (y)%(x) == 0 ? (y) : (y)*(x))
 
 #define VM_abort	0x0001	/* abort() on assertion failure		*/
-#define VM_check	0x0002	/* enable detailed checks		*/
-#define VM_free		0x0004	/* disable addfreelist()		*/
-#define VM_keep		0x0008	/* disable free()			*/
+#define VM_break	0x0002	/* try sbrk() block allocator first	*/
+#define VM_check	0x0004	/* enable detailed checks		*/
+#define VM_free		0x0008	/* disable addfreelist()		*/
+#define VM_keep		0x0010	/* disable free()			*/
 
 #if _UWIN
 #include <ast_windows.h>

@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -81,7 +81,7 @@ USAGE_LICENSE
 
 typedef struct State_s			/* program state		*/
 {
-	void*		context;	/* builtin context		*/
+	Shbltin_t*	context;	/* builtin context		*/
 	int		clobber;	/* clear out file data first	*/
 	int		directory;	/* remove(dir) not rmdir(dir)	*/
 	int		force;		/* force actions		*/
@@ -326,7 +326,7 @@ rm(State_t* state, register FTSENT* ent)
 }
 
 int
-b_rm(int argc, register char** argv, void* context)
+b_rm(int argc, register char** argv, Shbltin_t* context)
 {
 	State_t		state;
 	FTS*		fts;

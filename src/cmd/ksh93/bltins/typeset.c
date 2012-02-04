@@ -66,8 +66,8 @@ static int	print_namval(Sfio_t*, Namval_t*, int, struct tdata*);
 static void	print_attribute(Namval_t*,void*);
 static void	print_all(Sfio_t*, Dt_t*, struct tdata*);
 static void	print_scan(Sfio_t*, int, Dt_t*, int, struct tdata*);
-static int	b_unall(int, char**, Dt_t*, Shell_t*);
-static int	b_common(char**, int, Dt_t*, struct tdata*);
+static int	unall(int, char**, Dt_t*, Shell_t*);
+static int	setall(char**, int, Dt_t*, struct tdata*);
 static void	pushname(Namval_t*,void*);
 static void(*nullscan)(Namval_t*,void*);
 
@@ -82,16 +82,16 @@ static Namval_t *load_class(const char *name)
  */
 #if 0
     /* for the dictionary generator */
-    int    b_export(int argc,char *argv[],void *extra){}
+    int    b_export(int argc,char *argv[],Shbltin_t *context){}
 #endif
-int    b_readonly(int argc,char *argv[],void *extra)
+int    b_readonly(int argc,char *argv[],Shbltin_t *context)
 {
 	register int flag;
 	char *command = argv[0];
 	struct tdata tdata;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
-	tdata.sh = ((Shbltin_t*)extra)->shp;
+	tdata.sh = context->shp;
 	tdata.aflag = '-';
 	while((flag = optget(argv,*command=='e'?sh_optexport:sh_optreadonly))) switch(flag)
 	{
@@ -129,11 +129,11 @@ int    b_readonly(int argc,char *argv[],void *extra)
 		if(!tdata.sh->prefix)
 			tdata.sh->prefix = "";
 	}
-	return(b_common(argv,flag,tdata.sh->var_tree, &tdata));
+	return(setall(argv,flag,tdata.sh->var_tree, &tdata));
 }
 
 
-int    b_alias(int argc,register char *argv[],void *extra)
+int    b_alias(int argc,register char *argv[],Shbltin_t *context)
 {
 	register unsigned flag = NV_NOARRAY|NV_NOSCOPE|NV_ASSIGN;
 	register Dt_t *troot;
@@ -141,7 +141,7 @@ int    b_alias(int argc,register char *argv[],void *extra)
 	struct tdata tdata;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
-	tdata.sh = ((Shbltin_t*)extra)->shp;
+	tdata.sh = context->shp;
 	troot = tdata.sh->alias_tree;
 	if(*argv[0]=='h')
 		flag = NV_TAGGED;
@@ -197,25 +197,25 @@ int    b_alias(int argc,register char *argv[],void *extra)
 			troot = tdata.sh->track_tree;
 		}
 	}
-	return(b_common(argv,flag,troot,&tdata));
+	return(setall(argv,flag,troot,&tdata));
 }
 
 
 #if 0
     /* for the dictionary generator */
-    int    b_local(int argc,char *argv[],void *extra){}
+    int    b_local(int argc,char *argv[],Shbltin_t *context){}
 #endif
-int    b_typeset(int argc,register char *argv[],void *extra)
+int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 {
 	register int	n, flag = NV_VARNAME|NV_ASSIGN;
 	struct tdata	tdata;
 	const char	*optstring = sh_opttypeset;
-	Namdecl_t 	*ntp = (Namdecl_t*)((Shbltin_t*)extra)->ptr;
+	Namdecl_t 	*ntp = (Namdecl_t*)context->ptr;
 	Dt_t		*troot;
 	int		isfloat=0, shortint=0, sflag=0;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
-	tdata.sh = ((Shbltin_t*)extra)->shp;
+	tdata.sh = context->shp;
 	if(ntp)
 	{
 		tdata.tp = ntp->tp;
@@ -447,7 +447,7 @@ endargs:
 		tdata.help = 0;
 	if(tdata.aflag=='+' && (flag&(NV_ARRAY|NV_IARRAY|NV_COMVAR)))
 		errormsg(SH_DICT,ERROR_exit(1),e_nounattr);
-	return(b_common(argv,flag,troot,&tdata));
+	return(setall(argv,flag,troot,&tdata));
 }
 
 static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
@@ -514,7 +514,7 @@ static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
 	}
 }
 
-static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *tp)
+static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp)
 {
 	register char *name;
 	char *last = 0;
@@ -581,8 +581,13 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						np = sh_fsearch(shp,name,HASH_NOSCOPE);
 					if(!np)
 #endif /* SHOPT_NAMESPACE */
-					if((np=nv_search(name,troot,0)) && !is_afunction(np))
-						np = 0;
+					if(np=nv_search(name,troot,0))
+					{
+						if(!is_afunction(np))
+							np = 0;
+					}
+					else if(memcmp(name,".sh.math.",9)==0 && sh_mathstd(name+9))
+						continue;
 				}
 				if(np && ((flag&NV_LTOU) || !nv_isnull(np) || nv_isattr(np,NV_LTOU)))
 				{
@@ -861,7 +866,6 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 }
 
 typedef void (*Iptr_t)(int,void*);
-typedef int (*Fptr_t)(int, char*[], void*);
 
 #define GROWLIB	4
 
@@ -936,14 +940,14 @@ int sh_addlib(Shell_t *shp,void* library)
  * add change or list built-ins
  * adding builtins requires dlopen() interface
  */
-int	b_builtin(int argc,char *argv[],void *extra)
+int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 {
 	register char *arg=0, *name;
 	register int n, r=0, flag=0;
 	register Namval_t *np;
 	long dlete=0;
 	struct tdata tdata;
-	Fptr_t addr;
+	Shbltin_f addr;
 	Stk_t	*stkp;
 	void *library=0;
 	char *errmsg;
@@ -954,7 +958,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 #endif
 	NOT_USED(argc);
 	memset(&tdata,0,sizeof(tdata));
-	tdata.sh = ((Shbltin_t*)extra)->shp;
+	tdata.sh = context->shp;
 	stkp = tdata.sh->stk;
 	if(!tdata.sh->pathlist)
 		path_absolute(tdata.sh,argv[0],NIL(Pathcomp_t*));
@@ -1042,7 +1046,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		{
 			/* (char*) added for some sgi-mips compilers */ 
 #if SHOPT_DYNAMIC
-			if(dlete || (addr = (Fptr_t)dlllook(liblist[n],stkptr(stkp,flag))))
+			if(dlete || (addr = (Shbltin_f)dlllook(liblist[n],stkptr(stkp,flag))))
 #else
 			if(dlete)
 #endif /* SHOPT_DYNAMIC */
@@ -1076,11 +1080,12 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	return(r);
 }
 
-int    b_set(int argc,register char *argv[],void *extra)
+int    b_set(int argc,register char *argv[],Shbltin_t *context)
 {
 	struct tdata tdata;
+	int was_monitor = sh_isoption(SH_MONITOR);
 	memset(&tdata,0,sizeof(tdata));
-	tdata.sh = ((Shbltin_t*)extra)->shp;
+	tdata.sh = context->shp;
 	tdata.prefix=0;
 	if(argv[1])
 	{
@@ -1090,9 +1095,9 @@ int    b_set(int argc,register char *argv[],void *extra)
 			sh_onstate(SH_VERBOSE);
 		else
 			sh_offstate(SH_VERBOSE);
-		if(sh_isoption(SH_MONITOR))
+		if(sh_isoption(SH_MONITOR) && !was_monitor)
 			sh_onstate(SH_MONITOR);
-		else
+		else if(!sh_isoption(SH_MONITOR)  && was_monitor)
 			sh_offstate(SH_MONITOR);
 	}
 	else
@@ -1108,19 +1113,19 @@ int    b_set(int argc,register char *argv[],void *extra)
  * Non-existent items being deleted give non-zero exit status
  */
 
-int    b_unalias(int argc,register char *argv[],void *extra)
+int    b_unalias(int argc,register char *argv[],Shbltin_t *context)
 {
-	Shell_t *shp = ((Shbltin_t*)extra)->shp;
-	return(b_unall(argc,argv,shp->alias_tree,shp));
+	Shell_t *shp = context->shp;
+	return(unall(argc,argv,shp->alias_tree,shp));
 }
 
-int    b_unset(int argc,register char *argv[],void *extra)
+int    b_unset(int argc,register char *argv[],Shbltin_t *context)
 {
-	Shell_t *shp = ((Shbltin_t*)extra)->shp;
-	return(b_unall(argc,argv,shp->var_tree,shp));
+	Shell_t *shp = context->shp;
+	return(unall(argc,argv,shp->var_tree,shp));
 }
 
-static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
+static int unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 {
 	register Namval_t *np;
 	register const char *name;

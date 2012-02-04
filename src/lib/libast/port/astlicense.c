@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -63,24 +63,25 @@
 #define AUTHOR			0
 #define CLASS			1
 #define COMPANY			2
-#define CONTRIBUTOR		3
-#define CORPORATION		4
-#define DOMAIN			5
-#define ID			6
-#define INCORPORATION		7
-#define LICENSE			8
-#define LOCATION		9
-#define NAME			10
-#define NOTICE			11
-#define ORGANIZATION		12
-#define PACKAGE			13
-#define PARENT			14
-#define QUERY			15
-#define SINCE			16
-#define STYLE			17
-#define URL			18
-#define URLMD5			19
-#define VERSION			20
+#define COMPONENT		3
+#define CONTRIBUTOR		4
+#define CORPORATION		5
+#define DOMAIN			6
+#define ID			7
+#define INCORPORATION		8
+#define LICENSE			9
+#define LOCATION		10
+#define NAME			11
+#define NOTICE			12
+#define ORGANIZATION		13
+#define PACKAGE			14
+#define PARENT			15
+#define QUERY			16
+#define SINCE			17
+#define STYLE			18
+#define URL			19
+#define URLMD5			20
+#define VERSION			21
 
 #define IDS			64
 
@@ -131,6 +132,7 @@ static const Item_t	key[] =
 	KEY("author"),
 	KEY("class"),
 	KEY("company"),
+	KEY("component"),
 	KEY("contributor"),
 	KEY("corporation"),
 	KEY("domain"),
@@ -737,6 +739,8 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 							notice.type = c;
 							notice.item[CLASS].data = lic[lic[c].quote].data;
 							notice.item[CLASS].size = lic[lic[c].quote].size;
+							if (notice.item[STYLE].data != lic[NONE].data)
+								h = -1;
 							break;
 						}
 					if (h >= 0)

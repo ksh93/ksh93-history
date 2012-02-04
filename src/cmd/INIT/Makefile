@@ -2,6 +2,8 @@
  * initialization for all packages
  */
 
+:PACKAGE: license=ast
+
 LICENSE = since=1994,author=gsf
 
 PACKAGEROOT = $(INSTALLROOT:T=F:P=L*:O=n)

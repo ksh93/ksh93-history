@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1098,10 +1098,14 @@ done:
 #endif
 #if _mem_mmap_anon
 #undef	_mem_mmap_zero
+#if !_PACKAGE_ast
 #undef	_mem_sbrk
 #endif
+#endif
 #if _mem_mmap_zero
+#if !_PACKAGE_ast
 #undef	_mem_sbrk
+#endif
 #endif
 
 #if _SUNOS /* sunos guarantees that brk-addresses are valid */
@@ -1178,7 +1182,7 @@ static Void_t* sbrkmem(Void_t* caddr, size_t csize, size_t nsize)
 	if(brk(addr) != 0 )
 		return NIL(Void_t*);
 	else if(nsize > csize && chkaddr(caddr, nsize) < 0 )
-	{	(void)brk(caddr+csize);
+	{	(void)brk((Vmuchar_t*)caddr+csize);
 		return NIL(Void_t*);
 	}
 	else	return caddr;
@@ -1296,6 +1300,10 @@ static Void_t* getmemory(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsiz
 	if((addr = win32mem(caddr, csize, nsize)) )
 		return (Void_t*)addr;
 #endif
+#if _mem_sbrk
+	if((_Vmassert & VM_break) && (addr = sbrkmem(caddr, csize, nsize)) )
+		return (Void_t*)addr;
+#endif
 #if _mem_mmap_anon
 	if((addr = mmapmem(caddr, csize, nsize, (Mmdisc_t*)0)) )
 		return (Void_t*)addr;
@@ -1305,7 +1313,7 @@ static Void_t* getmemory(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsiz
 		return (Void_t*)addr;
 #endif
 #if _mem_sbrk
-	if((addr = sbrkmem(caddr, csize, nsize)) )
+	if(!(_Vmassert & VM_break) && (addr = sbrkmem(caddr, csize, nsize)) )
 		return (Void_t*)addr;
 #endif
 #if _std_malloc

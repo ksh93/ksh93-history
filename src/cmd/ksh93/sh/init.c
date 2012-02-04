@@ -520,6 +520,8 @@ static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp
 		nv_putv(np, val, flags, fp);
 	if(!val && !(flags&NV_CLONE) && (fp=np->nvfun) && !fp->disc && (shp=(Shell_t*)(fp->last)))
 		nv_stack(np,&((Init_t*)shp->init_context)->IFS_init.hdr);
+	else if(!val)
+		np->nvfun = 0;
 }
 
 /*
@@ -1952,7 +1954,7 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 		}
 		np->nvenv = 0;
 		if(name_vals==(const struct shtable2*)shtab_builtins)
-			np->nvalue.bfp = ((struct shtable3*)tp)->sh_value;
+			np->nvalue.bfp = (Nambfp_f)((struct shtable3*)tp)->sh_value;
 		else
 		{
 			if(name_vals == shtab_variables)

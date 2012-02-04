@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -720,7 +720,7 @@ Namfun_t *nv_disc(register Namval_t *np, register Namfun_t* fp, int mode)
 				}
 				lp = lp->next;
 			}
-			if(mode==NV_LAST)
+			if(mode==NV_LAST && lp->disc)
 				lpp = &lp->next;
 		}
 		if(mode==NV_POP)
@@ -728,7 +728,12 @@ Namfun_t *nv_disc(register Namval_t *np, register Namfun_t* fp, int mode)
 		/* push */
 		nv_offattr(np,NV_NODISC);
 		if(mode==NV_LAST)
-			fp->next = 0;
+		{
+			if(lp && !lp->disc)
+				fp->next = lp;
+			else
+				fp->next = 0;
+		}
 		else
 		{
 			if((fp->nofree&1) && *lpp)
@@ -1159,13 +1164,13 @@ done:
  *   failure.  For delete NULL means success and the node that cannot be
  *   deleted is returned on failure.
  */
-Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void *extra)
+Namval_t *sh_addbuiltin(const char *path, Shbltin_f bltin, void *extra)
 {
 	register const char	*name = path_basename(path);
 	char			*cp;
 	register Namval_t	*np, *nq=0;
 	int			offset=staktell();
-	if(name==path && bltin!=SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
+	if(name==path && bltin!=(Shbltin_f)SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
 		path = name = stakptr(offset);
 	if(np = nv_search(path,sh.bltin_tree,0))
 	{
@@ -1190,7 +1195,7 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 			if(nv_isattr(np,BLT_SPC))
 				return(np);
 			if(!bltin)
-				bltin = np->nvalue.bfp;
+				bltin = (Shbltin_f)np->nvalue.bfp;
 			if(np->nvenv)
 				dtdelete(sh.bltin_tree,np);
 			if(extra == (void*)1)
@@ -1211,7 +1216,7 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 	np->nvfun = 0;
 	if(bltin)
 	{
-		np->nvalue.bfp = bltin;
+		np->nvalue.bfp = (Nambfp_f)bltin;
 		nv_onattr(np,NV_BLTIN|NV_NOFREE);
 		np->nvfun = (Namfun_t*)extra;
 	}

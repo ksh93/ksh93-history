@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -20,10 +20,9 @@
 #pragma prototyped
 
 
-#include	<shell.h>
-#include	<signal.h>
 #include	"defs.h"
 #include	"shtable.h"
+#include	<signal.h>
 #include	"ulimit.h"
 #include	"name.h"
 #include	"version.h"
@@ -1155,6 +1154,9 @@ USAGE_LICENSE
 		"command.]"
 	"[+%Z?Output a byte whose value is \b0\b.]"
 "}"
+"[+?The format modifier flag \bL\b can precede the width and/or precision "
+	"specifiers for the \bc\b and \bs\b to cause the width and/or "
+	"precision to be measured in character width rather than byte count.]"
 "[+?When performing conversions of \astring\a to satisfy a numeric "
 	"format specifier, if the first character of \astring\a "
 	"is \b\"\b or \b'\b, then the value will be the numeric value "

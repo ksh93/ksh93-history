@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -307,5 +307,13 @@ chmod +x script$$.1
 x=$(  LC_ALL=debug $SHELL ./script$$.1)
 [[ ${#x} == 8641 ]] || err_exit 'here doc contains wrong number of chars with multibyte locale'
 [[ $x == *$'next character is multibyte<2b|>c<3d|\>foo'* ]] || err_exit "here_doc doesn't contain line with multibyte chars"
+
+
+x=$(LC_ALL=debug $SHELL -c 'x="a<2b|>c";print -r -- ${#x}')
+(( x == 3  )) || err_exit 'character length of multibyte character should be 3'
+x=$(LC_ALL=debug $SHELL -c 'typeset -R10 x="a<2b|>c";print -r -- "${x}"')
+[[ $x == '   a<2b|>c' ]] || err_exit 'typeset -R10 should begin with three spaces'
+x=$(LC_ALL=debug $SHELL -c 'typeset -L10 x="a<2b|>c";print -r -- "${x}"')
+[[ $x == 'a<2b|>c   ' ]] || err_exit 'typeset -L10 should end in three spaces'
 
 exit $((Errors<125?Errors:125))

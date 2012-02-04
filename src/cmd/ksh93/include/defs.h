@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -39,9 +39,6 @@
 #include	"argnod.h"
 #include	"name.h"
 #include	<ctype.h>
-#define _SH_PRIVATE
-#include	<shcmd.h>
-#undef _SH_PRIVATE
 
 #ifndef pointerof
 #define pointerof(x)		((void*)((char*)0+(x)))
@@ -270,6 +267,7 @@ struct shared
 
 #include	<shell.h>
 
+#include	"shtable.h"
 #include	"regress.h"
 
 /* error exits from various parts of shell */
@@ -418,6 +416,7 @@ extern char 		*sh_macpat(Shell_t*,struct argnod*,int);
 extern Sfdouble_t	sh_mathfun(Shell_t*, void*, int, Sfdouble_t*);
 extern int		sh_outtype(Shell_t*, Sfio_t*);
 extern char 		*sh_mactry(Shell_t*,char*);
+extern int		sh_mathstd(const char*);
 extern void		sh_printopts(Shopt_t,int,Shopt_t*);
 extern int 		sh_readline(Shell_t*,char**,int,int,long);
 extern Sfio_t		*sh_sfeval(char*[]);

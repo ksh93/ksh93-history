@@ -1,3 +1,4 @@
+12-01-10 b_* (int, char**, void*) => (int, char**, Shbltin_t*)
 11-08-27 pids.c: add getsid() iffe test
 10-08-16 chmod.c: add -l alias for { -h --symlink }
 11-08-16 chgrp.c: change lchmod() ref to lchown()

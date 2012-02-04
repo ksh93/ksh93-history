@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -97,6 +97,7 @@ typedef struct ______mstats Mstats_t;
 **	    abort	if Vmregion==Vmdebug then VM_DBABORT is set,
 **			otherwise _BLD_DEBUG enabled assertions abort()
 **			on failure
+**	    break	try sbrk() block allocator first
 **	    check	if Vmregion==Vmbest then the region is checked every op
 **	    free	disable addfreelist()
 **	    keep	disable free -- if code works with this enabled then it
@@ -362,13 +363,13 @@ static void clrfreelist()
 
 	for(; list; list = next)
 	{	next = list->next;
-
-		vm = regionof((Void_t*)list);
-		if(asocasint(&vm->data->lock, 0, 1) == 0) /* can free this now */
-		{	(void)(*vm->meth.freef)(vm, (Void_t*)list, 1);
-			vm->data->lock = 0;
+		if(vm = regionof((Void_t*)list))
+		{	if(asocasint(&vm->data->lock, 0, 1) == 0) /* can free this now */
+			{	(void)(*vm->meth.freef)(vm, (Void_t*)list, 1);
+				vm->data->lock = 0;
+			}
+			else	addfreelist(list); /* ah well, back in the queue */
 		}
-		else	addfreelist(list); /* ah well, back in the queue */
 	}
 }
 
@@ -398,14 +399,16 @@ static Vmalloc_t* getregion(int* local)
 
 	clrfreelist();
 
-	if(asocasint(&Vmregion->data->lock, 0, 1) == 0 )
-	{	*local = 1; /* Vmregion is open, so use it */
-		asoincint(&Regopen);
+	if(Regmax <= 0 )
+	{	/* uni-process/thread */
+		*local = 1;
+		Vmregion->data->lock = 1;
 		return Vmregion;
 	}
-	else if(Regmax <= 0 || Vmregion != Vmheap )
-	{	*local = 0; /* forbidden from making new regions */
-		asoincint(&Reglock);
+	else if(asocasint(&Vmregion->data->lock, 0, 1) == 0 )
+	{	/* Vmregion is open, so use it */
+		*local = 1;
+		asoincint(&Regopen);
 		return Vmregion;
 	}
 
@@ -916,6 +919,8 @@ extern Mstats_t mstats()
  * _ast_* counterparts for object compatibility
  */
 
+#define setregmax(n)
+
 #undef	calloc
 extern Void_t*	calloc _ARG_((size_t, size_t));
 
@@ -1199,6 +1204,9 @@ void _vmoptions()
 				else
 					_Vmassert |= VM_abort;
 				break;
+			case 'b':		/* break */
+				_Vmassert |= VM_break;
+				break;
 			case 'c':		/* check */
 				_Vmassert |= VM_check;
 				break;
@@ -1281,13 +1289,19 @@ void _vmoptions()
 		Vmregion = vm;
 	}
 
-	/* enable tracing */
+	/* enable tracing -- this currently disables multiple regions */
 
-	if (trace && (fd = createfile(trace)) >= 0)
+	if (trace)
 	{
-		vmset(Vmregion, VM_TRACE, 1);
-		vmtrace(fd);
+		setregmax(0);
+		if ((fd = createfile(trace)) >= 0)
+		{
+			vmset(Vmregion, VM_TRACE, 1);
+			vmtrace(fd);
+		}
 	}
+	else if (Vmregion != Vmheap || asometh(0, 0)->type == ASO_SIGNAL)
+		setregmax(0);
 
 	/* make sure that profile data is output upon exiting */
 
@@ -1333,7 +1347,7 @@ int	v;
 		_Vmassert |= VM_keep;
 	else
 		_Vmassert &= ~VM_keep;
-	return v;
+	return r;
 }
 
 #endif /*_UWIN*/

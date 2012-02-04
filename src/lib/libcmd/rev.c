@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -114,7 +114,7 @@ static int rev_char(Sfio_t *in, Sfio_t *out)
 }
 
 int
-b_rev(int argc, register char** argv, void* context)
+b_rev(int argc, register char** argv, Shbltin_t* context)
 {
 	register Sfio_t *fp;
 	register char *cp;

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
-<META name="generator" content="mm2html (AT&amp;T Research) 2011-12-30">
+<META name="generator" content="mm2html (AT&amp;T Research) 2012-01-11">
 <META name="description" content="INIT package">
 <META name="keywords" content="software, package">
 <TITLE> INIT package </TITLE>
@@ -55,6 +55,12 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+12-02-02 regress.sh: fix ulimit -c defaults for --nokeep
+12-01-18 regress.sh: add INPUT|OUTPUT|ERROR -e 'filter' to filter before comparison
+12-01-21 package.sh: fix `admin make' bug that created unused $INSTALLROOT/lib
+12-01-21 Makefile: :PACKAGE: license=ast -- oops
+12-01-20 cc.darwin,cc.mvs.390: tmp=/tmp/cc.${USER:-$LOGNAME}.$$.err
+12-01-12 package.sh: add admin make share closure to handle alternate HOSTTYPEs
 11-12-13 iffe.sh: add /*&lt;NOSTDIO&gt;*/ test code comment to disable default #include &lt;stdio.h&gt;
 11-11-11 C+probe: test for .so before .sl
 11-10-26 package.sh: don't forget about *.pkg for admin update
@@ -965,7 +971,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>January 05, 2012</TD>
+<TD align=right>February 03, 2012</TD>
 </TR>
 </TABLE>
 <P>

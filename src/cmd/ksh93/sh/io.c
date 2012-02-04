@@ -1035,7 +1035,7 @@ void sh_pclose(register int pv[])
 	pv[0] = pv[1] = -1;
 }
 
-static char *io_usename(char *name, int *perm, int mode)
+static char *io_usename(char *name, int *perm, int fno, int mode)
 {
 	struct stat	statb;
 	char		*tname, *sp, *ep;
@@ -1069,15 +1069,16 @@ static char *io_usename(char *name, int *perm, int mode)
 		stakseek(0);
 	}
 	stakputc('.');
-	stakputs(ep);
-	stakputs(".tmp");
+	sfprintf(stkstd,"%<#d_%d{;.tmp",getpid(),fno);
 	tname = stakfreeze(1);
 	switch(mode)
 	{
+		unlink(tname);
+		break;
 	    case 1:
 		rename(tname,name);
 		break;
-	    case 2:
+	    default:
 		unlink(tname);
 		break;
 	}
@@ -1299,7 +1300,8 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				{
 					io_op[2] = ';';
 					o_mode |= O_TRUNC;
-					tname = io_usename(fname,&perm,0);
+					if(tname = io_usename(fname,&perm,fn,0))
+						o_mode |= O_EXCL;
 				}
 				else
 				{
@@ -1728,7 +1730,7 @@ void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 		if(filemap[fd].tname == Empty && shp->exitval==0)
 			ftruncate(origfd,lseek(origfd,0,SEEK_CUR));
 		else if(filemap[fd].tname)
-			io_usename(filemap[fd].tname,(int*)0,shp->exitval?2:1);
+			io_usename(filemap[fd].tname,(int*)0,origfd,shp->exitval?2:1);
 		sh_close(origfd);
 		if ((savefd = filemap[fd].save_fd) >= 0)
 		{
@@ -1832,6 +1834,8 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 #endif /* O_NONBLOCK */
 		if(errno!=EINTR)
 			return(0);
+		else if(shp->bltinfun && (shp->trapnote&SH_SIGTRAP) && shp->lastsig)
+			return(-1);
 		n=1;
 		sh_onstate(SH_TTYWAIT);
 	}

@@ -2039,13 +2039,13 @@ void job_fork(pid_t parent)
 		jobfork++;
 		break;
 	case 0:
-		jobfork--;
+		jobfork=0;
 		job_unlock();
 		job.waitsafe = 0;
 		job.in_critical = 0;
 		break;
 	default:
-		jobfork--;
+		jobfork=0;
 		job_unlock();
 		break;
 	}

@@ -182,9 +182,9 @@ static Sfdouble_t get_nenum(register Namval_t* np, Namfun_t *fp)
 const Namdisc_t ENUM_disc        = {  0, put_enum, get_enum, get_nenum, 0,0,clone_enum };
 
 #ifdef STANDALONE
-static int enum_create(int argc, char** argv, void* context)
+static int enum_create(int argc, char** argv, Shbltin_t *context)
 #else
-int b_enum(int argc, char** argv, void* context)
+int b_enum(int argc, char** argv, Shbltin_t *context)
 #endif
 {
 	int			sz,i,n,iflag = 0;
@@ -192,7 +192,7 @@ int b_enum(int argc, char** argv, void* context)
 	Namarr_t		*ap;
 	char			*cp,*sp;
 	struct Enum		*ep;
-	Shell_t			*shp = ((Shbltin_t*)context)->shp;
+	Shell_t			*shp = context->shp;
 	struct {
 	    Optdisc_t	opt;
 	    Namval_t	*np;

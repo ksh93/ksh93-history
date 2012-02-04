@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -58,17 +58,17 @@ struct read_save
         long	timeout;
 };
 
-int	b_read(int argc,char *argv[], void *extra)
+int	b_read(int argc,char *argv[], Shbltin_t *context)
 {
 	Sfdouble_t sec;
 	register char *name;
 	register int r, flags=0, fd=0;
-	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
+	register Shell_t *shp = context->shp;
 	long timeout = 1000*shp->st.tmout;
-	int save_prompt, fixargs=((Shbltin_t*)extra)->invariant;
+	int save_prompt, fixargs=context->invariant;
 	struct read_save *rp;
 	static char default_prompt[3] = {ESC,ESC};
-	rp = (struct read_save*)(((Shbltin_t*)extra)->data);
+	rp = (struct read_save*)(context->data);
 	if(argc==0)
 	{
 		if(rp)
@@ -156,7 +156,7 @@ int	b_read(int argc,char *argv[], void *extra)
 		r = 0;
 	if(argc==fixargs && (rp=newof(NIL(struct read_save*),struct read_save,1,0)))
 	{
-		((Shbltin_t*)extra)->data = (void*)rp;
+		context->data = (void*)rp;
 		rp->fd = fd;
 		rp->flags = flags;
 		rp->timeout = timeout;
@@ -178,13 +178,9 @@ bypass:
 	shp->nextprompt = save_prompt;
 	if(r==0 && (r=(sfeof(shp->sftable[fd])||sferror(shp->sftable[fd]))))
 	{
-		if(fd == shp->cpipe[0])
-		{
+		if(fd == shp->cpipe[0] && errno!=EINTR)
 			sh_pclose(shp->cpipe);
-			return(1);
-		}
 	}
-	sfclrerr(shp->sftable[fd]);
 	return(r);
 }
 

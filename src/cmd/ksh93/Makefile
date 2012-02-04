@@ -93,7 +93,7 @@ SH_CMDLIB_DIR ==		/* SHOPT_CMDLIB_DIR dir prefix */
 SH_DICT ==			/* message catalog */
 DEBUG ==			/* debugging purposes only */
 
-if  CC.HOSTTYPE == "*win*"
+if  CC.HOSTTYPE == "win32*"
 	SHOPT_CRNL == 1		/* <cr><nl> is eqivalent to <nl> */
 end
 

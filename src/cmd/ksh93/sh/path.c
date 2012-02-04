@@ -304,7 +304,7 @@ static void free_bltin(Namval_t *np,void *data)
 		stakputs("/bin");
 		stakputs(np->nvname+pp->len+1);
 		stakputc(0);
-		sh_addbuiltin(stakptr(offset),np->nvalue.bfp,NiL);
+		sh_addbuiltin(stakptr(offset),(Shbltin_f)np->nvalue.bfp,NiL);
 		stakseek(offset);
 		return;
 	}
@@ -798,8 +798,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 #if SHOPT_DYNAMIC
 			if(oldpp->blib)
 			{
-				typedef int (*Fptr_t)(int, char*[], void*);
-				Fptr_t addr;
+				Shbltin_f addr;
 				int n = staktell();
 				char *cp;
 				stakputs("b_");
@@ -811,7 +810,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 						cp++;
 					else
 						cp = oldpp->blib;
-					if(!strcmp(cp,LIBCMD) && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
+					if(!strcmp(cp,LIBCMD) && (addr=(Shbltin_f)dlllook((void*)0,stakptr(n))))
 					{
 						if((np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) && nv_isattr(np,NV_BLTINOPT))
 							return(oldpp);
@@ -843,8 +842,8 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 #endif
 				}
 				if(oldpp->bltin_lib &&
-				   (addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n))) &&
-				   (!(np = sh_addbuiltin(stakptr(PATH_OFFSET),NiL,NiL)) || np->nvalue.bfp!=addr) &&
+				   (addr=(Shbltin_f)dlllook(oldpp->bltin_lib,stakptr(n))) &&
+				   (!(np = sh_addbuiltin(stakptr(PATH_OFFSET),NiL,NiL)) || np->nvalue.bfp!=(Nambfp_f)addr) &&
 				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)))
 				{
 					np->nvenv = oldpp->bltin_lib;
@@ -881,7 +880,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 			if(np)
 			{
 				n = np->nvflag;
-				np = sh_addbuiltin(stakptr(PATH_OFFSET),np->nvalue.bfp,nv_context(np));
+				np = sh_addbuiltin(stakptr(PATH_OFFSET),(Shbltin_f)np->nvalue.bfp,nv_context(np));
 				np->nvflag = n;
 			}
 		}

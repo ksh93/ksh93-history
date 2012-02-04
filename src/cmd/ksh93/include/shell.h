@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,6 +27,8 @@
  *
  */
 
+#define SH_VERSION	20071012
+
 #include	<ast.h>
 #include	<cdt.h>
 #ifdef _SH_PRIVATE
@@ -34,8 +36,6 @@
 #else
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
-
-#define SH_VERSION	20071012
 
 #undef NOT_USED
 #define NOT_USED(x)	(&x,1)
@@ -48,6 +48,8 @@ typedef struct
 Shopt_t;
 
 typedef struct Shell_s Shell_t;
+
+#include	<shcmd.h>
 
 typedef void	(*Shinit_f)(Shell_t*, int);
 #ifndef SH_wait_f_defined
@@ -183,7 +185,7 @@ extern Sfio_t		*sh_iogetiop(int,int);
 extern int		sh_main(int, char*[], Shinit_f);
 extern int		sh_run(int, char*[]);
 extern void		sh_menu(Sfio_t*, int, char*[]);
-extern Namval_t		*sh_addbuiltin(const char*, int(*)(int, char*[],void*), void*);
+extern Namval_t		*sh_addbuiltin(const char*, int(*)(int, char*[],Shbltin_t*), void*);
 extern char		*sh_fmtq(const char*);
 extern char		*sh_fmtqf(const char*, int, int);
 extern Sfdouble_t	sh_strnum(const char*, char**, int);

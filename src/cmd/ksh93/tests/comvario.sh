@@ -1,14 +1,14 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
-#                  Common Public License, Version 1.0                  #
+#                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
-#            http://www.opensource.org/licenses/cpl1.0.txt             #
-#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -30,7 +30,12 @@ alias err_exit='err_exit $LINENO'
 # "nounset" disabled for now
 #set -o nounset
 Command=${0##*/}
-integer Errors=0
+integer Errors=0 HAVE_signbit=0
+
+if	typeset -f .sh.math.signbit >/dev/null && (( signbit(-NaN) ))
+then	HAVE_signbit=1
+else	print -u2 "$0: warning: -lm does not support signbit(-NaN)"
+fi
 
 compound bracketstat=(
 	integer bopen=0
@@ -229,8 +234,10 @@ s=${
 (( ${#y2.myarray3[e].nested_cpv.myarray[@]} == 10 )) || err_exit "Expected 10 elements in y2.myarray3[e].nested_cpv, got ${#y2.myarray3[e].nested_cpv[@]}"
 (( isnan(y1.myarray3[a_nan].my_nan) ))   || err_exit "y1.myarray3[a_nan].my_nan not a NaN"
 (( isnan(y2.myarray3[a_nan].my_nan) ))   || err_exit "y2.myarray3[a_nan].my_nan not a NaN"
-(( signbit(y1.myarray3[a_nan].my_nan) )) || err_exit "y1.myarray3[a_nan].my_nan not negative"
-(( signbit(y2.myarray3[a_nan].my_nan) )) || err_exit "y2.myarray3[a_nan].my_nan not negative"
+if	(( HAVE_signbit ))
+then	(( signbit(y1.myarray3[a_nan].my_nan) )) || err_exit "y1.myarray3[a_nan].my_nan not negative"
+	(( signbit(y2.myarray3[a_nan].my_nan) )) || err_exit "y2.myarray3[a_nan].my_nan not negative"
+fi
 count_brackets "$y1" || err_exit "y1: bracket open ${bracketstat.bopen} != bracket close ${bracketstat.bclose}"
 count_brackets "$(print -v y1)" || err_exit "y1: bracket open ${bracketstat.bopen} != bracket close ${bracketstat.bclose}"
 count_brackets "$(print -C y1)" || err_exit "y1: bracket open ${bracketstat.bopen} != bracket close ${bracketstat.bclose}"
@@ -307,7 +314,9 @@ count_brackets "$(print -v x)" || err_exit "x: bracket open ${bracketstat.bopen}
 count_brackets "$(print -C x)" || err_exit "x: bracket open ${bracketstat.bopen} != bracket close ${bracketstat.bclose}"
 (( ${#x.myarray3[e].nested_cpv.myarray[@]} == 10 )) || err_exit "Expected 10 elements in x.myarray3[e].nested_cpv, got ${#x.myarray3[e].nested_cpv[@]}"
 (( isnan(x.myarray3[a_nan].my_nan) ))   || err_exit "x.myarray3[a_nan].my_nan not a NaN"
-(( signbit(x.myarray3[a_nan].my_nan) )) || err_exit "x.myarray3[a_nan].my_nan not negative"
+if	(( HAVE_signbit ))
+then	(( signbit(x.myarray3[a_nan].my_nan) )) || err_exit "x.myarray3[a_nan].my_nan not negative"
+fi
 
 # cleanup
 unset x x_copy nested_cpv_copy || err_exit "unset failed"

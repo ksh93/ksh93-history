@@ -1100,6 +1100,22 @@ Note that no space is allowed before or after the
 .sp .5
 .PP
 .PD 0
+Attributes assigned by the
+.I typeset\^
+special built-in command apply to all elements of the array.
+An array elemement can be a simple variable, a compound variable or an
+array variable.  An element of an indexed array can be either an indexed
+array or an associative array.  An element of an associative arrary can also
+be either.  To refer to an array element that is part of an array
+element, contatenate the subscript in brackets.  For example, to refer
+to the
+.I foobar\^
+element of an assocative array that is defined as the
+third element of the indexed array, use
+.BI ${ vname [ 3 ][ foobar ]}
+.sp .5
+.PP
+.PD 0
 A
 .I nameref\^
 is a variable that is a reference to another variable.
@@ -1199,10 +1215,10 @@ are substituted
 (separated by a field separator character).
 If an array
 .I vname\^
-with subscript
+with last subscript
 .B \(**
 .BR @ ,
-or of the form
+or for index arrays of the form
 .I sub1\^
 .B ..
 .IR sub2 .

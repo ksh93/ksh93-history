@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -54,7 +54,7 @@ USAGE_LICENSE
 #endif
 
 int
-b_tty(int argc, char *argv[], void* context)
+b_tty(int argc, char** argv, Shbltin_t* context)
 {
 	register int n,sflag=0,lflag=0;
 	register char *tty;

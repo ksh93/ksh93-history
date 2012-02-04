@@ -1403,7 +1403,7 @@ static void draw(register Emacs_t *ep,Draw_t option)
 		if(ep->ed->hlist)
 			ed_histlist(ep->ed,0);
 	}
-	else if(option==UPDATE && drawbuff[0]=='#' && cur>1 && cur==eol && drawbuff[cur-1]!='*')
+	else if((option==UPDATE||option==APPEND) && drawbuff[0]=='#' && cur>1 && cur==eol && drawbuff[cur-1]!='*')
 	{
 		int		n;
 		drawbuff[cur+1]=0;

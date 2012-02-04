@@ -45,12 +45,14 @@ cmdext.h : (src) $$(-mam:+$$(src))
 	$(" ")* -lcmd extern function prototypes
 	$(" ")*/
 	
+	$("#")include <shcmd.h>
+
 	!
 	$(SED) \
 		-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 		-e 's/^b_//' \
 		-e 's/(.*//' \
-		-e 's/.*/extern int	b_&(int, char**, void*);/' \
+		-e 's/.*/extern int	b_&(int, char**, Shbltin_t*);/' \
 		$($(~:O=1)) |
 	$(SORT) -u
 	} > 1.$(tmp).h

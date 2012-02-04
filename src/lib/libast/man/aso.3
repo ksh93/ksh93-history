@@ -127,7 +127,7 @@ This function returns the value \f5*from\fP.
 .Ss "  uint32_t asoinc32(uint32_t* dest);"
 .Ss "  uint32_t asodec32(uint32_t* dest);"
 These functions increment \f5*dest\fP by 1 and decrement \f5*dest\fP by 1 in an atomic step.
-The return value is the new value \f5*dest\fP.
+The return value is the old value in \f5*dest\fP.
 
 Consider an example where two concurrent threads/processes call \f5asoinc32()\fP
 on the same \f5dest\fP with values, say \fIv1\fP and \fIv2\fP.
@@ -281,7 +281,7 @@ The pseudo-type \f5ASO_NEXT\fP generates the list of all methods in successive c
 .Cs
 Asometh_t* meth;
 meth = 0;
-while (meth = asometh(0, meth))
+while (meth = asometh(ASO_NEXT, meth))
 	/* examine meth->... */
 .Ce
 Otherwise if \f5type\fP is not \f50\fP and not \f5ASO_NEXT\fP it is treated as a combination of the ordered types
@@ -291,9 +291,9 @@ the first method with \f5(meth->type & type) != 0\fP is returned;
 
 Method names are treated as a name, optionally followed by a list of
 \fB,\fP\fIname\fP=\fIvalue\fP details, and optionally ending with \fB,\fP\fIpathname\fP.
-The \fBsemaphore\fP method uses the \fBsize\fP=\fInumber\fP to specify
+The \fBsemaphore\fP method uses \fBsize\fP=\fInumber\fP to specify
 the number of semaphores and hashes \fIpathname\fP to determine the semaphore IPC key.
-The \fBfcntl\fP method uses the \fBsize\fP=\fInumber\fP to specify
+The \fBfcntl\fP method uses \fBsize\fP=\fInumber\fP to specify
 the number of 1 byte file locks and uses \fIpathname\fP as the
 file to lock using \f5fcntl(F_SETLCK[W])\fP.
 
@@ -339,7 +339,7 @@ instead of \f5(ASO_INTRINSIC|ASO_THREAD)\fP.
 .SH IMPLEMENTATION NOTES
 Unlike other \fIAST\fP library discipline/method functions which can instantiate
 multiple discpline/method handles within a single process, the \fIASO\fP
-library allows only one disipline and method to be set at a time, with the additional
+library allows only one discipline and method to be set at a time, with the additional
 restriction that it may only be set by the main and only thread of the calling process.
 For this reason there is no open/close interface with an instantation handle;
 instead the global discipline/method is simply initialized by \f5asoinit()\fP.

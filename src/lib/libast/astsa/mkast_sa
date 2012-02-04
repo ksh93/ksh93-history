@@ -136,6 +136,10 @@ echo '#include <stdint.h>' > _ast_.c
 if	"$@" -E _ast_.c > /dev/null 2>&1
 then	echo "#define _hdr_stdint	1"
 fi
+echo '#include <unistd.h>' > _ast_.c
+if	"$@" -E _ast_.c > /dev/null 2>&1
+then	echo "#define _hdr_unistd	1"
+fi
 rm -f _ast_.c _ast_.exe
 echo "#define __DEFINE__(T,obj,val)	T obj = val"
 echo "#define __EXTERN__(T,obj)		extern T obj"

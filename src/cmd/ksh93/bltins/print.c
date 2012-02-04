@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -82,13 +82,13 @@ struct print
 static char* 	nullarg[] = { 0, 0 };
 
 #if !SHOPT_ECHOPRINT
-   int    B_echo(int argc, char *argv[],void *extra)
+   int    B_echo(int argc, char *argv[],Shbltin_t *context)
    {
 	static char bsd_univ;
 	struct print prdata;
 	prdata.options = sh_optecho+5;
 	prdata.raw = prdata.echon = 0;
-	prdata.sh = ((Shbltin_t*)extra)->shp;
+	prdata.sh = context->shp;
 	NOT_USED(argc);
 	/* This mess is because /bin/echo on BSD is different */
 	if(!prdata.sh->universe)
@@ -99,7 +99,7 @@ static char* 	nullarg[] = { 0, 0 };
 		prdata.sh->universe = 1;
 	}
 	if(!bsd_univ)
-		return(b_print(0,argv,&prdata));
+		return(b_print(0,argv,(Shbltin_t*)&prdata));
 	prdata.options = sh_optecho;
 	prdata.raw = 1;
 	while(argv[1] && *argv[1]=='-')
@@ -119,18 +119,18 @@ static char* 	nullarg[] = { 0, 0 };
 			break;
 		argv++;
 	}
-	return(b_print(0,argv,&prdata));
+	return(b_print(0,argv,(Shbltin_t*)&prdata));
    }
 #endif /* SHOPT_ECHOPRINT */
 
-int    b_printf(int argc, char *argv[],void *extra)
+int    b_printf(int argc, char *argv[],Shbltin_t *context)
 {
 	struct print prdata;
 	NOT_USED(argc);
 	memset(&prdata,0,sizeof(prdata));
-	prdata.sh = ((Shbltin_t*)extra)->shp;
+	prdata.sh = context->shp;
 	prdata.options = sh_optprintf;
-	return(b_print(-1,argv,&prdata));
+	return(b_print(-1,argv,(Shbltin_t*)&prdata));
 }
 
 /*
@@ -138,11 +138,11 @@ int    b_printf(int argc, char *argv[],void *extra)
  * argc==-1 when called from printf
  */
 
-int    b_print(int argc, char *argv[], void *extra)
+int    b_print(int argc, char *argv[], Shbltin_t *context)
 {
 	register Sfio_t *outfile;
 	register int exitval=0,n, fd = 1;
-	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
+	register Shell_t *shp = context->shp;
 	const char *options, *msg = e_file+4;
 	char *format = 0;
 	int sflag = 0, nflag=0, rflag=0, vflag=0;
@@ -154,7 +154,7 @@ int    b_print(int argc, char *argv[], void *extra)
 	}
 	else
 	{
-		struct print *pp = (struct print*)extra;
+		struct print *pp = (struct print*)context;
 		shp = pp->sh;
 		options = pp->options;
 		if(argc==0)

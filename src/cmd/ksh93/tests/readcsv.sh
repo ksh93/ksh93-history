@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -33,7 +33,6 @@ trap "cd /; rm -rf $tmp" EXIT
 	
 tmp1=$tmp/tmp1.csv
 tmp2=$tmp/tmp2.csv
-trap 'rm $tmp1 $tmp2' EXIT
 cat > $tmp1 <<- \EOF
 	CAT,"CVE CCODE","NECA OCN",ST,LATA,AP,"New InterState
 	Orig","New Inter""""State
@@ -60,7 +59,7 @@ do	((nfields=${#arr[@]}))
 		printf "%#q%s"  "${arr[i]}" "$delim"
 	done
 done < $tmp1 > $tmp2
-diff -q "$tmp1" "$tmp2" || err_exit "fles $tmp1 and $tmp2 differ"
+diff "$tmp1" "$tmp2" >/dev/null 2>&1 || err_exit "files $tmp1 and $tmp2 differ"
 
 exit $((Errors<125?Errors:125))
 

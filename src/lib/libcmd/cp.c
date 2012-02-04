@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -156,7 +156,7 @@ static const char usage_tail[] =
 
 typedef struct State_s			/* program state		*/
 {
-	void*		context;	/* builtin context		*/
+	Shbltin_t*	context;	/* builtin context		*/
 	int		backup;		/* BAK_* type			*/
 	int		directory;	/* destination is directory	*/
 	int		flags;		/* FTS_* flags			*/
@@ -672,7 +672,7 @@ visit(State_t* state, register FTSENT* ent)
 }
 
 int
-b_cp(int argc, register char** argv, void* context)
+b_cp(int argc, register char** argv, Shbltin_t* context)
 {
 	register char*	file;
 	register char*	s;
@@ -686,7 +686,7 @@ b_cp(int argc, register char** argv, void* context)
 	struct stat	st;
 	State_t*	state;
 	Shbltin_t*	sh;
-	void*		cleanup = context;
+	Shbltin_t*	cleanup = context;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	if (!(sh = CMD_CONTEXT(context)) || !(state = (State_t*)sh->ptr))

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -191,6 +191,29 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	return(np);
 }
 
+static Math_f sh_mathstdfun(const char *fname, size_t fsize, short * nargs)
+{
+	register const struct mathtab *tp;
+	register char c = fname[0];
+	for(tp=shtab_math; *tp->fname; tp++)
+	{
+		if(*tp->fname > c)
+			break;
+		if(tp->fname[1]==c && tp->fname[fsize+1]==0 && strncmp(&tp->fname[1],fname,fsize)==0)
+		{
+			if(nargs)
+				*nargs = *tp->fname;
+			return(tp->fnptr);
+		}
+	}
+	return(0);
+}
+
+int	sh_mathstd(const char *name)
+{
+	return(sh_mathstdfun(name,strlen(name),NULL)!=0);
+}
+
 static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdouble_t n)
 {
 	Shell_t		*shp = lvalue->shp;
@@ -257,17 +280,8 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 						lvalue->fun = (Math_f)np;
 						break;
 				}
-				if(fsize<=(sizeof(tp->fname)-2)) for(tp=shtab_math; *tp->fname; tp++)
-				{
-					if(*tp->fname > c)
-						break;
-					if(tp->fname[1]==c && tp->fname[fsize+1]==0 && strncmp(&tp->fname[1],*ptr,fsize)==0)
-					{
-						lvalue->fun = tp->fnptr;
-						lvalue->nargs = *tp->fname;
-						break;
-					}
-				}
+				if(fsize<=(sizeof(tp->fname)-2))
+					lvalue->fun = (Math_f)sh_mathstdfun(*ptr,fsize,&lvalue->nargs);
 				if(lvalue->fun)
 					break;
 				if(lvalue->emode&ARITH_COMP)

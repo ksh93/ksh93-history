@@ -1,14 +1,14 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
-#                  Common Public License, Version 1.0                  #
+#                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
-#            http://www.opensource.org/licenses/cpl1.0.txt             #
-#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -237,16 +237,10 @@ if	[[ $(export | grep "zzz=") ]]
 then	err_exit 'zzz exported after function call'
 fi
 set -- foo/bar bam/yes last/file/done
-if	[[ ${@/*\/@(*)/${.sh.match[1]}} != 'bar yes done' ]]
-then	err_exit '.sh.match not working with $@'
-fi
 if	[[ ${@/*\/@(*)/\1} != 'bar yes done' ]]
 then	err_exit '\1 not working with $@'
 fi
 var=(foo/bar bam/yes last/file/done)
-if	[[ ${var[@]/*\/@(*)/${.sh.match[1]}} != 'bar yes done' ]]
-then	err_exit '.sh.match not working with ${var[@]}'
-fi
 if	[[ ${var[@]/*\/@(*)/\1} != 'bar yes done' ]]
 then	err_exit '\1 not working with ${var[@]}'
 fi
@@ -260,6 +254,8 @@ fi
 if	[[ ${var//+(\S)/Q} != 'Q Q' ]]
 then	err_exit '${var//+(\S)/Q} not workding'
 fi
+var=$($SHELL -c 'v=/vin:/usr/vin r=vin; : ${v//vin/${r//v/b}};typeset -p .sh.match') 2> /dev/null
+[[ $var == 'typeset -a .sh.match=((vin vin) )' ]] || err_exit '.sh.match not correct when replacement pattern contains a substring match'
 foo='foo+bar+'
 [[ $(print -r -- ${foo//+/'|'}) != 'foo|bar|' ]] && err_exit "\${foobar//+/'|'}"
 [[ $(print -r -- ${foo//+/"|"}) != 'foo|bar|' ]] && err_exit '${foobar//+/"|"}'

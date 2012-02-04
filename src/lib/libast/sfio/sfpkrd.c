@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -72,31 +72,51 @@ int	action;	/* >0: peeking, if rc>=0, get action records,
 #if _stream_peek
 		if((t&STREAM_PEEK) && (ntry == 1 || tm < 0) )
 		{
-			struct strpeek	pbuf;
-			pbuf.flags = 0;
-			pbuf.ctlbuf.maxlen = -1;
-			pbuf.ctlbuf.len = 0;
-			pbuf.ctlbuf.buf = NIL(char*);
-			pbuf.databuf.maxlen = n;
-			pbuf.databuf.buf = buf;
-			pbuf.databuf.len = 0;
-
-			if((r = ioctl(fd,I_PEEK,&pbuf)) < 0)
-			{	if(errno == EINTR)
-					return -1;
-				t &= ~STREAM_PEEK;
+#ifdef __sun
+			/*
+			 * I_PEEK on stdin can hang rsh+ksh on solaris
+			 * this kludge will have to do until sun^H^H^Horacle fixes I_PEEK/rsh
+			 */
+			static int	stream_peek;
+			if (stream_peek == 0) /* this will be done just once */
+			{	char	*e;
+				stream_peek = (
+					getenv("LOGNAME") == 0 &&
+					getenv("MAIL") == 0 &&
+					((e = getenv("LANG")) == 0 || strcmp(e, "C") == 0) &&
+					((e = getenv("PATH")) == 0 || strncmp(e, "/usr/bin:", 9) == 0)
+					) ? -1 : 1;
 			}
+			if(stream_peek < 0)
+				t &= ~STREAM_PEEK;
 			else
-			{	t &= ~SOCKET_PEEK;
-				if(r > 0 && (r = pbuf.databuf.len) <= 0)
-				{	if(action <= 0)	/* read past eof */
-						r = sysreadf(fd,buf,1);
-					return r;
+#endif
+			{	struct strpeek	pbuf;
+				pbuf.flags = 0;
+				pbuf.ctlbuf.maxlen = -1;
+				pbuf.ctlbuf.len = 0;
+				pbuf.ctlbuf.buf = NIL(char*);
+				pbuf.databuf.maxlen = n;
+				pbuf.databuf.buf = buf;
+				pbuf.databuf.len = 0;
+
+				if((r = ioctl(fd,I_PEEK,&pbuf)) < 0)
+				{	if(errno == EINTR)
+						return -1;
+					t &= ~STREAM_PEEK;
 				}
-				if(r == 0)
-					r = -1;
-				else if(r > 0)
-					break;
+				else
+				{	t &= ~SOCKET_PEEK;
+					if(r > 0 && (r = pbuf.databuf.len) <= 0)
+					{	if(action <= 0)	/* read past eof */
+							r = sysreadf(fd,buf,1);
+						return r;
+					}
+					if(r == 0)
+						r = -1;
+					else if(r > 0)
+						break;
+				}
 			}
 		}
 #endif /* stream_peek */

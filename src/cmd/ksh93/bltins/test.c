@@ -107,12 +107,12 @@ static int test_strmatch(Shell_t *shp,const char *str, const char *pat)
 	return(n);
 }
 
-int b_test(int argc, char *argv[],void *extra)
+int b_test(int argc, char *argv[],Shbltin_t *context)
 {
 	struct test tdata;
 	register char *cp = argv[0];
 	register int not;
-	tdata.sh = ((Shbltin_t*)extra)->shp;
+	tdata.sh = context->shp;
 	tdata.av = argv;
 	tdata.ap = 1;
 	if(c_eq(cp,'['))

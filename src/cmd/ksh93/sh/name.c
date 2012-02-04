@@ -2828,7 +2828,7 @@ done:
 		return(cp);
 	}
 #endif
-	if((numeric=nv_size(np)) && up->cp && up->cp[numeric])
+	if(!nv_isattr(np,NV_LJUST|NV_RJUST) && (numeric=nv_size(np)) && up->cp && up->cp[numeric])
 	{
 		char *cp = getbuf(numeric+1);
 		memcpy(cp,up->cp,numeric);

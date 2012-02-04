@@ -1,6 +1,7 @@
 set	prototyped
 iff
 set	stdio ast_common.h
+set	include .
 
 cat{
 	#ifndef _AST_WCHAR_H
