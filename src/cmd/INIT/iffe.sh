@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2011-12-13 # update in USAGE too #
+version=2012-02-14 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -94,8 +94,17 @@ is_hdr() # [ - ] [ file.c ] hdr
 pkg() # package
 {
 	case $1 in
-	'<')	shift ;;
-	*)	return ;;
+	'')	pth=`getconf PATH 2>/dev/null`
+		case $pth in
+		'')	pth="/bin /usr/bin" ;;
+		*:*)	pth=`echo "$pth" | sed 's/:/ /g'` ;;
+		esac
+		return
+		;;
+	'<')	shift
+		;;
+	*)	return
+		;;
 	esac
 	case $1 in
 	X|X11*)	i="openwin"
@@ -659,7 +668,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2011-12-13 $
+@(#)$Id: iffe (AT&T Research) 2012-02-14 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -921,8 +930,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		\adir\a directories. \b{\b ... \b}\b forms a directory list
 		from the cross-product of \b-\b separated directory groups
 		\ag1\a ... \agn\a. < ... > forms a directory list for the
-		package \apkg\a with optional versions. The \b--config\b macro
-		name is \aNAME\a\b_PATH\b.]
+		package \apkg\a with optional versions. If no operands are
+		specified then the default PATH directories are used. The
+		\b--config\b macro name is \aNAME\a\b_PATH\b.]
 	[+run \afile\a?Runs the tests in \afile\a based on the \afile\a
 		suffix:]{
 		[+.c?\afile\a is compiled and executed and the output is copied
@@ -1003,8 +1013,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		\b{\b ... \b}\b.  Deprecated: use { \bif\b \belif\b \belse\b
 		\bendif\b } with unnamed \b{\b ... \b}\b blocks.]
 }
-[+SEE ALSO?\bautoconf\b(1), \bconfig\b(1), \bcrossexec\b(1), \bnmake\b(1),
-	\bpackage\b(1), \bproto\b(1), \bsh\b(1)]
+[+SEE ALSO?\bautoconf\b(1), \bconfig\b(1), \bgetconf\b(1), \bcrossexec\b(1),
+	\bnmake\b(1), \bpackage\b(1), \bproto\b(1), \bsh\b(1)]
 '
 	while	getopts -a "$command" "$USAGE" OPT
 	do	case $OPT in

@@ -323,7 +323,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		/* restore everything but the nvlink field */
 		memcpy(&SH_VALNOD->nvname,  &node.nvname, sizeof(node)-sizeof(node.nvlink));
 	}
-	else if(sh_isstate(SH_INIT))
+	else if(sh_isstate(SH_INIT) || np==SH_FUNNAMENOD)
 	{
 		/* don't free functions during reinitialization */
 		nv_putv(np,val,flags,handle);

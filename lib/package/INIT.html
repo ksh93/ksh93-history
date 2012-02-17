@@ -55,6 +55,10 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+12-02-14 package.mk: { --clobber --compare --link=lib*.a* } for --mam=static
+12-02-14 package.mk: export LICENSEFILEDEFAULT instead of LICENSEFILE
+12-02-14 package.sh: handle @(cc|ld).${HOSTTYPE}* intercepts
+12-02-07 package.sh: add { clean clobber } actions
 12-02-02 regress.sh: fix ulimit -c defaults for --nokeep
 12-01-18 regress.sh: add INPUT|OUTPUT|ERROR -e 'filter' to filter before comparison
 12-01-21 package.sh: fix `admin make' bug that created unused $INSTALLROOT/lib
@@ -971,7 +975,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>February 03, 2012</TD>
+<TD align=right>February 17, 2012</TD>
 </TR>
 </TABLE>
 <P>

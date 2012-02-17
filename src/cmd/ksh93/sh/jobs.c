@@ -460,6 +460,10 @@ int job_reap(register int sig)
 			pw->p_flag &= ~(P_NOTIFY|P_SIGNALLED|P_STOPPED);
 		else if(WIFSTOPPED(wstat))
 		{
+			pw->p_flag |= (P_NOTIFY|P_SIGNALLED|P_STOPPED);
+			pw->p_exit = WSTOPSIG(wstat);
+			if(pw->p_pgrp && pw->p_pgrp==job.curpgid && sh_isstate(SH_STOPOK))
+				sh_fault(pw->p_exit); 
 			if(px)
 			{
 				/* move to top of job list */
@@ -467,10 +471,6 @@ int job_reap(register int sig)
 				px->p_nxtjob = job.pwlist;
 				job.pwlist = px;
 			}
-			pw->p_flag |= (P_NOTIFY|P_SIGNALLED|P_STOPPED);
-			pw->p_exit = WSTOPSIG(wstat);
-			if(pw->p_pgrp && pw->p_pgrp==job.curpgid && sh_isstate(SH_STOPOK))
-				sh_fault(pw->p_exit); 
 			continue;
 		}
 		else
@@ -1631,6 +1631,8 @@ int	job_wait(register pid_t pid)
 	if(pid==1)
 		return(nochild);
 	exitset();
+	if(pid==0)
+		goto done;
 	if(pw->p_pgrp)
 	{
 		job_reset(pw);

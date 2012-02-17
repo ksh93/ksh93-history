@@ -232,6 +232,7 @@ int tty_set(int fd, int action, struct termios *tty)
 void tty_cooked(register int fd)
 {
 	register Edit_t *ep = (Edit_t*)(shgd->ed_context);
+	ep->e_keytrap = 0;
 	if(ep->e_raw==0)
 		return;
 	if(fd < 0)
@@ -1054,6 +1055,7 @@ int ed_getchar(register Edit_t *ep,int mode)
 			}
 			if(mode<=0 && ep->sh->st.trap[SH_KEYTRAP])
 			{
+				ep->e_keytrap = 1;
 				n=1;
 				if((readin[0]= -c) == ESC)
 				{
@@ -1086,6 +1088,7 @@ int ed_getchar(register Edit_t *ep,int mode)
 				}
 				else
 					c = ed_getchar(ep,mode);
+				ep->e_keytrap = 0;
 			}
 			else
 				c = -c;

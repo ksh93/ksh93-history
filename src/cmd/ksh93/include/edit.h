@@ -94,6 +94,7 @@ typedef struct edit
 	int	e_plen;		/* length of prompt string */
 	char	e_crlf;		/* zero if cannot return to beginning of line */
 	char	e_nocrnl;	/* don't put a new-line with ^L */
+	char	e_keytrap;	/* set when in keytrap */
 	int	e_llimit;	/* line length limit */
 	int	e_hline;	/* current history line number */
 	int	e_hloff;	/* line number offset for command */

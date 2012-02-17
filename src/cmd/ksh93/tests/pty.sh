@@ -57,12 +57,14 @@ function tst
 	integer lineno=$1 offset
 	typeset text
 
-	PS1=':test-!: ' PS2='> ' PS4=': ' ENV= EXINIT= HISTFILE= TERM=dumb VISUAL=vi LC_ALL=C pty --dialogue --messages='/dev/fd/1' $SHELL |
+	pty --dialogue --messages='/dev/fd/1' $SHELL |
 	while	read -r text
 	do	offset=${text/*: line +([[:digit:]]):*/\1}
 		err_exit "${text/: line $offset:/: line $(( lineno + offset)):}"
 	done
 }
+
+export PS1=':test-!: ' PS2='> ' PS4=': ' ENV= EXINIT= HISTFILE= TERM=dumb VISUAL=vi LC_ALL=C
 
 if	! pty $bintrue < /dev/null
 then	err_exit pty command hangs on $bintrue -- tests skipped
@@ -414,6 +416,19 @@ c n
 r echo repeat-2
 c n
 r echo repeat-3
+!
+
+# err_exit #
+whence -q less &&
+TERM=vt100 tst $LINENO <<"!"
+L ksh process/terminal group exercise
+
+w while :; do echo y; done | less
+u ^:\E
+c \cZ
+r Stopped
+w fg
+u ^:\E
 !
 
 exit $((Errors<125?Errors:125))

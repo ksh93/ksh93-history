@@ -73,6 +73,9 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	Dt_t	*root = shp->var_tree;
 	assign = assign?NV_ASSIGN:NV_NOASSIGN;
 	lvalue->nosub = 0;
+	if(nosub<0 && lvalue->ovalue)
+		return((Namval_t*)lvalue->ovalue);
+	lvalue->ovalue = 0;
 	if(cp>=lvalue->expr &&  cp < lvalue->expr+lvalue->elen)
 	{
 		int offset;
@@ -125,6 +128,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	}
 	if(!nosub && flag)
 	{
+		int		hasdot = 0;
 		cp = (char*)&lvalue->expr[flag];
 		if(sub)
 		{
@@ -141,6 +145,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 				c = '.';
 				while(*cp=='.')
 				{
+					hasdot=1;
 					cp++;
 					while(c=mbchar(cp),isaname(c));
 				}
@@ -149,7 +154,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			}
 			flag = *cp;
 			*cp = 0;
-			if(c)
+			if(c || hasdot)
 			{
 				sfprintf(shp->strbuf,"%s%s%c",nv_name(np),sub,0);
 				sub = sfstruse(shp->strbuf);
@@ -157,9 +162,9 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			if(strchr(sub,'$'))
 				sub = sh_mactrim(shp,sub,0);
 			*cp = flag;
-			if(c)
+			if(c || hasdot)
 			{
-				np = nv_open(sub,shp->var_tree,assign);
+				np = nv_open(sub,shp->var_tree,NV_VARNAME|assign);
 				return(np);
 			}
 #if SHOPT_FIXEDARRAY
@@ -446,6 +451,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			}
 			return(0);
 		}
+		lvalue->ovalue = (char*)np;
 		if(lvalue->eflag)
 			lvalue->ptr = (void*)nv_hasdisc(np,&ENUM_disc);
 		else if((Namfun_t*)lvalue->ptr && !nv_hasdisc(np,&ENUM_disc) && !nv_isattr(np,NV_INTEGER))
@@ -504,7 +510,7 @@ Sfdouble_t sh_strnum(register const char *str, char** ptr, int mode)
 {
 	Shell_t	*shp = sh_getinterp();
 	register Sfdouble_t d;
-	char base=0, *last;
+	char base=(shp->inarith?0:10), *last;
 	if(*str==0)
 	{
 		if(ptr)

@@ -52,7 +52,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-01-21 $
+@(#)$Id: package (AT&T Research) 2012-02-14 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -156,6 +156,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
                     \bwrite\b action error counts. A non-numeric value in
                     any of these fields disables the corresponding action.]
             }
+	[+clean | clobber?Delete the \barch/\b\aHOSTTYPE\a hierarchy; this
+	    deletes all generated files and directories for \aHOSTTYPE\a.
+	    The heirarchy can be rebuilt by \bpackage make\b.]
         [+contents\b [ \apackage\a ... ]]?List description and
             components for \apackage\a on the standard output.]
         [+copyright\b [ \apackage\a ... ]]?List the general copyright
@@ -542,7 +545,7 @@ do	case $# in
 	0)	set host type ;;
 	esac
 	case $1 in
-	admin|contents|copyright|export|host|install|license|list|make|read|regress|release|remove|results|setup|test|update|use|verify|view|write|TEST)
+	admin|clean|clobber|contents|copyright|export|host|install|license|list|make|read|regress|release|remove|results|setup|test|update|use|verify|view|write|TEST)
 		action=$1
 		shift
 		break
@@ -969,6 +972,10 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		   M T W   The admin action make, test and write action error
 			   counts. A non-numeric value in any of these fields
 			   disables the corresponding action.
+	clean | clobber
+	    Delete the arch/HOSTTYPE hierarchy; this deletes all generated
+	    files and directories for HOSTTYPE. The heirarchy can be rebuilt
+	    by package make.]
 	contents [ package ... ]
 		List description and components for PACKAGE on the standard
 		output.
@@ -4890,6 +4897,12 @@ admin)	while	test ! -f $admin_db
 	esac
 	;;
 
+clean|clobber)
+	cd $PACKAGEROOT
+	$exec rm -rf $INSTALLROOT
+	exit
+	;;
+
 contents|list)
 	# all work in $PACKAGESRC
 
@@ -5424,7 +5437,7 @@ make|view)
 
 	# check $CC and { ar cc ld ldd } intercepts
 
-	h=$HOSTTYPE
+	h="${HOSTTYPE} ${HOSTTYPE}.*"
 	case $HOSTTYPE in
 	*.*)	t=`echo $HOSTTYPE | sed 's/[.][^.]*//'`
 		h="$h $t"
@@ -5443,52 +5456,55 @@ make|view)
 		b=$INSTALLROOT/bin/$c
 		t=$INSTALLROOT/lib/package/gen/$c.tim
 		intercept=0
-		for a in $h
-		do	s=$INITROOT/$c.$a
-			test -x "$s" || continue
-			if	cmp -s "$s" "$b" >/dev/null 2>&1
-			then	intercept=1
-				break
-			fi
-			case `ls -t "$t" "$b" "$s" 2>/dev/null` in
-			$t*)	;;
-			$b*)	cc=$b
-				;;
-			$s*)	cd $INSTALLROOT/lib/package/gen
-				tmp=pkg$$
-				eval '$'exec echo "'int main(){return 0;}' > $tmp.c"
-				if	$exec $s -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
-					test -x $tmp.exe
-				then	case $HOSTTYPE in
-					*.mips*)$s -version >/dev/null 2>&1 || s= ;;
-					esac
-					case $s in
-					?*)	$exec sed "s/^HOSTTYPE=.*/HOSTTYPE=$HOSTTYPE/" < "$s" > "$b" || exit
-						$exec chmod +x "$b" || exit
-						cc=$b
-						intercept=1
-						note update $b
-						;;
-					esac
+		for k in $h
+		do	for s in $INITROOT/$c.$k
+			do	test -x "$s" || continue
+				if	cmp -s "$s" "$b" >/dev/null 2>&1
+				then	intercept=1
+					break 2
 				fi
-				$exec rm -f $tmp.*
-				$exec touch "$t"
-				cd $PACKAGEROOT
-				;;
-			esac
+				case `ls -t "$t" "$b" "$s" 2>/dev/null` in
+				$t*)	;;
+				$b*)	cc=$b
+					;;
+				$s*)	cd $INSTALLROOT/lib/package/gen
+					tmp=pkg$$
+					eval '$'exec echo "'int main(){return 0;}' > $tmp.c"
+					if	$exec $s -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
+						test -x $tmp.exe
+					then	case $HOSTTYPE in
+						*.mips*)$s -version >/dev/null 2>&1 || s= ;;
+						esac
+						case $s in
+						?*)	$exec sed "s/^HOSTTYPE=.*/HOSTTYPE=$HOSTTYPE/" < "$s" > "$b" || exit
+							$exec chmod +x "$b" || exit
+							cc=$b
+							intercept=1
+							note update $b
+							;;
+						esac
+					fi
+					$exec rm -f $tmp.*
+					$exec touch "$t"
+					cd $PACKAGEROOT
+					;;
+				esac
+				break 2
+			done
 		done
 		case $intercept in
 		1)	c=ld
 			b=$INSTALLROOT/bin/$c
-			for t in $h
-			do	s=$INITROOT/$c.$t
-				test -x "$s" || continue
-				case `ls -t "$b" "$s" 2>/dev/null` in
-				$b*)	;;
-				$s*)	$exec cp "$s" "$b"
-					note update $b
-					;;
-				esac
+			for k in $h
+			do	for s in $INITROOT/$c.$k
+				do	test -x "$s" || continue
+					case `ls -t "$b" "$s" 2>/dev/null` in
+					$b*)	;;
+					$s*)	$exec cp "$s" "$b"
+						note update $b
+						;;
+					esac
+				done
 			done
 			;;
 		esac

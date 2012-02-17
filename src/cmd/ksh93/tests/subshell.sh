@@ -562,4 +562,10 @@ print -n $(fun1 2> $tmpf)
 [[  $(< $tmpf) == *SUCCESS ]] || err_exit 'standard error output lost with command substitution'
 
 
+tmpfile=$tmp/foo
+cat > $tmpfile <<-\EOF
+	$SHELL -c 'function g { IFS= ;};function f { typeset IFS;(g);: $V;};f;f'
+	EOF
+$SHELL 2> /dev/null "$tmpfile" || err_exit 'IFS in subshell causes core dump'
+
 exit $((Errors<125?Errors:125))

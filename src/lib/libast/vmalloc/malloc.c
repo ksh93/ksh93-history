@@ -155,6 +155,23 @@ static int		_Vmpffd = -1;
 #undef mstats
 #undef realloc
 #undef valloc
+
+#if _malloc_hook
+
+#include <malloc.h>
+
+#undef	free
+#undef	malloc
+#undef	memalign
+#undef	realloc
+
+#define free		_ast_free
+#define malloc		_ast_malloc
+#define memalign	_ast_memalign
+#define realloc		_ast_realloc
+
+#endif
+
 #endif
 
 #if _WINIX
@@ -762,6 +779,83 @@ size_t	size;
 
 #else
 
+#if _malloc_hook
+
+static void	(*vm_free_hook_old)(void*, const void*);
+static void*	(*vm_malloc_hook_old)(size_t, const void*);
+static void*	(*vm_realloc_hook_old)(void*, size_t, const void*);
+static void*	(*vm_memalign_hook_old)(size_t, size_t, const void*);
+
+#define OLD	{ \
+	void	(*vm_free_hook_save)(void*, const void*) = __free_hook; \
+	void*	(*vm_malloc_hook_save)(size_t, const void*) = __malloc_hook; \
+	void*	(*vm_realloc_hook_save)(void*, size_t, const void*) = __realloc_hook; \
+	void*	(*vm_memalign_hook_save)(size_t, size_t, const void*) = __memalign_hook; \
+	__free_hook = vm_free_hook_old; \
+	__malloc_hook = vm_malloc_hook_old; \
+	__memalign_hook = vm_memalign_hook_old; \
+	__realloc_hook = vm_realloc_hook_old;
+
+#define NEW	\
+	__free_hook = vm_free_hook_save; \
+	__malloc_hook = vm_malloc_hook_save; \
+	__memalign_hook = vm_memalign_hook_save; \
+	__realloc_hook = vm_realloc_hook_save; \
+	}
+
+static void vm_free_hook(void* ptr, const void* caller)
+{
+	OLD
+	free(ptr);
+	NEW
+}
+
+static void* vm_malloc_hook(size_t size, const void* caller)
+{
+	void*	r;
+
+	OLD
+	r = malloc(size);
+	NEW
+	return r;
+}
+
+static void* vm_memalign_hook(size_t align, size_t size, const void* caller)
+{
+	void*	r;
+
+	OLD
+	r = memalign(align, size);
+	NEW
+	return r;
+}
+
+static void* vm_realloc_hook(void* ptr, size_t size, const void* caller)
+{
+	void*	r;
+
+	OLD
+	r = realloc(ptr, size);
+	NEW
+	return r;
+}
+
+static void vm_initialize_hook(void)
+{
+	vm_free_hook_old = __free_hook;
+	vm_malloc_hook_old = __malloc_hook;
+	vm_memalign_hook_old = __memalign_hook;
+	vm_realloc_hook_old = __realloc_hook;
+	__free_hook = vm_free_hook;
+	__malloc_hook = vm_malloc_hook;
+	__memalign_hook = vm_memalign_hook;
+	__realloc_hook = vm_realloc_hook;
+}
+
+void	(*__malloc_initialize_hook)(void) = vm_initialize_hook;
+
+#else
+
 /* intercept _* __* __libc_* variants */
 
 #if __lib__malloc
@@ -814,6 +908,8 @@ extern Void_t*	F2(__libc_realloc, Void_t*,p, size_t,n) { return realloc(p, n); }
 extern Void_t*	F1(__libc_valloc, size_t,n) { return valloc(n); }
 #endif
 #endif
+
+#endif /* _malloc_hook */
 
 #endif /* _map_malloc */
 
@@ -955,17 +1051,22 @@ extern Void_t*	valloc _ARG_((size_t));
 #define extern		__EXPORT__
 #endif
 
-extern Void_t*	F2(_ast_calloc, size_t,n, size_t,m) { return calloc(n, m); }
-extern Void_t	F1(_ast_cfree, Void_t*,p) { free(p); }
+#if !_malloc_hook
+
 extern Void_t	F1(_ast_free, Void_t*,p) { free(p); }
 extern Void_t*	F1(_ast_malloc, size_t,n) { return malloc(n); }
 #if _lib_memalign
 extern Void_t*	F2(_ast_memalign, size_t,a, size_t,n) { return memalign(a, n); }
 #endif
+extern Void_t*	F2(_ast_realloc, Void_t*,p, size_t,n) { return realloc(p, n); }
+
+#endif
+
+extern Void_t*	F2(_ast_calloc, size_t,n, size_t,m) { return calloc(n, m); }
+extern Void_t	F1(_ast_cfree, Void_t*,p) { free(p); }
 #if _lib_pvalloc
 extern Void_t*	F1(_ast_pvalloc, size_t,n) { return pvalloc(n); }
 #endif
-extern Void_t*	F2(_ast_realloc, Void_t*,p, size_t,n) { return realloc(p, n); }
 #if _lib_valloc
 extern Void_t*	F1(_ast_valloc, size_t,n) { return valloc(n); }
 #endif
@@ -988,7 +1089,11 @@ extern Void_t*	F1(_ast_valloc, size_t,n) { return valloc(n); }
 
 #if !_UWIN
 
+#if !_malloc_hook
+
 #include	<malloc.h>
+
+#endif
 
 typedef struct mallinfo Mallinfo_t;
 typedef struct mstats Mstats_t;

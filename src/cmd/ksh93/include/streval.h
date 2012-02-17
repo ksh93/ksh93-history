@@ -72,6 +72,7 @@ struct lval
 {
 	Shell_t		*shp;
 	char		*value;
+	char		*ovalue;
 	Sfdouble_t	(*fun)(Sfdouble_t,...);
 	const char	*expr;
 	const  void	*ptr;

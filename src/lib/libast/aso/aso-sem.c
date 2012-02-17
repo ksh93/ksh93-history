@@ -48,7 +48,7 @@ typedef struct APL_s
 	size_t		size;
 } APL_t;
 
-void*
+static void*
 aso_init_semaphore(void* data, const char* details)
 {
 	APL_t*		apl = (APL_t*)data;
@@ -75,9 +75,7 @@ aso_init_semaphore(void* data, const char* details)
 		semop(apl->id, &sem, 1);
 		sem.sem_op = 0;
 		if (!semop(apl->id, &sem, 1))
-		{
 			semctl(apl->id, 0, IPC_RMID);
-		}
 		free(apl);
 		return 0;
 	}
@@ -170,7 +168,7 @@ aso_init_semaphore(void* data, const char* details)
 	return apl;
 }
 
-ssize_t
+static ssize_t
 aso_lock_semaphore(void* data, ssize_t k, void volatile* p)
 {
 	APL_t*		apl = (APL_t*)data;

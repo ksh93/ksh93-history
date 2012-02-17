@@ -318,6 +318,7 @@ static void nv_restore(struct subshell *sp)
 			flags |= NV_MINIMAL;
 		if(nv_isarray(mp))
 			 nv_putsub(mp,NIL(char*),ARRAY_SCAN);
+		nofree = mp->nvfun?mp->nvfun->nofree:0;
 		_nv_unset(mp,NV_RDONLY|NV_CLONE);
 		if(nv_isarray(np))
 		{
@@ -327,9 +328,8 @@ static void nv_restore(struct subshell *sp)
 		nv_setsize(mp,nv_size(np));
 		if(!(flags&NV_MINIMAL))
 			mp->nvenv = np->nvenv;
-		nofree = mp->nvfun?mp->nvfun->nofree:0;
-		if((mp->nvfun = np->nvfun) && nofree)
-			mp->nvfun->nofree = nofree;
+		if(!nofree)
+			mp->nvfun = np->nvfun;
 		if(nv_isattr(np,NV_IDENT))
 		{
 			nv_offattr(np,NV_IDENT);
@@ -337,13 +337,11 @@ static void nv_restore(struct subshell *sp)
 		}
 		mp->nvflag = np->nvflag|(flags&NV_MINIMAL);
 		if(nv_cover(mp))
-		{
 			nv_putval(mp, nv_getval(np),np->nvflag|NV_NOFREE);
-			if(!nv_isattr(np,NV_NOFREE))
-				nv_offattr(mp,NV_NOFREE);
-		}
 		else
 			mp->nvalue.cp = np->nvalue.cp;
+		if(nofree && np->nvfun && !np->nvfun->nofree)
+			free((char*)np->nvfun);
 		np->nvfun = 0;
 		if(nv_isattr(mp,NV_EXPORT))
 		{

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-02-07
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -122,7 +122,7 @@ meta FEATURE/sum features/%>FEATURE/% features/sum sum
 make features/sum
 done features/sum
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/sum
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/sum
 done FEATURE/sum generated
 make ${PACKAGE_ast_INCLUDE}/hashpart.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -157,7 +157,6 @@ prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_wchar.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
 make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
@@ -183,7 +182,6 @@ done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_lib.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_lib.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_std.h dontcare
 done ${PACKAGE_ast_INCLUDE}/vmalloc.h dontcare
 make ${PACKAGE_ast_INCLUDE}/sfio.h implicit
@@ -192,7 +190,6 @@ prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
 done sum.h
 done sumlib.c

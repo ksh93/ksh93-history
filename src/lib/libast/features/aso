@@ -1,7 +1,7 @@
 # ast atomic scalar operations feature tests
 
 if	aso note{ gcc 4.1+ 64 bit memory atomic operations model }end link{
-		#include <stdint.h>
+		#include "FEATURE/common"
 		int main()
 		{
 			uint64_t i = 0;
@@ -27,9 +27,10 @@ if	aso note{ gcc 4.1+ 64 bit memory atomic operations model }end link{
 		#endif
 	}
 elif	aso note{ gcc 4.1+ 32 bit memory atomic operations model }end link{
+		#include "FEATURE/common"
 		int main()
 		{
-			unsigned int i = 0;
+			uint32_t i = 0;
 			return __sync_fetch_and_add(&i,7);
 		}
 	}end && {
@@ -45,12 +46,13 @@ elif	aso note{ gcc 4.1+ 32 bit memory atomic operations model }end link{
 		#define _aso_casptr(p,o,n)	((void*)__sync_val_compare_and_swap(p,(uint32_t)o,(uint32_t)n))
 	}
 elif	aso note{ <atomic.h> atomic_cas_64 }end link{
+		#include "FEATURE/common"
 		#include <atomic.h>
 		int main()
 		{
 			uint64_t i = 0;
 			uint32_t j = 1;
-			return atomic_cas_64(&i, 0, 1) != 0 || (atomic_add_32_nv(&j, 1) != 1;-1)
+			return atomic_cas_64(&i, 0, 1) != 0 || atomic_add_32_nv(&j, 1) != 1;
 		}
 	}end && {
 		#include <atomic.h>
@@ -73,11 +75,12 @@ elif	aso note{ <atomic.h> atomic_cas_64 }end link{
 		#endif
 	}
 elif	aso note{ <atomic.h> atomic_cas_32 }end link{
+		#include "FEATURE/common"
 		#include <atomic.h>
 		int main()
 		{
 			uint32_t i = 0;
-			return atomic_cas_32(&i, 0, 1) != 0 || (atomic_add_32_nv(&i, 1) != 1;-1)
+			return atomic_cas_32(&i, 0, 1) != 0 || (atomic_add_32_nv(&i, 1) - 1) != 1;
 		}
 	}end && {
 		#include <atomic.h>
@@ -93,12 +96,13 @@ elif	aso note{ <atomic.h> atomic_cas_32 }end link{
 		#define _aso_casptr(p,o,n)	((void*)atomic_cas_32((uint32_t*)p,(uint32_t)o,(uint32_t)n))
 	}
 elif	aso -latomic note{ <atomic.h> atomic_cas_64 with -latomic }end link{
+		#include "FEATURE/common"
 		#include <atomic.h>
 		int main()
 		{
 			uint64_t i = 0;
 			uint32_t j = 1;
-			return atomic_cas_64(&i, 0, 1) != 0 || (atomic_add_32_nv(&j, 1) != 1;-1)
+			return atomic_cas_64(&i, 0, 1) != 0 || (atomic_add_32_nv(&j, 1) - 1) != 1;
 		}
 	}end && {
 		#include <atomic.h>
@@ -122,11 +126,12 @@ elif	aso -latomic note{ <atomic.h> atomic_cas_64 with -latomic }end link{
 		#endif
 	}
 elif	aso note{ <atomic.h> atomic_cas_32 with -latomic }end link{
+		#include "FEATURE/common"
 		#include <atomic.h>
 		int main()
 		{
 			uint32_t i = 0;
-			return atomic_cas_32(&i, 0, 1) != 0 || (atomic_add_32_nv(&i, 1) != 1;-1)
+			return atomic_cas_32(&i, 0, 1) != 0 || (atomic_add_32_nv(&i, 1) - 1) != 1;
 		}
 	}end && {
 		#include <atomic.h>
@@ -143,12 +148,13 @@ elif	aso note{ <atomic.h> atomic_cas_32 with -latomic }end link{
 		#define _aso_casptr(p,o,n)	((void*)atomic_cas_32((uint32_t*)p,(uint32_t)o,(uint32_t)n))
 	}
 elif	aso note{ <atomic.h> cas64 }end link{
+		#include "FEATURE/common"
 		#include <atomic.h>
 		int main()
 		{
 			uint64_t i = 0;
 			uint32_t j = 1;
-			return cas64(&i, 0, 1) != 0 || (atomic_add_32_nv(&j, 1) != 1;-1)
+			return cas64(&i, 0, 1) != 0 || (atomic_add_32_nv(&j, 1) - 1) != 1;
 		}
 	}end && {
 		#include <atomic.h>
@@ -170,12 +176,36 @@ elif	aso note{ <atomic.h> cas64 }end link{
 		#define _aso_casptr(p,o,n)	((void*)cas32((uint32_t*)p,(uint32_t)o,(uint32_t)n))
 		#endif
 	}
-elif	aso note{ <atomic.h> cas32 }end link{
+elif	aso note{ <atomic.h> just cas64 }end link{
+		#include "FEATURE/common"
 		#include <atomic.h>
 		int main()
 		{
 			uint64_t i = 0;
-			return cas32(&i, 0, 1) != 0 || (atomic_add_32_nv(&i, 1) != 1;-1)
+			uint32_t j = 1;
+			uint16_t k = 1;
+			uint8_t l = 1;
+			return cas64(&i, 0, 1) != 0 || cas32(&j, 0, 1) != 0 || cas16(&k, 0, 1) != 0 || cas8(&l, 0, 1) != 0;
+		}
+	}end && {
+		#include <atomic.h>
+		#define _aso_cas8(p,o,n)	cas8(p,o,n)
+		#define _aso_cas16(p,o,n)	cas16(p,o,n)
+		#define _aso_cas32(p,o,n)	cas32(p,o,n)
+		#define _aso_cas64(p,o,n)	cas64(p,o,n)
+		#if _ast_sizeof_pointer == 8
+		#define _aso_casptr(p,o,n)	((void*)cas64((uint64_t*)p,(uint64_t)o,(uint64_t)n))
+		#else
+		#define _aso_casptr(p,o,n)	((void*)cas32((uint32_t*)p,(uint32_t)o,(uint32_t)n))
+		#endif
+	}
+elif	aso note{ <atomic.h> cas32 }end link{
+		#include "FEATURE/common"
+		#include <atomic.h>
+		int main()
+		{
+			uint32_t i = 0;
+			return cas32(&i, 0, 1) != 0 || (atomic_add_32_nv(&i, 1) - 1) != 1;
 		}
 	}end && {
 		#include <atomic.h>
@@ -188,6 +218,23 @@ elif	aso note{ <atomic.h> cas32 }end link{
 		#define _aso_cas32(p,o,n)	cas32(p,o,n)
 		#define _aso_inc32(p)		(atomic_add_32_nv(p,1)-1)
 		#define _aso_dec32(p)		(atomic_add_32_nv(p,-1)+1)
+		#define _aso_casptr(p,o,n)	((void*)cas32((uint32_t*)p,(uint32_t)o,(uint32_t)n))
+	}
+elif	aso note{ <atomic.h> just cas32 }end link{
+		#include "FEATURE/common"
+		#include <atomic.h>
+		int main()
+		{
+			uint32_t j = 1;
+			uint16_t k = 1;
+			uint8_t l = 1;
+			return cas32(&j, 0, 1) != 0 || cas16(&k, 0, 1) != 0 || cas8(&l, 0, 1) != 0;
+		}
+	}end && {
+		#include <atomic.h>
+		#define _aso_cas8(p,o,n)	cas8(p,o,n)
+		#define _aso_cas16(p,o,n)	cas16(p,o,n)
+		#define _aso_cas32(p,o,n)	cas32(p,o,n)
 		#define _aso_casptr(p,o,n)	((void*)cas32((uint32_t*)p,(uint32_t)o,(uint32_t)n))
 	}
 elif	aso note{ winix Interlocked }end link{

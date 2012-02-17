@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Research) 2011-03-26 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Research) 2012-02-14 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -47,7 +47,8 @@ USAGE_LICENSE
 "	The caller requires sufficient privilege, not to mention a strong"
 "	constitution, to use this option. Even though the directory must"
 "	not be empty, \brm\b still attempts to empty it before removal.]"
-"[f:force?Ignore nonexistent files and never prompt the user.]"
+"[f:force?Ignore nonexistent files, ignore no file operands specified,"
+"	and never prompt the user.]"
 "[i:interactive|prompt?Prompt whether to remove each file."
 "	An affirmative response (\by\b or \bY\b) removes the file, a quit"
 "	response (\bq\b or \bQ\b) causes \brm\b to exit immediately, and"
@@ -382,8 +383,10 @@ b_rm(int argc, register char** argv, Shbltin_t* context)
 	argv += opt_info.index;
 	if (*argv && streq(*argv, "-") && !streq(*(argv - 1), "--"))
 		argv++;
-	if (error_info.errors || !*argv)
+	if (error_info.errors || !*argv && !state.force)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
+	if (!*argv)
+		return 0;
 
 	/*
 	 * do it

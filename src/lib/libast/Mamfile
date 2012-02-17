@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-02-07
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -42,25 +42,25 @@ make FEATURE/standards
 meta FEATURE/standards features/%>FEATURE/% features/standards standards
 make features/standards
 done features/standards
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/standards
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/standards
 done FEATURE/standards generated
 make FEATURE/lib
 meta FEATURE/lib features/%>FEATURE/% features/lib lib
 make features/lib
 done features/lib
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/lib
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/lib
 done FEATURE/lib generated
 make FEATURE/common
 meta FEATURE/common features/%>FEATURE/% features/common common
 make features/common
 done features/common
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/common
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/common
 done FEATURE/common generated
 make FEATURE/param
 meta FEATURE/param features/%.sh>FEATURE/% features/param.sh param
 make features/param.sh
 done features/param.sh
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/param.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/param.sh
 make std/endian.h implicit
 make std/bytesex.h implicit
 make ast_common.h implicit
@@ -78,36 +78,36 @@ make FEATURE/api implicit
 meta FEATURE/api features/%>FEATURE/% features/api api
 make features/api
 done features/api
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/api
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/api
 done FEATURE/api generated
 make FEATURE/eaccess implicit
 meta FEATURE/eaccess features/%>FEATURE/% features/eaccess eaccess
 make features/eaccess
 done features/eaccess
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/eaccess
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/eaccess
 done FEATURE/eaccess generated
 make FEATURE/vmalloc implicit
 meta FEATURE/vmalloc features/%>FEATURE/% features/vmalloc vmalloc
 make features/vmalloc
 done features/vmalloc
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/vmalloc
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/vmalloc
 make FEATURE/mmap implicit
 meta FEATURE/mmap features/%>FEATURE/% features/mmap mmap
 make features/mmap
 done features/mmap
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/mmap
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/mmap
 done FEATURE/mmap dontcare generated
 done FEATURE/vmalloc generated
 make FEATURE/options implicit
 meta FEATURE/options features/%>FEATURE/% features/options options
 make features/options
 done features/options
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/options
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/options
 done FEATURE/options generated
 prev FEATURE/mmap implicit
 prev FEATURE/lib implicit
 done features/map.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I.  ${LDFLAGS} ' run features/map.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} ' run features/map.c
 done FEATURE/map generated
 exec - cmp 2>/dev/null -s FEATURE/map ast_map.h || { rm -f ast_map.h; silent test -d . || mkdir .; ${STDCP} FEATURE/map ast_map.h; }
 done ast_map.h dontcare generated
@@ -119,7 +119,7 @@ make FEATURE/aso
 meta FEATURE/aso features/%>FEATURE/% features/aso aso
 make features/aso
 done features/aso
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/aso
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/aso
 done FEATURE/aso generated
 prev ast_map.h
 make ast_limits.h
@@ -187,7 +187,7 @@ prev FEATURE/common implicit
 prev FEATURE/lib implicit
 prev FEATURE/standards implicit
 done features/limits.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/limits.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/limits.c
 done FEATURE/limits generated
 exec - cmp 2>/dev/null -s FEATURE/limits ast_limits.h || { rm -f ast_limits.h; silent test -d . || mkdir .; ${STDCP} FEATURE/limits ast_limits.h; }
 done ast_limits.h generated
@@ -196,7 +196,7 @@ make FEATURE/stdio
 meta FEATURE/stdio features/%>FEATURE/% features/stdio stdio
 make features/stdio
 done features/stdio
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/stdio
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/stdio
 make include/sfio_s.h implicit
 done include/sfio_s.h dontcare
 make include/ast_std.h implicit
@@ -207,14 +207,14 @@ meta FEATURE/wchar features/%>FEATURE/% features/wchar wchar
 make features/wchar
 prev ast_common.h implicit
 done features/wchar
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/wchar
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/wchar
 make std/wctype.h implicit
 make ast_wctype.h implicit
 make FEATURE/wctype
 meta FEATURE/wctype features/%>FEATURE/% features/wctype wctype
 make features/wctype
 done features/wctype
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/wctype
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/wctype
 prev std/endian.h implicit
 done FEATURE/wctype generated
 exec - cmp 2>/dev/null -s FEATURE/wctype ast_wctype.h || { rm -f ast_wctype.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wctype ast_wctype.h; }
@@ -242,13 +242,13 @@ make FEATURE/sys implicit
 meta FEATURE/sys features/%>FEATURE/% features/sys sys
 make features/sys
 done features/sys
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/sys
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/sys
 prev std/endian.h implicit
 prev std/endian.h implicit
 done FEATURE/sys generated
 prev FEATURE/lib implicit
 done features/botch.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/botch.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/botch.c
 done FEATURE/botch generated
 exec - cmp 2>/dev/null -s FEATURE/botch ast_botch.h || { rm -f ast_botch.h; silent test -d . || mkdir .; ${STDCP} FEATURE/botch ast_botch.h; }
 done ast_botch.h dontcare generated
@@ -261,17 +261,17 @@ make FEATURE/tty implicit
 meta FEATURE/tty features/%>FEATURE/% features/tty tty
 make features/tty
 done features/tty
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/tty
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/tty
 done FEATURE/tty generated
 make FEATURE/fs implicit
 meta FEATURE/fs features/%>FEATURE/% features/fs fs
 make features/fs
 done features/fs
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/fs
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/fs
 done FEATURE/fs generated
 prev FEATURE/lib implicit
 done features/fcntl.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/fcntl.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/fcntl.c
 make ast_fs.h implicit
 prev FEATURE/fs
 exec - cmp 2>/dev/null -s FEATURE/fs ast_fs.h || { rm -f ast_fs.h; silent test -d . || mkdir .; ${STDCP} FEATURE/fs ast_fs.h; }
@@ -301,7 +301,7 @@ make FEATURE/nl_types
 meta FEATURE/nl_types features/%>FEATURE/% features/nl_types nl_types
 make features/nl_types
 done features/nl_types
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/nl_types
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/nl_types
 done FEATURE/nl_types generated
 exec - cmp 2>/dev/null -s FEATURE/nl_types ast_nl_types.h || { rm -f ast_nl_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/nl_types ast_nl_types.h; }
 done ast_nl_types.h generated
@@ -419,7 +419,7 @@ make FEATURE/dirent
 meta FEATURE/dirent features/%>FEATURE/% features/dirent dirent
 make features/dirent
 done features/dirent
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/dirent
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/dirent
 prev include/ast_std.h implicit
 done FEATURE/dirent generated
 exec - cmp 2>/dev/null -s FEATURE/dirent ast_dirent.h || { rm -f ast_dirent.h; silent test -d . || mkdir .; ${STDCP} FEATURE/dirent ast_dirent.h; }
@@ -438,7 +438,7 @@ make include/modecanon.h implicit
 done include/modecanon.h
 prev FEATURE/param implicit
 done features/mode.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I. -Iinclude -Istd  ${LDFLAGS} ' run features/mode.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} ' run features/mode.c
 done FEATURE/mode generated
 exec - cmp 2>/dev/null -s FEATURE/mode ast_mode.h || { rm -f ast_mode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/mode ast_mode.h; }
 done ast_mode.h dontcare generated
@@ -504,7 +504,7 @@ make FEATURE/syscall implicit
 meta FEATURE/syscall features/%>FEATURE/% features/syscall syscall
 make features/syscall
 done features/syscall
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/syscall
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/syscall
 done FEATURE/syscall dontcare generated
 prev include/ast.h implicit
 done misc/getcwd.c
@@ -661,7 +661,7 @@ make FEATURE/ccode
 meta FEATURE/ccode features/%>FEATURE/% features/ccode ccode
 make features/ccode
 done features/ccode
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/ccode
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/ccode
 done FEATURE/ccode generated
 exec - cmp 2>/dev/null -s FEATURE/ccode ast_ccode.h || { rm -f ast_ccode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/ccode ast_ccode.h; }
 done ast_ccode.h dontcare generated
@@ -966,7 +966,7 @@ make FEATURE/time
 meta FEATURE/time features/%>FEATURE/% features/time time
 make features/time
 done features/time
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/time
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/time
 done FEATURE/time generated
 exec - cmp 2>/dev/null -s FEATURE/time ast_time.h || { rm -f ast_time.h; silent test -d . || mkdir .; ${STDCP} FEATURE/time ast_time.h; }
 done ast_time.h dontcare generated
@@ -1015,8 +1015,6 @@ exec - then rm ${COTEMP}.2
 exec - else mv ${COTEMP}.2 lctab.c
 exec - fi
 prev include/ast.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
 make joint.lc.h joint
 prev lc.h
 make lctab.c
@@ -1029,7 +1027,7 @@ done port/lclib.h
 done path/pathexists.c
 meta pathexists.o %.c>%.o path/pathexists.c pathexists
 prev path/pathexists.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c path/pathexists.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c path/pathexists.c
 done pathexists.o generated
 make pathfind.o
 make path/pathfind.c
@@ -1050,7 +1048,7 @@ make FEATURE/preroot
 meta FEATURE/preroot features/%.sh>FEATURE/% features/preroot.sh preroot
 make features/preroot.sh
 done features/preroot.sh
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/preroot.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/preroot.sh
 done FEATURE/preroot generated
 exec - cmp 2>/dev/null -s FEATURE/preroot preroot.h || { rm -f preroot.h; silent test -d . || mkdir .; ${STDCP} FEATURE/preroot preroot.h; }
 done preroot.h generated
@@ -1113,7 +1111,7 @@ make FEATURE/tv
 meta FEATURE/tv features/%>FEATURE/% features/tv tv
 make features/tv
 done features/tv
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/tv
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/tv
 prev include/ast.h implicit
 done FEATURE/tv generated
 exec - cmp 2>/dev/null -s FEATURE/tv tv.h || { rm -f tv.h; silent test -d . || mkdir .; ${STDCP} FEATURE/tv tv.h; }
@@ -1198,7 +1196,7 @@ make FEATURE/prog implicit
 meta FEATURE/prog features/%>FEATURE/% features/prog prog
 make features/prog
 done features/prog
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/prog
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/prog
 done FEATURE/prog generated
 make include/ast_windows.h implicit
 make windows.h implicit
@@ -1407,7 +1405,7 @@ make FEATURE/sig
 meta FEATURE/sig features/%.sh>FEATURE/% features/sig.sh sig
 make features/sig.sh
 done features/sig.sh
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/sig.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/sig.sh
 done FEATURE/sig generated
 exec - cmp 2>/dev/null -s FEATURE/sig sig.h || { rm -f sig.h; silent test -d . || mkdir .; ${STDCP} FEATURE/sig sig.h; }
 done sig.h generated
@@ -1450,7 +1448,7 @@ prev port/lclib.h implicit
 done misc/error.c
 meta error.o %.c>%.o misc/error.c error
 prev misc/error.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -DERROR_CATALOG=\""libast"\" -D_PACKAGE_ast -c misc/error.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -DERROR_CATALOG=\""libast"\" -D_PACKAGE_ast -c misc/error.c
 done error.o generated
 make errorf.o
 make misc/errorf.c
@@ -1474,7 +1472,7 @@ prev port/lclib.h implicit
 done misc/errorx.c
 meta errorx.o %.c>%.o misc/errorx.c errorx
 prev misc/errorx.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/errorx.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c misc/errorx.c
 done errorx.o generated
 make localeconv.o
 make comp/localeconv.c
@@ -1482,7 +1480,7 @@ prev port/lclib.h implicit
 done comp/localeconv.c
 meta localeconv.o %.c>%.o comp/localeconv.c localeconv
 prev comp/localeconv.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/localeconv.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c comp/localeconv.c
 done localeconv.o generated
 make setlocale.o
 make comp/setlocale.c
@@ -1501,7 +1499,7 @@ done ast_standards.h generated
 done comp/setlocale.c
 meta setlocale.o %.c>%.o comp/setlocale.c setlocale
 prev comp/setlocale.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/setlocale.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c comp/setlocale.c
 done setlocale.o generated
 make translate.o
 make misc/translate.c
@@ -1515,7 +1513,7 @@ prev port/lclib.h implicit
 done misc/translate.c
 meta translate.o %.c>%.o misc/translate.c translate
 prev misc/translate.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/translate.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c misc/translate.c
 done translate.o generated
 make catopen.o
 make comp/catopen.c
@@ -1525,7 +1523,7 @@ make FEATURE/iconv
 meta FEATURE/iconv features/%>FEATURE/% features/iconv iconv
 make features/iconv
 done features/iconv
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/iconv
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/iconv
 prev include/ccode.h implicit
 prev ast_common.h implicit
 done FEATURE/iconv generated
@@ -1553,7 +1551,7 @@ prev include/ast.h implicit
 done comp/iconv.c
 meta iconv.o %.c>%.o comp/iconv.c iconv
 prev comp/iconv.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/iconv.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c comp/iconv.c
 done iconv.o generated
 make lc.o
 make port/lc.c
@@ -1561,7 +1559,7 @@ make FEATURE/locale implicit
 meta FEATURE/locale features/%>FEATURE/% features/locale locale
 make features/locale
 done features/locale
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/locale
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/locale
 done FEATURE/locale generated
 make port/lclang.h implicit
 prev include/ast_windows.h implicit
@@ -1570,7 +1568,7 @@ prev port/lclib.h implicit
 done port/lc.c
 meta lc.o %.c>%.o port/lc.c lc
 prev port/lc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c port/lc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c port/lc.c
 done lc.o generated
 make lctab.o
 make lctab.c
@@ -1579,7 +1577,7 @@ prev port/lclib.h implicit
 done lctab.c
 meta lctab.o %.c>%.o lctab.c lctab
 prev lctab.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c lctab.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c lctab.c
 done lctab.o generated
 make mc.o
 make port/mc.c
@@ -1603,10 +1601,10 @@ make FEATURE/isoc99 implicit
 meta FEATURE/isoc99 features/%>FEATURE/% features/isoc99 isoc99
 make features/isoc99
 done features/isoc99
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/isoc99
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/isoc99
 done FEATURE/isoc99 generated
 done features/float
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/float
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/float
 prev ast_common.h implicit
 done FEATURE/float dontcare generated
 make mman.h implicit
@@ -1636,13 +1634,13 @@ make FEATURE/sfio implicit
 meta FEATURE/sfio features/%>FEATURE/% features/sfio sfio
 make features/sfio
 done features/sfio
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/sfio
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/sfio
 done FEATURE/sfio dontcare generated
 done sfio/sfhdr.h
 done port/mc.c
 meta mc.o %.c>%.o port/mc.c mc
 prev port/mc.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} ${DEBUG+-DDEBUG=${DEBUG}} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c port/mc.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} ${DEBUG+-DDEBUG=${DEBUG}} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c port/mc.c
 done mc.o generated
 make base64.o
 make string/base64.c
@@ -1897,7 +1895,7 @@ prev include/ast.h implicit
 done string/fmtscale.c
 meta fmtscale.o %.c>%.o string/fmtscale.c fmtscale
 prev string/fmtscale.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/fmtscale.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c string/fmtscale.c
 done fmtscale.o generated
 make fmttmx.o
 make string/fmttmx.c
@@ -1908,7 +1906,7 @@ meta FEATURE/tmx features/%>FEATURE/% features/tmx tmx
 make features/tmx
 prev FEATURE/common implicit
 done features/tmx
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/tmx
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/tmx
 prev tv.h implicit
 prev include/tm.h implicit
 done FEATURE/tmx generated
@@ -2010,7 +2008,7 @@ meta FEATURE/align features/%.c>FEATURE/% features/align.c align
 make features/align.c
 prev FEATURE/common implicit
 done features/align.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I.  ${LDFLAGS} ' run features/align.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} ' run features/align.c
 done FEATURE/align generated
 exec - cmp 2>/dev/null -s FEATURE/align align.h || { rm -f align.h; silent test -d . || mkdir .; ${STDCP} FEATURE/align align.h; }
 done align.h generated
@@ -2066,11 +2064,11 @@ make FEATURE/siglist implicit
 meta FEATURE/siglist features/%>FEATURE/% features/siglist siglist
 make features/siglist
 done features/siglist
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/siglist
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/siglist
 done FEATURE/siglist generated
 prev FEATURE/standards implicit
 done features/signal.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I.  ${LDFLAGS} ' run features/signal.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} ' run features/signal.c
 done FEATURE/signal generated
 prev sig.h implicit
 prev include/ast.h implicit
@@ -2110,7 +2108,7 @@ make FEATURE/wait
 meta FEATURE/wait features/%>FEATURE/% features/wait wait
 make features/wait
 done features/wait
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/wait
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/wait
 done FEATURE/wait generated
 exec - cmp 2>/dev/null -s FEATURE/wait ast_wait.h || { rm -f ast_wait.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wait ast_wait.h; }
 done ast_wait.h dontcare generated
@@ -2205,7 +2203,7 @@ make FEATURE/tmlib implicit
 meta FEATURE/tmlib features/%>FEATURE/% features/tmlib tmlib
 make features/tmlib
 done features/tmlib
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/tmlib
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/tmlib
 done FEATURE/tmlib generated
 prev include/namval.h implicit
 prev include/tm.h implicit
@@ -2246,7 +2244,7 @@ prev include/ast.h implicit
 done tm/tmlocale.c
 meta tmlocale.o %.c>%.o tm/tmlocale.c tmlocale
 prev tm/tmlocale.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c tm/tmlocale.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c tm/tmlocale.c
 done tmlocale.o generated
 make tmmake.o
 make tm/tmmake.c
@@ -2435,7 +2433,7 @@ make FEATURE/tvlib implicit
 meta FEATURE/tvlib features/%>FEATURE/% features/tvlib tvlib
 make features/tvlib
 done features/tvlib
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/tvlib
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/tvlib
 done FEATURE/tvlib generated
 prev include/tm.h implicit
 prev tv.h implicit
@@ -2756,7 +2754,7 @@ prev include/ast.h implicit
 done comp/strtod.c
 meta strtod.o %.c>%.o comp/strtod.c strtod
 prev comp/strtod.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtod.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c comp/strtod.c
 done strtod.o generated
 make strtold.o
 make comp/strtold.c
@@ -2767,7 +2765,7 @@ prev ast_common.h implicit
 done comp/strtold.c
 meta strtold.o %.c>%.o comp/strtold.c strtold
 prev comp/strtold.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtold.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c comp/strtold.c
 done strtold.o generated
 make strtol.o
 make comp/strtol.c
@@ -2778,7 +2776,7 @@ done string/strtoi.h dontcare
 done comp/strtol.c
 meta strtol.o %.c>%.o comp/strtol.c strtol
 prev comp/strtol.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtol.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c comp/strtol.c
 done strtol.o generated
 make strtoll.o
 make comp/strtoll.c
@@ -2788,7 +2786,7 @@ prev include/ast.h implicit
 done comp/strtoll.c
 meta strtoll.o %.c>%.o comp/strtoll.c strtoll
 prev comp/strtoll.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtoll.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c comp/strtoll.c
 done strtoll.o generated
 make strtoul.o
 make comp/strtoul.c
@@ -2796,7 +2794,7 @@ prev string/strtoi.h implicit
 done comp/strtoul.c
 meta strtoul.o %.c>%.o comp/strtoul.c strtoul
 prev comp/strtoul.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtoul.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c comp/strtoul.c
 done strtoul.o generated
 make strtoull.o
 make comp/strtoull.c
@@ -2806,7 +2804,7 @@ prev include/ast.h implicit
 done comp/strtoull.c
 meta strtoull.o %.c>%.o comp/strtoull.c strtoull
 prev comp/strtoull.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtoull.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c comp/strtoull.c
 done strtoull.o generated
 make strton.o
 make string/strton.c
@@ -2814,7 +2812,7 @@ prev string/strtoi.h implicit
 done string/strton.c
 meta strton.o %.c>%.o string/strton.c strton
 prev string/strton.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strton.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strton.c
 done strton.o generated
 make strtonll.o
 make string/strtonll.c
@@ -2822,7 +2820,7 @@ prev string/strtoi.h implicit
 done string/strtonll.c
 meta strtonll.o %.c>%.o string/strtonll.c strtonll
 prev string/strtonll.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strtonll.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strtonll.c
 done strtonll.o generated
 make strntod.o
 make string/strntod.c
@@ -2831,7 +2829,7 @@ prev include/ast.h implicit
 done string/strntod.c
 meta strntod.o %.c>%.o string/strntod.c strntod
 prev string/strntod.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntod.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c string/strntod.c
 done strntod.o generated
 make strntold.o
 make string/strntold.c
@@ -2840,7 +2838,7 @@ prev include/ast.h implicit
 done string/strntold.c
 meta strntold.o %.c>%.o string/strntold.c strntold
 prev string/strntold.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntold.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c string/strntold.c
 done strntold.o generated
 make strnton.o
 make string/strnton.c
@@ -2848,7 +2846,7 @@ prev string/strtoi.h implicit
 done string/strnton.c
 meta strnton.o %.c>%.o string/strnton.c strnton
 prev string/strnton.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strnton.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strnton.c
 done strnton.o generated
 make strntonll.o
 make string/strntonll.c
@@ -2856,7 +2854,7 @@ prev string/strtoi.h implicit
 done string/strntonll.c
 meta strntonll.o %.c>%.o string/strntonll.c strntonll
 prev string/strntonll.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntonll.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strntonll.c
 done strntonll.o generated
 make strntol.o
 make string/strntol.c
@@ -2864,7 +2862,7 @@ prev string/strtoi.h implicit
 done string/strntol.c
 meta strntol.o %.c>%.o string/strntol.c strntol
 prev string/strntol.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntol.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strntol.c
 done strntol.o generated
 make strntoll.o
 make string/strntoll.c
@@ -2872,7 +2870,7 @@ prev string/strtoi.h implicit
 done string/strntoll.c
 meta strntoll.o %.c>%.o string/strntoll.c strntoll
 prev string/strntoll.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntoll.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strntoll.c
 done strntoll.o generated
 make strntoul.o
 make string/strntoul.c
@@ -2880,7 +2878,7 @@ prev string/strtoi.h implicit
 done string/strntoul.c
 meta strntoul.o %.c>%.o string/strntoul.c strntoul
 prev string/strntoul.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntoul.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strntoul.c
 done strntoul.o generated
 make strntoull.o
 make string/strntoull.c
@@ -2888,7 +2886,7 @@ prev string/strtoi.h implicit
 done string/strntoull.c
 meta strntoull.o %.c>%.o string/strntoull.c strntoull
 prev string/strntoull.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strntoull.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/strntoull.c
 done strntoull.o generated
 make strcasecmp.o
 make comp/strcasecmp.c
@@ -2912,13 +2910,13 @@ make FEATURE/errno implicit
 meta FEATURE/errno features/%>FEATURE/% features/errno errno
 make features/errno
 done features/errno
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/errno
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/errno
 done FEATURE/errno generated
 prev port/lclib.h implicit
 done string/strerror.c
 meta strerror.o %.c>%.o string/strerror.c strerror
 prev string/strerror.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strerror.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c string/strerror.c
 done strerror.o generated
 make mktemp.o
 make comp/mktemp.c
@@ -2994,7 +2992,7 @@ make FEATURE/vfork
 meta FEATURE/vfork features/%>FEATURE/% features/vfork vfork
 make features/vfork
 done features/vfork
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/vfork
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/vfork
 done FEATURE/vfork generated
 exec - cmp 2>/dev/null -s FEATURE/vfork ast_vfork.h || { rm -f ast_vfork.h; silent test -d . || mkdir .; ${STDCP} FEATURE/vfork ast_vfork.h; }
 done ast_vfork.h dontcare generated
@@ -3131,7 +3129,7 @@ make FEATURE/hack implicit
 meta FEATURE/hack features/%>FEATURE/% features/hack hack
 make features/hack
 done features/hack
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/hack
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/hack
 done FEATURE/hack generated
 prev include/ls.h implicit
 prev include/ast.h implicit
@@ -3149,7 +3147,7 @@ make FEATURE/omitted implicit
 meta FEATURE/omitted features/%>FEATURE/% features/omitted omitted
 make features/omitted
 done features/omitted
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/omitted
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/omitted
 done FEATURE/omitted generated
 prev include/tm.h implicit
 prev include/error.h implicit
@@ -3420,7 +3418,7 @@ done disc/sfdchdr.h
 done disc/sfdcdio.c
 meta sfdcdio.o %.c>%.o disc/sfdcdio.c sfdcdio
 prev disc/sfdcdio.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcdio.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcdio.c
 done sfdcdio.o generated
 make sfdcdos.o
 make disc/sfdcdos.c
@@ -3428,7 +3426,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcdos.c
 meta sfdcdos.o %.c>%.o disc/sfdcdos.c sfdcdos
 prev disc/sfdcdos.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcdos.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcdos.c
 done sfdcdos.o generated
 make sfdcfilter.o
 make disc/sfdcfilter.c
@@ -3436,7 +3434,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcfilter.c
 meta sfdcfilter.o %.c>%.o disc/sfdcfilter.c sfdcfilter
 prev disc/sfdcfilter.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcfilter.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcfilter.c
 done sfdcfilter.o generated
 make sfdcseekable.o
 make disc/sfdcseekable.c
@@ -3444,7 +3442,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcseekable.c
 meta sfdcseekable.o %.c>%.o disc/sfdcseekable.c sfdcseekable
 prev disc/sfdcseekable.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcseekable.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcseekable.c
 done sfdcseekable.o generated
 make sfdcslow.o
 make disc/sfdcslow.c
@@ -3452,7 +3450,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcslow.c
 meta sfdcslow.o %.c>%.o disc/sfdcslow.c sfdcslow
 prev disc/sfdcslow.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcslow.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcslow.c
 done sfdcslow.o generated
 make sfdcsubstr.o
 make disc/sfdcsubstr.c
@@ -3460,7 +3458,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcsubstr.c
 meta sfdcsubstr.o %.c>%.o disc/sfdcsubstr.c sfdcsubstr
 prev disc/sfdcsubstr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcsubstr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcsubstr.c
 done sfdcsubstr.o generated
 make sfdctee.o
 make disc/sfdctee.c
@@ -3468,7 +3466,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdctee.c
 meta sfdctee.o %.c>%.o disc/sfdctee.c sfdctee
 prev disc/sfdctee.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdctee.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdctee.c
 done sfdctee.o generated
 make sfdcunion.o
 make disc/sfdcunion.c
@@ -3476,7 +3474,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcunion.c
 meta sfdcunion.o %.c>%.o disc/sfdcunion.c sfdcunion
 prev disc/sfdcunion.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcunion.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcunion.c
 done sfdcunion.o generated
 make sfdcmore.o
 make disc/sfdcmore.c
@@ -3485,7 +3483,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcmore.c
 meta sfdcmore.o %.c>%.o disc/sfdcmore.c sfdcmore
 prev disc/sfdcmore.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcmore.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcmore.c
 done sfdcmore.o generated
 make sfdcprefix.o
 make disc/sfdcprefix.c
@@ -3493,7 +3491,7 @@ prev disc/sfdchdr.h implicit
 done disc/sfdcprefix.c
 meta sfdcprefix.o %.c>%.o disc/sfdcprefix.c sfdcprefix
 prev disc/sfdcprefix.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcprefix.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Idisc -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c disc/sfdcprefix.c
 done sfdcprefix.o generated
 make wc.o
 make comp/wc.c
@@ -3809,7 +3807,7 @@ prev regex/reglib.h implicit
 done regex/regcomp.c
 meta regcomp.o %.c>%.o regex/regcomp.c regcomp
 prev regex/regcomp.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Icomp -Iport -Iregex -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c regex/regcomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Icomp -Iport -Iregex -Iinclude -Istd -D_PACKAGE_ast -c regex/regcomp.c
 done regcomp.o generated
 make regcache.o
 make regex/regcache.c
@@ -4020,7 +4018,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfclose.c
 meta sfclose.o %.c>%.o sfio/sfclose.c sfclose
 prev sfio/sfclose.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfclose.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfclose.c
 done sfclose.o generated
 make sfclrlock.o
 make sfio/sfclrlock.c
@@ -4028,7 +4026,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfclrlock.c
 meta sfclrlock.o %.c>%.o sfio/sfclrlock.c sfclrlock
 prev sfio/sfclrlock.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfclrlock.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfclrlock.c
 done sfclrlock.o generated
 make sfdisc.o
 make sfio/sfdisc.c
@@ -4036,7 +4034,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfdisc.c
 meta sfdisc.o %.c>%.o sfio/sfdisc.c sfdisc
 prev sfio/sfdisc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfdisc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfdisc.c
 done sfdisc.o generated
 make sfdlen.o
 make sfio/sfdlen.c
@@ -4044,7 +4042,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfdlen.c
 meta sfdlen.o %.c>%.o sfio/sfdlen.c sfdlen
 prev sfio/sfdlen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfdlen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfdlen.c
 done sfdlen.o generated
 make sfexcept.o
 make sfio/sfexcept.c
@@ -4052,7 +4050,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfexcept.c
 meta sfexcept.o %.c>%.o sfio/sfexcept.c sfexcept
 prev sfio/sfexcept.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfexcept.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfexcept.c
 done sfexcept.o generated
 make sfgetl.o
 make sfio/sfgetl.c
@@ -4060,7 +4058,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfgetl.c
 meta sfgetl.o %.c>%.o sfio/sfgetl.c sfgetl
 prev sfio/sfgetl.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetl.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfgetl.c
 done sfgetl.o generated
 make sfgetu.o
 make sfio/sfgetu.c
@@ -4068,7 +4066,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfgetu.c
 meta sfgetu.o %.c>%.o sfio/sfgetu.c sfgetu
 prev sfio/sfgetu.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetu.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfgetu.c
 done sfgetu.o generated
 make sfcvt.o
 make sfio/sfcvt.c
@@ -4077,7 +4075,7 @@ prev FEATURE/isoc99 implicit
 done sfio/sfcvt.c
 meta sfcvt.o %.c>%.o sfio/sfcvt.c sfcvt
 prev sfio/sfcvt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfcvt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfcvt.c
 done sfcvt.o generated
 make sfecvt.o
 make sfio/sfecvt.c
@@ -4085,7 +4083,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfecvt.c
 meta sfecvt.o %.c>%.o sfio/sfecvt.c sfecvt
 prev sfio/sfecvt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfecvt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfecvt.c
 done sfecvt.o generated
 make sffcvt.o
 make sfio/sffcvt.c
@@ -4093,7 +4091,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sffcvt.c
 meta sffcvt.o %.c>%.o sfio/sffcvt.c sffcvt
 prev sfio/sffcvt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sffcvt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sffcvt.c
 done sffcvt.o generated
 make sfextern.o
 make sfio/sfextern.c
@@ -4101,7 +4099,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfextern.c
 meta sfextern.o %.c>%.o sfio/sfextern.c sfextern
 prev sfio/sfextern.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfextern.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfextern.c
 done sfextern.o generated
 make sffilbuf.o
 make sfio/sffilbuf.c
@@ -4109,7 +4107,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sffilbuf.c
 meta sffilbuf.o %.c>%.o sfio/sffilbuf.c sffilbuf
 prev sfio/sffilbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sffilbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sffilbuf.c
 done sffilbuf.o generated
 make sfflsbuf.o
 make sfio/sfflsbuf.c
@@ -4117,7 +4115,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfflsbuf.c
 meta sfflsbuf.o %.c>%.o sfio/sfflsbuf.c sfflsbuf
 prev sfio/sfflsbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfflsbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfflsbuf.c
 done sfflsbuf.o generated
 make sfprints.o
 make sfio/sfprints.c
@@ -4125,7 +4123,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfprints.c
 meta sfprints.o %.c>%.o sfio/sfprints.c sfprints
 prev sfio/sfprints.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfprints.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfprints.c
 done sfprints.o generated
 make sfgetd.o
 make sfio/sfgetd.c
@@ -4133,7 +4131,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfgetd.c
 meta sfgetd.o %.c>%.o sfio/sfgetd.c sfgetd
 prev sfio/sfgetd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfgetd.c
 done sfgetd.o generated
 make sfgetr.o
 make sfio/sfgetr.c
@@ -4141,7 +4139,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfgetr.c
 meta sfgetr.o %.c>%.o sfio/sfgetr.c sfgetr
 prev sfio/sfgetr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfgetr.c
 done sfgetr.o generated
 make sfllen.o
 make sfio/sfllen.c
@@ -4149,7 +4147,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfllen.c
 meta sfllen.o %.c>%.o sfio/sfllen.c sfllen
 prev sfio/sfllen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfllen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfllen.c
 done sfllen.o generated
 make sfmode.o
 make sfio/sfmode.c
@@ -4159,7 +4157,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfmode.c
 meta sfmode.o %.c>%.o sfio/sfmode.c sfmode
 prev sfio/sfmode.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfmode.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfmode.c
 done sfmode.o generated
 make sfmove.o
 make sfio/sfmove.c
@@ -4167,7 +4165,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfmove.c
 meta sfmove.o %.c>%.o sfio/sfmove.c sfmove
 prev sfio/sfmove.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfmove.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfmove.c
 done sfmove.o generated
 make sfnew.o
 make sfio/sfnew.c
@@ -4175,7 +4173,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfnew.c
 meta sfnew.o %.c>%.o sfio/sfnew.c sfnew
 prev sfio/sfnew.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfnew.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfnew.c
 done sfnew.o generated
 make sfpkrd.o
 make sfio/sfpkrd.c
@@ -4183,7 +4181,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfpkrd.c
 meta sfpkrd.o %.c>%.o sfio/sfpkrd.c sfpkrd
 prev sfio/sfpkrd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpkrd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfpkrd.c
 done sfpkrd.o generated
 make sfnotify.o
 make sfio/sfnotify.c
@@ -4191,7 +4189,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfnotify.c
 meta sfnotify.o %.c>%.o sfio/sfnotify.c sfnotify
 prev sfio/sfnotify.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfnotify.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfnotify.c
 done sfnotify.o generated
 make sfnputc.o
 make sfio/sfnputc.c
@@ -4199,7 +4197,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfnputc.c
 meta sfnputc.o %.c>%.o sfio/sfnputc.c sfnputc
 prev sfio/sfnputc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfnputc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfnputc.c
 done sfnputc.o generated
 make sfopen.o
 make sfio/sfopen.c
@@ -4207,7 +4205,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfopen.c
 meta sfopen.o %.c>%.o sfio/sfopen.c sfopen
 prev sfio/sfopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfopen.c
 done sfopen.o generated
 make sfpeek.o
 make sfio/sfpeek.c
@@ -4215,7 +4213,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfpeek.c
 meta sfpeek.o %.c>%.o sfio/sfpeek.c sfpeek
 prev sfio/sfpeek.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpeek.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfpeek.c
 done sfpeek.o generated
 make sfpoll.o
 make sfio/sfpoll.c
@@ -4223,7 +4221,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfpoll.c
 meta sfpoll.o %.c>%.o sfio/sfpoll.c sfpoll
 prev sfio/sfpoll.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpoll.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfpoll.c
 done sfpoll.o generated
 make sfpool.o
 make sfio/sfpool.c
@@ -4231,7 +4229,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfpool.c
 meta sfpool.o %.c>%.o sfio/sfpool.c sfpool
 prev sfio/sfpool.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpool.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfpool.c
 done sfpool.o generated
 make sfpopen.o
 make sfio/sfpopen.c
@@ -4240,7 +4238,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfpopen.c
 meta sfpopen.o %.c>%.o sfio/sfpopen.c sfpopen
 prev sfio/sfpopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfpopen.c
 done sfpopen.o generated
 make sfprintf.o
 make sfio/sfprintf.c
@@ -4248,7 +4246,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfprintf.c
 meta sfprintf.o %.c>%.o sfio/sfprintf.c sfprintf
 prev sfio/sfprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS.FORCE} ${mam_cc_NOPROTECT} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS.FORCE} ${mam_cc_NOPROTECT} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfprintf.c
 done sfprintf.o generated
 make sfputd.o
 make sfio/sfputd.c
@@ -4256,7 +4254,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfputd.c
 meta sfputd.o %.c>%.o sfio/sfputd.c sfputd
 prev sfio/sfputd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfputd.c
 done sfputd.o generated
 make sfputl.o
 make sfio/sfputl.c
@@ -4264,7 +4262,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfputl.c
 meta sfputl.o %.c>%.o sfio/sfputl.c sfputl
 prev sfio/sfputl.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputl.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfputl.c
 done sfputl.o generated
 make sfputr.o
 make sfio/sfputr.c
@@ -4272,7 +4270,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfputr.c
 meta sfputr.o %.c>%.o sfio/sfputr.c sfputr
 prev sfio/sfputr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfputr.c
 done sfputr.o generated
 make sfputu.o
 make sfio/sfputu.c
@@ -4280,7 +4278,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfputu.c
 meta sfputu.o %.c>%.o sfio/sfputu.c sfputu
 prev sfio/sfputu.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputu.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfputu.c
 done sfputu.o generated
 make sfrd.o
 make sfio/sfrd.c
@@ -4288,7 +4286,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfrd.c
 meta sfrd.o %.c>%.o sfio/sfrd.c sfrd
 prev sfio/sfrd.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} ${DEBUG+-DDEBUG=${DEBUG}} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfrd.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} ${DEBUG+-DDEBUG=${DEBUG}} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfrd.c
 done sfrd.o generated
 make sfread.o
 make sfio/sfread.c
@@ -4296,7 +4294,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfread.c
 meta sfread.o %.c>%.o sfio/sfread.c sfread
 prev sfio/sfread.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfread.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfread.c
 done sfread.o generated
 make sfreserve.o
 make sfio/sfreserve.c
@@ -4304,7 +4302,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfreserve.c
 meta sfreserve.o %.c>%.o sfio/sfreserve.c sfreserve
 prev sfio/sfreserve.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfreserve.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfreserve.c
 done sfreserve.o generated
 make sfscanf.o
 make sfio/sfscanf.c
@@ -4312,7 +4310,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfscanf.c
 meta sfscanf.o %.c>%.o sfio/sfscanf.c sfscanf
 prev sfio/sfscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS.FORCE} ${mam_cc_NOPROTECT} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS.FORCE} ${mam_cc_NOPROTECT} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfscanf.c
 done sfscanf.o generated
 make sfseek.o
 make sfio/sfseek.c
@@ -4320,7 +4318,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfseek.c
 meta sfseek.o %.c>%.o sfio/sfseek.c sfseek
 prev sfio/sfseek.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfseek.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfseek.c
 done sfseek.o generated
 make sfset.o
 make sfio/sfset.c
@@ -4328,7 +4326,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfset.c
 meta sfset.o %.c>%.o sfio/sfset.c sfset
 prev sfio/sfset.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfset.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfset.c
 done sfset.o generated
 make sfsetbuf.o
 make sfio/sfsetbuf.c
@@ -4336,7 +4334,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfsetbuf.c
 meta sfsetbuf.o %.c>%.o sfio/sfsetbuf.c sfsetbuf
 prev sfio/sfsetbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsetbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfsetbuf.c
 done sfsetbuf.o generated
 make sfsetfd.o
 make sfio/sfsetfd.c
@@ -4344,7 +4342,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfsetfd.c
 meta sfsetfd.o %.c>%.o sfio/sfsetfd.c sfsetfd
 prev sfio/sfsetfd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsetfd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfsetfd.c
 done sfsetfd.o generated
 make sfsize.o
 make sfio/sfsize.c
@@ -4352,7 +4350,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfsize.c
 meta sfsize.o %.c>%.o sfio/sfsize.c sfsize
 prev sfio/sfsize.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsize.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfsize.c
 done sfsize.o generated
 make sfsk.o
 make sfio/sfsk.c
@@ -4360,7 +4358,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfsk.c
 meta sfsk.o %.c>%.o sfio/sfsk.c sfsk
 prev sfio/sfsk.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsk.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfsk.c
 done sfsk.o generated
 make sfstack.o
 make sfio/sfstack.c
@@ -4368,7 +4366,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfstack.c
 meta sfstack.o %.c>%.o sfio/sfstack.c sfstack
 prev sfio/sfstack.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfstack.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfstack.c
 done sfstack.o generated
 make sfstrtod.o
 make sfio/sfstrtod.c
@@ -4376,7 +4374,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfstrtod.c
 meta sfstrtod.o %.c>%.o sfio/sfstrtod.c sfstrtod
 prev sfio/sfstrtod.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfstrtod.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfstrtod.c
 done sfstrtod.o generated
 make sfsync.o
 make sfio/sfsync.c
@@ -4384,7 +4382,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfsync.c
 meta sfsync.o %.c>%.o sfio/sfsync.c sfsync
 prev sfio/sfsync.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsync.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfsync.c
 done sfsync.o generated
 make sfswap.o
 make sfio/sfswap.c
@@ -4392,7 +4390,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfswap.c
 meta sfswap.o %.c>%.o sfio/sfswap.c sfswap
 prev sfio/sfswap.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfswap.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfswap.c
 done sfswap.o generated
 make sftable.o
 make sfio/sftable.c
@@ -4402,14 +4400,14 @@ make features/sfinit.c
 prev FEATURE/float implicit
 prev FEATURE/common implicit
 done features/sfinit.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc -I. -Istd  ${LDFLAGS} ' run features/sfinit.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  ${LDFLAGS} ' run features/sfinit.c
 done FEATURE/sfinit generated
 prev FEATURE/float implicit
 prev sfio/sfhdr.h implicit
 done sfio/sftable.c
 meta sftable.o %.c>%.o sfio/sftable.c sftable
 prev sfio/sftable.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sftable.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sftable.c
 done sftable.o generated
 make sftell.o
 make sfio/sftell.c
@@ -4417,7 +4415,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sftell.c
 meta sftell.o %.c>%.o sfio/sftell.c sftell
 prev sfio/sftell.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sftell.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sftell.c
 done sftell.o generated
 make sftmp.o
 make sfio/sftmp.c
@@ -4425,7 +4423,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sftmp.c
 meta sftmp.o %.c>%.o sfio/sftmp.c sftmp
 prev sfio/sftmp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sftmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sftmp.c
 done sftmp.o generated
 make sfungetc.o
 make sfio/sfungetc.c
@@ -4433,7 +4431,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfungetc.c
 meta sfungetc.o %.c>%.o sfio/sfungetc.c sfungetc
 prev sfio/sfungetc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfungetc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfungetc.c
 done sfungetc.o generated
 make sfvprintf.o
 make sfio/sfvprintf.c
@@ -4442,7 +4440,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfvprintf.c
 meta sfvprintf.o %.c>%.o sfio/sfvprintf.c sfvprintf
 prev sfio/sfvprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} ${mam_cc_NOPROTECT} ${DEBUG+-DDEBUG=${DEBUG}} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfvprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} ${mam_cc_NOPROTECT} ${DEBUG+-DDEBUG=${DEBUG}} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfvprintf.c
 done sfvprintf.o generated
 make sfvscanf.o
 make sfio/sfvscanf.c
@@ -4451,7 +4449,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfvscanf.c
 meta sfvscanf.o %.c>%.o sfio/sfvscanf.c sfvscanf
 prev sfio/sfvscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS.FORCE} ${mam_cc_NOPROTECT} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfvscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS.FORCE} ${mam_cc_NOPROTECT} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfvscanf.c
 done sfvscanf.o generated
 make sfwr.o
 make sfio/sfwr.c
@@ -4459,7 +4457,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfwr.c
 meta sfwr.o %.c>%.o sfio/sfwr.c sfwr
 prev sfio/sfwr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfwr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfwr.c
 done sfwr.o generated
 make sfwrite.o
 make sfio/sfwrite.c
@@ -4467,7 +4465,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfwrite.c
 meta sfwrite.o %.c>%.o sfio/sfwrite.c sfwrite
 prev sfio/sfwrite.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfwrite.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfwrite.c
 done sfwrite.o generated
 make sfpurge.o
 make sfio/sfpurge.c
@@ -4475,7 +4473,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfpurge.c
 meta sfpurge.o %.c>%.o sfio/sfpurge.c sfpurge
 prev sfio/sfpurge.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpurge.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfpurge.c
 done sfpurge.o generated
 make sfraise.o
 make sfio/sfraise.c
@@ -4483,7 +4481,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfraise.c
 meta sfraise.o %.c>%.o sfio/sfraise.c sfraise
 prev sfio/sfraise.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfraise.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfraise.c
 done sfraise.o generated
 make sfwalk.o
 make sfio/sfwalk.c
@@ -4491,7 +4489,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfwalk.c
 meta sfwalk.o %.c>%.o sfio/sfwalk.c sfwalk
 prev sfio/sfwalk.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfwalk.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfwalk.c
 done sfwalk.o generated
 make sfgetm.o
 make sfio/sfgetm.c
@@ -4499,7 +4497,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfgetm.c
 meta sfgetm.o %.c>%.o sfio/sfgetm.c sfgetm
 prev sfio/sfgetm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfgetm.c
 done sfgetm.o generated
 make sfmutex.o
 make sfio/sfmutex.c
@@ -4507,7 +4505,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfmutex.c
 meta sfmutex.o %.c>%.o sfio/sfmutex.c sfmutex
 prev sfio/sfmutex.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfmutex.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfmutex.c
 done sfmutex.o generated
 make sfputm.o
 make sfio/sfputm.c
@@ -4515,7 +4513,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfputm.c
 meta sfputm.o %.c>%.o sfio/sfputm.c sfputm
 prev sfio/sfputm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfputm.c
 done sfputm.o generated
 make sfresize.o
 make sfio/sfresize.c
@@ -4523,7 +4521,7 @@ prev sfio/sfhdr.h implicit
 done sfio/sfresize.c
 meta sfresize.o %.c>%.o sfio/sfresize.c sfresize
 prev sfio/sfresize.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfresize.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfresize.c
 done sfresize.o generated
 make _sfclrerr.o
 make sfio/_sfclrerr.c
@@ -4531,7 +4529,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfclrerr.c
 meta _sfclrerr.o %.c>%.o sfio/_sfclrerr.c _sfclrerr
 prev sfio/_sfclrerr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfclrerr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfclrerr.c
 done _sfclrerr.o generated
 make _sfeof.o
 make sfio/_sfeof.c
@@ -4539,7 +4537,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfeof.c
 meta _sfeof.o %.c>%.o sfio/_sfeof.c _sfeof
 prev sfio/_sfeof.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfeof.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfeof.c
 done _sfeof.o generated
 make _sferror.o
 make sfio/_sferror.c
@@ -4547,7 +4545,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sferror.c
 meta _sferror.o %.c>%.o sfio/_sferror.c _sferror
 prev sfio/_sferror.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sferror.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sferror.c
 done _sferror.o generated
 make _sffileno.o
 make sfio/_sffileno.c
@@ -4555,7 +4553,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sffileno.c
 meta _sffileno.o %.c>%.o sfio/_sffileno.c _sffileno
 prev sfio/_sffileno.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sffileno.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sffileno.c
 done _sffileno.o generated
 make _sfopen.o
 make sfio/_sfopen.c
@@ -4563,7 +4561,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfopen.c
 meta _sfopen.o %.c>%.o sfio/_sfopen.c _sfopen
 prev sfio/_sfopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfopen.c
 done _sfopen.o generated
 make _sfstacked.o
 make sfio/_sfstacked.c
@@ -4571,7 +4569,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfstacked.c
 meta _sfstacked.o %.c>%.o sfio/_sfstacked.c _sfstacked
 prev sfio/_sfstacked.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfstacked.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfstacked.c
 done _sfstacked.o generated
 make _sfvalue.o
 make sfio/_sfvalue.c
@@ -4579,7 +4577,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfvalue.c
 meta _sfvalue.o %.c>%.o sfio/_sfvalue.c _sfvalue
 prev sfio/_sfvalue.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfvalue.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfvalue.c
 done _sfvalue.o generated
 make _sfgetc.o
 make sfio/_sfgetc.c
@@ -4587,7 +4585,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfgetc.c
 meta _sfgetc.o %.c>%.o sfio/_sfgetc.c _sfgetc
 prev sfio/_sfgetc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfgetc.c
 done _sfgetc.o generated
 make _sfgetl.o
 make sfio/_sfgetl.c
@@ -4595,7 +4593,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfgetl.c
 meta _sfgetl.o %.c>%.o sfio/_sfgetl.c _sfgetl
 prev sfio/_sfgetl.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetl.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfgetl.c
 done _sfgetl.o generated
 make _sfgetl2.o
 make sfio/_sfgetl2.c
@@ -4603,7 +4601,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfgetl2.c
 meta _sfgetl2.o %.c>%.o sfio/_sfgetl2.c _sfgetl2
 prev sfio/_sfgetl2.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetl2.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfgetl2.c
 done _sfgetl2.o generated
 make _sfgetu.o
 make sfio/_sfgetu.c
@@ -4611,7 +4609,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfgetu.c
 meta _sfgetu.o %.c>%.o sfio/_sfgetu.c _sfgetu
 prev sfio/_sfgetu.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetu.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfgetu.c
 done _sfgetu.o generated
 make _sfgetu2.o
 make sfio/_sfgetu2.c
@@ -4619,7 +4617,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfgetu2.c
 meta _sfgetu2.o %.c>%.o sfio/_sfgetu2.c _sfgetu2
 prev sfio/_sfgetu2.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetu2.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfgetu2.c
 done _sfgetu2.o generated
 make _sfdlen.o
 make sfio/_sfdlen.c
@@ -4627,7 +4625,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfdlen.c
 meta _sfdlen.o %.c>%.o sfio/_sfdlen.c _sfdlen
 prev sfio/_sfdlen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfdlen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfdlen.c
 done _sfdlen.o generated
 make _sfllen.o
 make sfio/_sfllen.c
@@ -4635,7 +4633,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfllen.c
 meta _sfllen.o %.c>%.o sfio/_sfllen.c _sfllen
 prev sfio/_sfllen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfllen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfllen.c
 done _sfllen.o generated
 make _sfslen.o
 make sfio/_sfslen.c
@@ -4643,7 +4641,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfslen.c
 meta _sfslen.o %.c>%.o sfio/_sfslen.c _sfslen
 prev sfio/_sfslen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfslen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfslen.c
 done _sfslen.o generated
 make _sfulen.o
 make sfio/_sfulen.c
@@ -4651,7 +4649,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfulen.c
 meta _sfulen.o %.c>%.o sfio/_sfulen.c _sfulen
 prev sfio/_sfulen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfulen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfulen.c
 done _sfulen.o generated
 make _sfputc.o
 make sfio/_sfputc.c
@@ -4659,7 +4657,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfputc.c
 meta _sfputc.o %.c>%.o sfio/_sfputc.c _sfputc
 prev sfio/_sfputc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfputc.c
 done _sfputc.o generated
 make _sfputd.o
 make sfio/_sfputd.c
@@ -4667,7 +4665,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfputd.c
 meta _sfputd.o %.c>%.o sfio/_sfputd.c _sfputd
 prev sfio/_sfputd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfputd.c
 done _sfputd.o generated
 make _sfputl.o
 make sfio/_sfputl.c
@@ -4675,7 +4673,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfputl.c
 meta _sfputl.o %.c>%.o sfio/_sfputl.c _sfputl
 prev sfio/_sfputl.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputl.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfputl.c
 done _sfputl.o generated
 make _sfputm.o
 make sfio/_sfputm.c
@@ -4683,7 +4681,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfputm.c
 meta _sfputm.o %.c>%.o sfio/_sfputm.c _sfputm
 prev sfio/_sfputm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfputm.c
 done _sfputm.o generated
 make _sfputu.o
 make sfio/_sfputu.c
@@ -4691,7 +4689,7 @@ prev sfio/sfhdr.h implicit
 done sfio/_sfputu.c
 meta _sfputu.o %.c>%.o sfio/_sfputu.c _sfputu
 prev sfio/_sfputu.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputu.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/_sfputu.c
 done _sfputu.o generated
 make clearerr.o
 make stdio/clearerr.c
@@ -4702,7 +4700,7 @@ done stdio/stdhdr.h
 done stdio/clearerr.c
 meta clearerr.o %.c>%.o stdio/clearerr.c clearerr
 prev stdio/clearerr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/clearerr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/clearerr.c
 done clearerr.o generated
 make fclose.o
 make stdio/fclose.c
@@ -4710,7 +4708,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fclose.c
 meta fclose.o %.c>%.o stdio/fclose.c fclose
 prev stdio/fclose.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fclose.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fclose.c
 done fclose.o generated
 make fdopen.o
 make stdio/fdopen.c
@@ -4718,7 +4716,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fdopen.c
 meta fdopen.o %.c>%.o stdio/fdopen.c fdopen
 prev stdio/fdopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fdopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fdopen.c
 done fdopen.o generated
 make feof.o
 make stdio/feof.c
@@ -4726,7 +4724,7 @@ prev stdio/stdhdr.h implicit
 done stdio/feof.c
 meta feof.o %.c>%.o stdio/feof.c feof
 prev stdio/feof.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/feof.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/feof.c
 done feof.o generated
 make ferror.o
 make stdio/ferror.c
@@ -4734,7 +4732,7 @@ prev stdio/stdhdr.h implicit
 done stdio/ferror.c
 meta ferror.o %.c>%.o stdio/ferror.c ferror
 prev stdio/ferror.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ferror.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/ferror.c
 done ferror.o generated
 make fflush.o
 make stdio/fflush.c
@@ -4742,7 +4740,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fflush.c
 meta fflush.o %.c>%.o stdio/fflush.c fflush
 prev stdio/fflush.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fflush.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fflush.c
 done fflush.o generated
 make fgetc.o
 make stdio/fgetc.c
@@ -4750,7 +4748,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fgetc.c
 meta fgetc.o %.c>%.o stdio/fgetc.c fgetc
 prev stdio/fgetc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fgetc.c
 done fgetc.o generated
 make fgetpos.o
 make stdio/fgetpos.c
@@ -4758,7 +4756,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fgetpos.c
 meta fgetpos.o %.c>%.o stdio/fgetpos.c fgetpos
 prev stdio/fgetpos.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetpos.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fgetpos.c
 done fgetpos.o generated
 make fgets.o
 make stdio/fgets.c
@@ -4766,7 +4764,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fgets.c
 meta fgets.o %.c>%.o stdio/fgets.c fgets
 prev stdio/fgets.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgets.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fgets.c
 done fgets.o generated
 make fileno.o
 make stdio/fileno.c
@@ -4774,7 +4772,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fileno.c
 meta fileno.o %.c>%.o stdio/fileno.c fileno
 prev stdio/fileno.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fileno.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fileno.c
 done fileno.o generated
 make fopen.o
 make stdio/fopen.c
@@ -4782,7 +4780,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fopen.c
 meta fopen.o %.c>%.o stdio/fopen.c fopen
 prev stdio/fopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fopen.c
 done fopen.o generated
 make fprintf.o
 make stdio/fprintf.c
@@ -4790,7 +4788,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fprintf.c
 meta fprintf.o %.c>%.o stdio/fprintf.c fprintf
 prev stdio/fprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fprintf.c
 done fprintf.o generated
 make fpurge.o
 make stdio/fpurge.c
@@ -4798,7 +4796,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fpurge.c
 meta fpurge.o %.c>%.o stdio/fpurge.c fpurge
 prev stdio/fpurge.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fpurge.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fpurge.c
 done fpurge.o generated
 make fputc.o
 make stdio/fputc.c
@@ -4806,7 +4804,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fputc.c
 meta fputc.o %.c>%.o stdio/fputc.c fputc
 prev stdio/fputc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fputc.c
 done fputc.o generated
 make fputs.o
 make stdio/fputs.c
@@ -4814,7 +4812,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fputs.c
 meta fputs.o %.c>%.o stdio/fputs.c fputs
 prev stdio/fputs.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputs.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fputs.c
 done fputs.o generated
 make fread.o
 make stdio/fread.c
@@ -4822,7 +4820,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fread.c
 meta fread.o %.c>%.o stdio/fread.c fread
 prev stdio/fread.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fread.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fread.c
 done fread.o generated
 make freopen.o
 make stdio/freopen.c
@@ -4830,7 +4828,7 @@ prev stdio/stdhdr.h implicit
 done stdio/freopen.c
 meta freopen.o %.c>%.o stdio/freopen.c freopen
 prev stdio/freopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/freopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/freopen.c
 done freopen.o generated
 make fscanf.o
 make stdio/fscanf.c
@@ -4838,7 +4836,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fscanf.c
 meta fscanf.o %.c>%.o stdio/fscanf.c fscanf
 prev stdio/fscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fscanf.c
 done fscanf.o generated
 make fseek.o
 make stdio/fseek.c
@@ -4846,7 +4844,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fseek.c
 meta fseek.o %.c>%.o stdio/fseek.c fseek
 prev stdio/fseek.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fseek.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fseek.c
 done fseek.o generated
 make fseeko.o
 make stdio/fseeko.c
@@ -4854,7 +4852,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fseeko.c
 meta fseeko.o %.c>%.o stdio/fseeko.c fseeko
 prev stdio/fseeko.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fseeko.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fseeko.c
 done fseeko.o generated
 make fsetpos.o
 make stdio/fsetpos.c
@@ -4862,7 +4860,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fsetpos.c
 meta fsetpos.o %.c>%.o stdio/fsetpos.c fsetpos
 prev stdio/fsetpos.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fsetpos.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fsetpos.c
 done fsetpos.o generated
 make ftell.o
 make stdio/ftell.c
@@ -4870,7 +4868,7 @@ prev stdio/stdhdr.h implicit
 done stdio/ftell.c
 meta ftell.o %.c>%.o stdio/ftell.c ftell
 prev stdio/ftell.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ftell.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/ftell.c
 done ftell.o generated
 make ftello.o
 make stdio/ftello.c
@@ -4878,7 +4876,7 @@ prev stdio/stdhdr.h implicit
 done stdio/ftello.c
 meta ftello.o %.c>%.o stdio/ftello.c ftello
 prev stdio/ftello.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ftello.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/ftello.c
 done ftello.o generated
 make fwrite.o
 make stdio/fwrite.c
@@ -4886,7 +4884,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fwrite.c
 meta fwrite.o %.c>%.o stdio/fwrite.c fwrite
 prev stdio/fwrite.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwrite.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fwrite.c
 done fwrite.o generated
 make flockfile.o
 make stdio/flockfile.c
@@ -4894,7 +4892,7 @@ prev stdio/stdhdr.h implicit
 done stdio/flockfile.c
 meta flockfile.o %.c>%.o stdio/flockfile.c flockfile
 prev stdio/flockfile.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/flockfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/flockfile.c
 done flockfile.o generated
 make ftrylockfile.o
 make stdio/ftrylockfile.c
@@ -4902,7 +4900,7 @@ prev stdio/stdhdr.h implicit
 done stdio/ftrylockfile.c
 meta ftrylockfile.o %.c>%.o stdio/ftrylockfile.c ftrylockfile
 prev stdio/ftrylockfile.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ftrylockfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/ftrylockfile.c
 done ftrylockfile.o generated
 make funlockfile.o
 make stdio/funlockfile.c
@@ -4910,7 +4908,7 @@ prev stdio/stdhdr.h implicit
 done stdio/funlockfile.c
 meta funlockfile.o %.c>%.o stdio/funlockfile.c funlockfile
 prev stdio/funlockfile.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/funlockfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/funlockfile.c
 done funlockfile.o generated
 make getc.o
 make stdio/getc.c
@@ -4918,7 +4916,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getc.c
 meta getc.o %.c>%.o stdio/getc.c getc
 prev stdio/getc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getc.c
 done getc.o generated
 make getchar.o
 make stdio/getchar.c
@@ -4926,7 +4924,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getchar.c
 meta getchar.o %.c>%.o stdio/getchar.c getchar
 prev stdio/getchar.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getchar.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getchar.c
 done getchar.o generated
 make getw.o
 make stdio/getw.c
@@ -4934,7 +4932,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getw.c
 meta getw.o %.c>%.o stdio/getw.c getw
 prev stdio/getw.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getw.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getw.c
 done getw.o generated
 make pclose.o
 make stdio/pclose.c
@@ -4942,7 +4940,7 @@ prev stdio/stdhdr.h implicit
 done stdio/pclose.c
 meta pclose.o %.c>%.o stdio/pclose.c pclose
 prev stdio/pclose.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/pclose.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/pclose.c
 done pclose.o generated
 make popen.o
 make stdio/popen.c
@@ -4950,7 +4948,7 @@ prev stdio/stdhdr.h implicit
 done stdio/popen.c
 meta popen.o %.c>%.o stdio/popen.c popen
 prev stdio/popen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/popen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/popen.c
 done popen.o generated
 make printf.o
 make stdio/printf.c
@@ -4958,7 +4956,7 @@ prev stdio/stdhdr.h implicit
 done stdio/printf.c
 meta printf.o %.c>%.o stdio/printf.c printf
 prev stdio/printf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/printf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/printf.c
 done printf.o generated
 make putc.o
 make stdio/putc.c
@@ -4966,7 +4964,7 @@ prev stdio/stdhdr.h implicit
 done stdio/putc.c
 meta putc.o %.c>%.o stdio/putc.c putc
 prev stdio/putc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/putc.c
 done putc.o generated
 make putchar.o
 make stdio/putchar.c
@@ -4974,7 +4972,7 @@ prev stdio/stdhdr.h implicit
 done stdio/putchar.c
 meta putchar.o %.c>%.o stdio/putchar.c putchar
 prev stdio/putchar.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putchar.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/putchar.c
 done putchar.o generated
 make puts.o
 make stdio/puts.c
@@ -4982,7 +4980,7 @@ prev stdio/stdhdr.h implicit
 done stdio/puts.c
 meta puts.o %.c>%.o stdio/puts.c puts
 prev stdio/puts.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/puts.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/puts.c
 done puts.o generated
 make putw.o
 make stdio/putw.c
@@ -4990,7 +4988,7 @@ prev stdio/stdhdr.h implicit
 done stdio/putw.c
 meta putw.o %.c>%.o stdio/putw.c putw
 prev stdio/putw.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putw.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/putw.c
 done putw.o generated
 make rewind.o
 make stdio/rewind.c
@@ -4998,7 +4996,7 @@ prev stdio/stdhdr.h implicit
 done stdio/rewind.c
 meta rewind.o %.c>%.o stdio/rewind.c rewind
 prev stdio/rewind.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/rewind.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/rewind.c
 done rewind.o generated
 make scanf.o
 make stdio/scanf.c
@@ -5006,7 +5004,7 @@ prev stdio/stdhdr.h implicit
 done stdio/scanf.c
 meta scanf.o %.c>%.o stdio/scanf.c scanf
 prev stdio/scanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/scanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/scanf.c
 done scanf.o generated
 make setbuf.o
 make stdio/setbuf.c
@@ -5014,7 +5012,7 @@ prev stdio/stdhdr.h implicit
 done stdio/setbuf.c
 meta setbuf.o %.c>%.o stdio/setbuf.c setbuf
 prev stdio/setbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/setbuf.c
 done setbuf.o generated
 make setbuffer.o
 make stdio/setbuffer.c
@@ -5022,7 +5020,7 @@ prev stdio/stdhdr.h implicit
 done stdio/setbuffer.c
 meta setbuffer.o %.c>%.o stdio/setbuffer.c setbuffer
 prev stdio/setbuffer.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setbuffer.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/setbuffer.c
 done setbuffer.o generated
 make setlinebuf.o
 make stdio/setlinebuf.c
@@ -5030,7 +5028,7 @@ prev stdio/stdhdr.h implicit
 done stdio/setlinebuf.c
 meta setlinebuf.o %.c>%.o stdio/setlinebuf.c setlinebuf
 prev stdio/setlinebuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setlinebuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/setlinebuf.c
 done setlinebuf.o generated
 make setvbuf.o
 make stdio/setvbuf.c
@@ -5038,7 +5036,7 @@ prev stdio/stdhdr.h implicit
 done stdio/setvbuf.c
 meta setvbuf.o %.c>%.o stdio/setvbuf.c setvbuf
 prev stdio/setvbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setvbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/setvbuf.c
 done setvbuf.o generated
 make snprintf.o
 make stdio/snprintf.c
@@ -5046,7 +5044,7 @@ prev stdio/stdhdr.h implicit
 done stdio/snprintf.c
 meta snprintf.o %.c>%.o stdio/snprintf.c snprintf
 prev stdio/snprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/snprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/snprintf.c
 done snprintf.o generated
 make sprintf.o
 make stdio/sprintf.c
@@ -5054,7 +5052,7 @@ prev stdio/stdhdr.h implicit
 done stdio/sprintf.c
 meta sprintf.o %.c>%.o stdio/sprintf.c sprintf
 prev stdio/sprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/sprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/sprintf.c
 done sprintf.o generated
 make sscanf.o
 make stdio/sscanf.c
@@ -5062,7 +5060,7 @@ prev stdio/stdhdr.h implicit
 done stdio/sscanf.c
 meta sscanf.o %.c>%.o stdio/sscanf.c sscanf
 prev stdio/sscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/sscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/sscanf.c
 done sscanf.o generated
 make asprintf.o
 make stdio/asprintf.c
@@ -5070,7 +5068,7 @@ prev stdio/stdhdr.h implicit
 done stdio/asprintf.c
 meta asprintf.o %.c>%.o stdio/asprintf.c asprintf
 prev stdio/asprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/asprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/asprintf.c
 done asprintf.o generated
 make vasprintf.o
 make stdio/vasprintf.c
@@ -5078,7 +5076,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vasprintf.c
 meta vasprintf.o %.c>%.o stdio/vasprintf.c vasprintf
 prev stdio/vasprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vasprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vasprintf.c
 done vasprintf.o generated
 make tmpfile.o
 make stdio/tmpfile.c
@@ -5086,7 +5084,7 @@ prev stdio/stdhdr.h implicit
 done stdio/tmpfile.c
 meta tmpfile.o %.c>%.o stdio/tmpfile.c tmpfile
 prev stdio/tmpfile.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/tmpfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/tmpfile.c
 done tmpfile.o generated
 make ungetc.o
 make stdio/ungetc.c
@@ -5094,7 +5092,7 @@ prev stdio/stdhdr.h implicit
 done stdio/ungetc.c
 meta ungetc.o %.c>%.o stdio/ungetc.c ungetc
 prev stdio/ungetc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ungetc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/ungetc.c
 done ungetc.o generated
 make vfprintf.o
 make stdio/vfprintf.c
@@ -5102,7 +5100,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vfprintf.c
 meta vfprintf.o %.c>%.o stdio/vfprintf.c vfprintf
 prev stdio/vfprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vfprintf.c
 done vfprintf.o generated
 make vfscanf.o
 make stdio/vfscanf.c
@@ -5110,7 +5108,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vfscanf.c
 meta vfscanf.o %.c>%.o stdio/vfscanf.c vfscanf
 prev stdio/vfscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vfscanf.c
 done vfscanf.o generated
 make vprintf.o
 make stdio/vprintf.c
@@ -5118,7 +5116,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vprintf.c
 meta vprintf.o %.c>%.o stdio/vprintf.c vprintf
 prev stdio/vprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vprintf.c
 done vprintf.o generated
 make vscanf.o
 make stdio/vscanf.c
@@ -5126,7 +5124,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vscanf.c
 meta vscanf.o %.c>%.o stdio/vscanf.c vscanf
 prev stdio/vscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vscanf.c
 done vscanf.o generated
 make vsnprintf.o
 make stdio/vsnprintf.c
@@ -5134,7 +5132,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vsnprintf.c
 meta vsnprintf.o %.c>%.o stdio/vsnprintf.c vsnprintf
 prev stdio/vsnprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vsnprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vsnprintf.c
 done vsnprintf.o generated
 make vsprintf.o
 make stdio/vsprintf.c
@@ -5142,7 +5140,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vsprintf.c
 meta vsprintf.o %.c>%.o stdio/vsprintf.c vsprintf
 prev stdio/vsprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vsprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vsprintf.c
 done vsprintf.o generated
 make vsscanf.o
 make stdio/vsscanf.c
@@ -5150,7 +5148,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vsscanf.c
 meta vsscanf.o %.c>%.o stdio/vsscanf.c vsscanf
 prev stdio/vsscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vsscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vsscanf.c
 done vsscanf.o generated
 make _doprnt.o
 make stdio/_doprnt.c
@@ -5158,7 +5156,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_doprnt.c
 meta _doprnt.o %.c>%.o stdio/_doprnt.c _doprnt
 prev stdio/_doprnt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_doprnt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_doprnt.c
 done _doprnt.o generated
 make _doscan.o
 make stdio/_doscan.c
@@ -5166,7 +5164,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_doscan.c
 meta _doscan.o %.c>%.o stdio/_doscan.c _doscan
 prev stdio/_doscan.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_doscan.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_doscan.c
 done _doscan.o generated
 make _filbuf.o
 make stdio/_filbuf.c
@@ -5174,7 +5172,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_filbuf.c
 meta _filbuf.o %.c>%.o stdio/_filbuf.c _filbuf
 prev stdio/_filbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_filbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_filbuf.c
 done _filbuf.o generated
 make _flsbuf.o
 make stdio/_flsbuf.c
@@ -5182,7 +5180,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_flsbuf.c
 meta _flsbuf.o %.c>%.o stdio/_flsbuf.c _flsbuf
 prev stdio/_flsbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_flsbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_flsbuf.c
 done _flsbuf.o generated
 make _stdfun.o
 make stdio/_stdfun.c
@@ -5191,7 +5189,7 @@ make FEATURE/uwin implicit
 meta FEATURE/uwin features/%>FEATURE/% features/uwin uwin
 make features/uwin
 done features/uwin
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/uwin
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/uwin
 done FEATURE/uwin dontcare generated
 prev uwin.h implicit
 prev include/ast_windows.h implicit
@@ -5199,7 +5197,7 @@ prev include/ast.h implicit
 done stdio/_stdfun.c
 meta _stdfun.o %.c>%.o stdio/_stdfun.c _stdfun
 prev stdio/_stdfun.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdfun.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdfun.c
 done _stdfun.o generated
 make _stdopen.o
 make stdio/_stdopen.c
@@ -5207,7 +5205,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdopen.c
 meta _stdopen.o %.c>%.o stdio/_stdopen.c _stdopen
 prev stdio/_stdopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdopen.c
 done _stdopen.o generated
 make _stdprintf.o
 make stdio/_stdprintf.c
@@ -5215,7 +5213,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdprintf.c
 meta _stdprintf.o %.c>%.o stdio/_stdprintf.c _stdprintf
 prev stdio/_stdprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdprintf.c
 done _stdprintf.o generated
 make _stdscanf.o
 make stdio/_stdscanf.c
@@ -5223,7 +5221,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdscanf.c
 meta _stdscanf.o %.c>%.o stdio/_stdscanf.c _stdscanf
 prev stdio/_stdscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdscanf.c
 done _stdscanf.o generated
 make _stdsprnt.o
 make stdio/_stdsprnt.c
@@ -5231,7 +5229,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdsprnt.c
 meta _stdsprnt.o %.c>%.o stdio/_stdsprnt.c _stdsprnt
 prev stdio/_stdsprnt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdsprnt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdsprnt.c
 done _stdsprnt.o generated
 make _stdvbuf.o
 make stdio/_stdvbuf.c
@@ -5239,7 +5237,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdvbuf.c
 meta _stdvbuf.o %.c>%.o stdio/_stdvbuf.c _stdvbuf
 prev stdio/_stdvbuf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvbuf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdvbuf.c
 done _stdvbuf.o generated
 make _stdvsnprnt.o
 make stdio/_stdvsnprnt.c
@@ -5247,7 +5245,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdvsnprnt.c
 meta _stdvsnprnt.o %.c>%.o stdio/_stdvsnprnt.c _stdvsnprnt
 prev stdio/_stdvsnprnt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvsnprnt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdvsnprnt.c
 done _stdvsnprnt.o generated
 make _stdvsprnt.o
 make stdio/_stdvsprnt.c
@@ -5255,7 +5253,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdvsprnt.c
 meta _stdvsprnt.o %.c>%.o stdio/_stdvsprnt.c _stdvsprnt
 prev stdio/_stdvsprnt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvsprnt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdvsprnt.c
 done _stdvsprnt.o generated
 make _stdvsscn.o
 make stdio/_stdvsscn.c
@@ -5263,7 +5261,7 @@ prev stdio/stdhdr.h implicit
 done stdio/_stdvsscn.c
 meta _stdvsscn.o %.c>%.o stdio/_stdvsscn.c _stdvsscn
 prev stdio/_stdvsscn.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvsscn.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/_stdvsscn.c
 done _stdvsscn.o generated
 make fgetwc.o
 make stdio/fgetwc.c
@@ -5271,7 +5269,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fgetwc.c
 meta fgetwc.o %.c>%.o stdio/fgetwc.c fgetwc
 prev stdio/fgetwc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetwc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fgetwc.c
 done fgetwc.o generated
 make fwprintf.o
 make stdio/fwprintf.c
@@ -5279,7 +5277,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fwprintf.c
 meta fwprintf.o %.c>%.o stdio/fwprintf.c fwprintf
 prev stdio/fwprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fwprintf.c
 done fwprintf.o generated
 make putwchar.o
 make stdio/putwchar.c
@@ -5288,7 +5286,7 @@ prev stdio/stdhdr.h implicit
 done stdio/putwchar.c
 meta putwchar.o %.c>%.o stdio/putwchar.c putwchar
 prev stdio/putwchar.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putwchar.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/putwchar.c
 done putwchar.o generated
 make vfwscanf.o
 make stdio/vfwscanf.c
@@ -5296,7 +5294,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vfwscanf.c
 meta vfwscanf.o %.c>%.o stdio/vfwscanf.c vfwscanf
 prev stdio/vfwscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfwscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vfwscanf.c
 done vfwscanf.o generated
 make wprintf.o
 make stdio/wprintf.c
@@ -5304,7 +5302,7 @@ prev stdio/stdhdr.h implicit
 done stdio/wprintf.c
 meta wprintf.o %.c>%.o stdio/wprintf.c wprintf
 prev stdio/wprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/wprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/wprintf.c
 done wprintf.o generated
 make fgetws.o
 make stdio/fgetws.c
@@ -5312,7 +5310,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fgetws.c
 meta fgetws.o %.c>%.o stdio/fgetws.c fgetws
 prev stdio/fgetws.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetws.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fgetws.c
 done fgetws.o generated
 make fwscanf.o
 make stdio/fwscanf.c
@@ -5320,7 +5318,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fwscanf.c
 meta fwscanf.o %.c>%.o stdio/fwscanf.c fwscanf
 prev stdio/fwscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fwscanf.c
 done fwscanf.o generated
 make swprintf.o
 make stdio/swprintf.c
@@ -5328,7 +5326,7 @@ prev stdio/stdhdr.h implicit
 done stdio/swprintf.c
 meta swprintf.o %.c>%.o stdio/swprintf.c swprintf
 prev stdio/swprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/swprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/swprintf.c
 done swprintf.o generated
 make vswprintf.o
 make stdio/vswprintf.c
@@ -5336,7 +5334,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vswprintf.c
 meta vswprintf.o %.c>%.o stdio/vswprintf.c vswprintf
 prev stdio/vswprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vswprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vswprintf.c
 done vswprintf.o generated
 make wscanf.o
 make stdio/wscanf.c
@@ -5344,7 +5342,7 @@ prev stdio/stdhdr.h implicit
 done stdio/wscanf.c
 meta wscanf.o %.c>%.o stdio/wscanf.c wscanf
 prev stdio/wscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/wscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/wscanf.c
 done wscanf.o generated
 make fputwc.o
 make stdio/fputwc.c
@@ -5352,7 +5350,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fputwc.c
 meta fputwc.o %.c>%.o stdio/fputwc.c fputwc
 prev stdio/fputwc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputwc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fputwc.c
 done fputwc.o generated
 make getwc.o
 make stdio/getwc.c
@@ -5361,7 +5359,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getwc.c
 meta getwc.o %.c>%.o stdio/getwc.c getwc
 prev stdio/getwc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getwc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getwc.c
 done getwc.o generated
 make swscanf.o
 make stdio/swscanf.c
@@ -5369,7 +5367,7 @@ prev stdio/stdhdr.h implicit
 done stdio/swscanf.c
 meta swscanf.o %.c>%.o stdio/swscanf.c swscanf
 prev stdio/swscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/swscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/swscanf.c
 done swscanf.o generated
 make vswscanf.o
 make stdio/vswscanf.c
@@ -5377,7 +5375,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vswscanf.c
 meta vswscanf.o %.c>%.o stdio/vswscanf.c vswscanf
 prev stdio/vswscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vswscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vswscanf.c
 done vswscanf.o generated
 make fputws.o
 make stdio/fputws.c
@@ -5385,7 +5383,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fputws.c
 meta fputws.o %.c>%.o stdio/fputws.c fputws
 prev stdio/fputws.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputws.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fputws.c
 done fputws.o generated
 make getwchar.o
 make stdio/getwchar.c
@@ -5394,7 +5392,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getwchar.c
 meta getwchar.o %.c>%.o stdio/getwchar.c getwchar
 prev stdio/getwchar.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getwchar.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getwchar.c
 done getwchar.o generated
 make ungetwc.o
 make stdio/ungetwc.c
@@ -5402,7 +5400,7 @@ prev stdio/stdhdr.h implicit
 done stdio/ungetwc.c
 meta ungetwc.o %.c>%.o stdio/ungetwc.c ungetwc
 prev stdio/ungetwc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ungetwc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/ungetwc.c
 done ungetwc.o generated
 make vwprintf.o
 make stdio/vwprintf.c
@@ -5410,7 +5408,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vwprintf.c
 meta vwprintf.o %.c>%.o stdio/vwprintf.c vwprintf
 prev stdio/vwprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vwprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vwprintf.c
 done vwprintf.o generated
 make fwide.o
 make stdio/fwide.c
@@ -5418,7 +5416,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fwide.c
 meta fwide.o %.c>%.o stdio/fwide.c fwide
 prev stdio/fwide.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwide.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fwide.c
 done fwide.o generated
 make putwc.o
 make stdio/putwc.c
@@ -5427,7 +5425,7 @@ prev stdio/stdhdr.h implicit
 done stdio/putwc.c
 meta putwc.o %.c>%.o stdio/putwc.c putwc
 prev stdio/putwc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putwc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/putwc.c
 done putwc.o generated
 make vfwprintf.o
 make stdio/vfwprintf.c
@@ -5435,7 +5433,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vfwprintf.c
 meta vfwprintf.o %.c>%.o stdio/vfwprintf.c vfwprintf
 prev stdio/vfwprintf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfwprintf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vfwprintf.c
 done vfwprintf.o generated
 make vwscanf.o
 make stdio/vwscanf.c
@@ -5443,7 +5441,7 @@ prev stdio/stdhdr.h implicit
 done stdio/vwscanf.c
 meta vwscanf.o %.c>%.o stdio/vwscanf.c vwscanf
 prev stdio/vwscanf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vwscanf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/vwscanf.c
 done vwscanf.o generated
 make stdio_c99.o
 make stdio/stdio_c99.c
@@ -5451,7 +5449,7 @@ prev stdio/stdhdr.h implicit
 done stdio/stdio_c99.c
 meta stdio_c99.o %.c>%.o stdio/stdio_c99.c stdio_c99
 prev stdio/stdio_c99.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/stdio_c99.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/stdio_c99.c
 done stdio_c99.o generated
 make fcloseall.o
 make stdio/fcloseall.c
@@ -5459,7 +5457,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fcloseall.c
 meta fcloseall.o %.c>%.o stdio/fcloseall.c fcloseall
 prev stdio/fcloseall.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fcloseall.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fcloseall.c
 done fcloseall.o generated
 make fmemopen.o
 make stdio/fmemopen.c
@@ -5467,7 +5465,7 @@ prev stdio/stdhdr.h implicit
 done stdio/fmemopen.c
 meta fmemopen.o %.c>%.o stdio/fmemopen.c fmemopen
 prev stdio/fmemopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fmemopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/fmemopen.c
 done fmemopen.o generated
 make getdelim.o
 make stdio/getdelim.c
@@ -5475,7 +5473,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getdelim.c
 meta getdelim.o %.c>%.o stdio/getdelim.c getdelim
 prev stdio/getdelim.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getdelim.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getdelim.c
 done getdelim.o generated
 make getline.o
 make stdio/getline.c
@@ -5483,7 +5481,7 @@ prev stdio/stdhdr.h implicit
 done stdio/getline.c
 meta getline.o %.c>%.o stdio/getline.c getline
 prev stdio/getline.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getline.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -D_PACKAGE_ast -c stdio/getline.c
 done getline.o generated
 make frexp.o
 make comp/frexp.c
@@ -5522,7 +5520,7 @@ make FEATURE/libpath implicit
 meta FEATURE/libpath features/%.sh>FEATURE/% features/libpath.sh libpath
 make features/libpath.sh
 done features/libpath.sh
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/libpath.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/libpath.sh
 done FEATURE/libpath generated
 make conftab.h implicit
 done conftab.h
@@ -5547,7 +5545,7 @@ prev include/sfio_t.h implicit
 done port/astdynamic.c
 meta astdynamic.o %.c>%.o port/astdynamic.c astdynamic
 prev port/astdynamic.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c port/astdynamic.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c port/astdynamic.c
 done astdynamic.o generated
 make astlicense.o
 make port/astlicense.c
@@ -7129,7 +7127,7 @@ make FEATURE/ndbm
 meta FEATURE/ndbm features/%>FEATURE/% features/ndbm ndbm
 make features/ndbm
 done features/ndbm
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/ndbm
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/ndbm
 prev std/stdio.h implicit
 done FEATURE/ndbm generated
 exec - cmp 2>/dev/null -s FEATURE/ndbm ast_ndbm.h || { rm -f ast_ndbm.h; silent test -d . || mkdir .; ${STDCP} FEATURE/ndbm ast_ndbm.h; }
@@ -7210,7 +7208,7 @@ make FEATURE/sizeof
 meta FEATURE/sizeof features/%>FEATURE/% features/sizeof sizeof
 make features/sizeof
 done features/sizeof
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' run features/sizeof
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' run features/sizeof
 done FEATURE/sizeof generated
 exec - cmp 2>/dev/null -s FEATURE/sizeof ast_sizeof.h || { rm -f ast_sizeof.h; silent test -d . || mkdir .; ${STDCP} FEATURE/sizeof ast_sizeof.h; }
 done ast_sizeof.h generated
@@ -7298,7 +7296,8 @@ exec - fi
 exec - }
 exec - ;;
 exec - esac
-prev ${INSTALLROOT}/include/prototyped.h implicit
+make ${INSTALLROOT}/include/prototyped.h implicit
+done ${INSTALLROOT}/include/prototyped.h dontcare
 done ${INSTALLROOT}/include/ast/fmtmsg.h generated
 make ${INSTALLROOT}/include/ast/libgen.h
 prev comp/libgen.h

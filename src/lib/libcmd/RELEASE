@@ -1,3 +1,4 @@
+12-02-14 rm.c: --force ignores no file operands specified
 12-01-10 b_* (int, char**, void*) => (int, char**, Shbltin_t*)
 11-08-27 pids.c: add getsid() iffe test
 10-08-16 chmod.c: add -l alias for { -h --symlink }

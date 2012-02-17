@@ -1144,4 +1144,14 @@ func2
 EOF
 } 2> /dev/null || err_exit  'problem with unset -f  foo within function foo'
 
+val=$($SHELL 2> /dev/null <<- \EOF
+	.sh.fun.set() { set -x; }
+	function f1 { print -n ${.sh.fun}; set -o | grep xtrace;}
+	function f2 { print -n ${.sh.fun}; set -o | grep xtrace;}
+	f1
+	set -o | grep xtrace
+	f2
+EOF)
+[[ $val == f1xtrace*on*off*f2xtrace*on* ]] || err_exit "'.sh.fun.set() { set -x; }' not tracing all functions"
+
 exit $((Errors<125?Errors:125))

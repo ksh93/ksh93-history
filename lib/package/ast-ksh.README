@@ -93,7 +93,25 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-12-02-02  --- Release ksh93u+ ---
+12-02-14  --- Release ksh93u+ ---
+12-02-14  A bug in which ^Z did not stop a pipeline when the last component
+	  was a shell built-in has been fixed.
+12-02-14  getconf("PATH") used to initialize ed(1) path.
+12-02-13 +In earlier version read from standard input would fail when called
+	  from the KEYBD trap.  Now read options -N, -n, and -t should work
+	  when called from a KEYBD trap.
+12-02-13  If FCEDIT is not set and fc is invoked without the -e option,
+	  ed will be invoked if found instead of /bin/ed. 
+12-02-10  Another bug in the saving and restoring of IFS in a subshell
+	  that caused a core dump has been fixed.
+12-02-08  A bug in which .sh.fun disciplines could be cleared after a
+	  function completes has been fixed.
+12-02-08  A bug in job control in which the foregroup process group was not
+	  set correctly after restarting a stopped pipeline has been fixed.
+12-02-07  A bug in which numbers with leading zeros could be treated as
+	  octal constants outside of ((...)) has been fixed.
+12-02-06  A bug in arithmetic with compound variables containing multiple
+	  array elements has been fixed.
 12-02-02  A bug in the ulimit option table was fixed.
 12-01-26  A bug in which a set command that did not change monitor could
 	  effect the behavior of the monitor when monitor mode is on is fixed.
@@ -182,7 +200,7 @@ All recorded changes follow.
 11-08-03  A bug in which the shell did not preserve the exit status for a
 	  coprocess has been fixed.
 11-08-02  A bug in the saving and restoring of IFS in command substitution that
-	  cause case a core dump has been fixed.
+	  caused a core dump has been fixed.
 11-07-21  Modified the 10-08-27 bug fix so that background jobs started in for
 	  and while loops created interactively generate completion messages.
 11-07-20  I fixed a bug in here documents in which multi-byte characters that
@@ -2956,6 +2974,9 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+12-02-10 sfvprintf.c: fix 1 byte too long buffer access
+12-02-07 malloc.c/features/vmalloc: add gnu __malloc_hook tests
+12-02-06 vmmopen.c: fix ALIGN vs sys/param.h macro conflict
 12-02-02 astlicense.c: add license.component for component-specific licenses
 12-01-31 spawnveg.c: fix transient bug that made invalid setpgid() call
 12-01-27 pathpath.c: fix buffer size math when internal allocation requested
@@ -4717,6 +4738,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+12-02-14 rm.c: --force ignores no file operands specified
 12-01-10 b_* (int, char**, void*) => (int, char**, Shbltin_t*)
 11-08-27 pids.c: add getsid() iffe test
 10-08-16 chmod.c: add -l alias for { -h --symlink }

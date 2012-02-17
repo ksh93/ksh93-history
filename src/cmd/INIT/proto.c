@@ -198,7 +198,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 #line 1 "../../lib/libpp/ppproto.c"
  
 #line 13
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2011-08-30 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2012-04-14 $\000\n";
 
 #line 1 "../../lib/libpp/ppfsm.c"
  
@@ -1286,7 +1286,15 @@ extern __MANGLE__  long	strkey  __PROTO__((const char*));
 #line 20 "../../lib/libpp/ppproto.c"
 
 #line 41
-struct proto 
+typedef struct Key_s
+{
+	const char*	name;
+	size_t		size;
+	int		hit;
+	int		val;
+} Key_t;
+
+typedef struct Proto_s 
 {
 	int		brace;		 
 	int		call;		 
@@ -1317,10 +1325,32 @@ struct proto
 
 
 
+} Proto_t;
+
+ 
+#line 171
+static const Key_t	pragmas[] =
+{
+	{ "prototyped",sizeof( "prototyped")-1, 0x01, 1},	 
+	{ "noprototyped",sizeof( "noprototyped")-1, 0x01, 0},
+	{ "noticed",sizeof( "noticed")-1, 0x02, 1},
+	{ "nonoticed",sizeof( "nonoticed")-1, 0x02, 0},
 };
 
-  
-#line 163
+static const Key_t	notices[] =
+{
+	{ "Copyright",sizeof( "Copyright")-1, 0x02, 1},
+	{ "COPYRIGHT",sizeof( "COPYRIGHT")-1, 0x02, 1},
+	{ "copyright",sizeof( "copyright")-1, 0x02, 1},
+	{ "Public Domain",sizeof( "Public Domain")-1, 0x02, 0},
+	{ "PUBLIC DOMAIN",sizeof( "PUBLIC DOMAIN")-1, 0x02, 0},
+};
+
+ 
+
+
+
+
 static char*
 number __PARAM__((register char* p, register long n), (p, n)) __OTORP__(register char* p; register long n;){
 	register long	d;
@@ -1336,7 +1366,7 @@ number __PARAM__((register char* p, register long n), (p, n)) __OTORP__(register
 static int		errors;
 
  
-#line 194
+#line 224
  
 
 
@@ -1354,7 +1384,7 @@ sstrlen __PARAM__((register const char* s), (s)) __OTORP__(register const char* 
 
 
 static int
-sstrncmp __PARAM__((register const char* s, register char* t, register int n), (s, t, n)) __OTORP__(register const char* s; register char* t; register int n;){
+sstrncmp __PARAM__((register const char* s, register const char* t, register int n), (s, t, n)) __OTORP__(register const char* s; register const char* t; register int n;){
 	register const char*	e = s + n;
 
 	while (s < e)
@@ -1387,7 +1417,7 @@ proto_error __PARAM__((char* iob, int level, char* msg, char* arg), (iob, level,
 	p = strcopy(buf, "proto: ");
 	if (iob)
 	{
-		register struct proto*	proto = (struct proto*)(iob - sizeof(struct proto));
+		register Proto_t*	proto = (Proto_t*)(iob - sizeof(Proto_t));
 
 		if (proto->line)
 		{
@@ -2616,11 +2646,11 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		comment(&notice, &buf, ((char*)0), -1, 0);
 	return (*(( &buf)->nxt>=( &buf)->end?(( &buf)->nxt=( &buf)->end-1):( &buf)->nxt)=0,( &buf)->nxt-( &buf)->buf);
 }
-#line 306 "../../lib/libpp/ppproto.c"
+#line 336 "../../lib/libpp/ppproto.c"
  
-#line 318
+#line 348
 static char*
-linesync __PARAM__((register struct proto* proto, register char* p, register long n), (proto, p, n)) __OTORP__(register struct proto* proto; register char* p; register long n;){
+linesync __PARAM__((register Proto_t* proto, register char* p, register long n), (proto, p, n)) __OTORP__(register Proto_t* proto; register char* p; register long n;){
 
 	if (proto->flags & (1L<<13))
 
@@ -2642,7 +2672,7 @@ linesync __PARAM__((register struct proto* proto, register char* p, register lon
 
 
 static char*
-init __PARAM__((struct proto* proto, char* op, int flags), (proto, op, flags)) __OTORP__(struct proto* proto; char* op; int flags;){
+init __PARAM__((Proto_t* proto, char* op, int flags), (proto, op, flags)) __OTORP__(Proto_t* proto; char* op; int flags;){
 	register char*	s;
 
 	if (flags & (1L<<10))
@@ -2759,7 +2789,7 @@ init __PARAM__((struct proto* proto, char* op, int flags), (proto, op, flags)) _
 }
 
  
-#line 392
+#line 422
 static char*
 nns __PARAM__((register char* s), (s)) __OTORP__(register char* s;){
 	while (*s == ' ' || *s == '\t' || *s == '\n')
@@ -2768,7 +2798,7 @@ nns __PARAM__((register char* s), (s)) __OTORP__(register char* s;){
 }
 
  
-#line 409
+#line 439
 static int
 directive __PARAM__((register char* s, int dir), (s, dir)) __OTORP__(register char* s; int dir;){
 	switch (*(s = nns(s)))
@@ -2800,7 +2830,7 @@ directive __PARAM__((register char* s, int dir), (s, dir)) __OTORP__(register ch
 
 
 static int
-lex __PARAM__((register struct proto* proto, register long flags), (proto, flags)) __OTORP__(register struct proto* proto; register long flags;){
+lex __PARAM__((register Proto_t* proto, register long flags), (proto, flags)) __OTORP__(register Proto_t* proto; register long flags;){
 	register char*		ip;
 	register char*		op;
 	register int		c;
@@ -3586,7 +3616,7 @@ if !defined(va_start)\n\
 							*v++ = ' ';
 							v = memcopy(v, im, ie - im);
 							*v = 0;
-							proto_error((char*)proto + sizeof(struct proto), 2, op, ((char*)0));
+							proto_error((char*)proto + sizeof(Proto_t), 2, op, ((char*)0));
 						}
 						ip--;
  
@@ -3737,7 +3767,7 @@ if !defined(va_start)\n\
 		else if (*ie == ')')
 		{
 			if (op > om && *(op - 1) == '(')
-				proto_error((char*)proto + sizeof(struct proto), 1, "function pointer argument prototype omitted", ((char*)0));
+				proto_error((char*)proto + sizeof(Proto_t), 1, "function pointer argument prototype omitted", ((char*)0));
 			(*op++=( *ie++));
 			while (*ie == ' ' || *ie == '\t' || *ie == '\n') ie++;
 		}
@@ -4322,27 +4352,40 @@ if !defined(va_start)\n\
 	else if (flags & ((1L<<10)|(1L<<11)))
 	{
 
-		if ((flags & (1L<<29)) && c == '%' && *ip == '{') t = 0;
+		if ((flags & (1L<<29)) && c == '%' && *ip == '{')
+			t = 0;
 		else
 
 		{
-			if (c == '#') for (t = ip; *t == ' ' || *t == '\t'; t++);
-			else t = "";
-			if (*t++ == 'i' && *t++ == 'f' && *t++ == 'n' && *t++ == 'd' && *t++ == 'e' && *t++ == 'f')
+			if (c == '#')
 			{
+				for (t = ip; *t == ' ' || *t == '\t'; t++);
+				if (*t++ == 'i' && *t++ == 'f' && *t++ == 'n' && *t++ == 'd' && *t++ == 'e' && *t++ == 'f')
+				{
 
 
 
 
-					t = 0;
+						t = 0;
+				}
 			}
+			else
+				t = "";
 		}
 		if (t)
 		{
-			ip = bp;
-			op = proto->op;
+
+			n = ip - proto->tp;
+			ip -= n;
+			op -= n;
+
+
+
+
 		}
-		else while (*ip != '\n') *op++ = *ip++;
+		else
+			while (*ip != '\n')
+				*op++ = *ip++;
 		op = init(proto, op, flags);
 		op = linesync(proto, op, proto->line);
 		flags &= ~((1L<<10)|(1L<<11));
@@ -4359,21 +4402,26 @@ if !defined(va_start)\n\
 
 void
 pppclose __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
-	register struct proto*	proto = (struct proto*)(iob - sizeof(struct proto));
+	register Proto_t*	proto = (Proto_t*)(iob - sizeof(Proto_t));
 
 	if (proto->flags & (1L<<16)) close(proto->fd);
 	free((char*)proto);  
 }
 
  
-#line 2012
+#line 2055
 char*
 pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* package, char* comment, int flags), (file, fd, notice, options, package, comment, flags)) __OTORP__(char* file; int fd; char* notice; char* options; char* package; char* comment; int flags;){
-	register struct proto*	proto;
+	register Proto_t*	proto;
 	register char*		iob;
 	register long		n;
 	register char*		s;
+	char*			t;
 	int			pragma;
+	int			clr;
+	int			hit;
+	int			i;
+	int			z;
 	char*			b;
 
 	int			comlen;
@@ -4421,7 +4469,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 
 		n = (16*1024);
-		if (!(proto = (( 0)?( struct proto*)realloc((char*)( 0),sizeof( struct proto)*( 1)+( 5 * n + 2)):( struct proto*)calloc(1,sizeof( struct proto)*( 1)+( 5 * n + 2)))))
+		if (!(proto = (( 0)?( Proto_t*)realloc((char*)( 0),sizeof( Proto_t)*( 1)+( 5 * n + 2)):( Proto_t*)calloc(1,sizeof( Proto_t)*( 1)+( 5 * n + 2)))))
 			return 0;
 		proto->iz = n;
 		proto->oz = 3 * n;
@@ -4429,7 +4477,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 	}
 	proto->fd = fd;
 	proto->package = package;
-	iob = (char*)proto + sizeof(struct proto);
+	iob = (char*)proto + sizeof(Proto_t);
 	proto->op = proto->ob = iob;
 	proto->ip = proto->ib = iob + proto->oz + n;
 	if (m) proto->options |= (1L<<0);
@@ -4460,47 +4508,57 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 	*(proto->ip + n) = 0;
 
  
-#line 2117
+#line 2165
 	if (!notice && !options || (comlen = astlicense(com, sizeof(com), ((char*)0), "type=check", proto->cc[0], proto->cc[1], proto->cc[2])) <= 0)
 		*com = 0;
 
+	hit = (notice || options) ? 0 : 0x02;
 	pragma = -1;
 	s = proto->ip;
 	m = 80;
-	while (m-- > 0 && *s)
+	while (m-- > 0 && *s && hit != (0x01|0x02))
 	{
-		while (*s == ' ' || *s == '\t') s++;
+		while (*s == ' ' || *s == '\t')
+			s++;
 		if (*s == '#')
 		{
 			b = s++;
-			while (*s == ' ' || *s == '\t') s++;
-			if (!sstrncmp( s, "pragma", sizeof("pragma") - 1) && (*(s += sizeof("pragma") - 1) == ' ' || *s == '\t'))
+			while (*s == ' ' || *s == '\t')
+				s++;
+			if (*s == *"pragma"&& !sstrncmp( s, "pragma", sizeof("pragma") - 1) && (*(s += sizeof("pragma") - 1) == ' ' || *s == '\t'))
 			{
-				while (*s == ' ' || *s == '\t') s++;
-				if (*s == 'n' && *(s + 1) == 'o')
+				clr = 0;
+				while (*s && *s != '\r' && *s != '\n')
 				{
-					s += 2;
-					pragma = -2;
-				}
-				if (!sstrncmp( s, "prototyped", sizeof("prototyped") - 1) && (*(s += sizeof("prototyped") - 1) == ' ' || *s == '\t' || *s == '\n' || *s == '\r'))
-					while (*s)
-					{
-						if ((*(s - 1) == ' ' || *(s - 1) == '\t') && *s == *"noticed"&& !sstrncmp( s, "noticed", sizeof("noticed") - 1))
-							notice = options = 0;
-						if (*s++ == '\n')
+					for (; *s == ' ' || *s == '\t'; s++);
+					for (t = s; *s && *s != ' ' && *s != '\t' && *s != '\r' && *s != '\n'; s++);
+					z = s - t;
+					for (i = 0; i < (sizeof( pragmas)/sizeof( pragmas[0])); i++)
+						if (pragmas[i].size == z && !sstrncmp( t, pragmas[i].name, z))
 						{
-							pragma += 2;
-
-							if (!(flags & (1<<1)) || (flags & (1<<8)))
-
-							for (s--; b < s; *b++ = ' ');
-							goto magic;
+							clr = 1;
+							hit |= pragmas[i].hit;
+							switch (pragmas[i].hit)
+							{
+							case 0x02:
+								notice = options = 0;
+								break;
+							case 0x01:
+								pragma = pragmas[i].val;
+								break;
+							}
 						}
-					}
-				pragma = -1;
+				}
+				if (clr)
+				{
+
+					if (!(flags & (1<<1)) || (flags & (1<<8)))
+
+					for (; b < s; *b++ = ' ');
+				}
 			}
 		}
-		else if (*s == '/' && !sstrncmp( s, "/* : : generated by proto : : */\n", sizeof("/* : : generated by proto : : */\n") - 1))
+		else if (*s == *"/* : : generated by proto : : */\n"&& !sstrncmp( s, "/* : : generated by proto : : */\n", sizeof("/* : : generated by proto : : */\n") - 1))
 		{
 			pragma = 0;
 			break;
@@ -4508,40 +4566,40 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 		else if (*s == '%' && *(s + 1) == '{')
 			proto->flags |= (1L<<29);
-		if (notice || options)
+		else if (!(hit & 0x02))
 		{
 			if (*s == *com && !sstrncmp( s, com, comlen))
+			{
+				hit |= 0x02;
 				notice = options = 0;
+			}
 			else
-				while (*s)
-				{
-					if (*s == *"Copyright"&& !sstrncmp( s, "Copyright", sizeof("Copyright") - 1))
-					{
-						s += sizeof("Copyright") - 1;
-						while (*s == ' ' || *s == '\t')
-							s++;
-						if (*s == '(' && (*(s + 1) == 'c' || *(s + 1) == 'C') && *(s + 2) == ')' || *s >= '0' && *s <= '9' && *(s + 1) >= '0' && *(s + 1) <= '9')
+				for (; *s && *s != '\n' && !(hit & 0x02); s++)
+					for (i = 0; i < (sizeof( notices)/sizeof( notices[0])); i++)
+						if (*s == notices[i].name[0] && !sstrncmp( s, notices[i].name, notices[i].size))
 						{
-							notice = options = 0;
+							s += notices[i].size;
+							if (notices[i].val)
+							{
+								while (*s == ' ' || *s == '\t')
+									s++;
+								if (*s == '(' && (*(s + 1) == 'c' || *(s + 1) == 'C') && *(s + 2) == ')' || *s >= '0' && *s <= '9' && *(s + 1) >= '0' && *(s + 1) <= '9')
+								{
+									hit |= notices[i].hit;
+									notice = options = 0;
+								}
+							}
+							else
+							{
+								hit |= notices[i].hit;
+								notice = options = 0;
+							}
 							break;
 						}
-					}
-					if (*s == *"Public Domain"&& !sstrncmp( s, "Public Domain", sizeof("Public Domain") - 1))
-					{
-						notice = options = 0;
-						break;
-					}
-					else if (*s++ == '\n')
-					{
-						s--;
-						break;
-					}
-				}
 		}
 
 		while (*s && *s++ != '\n');
 	}
- magic:
 	if (flags & (1<<10)) proto->flags |= (1L<<20);
 	if (flags & (1<<12)) proto->test = 1;
 	if (flags & (1<<2)) proto->options |= (1L<<6);
@@ -4585,7 +4643,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 				if (proto->cc[0])
 				{
 					if ((comlen = astlicense(proto->op, proto->oz, notice, options, proto->cc[0], proto->cc[1], proto->cc[2])) < 0)
-						proto_error((char*)proto + sizeof(struct proto), 1, proto->op, ((char*)0));
+						proto_error((char*)proto + sizeof(Proto_t), 1, proto->op, ((char*)0));
 					else
 						proto->op += comlen;
 				}
@@ -4613,7 +4671,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 		if (notice || options)
 		{
 			if ((comlen = astlicense(proto->op, proto->oz, notice, options, proto->cc[0], proto->cc[1], proto->cc[2])) < 0)
-				proto_error((char*)proto + sizeof(struct proto), 1, proto->op, ((char*)0));
+				proto_error((char*)proto + sizeof(Proto_t), 1, proto->op, ((char*)0));
 			else
 				proto->op += comlen;
 		}
@@ -4633,7 +4691,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 				*proto->op++ = '#';
 				proto->op = strcopy(proto->op, "pragma");
 				*proto->op++ = ' ';
-				proto->op = strcopy(proto->op, "prototyped");
+				proto->op = strcopy(proto->op, pragmas[0].name);
 				*proto->op++ = '\n';
 			}
 			else
@@ -4681,7 +4739,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 int
 pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
-	register struct proto*	proto = (struct proto*)(iob - sizeof(struct proto));
+	register Proto_t*	proto = (Proto_t*)(iob - sizeof(Proto_t));
 	register int		n;
 
 	if (proto->flags & (1L<<18))

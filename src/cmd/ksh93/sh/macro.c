@@ -2034,6 +2034,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			t = sh_dolparen((Lex_t*)mp->shp->lex_context);
 		if(t && t->tre.tretyp==TARITH)
 		{
+			mp->shp->inarith = 1;
 			fcsave(&save);
 			if(t->ar.arcomp)
 				num = arith_exec(t->ar.arcomp);
@@ -2041,6 +2042,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 				num = sh_arith(mp->shp,t->ar.arexpr->argval);
 			else
 				num = sh_arith(mp->shp,sh_mactrim(mp->shp,t->ar.arexpr->argval,3));
+			mp->shp->inarith = 0;
 		out_offset:
 			stkset(stkp,savptr,savtop);
 			*mp = savemac;

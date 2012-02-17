@@ -32,6 +32,8 @@ void _STUB_vmmapopen(){}
 #include	<unistd.h>
 #endif
 
+#undef	ALIGN	/* some sys/param.h define this */
+
 #include	<sys/mman.h>	/* mmap() headers	*/
 #include	<sys/file.h>
 #include	<sys/stat.h>
@@ -39,6 +41,9 @@ void _STUB_vmmapopen(){}
 
 #include	<sys/shm.h>	/* shm headers		*/
 #include	<sys/ipc.h>
+
+#undef	ALIGN
+#define ALIGN	sizeof(struct _align_s)
 
 /* Create a region to allocate based on mmap() or shmget().
 ** Both ways provide for share memory allocation.

@@ -752,9 +752,7 @@ loop_fmt :
 				else
 #endif
 				{	if((v = size) < 0)
-						for(v = 0; sp[v]; ++v)
-							if(v == precis)
-								break;
+						for(v = 0; v != precis && sp[v]; ++v);
 					if(precis >= 0 && v > precis)
 						v = precis;
 					w = v;

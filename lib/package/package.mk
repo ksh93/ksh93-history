@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Research) 2011-05-09
+ * @(#)package.mk (AT&T Research) 2012-02-14
  *
  * usage:
  *
@@ -247,6 +247,8 @@ package.src.pat = $(PACKAGESRC)/($(name).(ini|pkg))
 package.src = $(package.src.pat:P=G) $(.package.licenses. --save $(name))
 package.bin = $(PACKAGEBIN)/$(name).ini
 
+package.mam = --never --force --mam=static --corrupt=accept --clobber --compare --link='lib*.a*' CC=$(CC.DIALECT:N=C++:?CC?cc?) package.license.class=$(license:Q) $(=) 'dontcare test' install test
+
 op = current
 stamp = [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]
 source = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(suffix)
@@ -290,8 +292,8 @@ package.requires = 0
 					version := $(I)
 				end
 			end
-			LICENSEFILE := $(.package.licenses. $(name):@/ /:/G)
-			export LICENSEFILE
+			LICENSEFILEDEFAULT := $(.package.licenses. $(name):@/ /:/G)
+			export LICENSEFILEDEFAULT
 		end
 		if "$(>)"
 			for I $(>:V)
@@ -704,7 +706,7 @@ vendor.cyg = gnu
 								then	cd $j
 									if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
 									then	(( m++ ))
-										$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) package.license.class=$(license:Q) $(=) 'dontcare test' install test $(export.$(style):Q) > $tmp/$m.mam
+										$(MAKE) $(package.mam) $(export.$(style):Q) > $tmp/$m.mam
 										echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
 									fi
 									cd $(INSTALLROOT)/$i
@@ -724,7 +726,7 @@ vendor.cyg = gnu
 								echo ";;;$tmp/$m.mam;$i/Mamfile"
 							fi
 						else	(( m++ ))
-							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) package.license.class=$(license:Q) $(=) 'dontcare test' install test $(export.$(style):Q) > $tmp/$m.mam
+							$(MAKE) $(package.mam) $(export.$(style):Q) > $tmp/$m.mam
 							echo ";;;$tmp/$m.mam;$i/Mamfile"
 						fi
 					fi
@@ -988,7 +990,7 @@ vendor.cyg = gnu
 								then	cd $j
 									if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
 									then	(( m++ ))
-										$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) package.license.class=$(license:Q) $(=) 'dontcare test' install test > $tmp/$m.mam
+										$(MAKE) $(package.mam) > $tmp/$m.mam
 										$(CMP) $(CMPFLAGS) $tmp/$m.mam $(PACKAGEROOT)/$i/$j/Mamfile && touch -r $(PACKAGEROOT)/$i/$j/Mamfile $tmp/$m.mam
 										echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
 									fi
@@ -1010,7 +1012,7 @@ vendor.cyg = gnu
 								echo ";;;$tmp/$m.mam;$i/Mamfile"
 							fi
 						else	(( m++ ))
-							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) package.license.class=$(license:Q) $(=) 'dontcare test' install test > $tmp/$m.mam
+							$(MAKE) $(package.mam) > $tmp/$m.mam
 							$(CMP) $(CMPFLAGS) $tmp/$m.mam $(PACKAGEROOT)/$i/Mamfile && touch -r $(PACKAGEROOT)/$i/Mamfile $tmp/$m.mam
 							echo ";;;$tmp/$m.mam;$i/Mamfile"
 						fi

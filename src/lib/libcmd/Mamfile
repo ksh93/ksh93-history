@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-02-07
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -106,7 +106,7 @@ meta FEATURE/symlink features/%>FEATURE/% features/symlink symlink
 make features/symlink
 done features/symlink
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/symlink
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/symlink
 done FEATURE/symlink generated
 make fts_fix.h implicit
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
@@ -133,7 +133,6 @@ prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_wchar.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
 make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
@@ -158,9 +157,7 @@ done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_lib.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_lib.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_std.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fts.h dontcare
 done fts_fix.h
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
@@ -168,7 +165,6 @@ make ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ls.h
 make ${PACKAGE_ast_INCLUDE}/cdt.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -201,12 +197,9 @@ prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/option.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/error.h
 prev fts_fix.h implicit
 make ${PACKAGE_ast_INCLUDE}/modex.h implicit
@@ -214,12 +207,10 @@ make ${PACKAGE_ast_INCLUDE}/modecanon.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/modecanon.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/modex.h
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 make ${PACKAGE_ast_INCLUDE}/sum.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/sum.h
 prev cmd.h implicit
 done cksum.c
@@ -246,22 +237,18 @@ make ${PACKAGE_ast_INCLUDE}/times.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_time.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_time.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/times.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/tm.h dontcare
 done ${PACKAGE_ast_INCLUDE}/tmx.h
 make ${PACKAGE_ast_INCLUDE}/stk.h implicit
 prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/stk.h
 make ${PACKAGE_ast_INCLUDE}/hashkey.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/hashkey.h
 make ${PACKAGE_ast_INCLUDE}/fs3d.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fs3d.h
 prev fts_fix.h implicit
 prev ${PACKAGE_ast_INCLUDE}/times.h implicit
@@ -279,7 +266,6 @@ prev ${PACKAGE_ast_INCLUDE}/times.h implicit
 prev ${PACKAGE_ast_INCLUDE}/tmx.h implicit
 make ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/proc.h
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -294,7 +280,7 @@ make FEATURE/sockets implicit
 meta FEATURE/sockets features/%>FEATURE/% features/sockets sockets
 make features/sockets
 done features/sockets
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/sockets
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/sockets
 done FEATURE/sockets generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -322,7 +308,7 @@ make FEATURE/ids implicit
 meta FEATURE/ids features/%>FEATURE/% features/ids ids
 make features/ids
 done features/ids
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/ids
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/ids
 done FEATURE/ids generated
 prev cmd.h implicit
 done id.c
@@ -333,7 +319,6 @@ prev ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
 done ${PACKAGE_ast_INCLUDE}/wchar.h dontcare
 make ${PACKAGE_ast_INCLUDE}/sfdisc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfdisc.h
 prev cmd.h implicit
 done join.c
@@ -420,7 +405,7 @@ make FEATURE/utsname implicit
 meta FEATURE/utsname features/%>FEATURE/% features/utsname utsname
 make features/utsname
 done features/utsname
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I-D${INSTALLROOT}/lib/probe/C/pp/0F689CA5rbincc   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/utsname
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/utsname
 done FEATURE/utsname generated
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmd.h implicit
@@ -446,7 +431,6 @@ done revlib.c
 make wclib.c
 make ${PACKAGE_ast_INCLUDE}/lc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/lc.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/wctype.h implicit
 prev ${PACKAGE_ast_INCLUDE}/wchar.h implicit
@@ -487,7 +471,6 @@ done cmdext.h dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/shcmd.h implicit
 make ${PACKAGE_ast_INCLUDE}/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/stk.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/stak.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit

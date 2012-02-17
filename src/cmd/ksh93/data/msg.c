@@ -39,6 +39,8 @@
 #include	"jobs.h"
 #include	"edit.h"
 
+#include	"FEATURE/cmds"
+
 /* error messages */
 const char e_timewarn[]		= "\r\n\ashell will timeout in 60 seconds due to inactivity";
 const char e_runvi[]		= "\\hist -e \"${VISUAL:-${EDITOR:-vi}}\" ";
@@ -179,7 +181,7 @@ const char e_sptbnl[]		= " \t\n";
 const char e_tolower[]		= "tolower";
 const char e_toupper[]		= "toupper";
 const char e_defpath[]		= "/bin:/usr/bin:";
-const char e_defedit[]		= "/bin/ed";
+const char e_defedit[]		= _pth_ed;
 const char e_unknown []		= "<command unknown>";
 const char e_devnull[]		= "/dev/null";
 const char e_traceprompt[]	= "+ ";

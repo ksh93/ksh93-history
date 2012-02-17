@@ -27,6 +27,7 @@
 #include	"name.h"
 #include	"defs.h"
 #include	"variables.h"
+#include	"builtins.h"
 
 /*
  * This is the list of built-in shell variables and default values
@@ -52,7 +53,7 @@ const struct shtable2 shtab_variables[] =
 	"HISTSIZE",	0,				(char*)0,
 	"HISTEDIT",	NV_NOFREE,			(char*)0,
 	"HISTCMD",	NV_NOFREE|NV_INTEGER,		(char*)0,
-	"FCEDIT",	NV_NOFREE,			"/bin/ed",
+	"FCEDIT",	NV_NOFREE,			&e_defedit[0],
 	"CDPATH",	0,				(char*)0,
 	"MAILPATH",	0,				(char*)0,
 	"PS3",		NV_NOFREE, 			"#? ",

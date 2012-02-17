@@ -1,3 +1,6 @@
+12-02-10 sfvprintf.c: fix 1 byte too long buffer access
+12-02-07 malloc.c/features/vmalloc: add gnu __malloc_hook tests
+12-02-06 vmmopen.c: fix ALIGN vs sys/param.h macro conflict
 12-02-02 astlicense.c: add license.component for component-specific licenses
 12-01-31 spawnveg.c: fix transient bug that made invalid setpgid() call
 12-01-27 pathpath.c: fix buffer size math when internal allocation requested

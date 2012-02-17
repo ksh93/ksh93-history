@@ -215,7 +215,11 @@ int	b_hist(int argc,char *argv[], Shbltin_t *context)
 	hist_eof(hp);
 	arg = edit;
 	if(!arg && !(arg=nv_getval(sh_scoped(shp,HISTEDIT))) && !(arg=nv_getval(sh_scoped(shp,FCEDNOD))))
+	{
 		arg = (char*)e_defedit;
+		if(*arg!='/')
+			errormsg(SH_DICT,ERROR_exit(1),"ed not found set FCEDIT");
+	}
 #ifdef apollo
 	/*
 	 * Code to support the FC using the pad editor.
