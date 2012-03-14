@@ -19,7 +19,6 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
 /*
  * Glenn Fowler
  * AT&T Research
@@ -28,7 +27,7 @@
  */
 
 #ifndef _OPTLIB_H
-#define _OPTLIB_H
+#define _OPTLIB_H		1
 
 #include <ast.h>
 #include <cdt.h>

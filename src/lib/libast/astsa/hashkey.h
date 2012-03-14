@@ -19,7 +19,6 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
 /*
  * Glenn Fowler
  * AT&T Research
@@ -29,7 +28,7 @@
  */
 
 #ifndef _HASHKEY_H
-#define _HASHKEY_H
+#define _HASHKEY_H			1
 
 #define HASHKEYMAX			6
 #define HASHKEYBIT			5

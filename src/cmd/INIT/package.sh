@@ -21,11 +21,38 @@
 # package - source and binary package control
 # Glenn Fowler <gsf@research.att.com>
 
+command=package
+
 case $-:$BASH_VERSION in
 *x*:[0123456789]*)	: bash set -x is broken :; set +ex ;;
 esac
 
-command=package
+# ksh checks -- ksh between 2007-11-05 and 2011-11-11 conflict with new -lcmd -- wea culpa
+checksh()
+{
+	egrep 'Version.*(88|1993)' $1 >/dev/null 2>&1 ||
+	$1 -c '(( .sh.version >= 20111111 ))' >/dev/null 2>&1
+}
+
+case $_AST_BIN_PACKAGE_:$SHELL:$0 in
+1:*|*:/bin/sh:*)
+	;;
+*:*/*:*/*)
+	_AST_BIN_PACKAGE_=1 # prevent non-interactive sh .rc referencing bin/package recursion #
+	export _AST_BIN_PACKAGE_
+	if	checksh $SHELL
+	then	: no -lcmd conflict :
+	else	case " $* " in
+		*" debug "*|*" DEBUG "*|*" show "*)
+			echo $command: $SHELL: warning: possible -lcmd conflict -- falling back to /bin/sh >&2
+			;;
+		esac
+		SHELL=/bin/sh
+		export SHELL
+		exec $SHELL "$0" "$@"
+	fi
+	;;
+esac
 
 LC_ALL=C
 export LC_ALL
@@ -33,7 +60,7 @@ export LC_ALL
 src="cmd contrib etc lib"
 use="/usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
 usr="/home"
-lib="/usr/local/lib /usr/local/shlib"
+lib="" # nee /usr/local/lib /usr/local/shlib
 ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
 makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
@@ -70,7 +97,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-02-14 $
+@(#)$Id: package (AT&T Research) 2012-02-29 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2395,7 +2422,8 @@ int main()
 				*) abi=-64 ;;
 				esac
 				;;
-			*)	cd ${TMPDIR:-/tmp}
+			*)	pwd=`pwd`
+				cd ${TMPDIR:-/tmp}
 				tmp=hi$$
 				trap 'rm -f $tmp.*' 0 1 2
 				cat > $tmp.a.c <<!
@@ -2427,6 +2455,9 @@ int b() { return 0; }
 						fi
 					done
 				fi </dev/null >/dev/null 2>&1
+				rm -f $tmp.*
+				trap - 0 1 2
+				cd $pwd
 				;;
 			esac
 			case $type$abi in
@@ -2443,6 +2474,29 @@ int b() { return 0; }
 			sgi.mips[456789]-64)
 				;;
 			*)	type=$type$abi
+				;;
+			esac
+			;;
+		*)	case $bits in
+			'')	case `file /bin/sh 2>/dev/null` in
+				*universal*64*)
+					pwd=`pwd`
+					cd ${TMPDIR:-/tmp}
+					tmp=hi$$
+					trap 'rm -f $tmp.*' 0 1 2
+					cat > $tmp.a.c <<!
+int main() { return 0; }
+!
+					if	$cc -o $tmp.a.exe $tmp.a.c
+					then	case `file $tmp.a.exe` in
+						*64*)	bits=64 ;;
+						esac
+					fi </dev/null >/dev/null 2>&1
+					rm -f $tmp.*
+					trap - 0 1 2
+					cd $pwd
+					;;
+				esac
 				;;
 			esac
 			;;
@@ -3016,14 +3070,7 @@ cat $INITROOT/$i.sh
 	case $KEEP_SHELL in
 	0)	executable "$SHELL" || SHELL=
 		case $SHELL in
-		?*)	case `$SHELL -c 'echo $KSH_VERSION' 2>&1` in
-			Version*????-??-??)
-				;;
-			?*)	: any output here means $SHELL is not reliable for scripting
-				SHELL=
-				;;
-			esac
-			;;
+		?*)	checksh $SHELL || SHELL= ;;
 		esac
 		case $SHELL in
 		''|/bin/*|/usr/bin/*)
@@ -3031,13 +3078,9 @@ cat $INITROOT/$i.sh
 			'')	SHELL=/bin/sh ;;
 			esac
 			for i in ksh sh bash
-			do	if	onpath $i
-				then	case `$_onpath_ -c 'echo $KSH_VERSION' 2>&1` in
-					Version*????-??-??|'')
-						SHELL=$_onpath_
-						break
-						;;
-					esac
+			do	if	onpath $i && checksh $_onpath_
+				then	SHELL=$_onpath_
+					break
 				fi
 			done
 			;;

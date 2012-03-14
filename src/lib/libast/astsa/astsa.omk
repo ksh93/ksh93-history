@@ -3,7 +3,10 @@
 #
 
 CC = cc
-CFLAGS = -O -D_PACKAGE_astsa -I$(ASTSA_DIR)
+CFLAGS = $(ASTSA_CFLAGS)
+
+ASTSA_OPTIMIZE = -O
+ASTSA_CFLAGS = $(ASTSA_OPTIMIZE) -D_PACKAGE_astsa -I.
 
 ASTSA_GEN = \
 	ast_sa.h

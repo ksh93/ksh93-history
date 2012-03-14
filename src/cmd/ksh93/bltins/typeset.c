@@ -915,12 +915,12 @@ int sh_addlib(Shell_t *shp,void* library)
 		maxlib += GROWLIB;
 		if (liblist)
 		{
-			liblist = (void**)realloc((void*)liblist, (maxlib+1)*sizeof(void**));
-			libattr = (unsigned short*)realloc((void*)liblist, (maxlib+1)*sizeof(unsigned short));
+			liblist = (void**)realloc((void*)liblist, (maxlib+1)*sizeof(void*));
+			libattr = (unsigned short*)realloc((void*)libattr, (maxlib+1)*sizeof(unsigned short));
 		}
 		else
 		{
-			liblist = (void**)malloc((maxlib+1)*sizeof(void**));
+			liblist = (void**)malloc((maxlib+1)*sizeof(void*));
 			libattr = (unsigned short*)malloc((maxlib+1)*sizeof(unsigned short));
 		}
 	}

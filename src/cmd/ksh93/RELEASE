@@ -1,4 +1,14 @@
-12-02-14  --- Release ksh93u+ ---
+12-02-29  --- Release ksh93u+ ---
+12-02-29  A bug which could lead to a core dump when more that four shared
+	  libraries were added with the builtin command has been fixed.
+12-02-29  Fixed a few bugs which caused SIGCHLD to be blocked preventing
+	  background jobs from being reaped until a foreground job was run.
+12-02-27  A bug in which sh -c for a simple command caused a fork() has been
+	  fixed.
+12-02-27  A timing bug on systems such as AIX that doesn't support vfork()
+	  that could cause the exist status to get lost has been fixed.
+12-02-22  A private file descriptor that was not close-on-exec for a command
+	  substitution and has been fixed.
 12-02-14  A bug in which ^Z did not stop a pipeline when the last component
 	  was a shell built-in has been fixed.
 12-02-14  getconf("PATH") used to initialize ed(1) path.

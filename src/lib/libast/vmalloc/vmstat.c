@@ -45,6 +45,7 @@ Vmstat_t*	st;
 	Block_t		*b, *endb;
 	int		local;
 	Vmdata_t	*vd;
+	Void_t		*d;
 
 	if(!st) /* just checking lock state of region */
 		return (vm ? vm : Vmregion)->data->lock;
@@ -96,10 +97,11 @@ Vmstat_t*	st;
 					st->n_free += 1;
 				}
 				else	/* get the real size */
-				{	if(vd->mode&VM_MTDEBUG)
-						s = DBSIZE(DB2DEBUG(DATA(b)));
+				{	d = DATA(b);
+					if(vd->mode&VM_MTDEBUG)
+						s = DBSIZE(DB2DEBUG(d));
 					else if(vd->mode&VM_MTPROFILE)
-						s = PFSIZE(DATA(b));
+						s = PFSIZE(d);
 					if(s > st->m_busy)
 						st->m_busy = s;
 					st->s_busy += s;

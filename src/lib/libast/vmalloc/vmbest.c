@@ -199,7 +199,7 @@ Block_t*	freeb; /* known to be free but not on any free list */
 					{ rv = -1; /**/ASSERT(0); }
 
 				/* must have a self-reference pointer */
-				if(*SELF(b) != b)
+				if(SELF(b) != b)
 					{ rv = -1; /**/ASSERT(0); }
 
 				/* segment pointer should be well-defined */
@@ -437,7 +437,7 @@ int		c;
 			np = NEXT(fp);	/**/ASSERT(ISBUSY(SIZE(np)));
 					/**/ASSERT(!ISJUNK(SIZE(np)));
 			SETPFREE(SIZE(np));
-			*(SELF(fp)) = fp;
+			SELF(fp) = fp;
 
 			if(fp == wanted) /* to be consumed soon */
 			{	/**/ASSERT(!saw_wanted); /* should be seen just once */
@@ -527,7 +527,7 @@ int		local;
 #endif
 {
 	reg Seg_t	*seg, *next;
-	reg Block_t	*bp, *t;
+	reg Block_t	*bp, *tp;
 	reg size_t	size, segsize, round;
 	reg Vmdata_t*	vd = vm->data;
 
@@ -567,8 +567,9 @@ int		local;
 			vd->wild = NIL(Block_t*);
 			vd->pool = 0;
 		}
-		else	REMOVE(vd,bp,INDEX(size),t,bestsearch);
-		CLRPFREE(SIZE(NEXT(bp)));
+		else	REMOVE(vd,bp,INDEX(size),tp,bestsearch);
+		tp = NEXT(bp); /* avoid strict-aliasing pun */
+		CLRPFREE(SIZE(tp));
 
 		if(size < (segsize = seg->size))
 			size += sizeof(Head_t);
@@ -613,7 +614,7 @@ int		local;	/* internal call		*/
 	reg Vmdata_t*	vd = vm->data;
 	reg size_t	s;
 	reg int		n;
-	reg Block_t	*tp, *np;
+	reg Block_t	*tp, *np, *ap;
 	size_t		orgsize = size;
 
 	/**/COUNT(N_alloc);
@@ -679,7 +680,8 @@ int		local;	/* internal call		*/
 		/**/ ASSERT(!vd->free);
 
 		/* tell next block that we are no longer a free block */
-		CLRPFREE(SIZE(NEXT(tp)));	/**/ ASSERT(ISBUSY(SIZE(NEXT(tp))));
+		np = NEXT(tp);
+		CLRPFREE(SIZE(np));	/**/ ASSERT(ISBUSY(SIZE(np)));
 
 		if((s = SIZE(tp)-size) >= (sizeof(Head_t)+BODYSIZE) )
 		{	SIZE(tp) = size;
@@ -690,8 +692,9 @@ int		local;	/* internal call		*/
 
 			if(VMWILD(vd,np))
 			{	SIZE(np) &= ~BITS;
-				*SELF(np) = np; /**/ASSERT(ISBUSY(SIZE(NEXT(np))));
-				SETPFREE(SIZE(NEXT(np)));
+				SELF(np) = np;
+				ap = NEXT(np); /**/ASSERT(ISBUSY(SIZE(ap)));
+				SETPFREE(SIZE(ap));
 				vd->wild = np;
 			}
 			else	vd->free = np;

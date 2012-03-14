@@ -28,7 +28,7 @@
  */
 
 #ifndef _OPTION_H
-#define _OPTION_H
+#define _OPTION_H	1
 
 #include <ast.h>
 

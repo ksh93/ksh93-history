@@ -108,6 +108,7 @@ static void iousepipe(Shell_t *shp)
 	usepipe++;
 	fcntl(subpipe[0],F_SETFD,FD_CLOEXEC);
 	subpipe[2] = fcntl(1,F_DUPFD,10);
+	fcntl(subpipe[2],F_SETFD,FD_CLOEXEC);
 	shp->fdstatus[subpipe[2]] = shp->fdstatus[1];
 	close(1);
 	fcntl(subpipe[1],F_DUPFD,1);
@@ -1657,6 +1658,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			{
 				volatile int jmpval;
 				struct checkpt *buffp = (struct checkpt*)stkalloc(shp->stk,sizeof(struct checkpt));
+				struct ionod *iop;
+				int	rewrite=0;
 				if(no_fork)
 					sh_sigreset(2);
 				sh_pushcontext(shp,buffp,SH_JMPEXIT);
@@ -1720,22 +1723,29 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(shp->topfd)
 					sh_iounsave(shp);
 				topfd = shp->topfd;
+				if(com0 && (iop=t->tre.treio))
+				{
+					for(;iop;iop=iop->ionxt)
+					{
+						if(iop->iofile&IOREWRITE)
+							rewrite = 1;
+					}
+				}
 				sh_redirect(shp,t->tre.treio,1);
-				if(!no_fork && shp->topfd > topfd)
+				if(rewrite)
 				{
 					job_lock();
 					while((parent = vfork()) < 0)
 						_sh_fork(shp,parent, 0, (int*)0);
-					job_fork(parent);
 					if(parent)
 					{
-						job_clear();
 						job_post(shp,parent,0);
 						job_wait(parent);
 						sh_iorestore(shp,topfd,SH_JMPCMD);
 						sh_done(shp,(shp->exitval&SH_EXITSIG)?(shp->exitval&SH_EXITMASK):0);
 
 					}
+					job_unlock();
 				}
 				if((type&COMMSK)!=TCOM)
 				{
@@ -3913,7 +3923,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		}
 	fail:
 		if(jobfork && spawnpid<0) 
-			job_fork(spawnpid);
+			job_fork(0);
 		if(spawnpid < 0) switch(errno=shp->path_err)
 		{
 		    case ENOENT:

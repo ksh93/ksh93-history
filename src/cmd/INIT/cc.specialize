@@ -6,8 +6,8 @@ esac
 
 cc=cc
 
-CCREPLACE='these (possibly empty) options replace -O*'
-CCALWAYS='these (possibly empty) options always set'
+CCREPLACE='' # these (possibly empty) options replace -O*
+CCALWAYS='' # these (possibly empty) options always set
 
 case $CCREPLACE in
 '')	;;

@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2012-02-14 # update in USAGE too #
+version=2012-02-23 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -440,8 +440,51 @@ $2
 	esac
 }
 
+# verify that cc is a C compiler
+
+checkcc()
+{
+	# check for local package root directories
+
+	case $PACKAGE_PATH in
+	?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
+		do	if	test -d $i/include
+			then	cc="$cc -I$i/include"
+				occ="$occ -I$i/include"
+			fi
+			if	test -d $i/lib
+			then	cc="$cc -L$i/lib"
+				occ="$occ -L$i/lib"
+				for y in $libpaths
+				do	eval $y=\"\$$y:\$i/lib\$${y}_default\"
+					eval export $y
+				done
+			fi
+		done
+		;;
+	esac
+	echo "int i = 1;" > $tmp.c
+	if	compile $cc -c $tmp.c <&$nullin >&$nullout
+	then	echo "(;" > $tmp.c
+		if	compile $cc -c $tmp.c <&$nullin >&$nullout
+		then	cctest="should not compile '(;'"
+		fi
+	else	cctest="should compile 'int i = 1;'"
+	fi
+	case $cctest in
+	"")	cctest=0
+		;;
+	*)	echo "$command: $cc: not a C compiler: $cctest" >&$stderr
+		exit 1
+		;;
+	esac
+}
+
 checkread()
 {
+	case $cctest in
+	"")	checkcc ;;
+	esac
 	case $posix_read in
 	-no)	;;
 	*)	posix_read=`(read -r _checkread_line; echo $_checkread_line) 2>/dev/null <<!
@@ -668,7 +711,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2012-02-14 $
+@(#)$Id: iffe (AT&T Research) 2012-02-23 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -842,7 +885,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	[+api \aname\a \aYYYYMMDD\a \asymbol ...\a?Emit api compatibility tests
 		for \aname\a and \b#define\b \asymbol\a \asymbol\a_\aYYYYMMDD\a
 		when \aNAME\a_API is >= \aYYYYMMDD\a (\aNAME\a is \aname\a
-		converted to upper case.) If \aNAME\a_API is not defined
+		converted to upper case). If \aNAME\a_API is not defined
 		then \asymbol\a maps to the newest \aYYYYMMDD\a for \aname\a.]
 	[+define \aname\a [ (\aarg,...\a) ]] [ \avalue\a ]]?Emit a macro
 		\b#define\b for \aname\a if it is not already defined. The
@@ -857,7 +900,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	[+reference \aheader\a?If \aheader\a exists then add \b#include\b
 		\aheader\a to subsequent tests.]
 	[+ver \aname\a \aYYYYMMDD\a?\b#define\b \aNAME\a_VERSION \aYYYYMMDD\a
-		\aNAME\a is \aname\a converted to upper case.)]
+		(\aNAME\a is \aname\a converted to upper case).]
 	[+cmd \aname\a?Defines \b_cmd_\b\aname\a if \aname\a is an executable
 		in one of the standard system directories (\b/bin, /etc,
 		/usr/bin, /usr/etc, /usr/ucb\b).
@@ -2184,41 +2227,7 @@ $lin
 	"")	cc="$occ $includes" ;;
 	esac
 	case $cctest in
-	"")	# check for local package root directories
-
-		case $PACKAGE_PATH in
-		?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
-			do	if	test -d $i/include
-				then	cc="$cc -I$i/include"
-					occ="$occ -I$i/include"
-				fi
-				if	test -d $i/lib
-				then	cc="$cc -L$i/lib"
-					occ="$occ -L$i/lib"
-					for y in $libpaths
-					do	eval $y=\"\$$y:\$i/lib\$${y}_default\"
-						eval export $y
-					done
-				fi
-			done
-			;;
-		esac
-		echo "int i = 1;" > $tmp.c
-		if	compile $cc -c $tmp.c <&$nullin >&$nullout
-		then	echo "(;" > $tmp.c
-			if	compile $cc -c $tmp.c <&$nullin >&$nullout
-			then	cctest="should not compile '(;'"
-			fi
-		else	cctest="should compile 'int i = 1;'"
-		fi
-		case $cctest in
-		"")	cctest=0
-			;;
-		*)	echo "$command: $cc: not a C compiler: $cctest" >&$stderr
-			exit 1
-			;;
-		esac
-		;;
+	"")	checkcc ;;
 	esac
 
 	# some ops allow no args

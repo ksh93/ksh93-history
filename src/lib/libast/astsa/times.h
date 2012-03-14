@@ -19,4 +19,9 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
+#ifndef _TIMES_H
+#define _TIMES_H	1
+
 #include <sys/times.h>
+
+#endif

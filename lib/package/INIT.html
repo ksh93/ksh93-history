@@ -55,6 +55,11 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+12-02-29 cc.darwin.i386*: handle default cc vs kernel bittedness
+12-02-29 C+probe: add __TIMESTAMP__ to the nopredefined list
+12-02-29 package.sh: don't assume grep -q or /usr/local/lib in LD_LIBRARY_PATH
+12-02-29 package.sh: fix ksh vs -lcmd compatibility checks
+12-02-23 iffe.sh: checkcc() before checkread() for sensible diagnostics
 12-02-14 package.mk: { --clobber --compare --link=lib*.a* } for --mam=static
 12-02-14 package.mk: export LICENSEFILEDEFAULT instead of LICENSEFILE
 12-02-14 package.sh: handle @(cc|ld).${HOSTTYPE}* intercepts
@@ -975,7 +980,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>February 17, 2012</TD>
+<TD align=right>March 13, 2012</TD>
 </TR>
 </TABLE>
 <P>

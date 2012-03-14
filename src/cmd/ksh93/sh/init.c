@@ -522,11 +522,10 @@ static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp
 		nv_putv(np, val, flags, fp);
 	if(!val)
 	{
-		fp->next = np->nvfun;
+		if(fp)
+			fp->next = np->nvfun;
 		np->nvfun = fp;
 	}
-	else if(!val)
-		np->nvfun = 0;
 }
 
 /*
@@ -1675,6 +1674,9 @@ int sh_reinit(char *argv[])
 	shp->st.filename = strdup(shp->lastarg);
 	nv_delete((Namval_t*)0, (Dt_t*)0, 0);
 	job.exitval = 0;
+	shp->inpipe = shp->outpipe = 0;
+	job_clear();
+	job.in_critical = 0;
 	return(1);
 }
 

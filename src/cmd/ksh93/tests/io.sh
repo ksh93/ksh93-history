@@ -462,4 +462,23 @@ got=$(<$tmp/22.out)
 tmp=$tmp $SHELL 2> /dev/null -c 'exec 3<&1 ; exec 1<&- ; exec > $tmp/outfile;print foobar' || err_exit 'exec 1<&- causes failure'
 [[ $(<$tmp/outfile) == foobar ]] || err_exit 'outfile does not contain foobar'
 
+print hello there world > $tmp/foobar
+sed  -e 's/there //' $tmp/foobar  >; $tmp/foobar
+[[ $(<$tmp/foobar) == 'hello world' ]] || err_exit '>; redirection not working on simple command'
+print hello there world > $tmp/foobar
+{ sed  -e 's/there //' $tmp/foobar;print done;} >; $tmp/foobar 
+[[ $(<$tmp/foobar) == $'hello world\ndone' ]] || err_exit '>; redirection not working for compound command'
+print hello there world > $tmp/foobar
+$SHELL -c "sed  -e 's/there //' $tmp/foobar  >; $tmp/foobar"
+[[ $(<$tmp/foobar) == 'hello world' ]] || err_exit '>; redirection not working with -c on a simple command'
+
+rm -f "$tmp/junk"
+for	(( i=1; i < 50; i++ ))
+do      out=$(/bin/ls "$tmp/junk" 2>/dev/null)
+	if	(( $? == 0 ))
+	then    err_exit 'wrong error code with redirection'
+		break
+	fi
+done
+
 exit $((Errors<125?Errors:125))

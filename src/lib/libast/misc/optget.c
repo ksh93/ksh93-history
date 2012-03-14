@@ -1758,7 +1758,7 @@ item(Sfio_t* sp, char* s, int about, int level, int style, Sfio_t* ip, int versi
 				else
 				{
 					sfputr(sp, "</H4>\n<DIV class=SH>", -1);
-					if (!strncmp(s, C("NAME"), strlen(C("NAME"))))
+					if (!strncmp(s, C("NAME"), strlen(C("NAME"))) || !strncmp(s, C("PLUGIN"), strlen(C("PLUGIN"))))
 						*hflags |= HELP_index;
 				}
 			}

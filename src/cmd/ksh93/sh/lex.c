@@ -1136,7 +1136,10 @@ int sh_lex(Lex_t* lp)
 						if(!(state=lp->lexd.first))
 							state = fcfirst();
 						else
-							fcseek(state-fcseek(0));
+						{
+							n = state-fcseek(0);
+							fcseek(n);
+						}
 						lp->lexd.paren = 1;
 					}
 					return(lp->token=LPAREN);
@@ -1560,7 +1563,10 @@ static int comsub(register Lex_t *lp, int endtok)
 		{
 
 			if(first==lp->lexd.first)
-				fcseek(cp+1-(char*)fcseek(0));
+			{
+				n = cp+1-(char*)fcseek(0);
+				fcseek(n);
+			}
 			count++;
 			lp->lexd.paren = 0;
 			fcgetc(c);

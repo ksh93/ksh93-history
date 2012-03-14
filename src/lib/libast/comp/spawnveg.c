@@ -194,17 +194,17 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 		fcntl(err[1], F_SETFD, FD_CLOEXEC);
 	}
 #endif
-	sigcritical(1);
+	sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
 #if _lib_vfork
 	pid = vfork();
 #else
 	pid = fork();
 #endif
-	sigcritical(0);
 	if (pid == -1)
 		n = errno;
 	else if (!pid)
 	{
+		sigcritical(0);
 		if (pgid == -1)
 			setsid();
 		else if (pgid)
@@ -230,8 +230,8 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #else
 		if (err[0] != -1)
 		{
-			n = errno;
-			write(err[1], &n, sizeof(n));
+			m = errno;
+			write(err[1], &m, sizeof(m));
 		}
 #endif
 		_exit(errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC);
@@ -248,15 +248,26 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 	if (err[0] != -1)
 	{
 		close(err[1]);
-		if (pid != -1 && read(err[0], &m, sizeof(m)) == sizeof(m) && m)
+		if (pid != -1)
 		{
-			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
-			rid = pid = -1;
-			n = m;
+			m = 0;
+			while (read(err[0], &m, sizeof(m)) == -1)
+				if (errno != EINTR)
+				{
+					m = errno;
+					break;
+				}
+			if (m)
+			{
+				while (waitpid(pid, &n, 0) && errno == EINTR);
+				rid = pid = -1;
+				n = m;
+			}
 		}
 		close(err[0]);
 	}
 #endif
+	sigcritical(0);
 	if (pid != -1 && pgid > 0)
 	{
 		/*

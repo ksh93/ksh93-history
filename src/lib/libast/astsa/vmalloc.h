@@ -19,13 +19,12 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
 /*
  * standalone mini vmalloc interface
  */
 
 #ifndef _VMALLOC_H
-#define _VMALLOC_H
+#define _VMALLOC_H		1
 
 #define vmalloc(v,n)		_vm_resize(v,(void*)0,n)
 #define vmalign(v,n,a)		_vm_resize(v,(void*)0,n)

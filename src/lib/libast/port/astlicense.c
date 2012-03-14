@@ -78,10 +78,12 @@
 #define PARENT			15
 #define QUERY			16
 #define SINCE			17
-#define STYLE			18
-#define URL			19
-#define URLMD5			20
-#define VERSION			21
+#define SOURCE			18
+#define START			19
+#define STYLE			20
+#define URL			21
+#define URLMD5			22
+#define VERSION			23
 
 #define IDS			64
 
@@ -147,6 +149,8 @@ static const Item_t	key[] =
 	KEY("parent"),
 	KEY("query"),
 	KEY("since"),
+	KEY("source"),
+	KEY("start"),
 	KEY("type"),
 	KEY("url"),
 	KEY("urlmd5"),
@@ -369,10 +373,14 @@ copyright(Notice_t* notice, register Buffer_t* b)
 	copy(b, "Copyright (c) ", -1);
 	if (notice->test)
 		clock = (time_t)1000212300;
-	else
+	else if (!(t = notice->item[SOURCE].data))
+	{
 		time(&clock);
-	t = ctime(&clock) + 20;
-	if ((x = notice->item[SINCE].data) && strncmp(x, t, 4))
+		t = ctime(&clock) + 20;
+	}
+	if ((x = notice->item[START].data) && strncmp(t, x, 4) < 0)
+		t = x;
+	if ((x = notice->item[SINCE].data) && strncmp(x, t, 4) < 0)
 	{
 		expand(notice, b, &notice->item[SINCE]);
 		PUT(b, '-');

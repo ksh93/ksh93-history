@@ -568,4 +568,15 @@ cat > $tmpfile <<-\EOF
 	EOF
 $SHELL 2> /dev/null "$tmpfile" || err_exit 'IFS in subshell causes core dump'
 
+unset i
+if      [[ -d /dev/fd ]]
+then    integer i
+        for ((i=11; i < 29; i++))
+        do      if      ! [[ -r /dev/fd/$i  || -w /dev/fd/$i ]]
+                then    a=$($SHELL -c "[[ -r /dev/fd/$i || -w /dev/fd/$i ]]")
+                        (( $? )) || err_exit "file descriptor $i not close on exec"
+                fi
+        done
+fi
+
 exit $((Errors<125?Errors:125))

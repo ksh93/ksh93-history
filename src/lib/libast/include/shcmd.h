@@ -31,7 +31,7 @@
 #ifndef AST_PLUGIN_VERSION
 #define AST_PLUGIN_VERSION(v)	(v)
 #endif
-#define SH_PLUGIN_VERSION	AST_PLUGIN_VERSION(20110505L)
+#define SH_PLUGIN_VERSION	AST_PLUGIN_VERSION(20111111L)
 
 #if __STDC__
 #define SHLIB(m)	unsigned long	plugin_version(void) { return SH_PLUGIN_VERSION; }

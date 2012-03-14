@@ -50,17 +50,25 @@ x=$( $SHELL <<- \EOF
 		kill $$
 	EOF
 )
-[[ $x == *Stop* ]] && err_exit 'monitor mode enabled incorrectly cause job to stop'
+[[ $x == *Stop* ]] && err_exit 'monitor mode enabled incorrectly causes job to stop'
+
+if	[[ -o xtrace ]]
+then	debug=--debug=1
+else	debug=
+fi
 
 function tst
 {
 	integer lineno=$1 offset
 	typeset text
 
-	pty --dialogue --messages='/dev/fd/1' $SHELL |
+	pty $debug --dialogue --messages='/dev/fd/1' $SHELL |
 	while	read -r text
-	do	offset=${text/*: line +([[:digit:]]):*/\1}
-		err_exit "${text/: line $offset:/: line $(( lineno + offset)):}"
+	do	if	[[ $text == *debug* ]]
+		then	print -u2 -r -- "$text"
+		else	offset=${text/*: line +([[:digit:]]):*/\1}
+			err_exit "${text/: line $offset:/: line $(( lineno + offset)):}"
+		fi
 	done
 }
 
@@ -421,14 +429,14 @@ r echo repeat-3
 # err_exit #
 whence -q less &&
 TERM=vt100 tst $LINENO <<"!"
-L ksh process/terminal group exercise
+L process/terminal group exercise
 
-w while :; do echo y; done | less
-u ^:\E
+w m=yes; while true; do echo $m-$m; done | less
+u :$|:\E|lines
 c \cZ
 r Stopped
 w fg
-u ^:\E
+u yes-yes
 !
 
 exit $((Errors<125?Errors:125))

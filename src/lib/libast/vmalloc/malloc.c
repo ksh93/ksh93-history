@@ -160,11 +160,15 @@ static int		_Vmpffd = -1;
 
 #include <malloc.h>
 
+#undef	calloc
+#undef	cfree
 #undef	free
 #undef	malloc
 #undef	memalign
 #undef	realloc
 
+#define calloc		_ast_calloc
+#define cfree		_ast_cfree
 #define free		_ast_free
 #define malloc		_ast_malloc
 #define memalign	_ast_memalign
@@ -781,42 +785,16 @@ size_t	size;
 
 #if _malloc_hook
 
-static void	(*vm_free_hook_old)(void*, const void*);
-static void*	(*vm_malloc_hook_old)(size_t, const void*);
-static void*	(*vm_realloc_hook_old)(void*, size_t, const void*);
-static void*	(*vm_memalign_hook_old)(size_t, size_t, const void*);
-
-#define OLD	{ \
-	void	(*vm_free_hook_save)(void*, const void*) = __free_hook; \
-	void*	(*vm_malloc_hook_save)(size_t, const void*) = __malloc_hook; \
-	void*	(*vm_realloc_hook_save)(void*, size_t, const void*) = __realloc_hook; \
-	void*	(*vm_memalign_hook_save)(size_t, size_t, const void*) = __memalign_hook; \
-	__free_hook = vm_free_hook_old; \
-	__malloc_hook = vm_malloc_hook_old; \
-	__memalign_hook = vm_memalign_hook_old; \
-	__realloc_hook = vm_realloc_hook_old;
-
-#define NEW	\
-	__free_hook = vm_free_hook_save; \
-	__malloc_hook = vm_malloc_hook_save; \
-	__memalign_hook = vm_memalign_hook_save; \
-	__realloc_hook = vm_realloc_hook_save; \
-	}
-
 static void vm_free_hook(void* ptr, const void* caller)
 {
-	OLD
 	free(ptr);
-	NEW
 }
 
 static void* vm_malloc_hook(size_t size, const void* caller)
 {
 	void*	r;
 
-	OLD
 	r = malloc(size);
-	NEW
 	return r;
 }
 
@@ -824,9 +802,7 @@ static void* vm_memalign_hook(size_t align, size_t size, const void* caller)
 {
 	void*	r;
 
-	OLD
 	r = memalign(align, size);
-	NEW
 	return r;
 }
 
@@ -834,18 +810,12 @@ static void* vm_realloc_hook(void* ptr, size_t size, const void* caller)
 {
 	void*	r;
 
-	OLD
 	r = realloc(ptr, size);
-	NEW
 	return r;
 }
 
 static void vm_initialize_hook(void)
 {
-	vm_free_hook_old = __free_hook;
-	vm_malloc_hook_old = __malloc_hook;
-	vm_memalign_hook_old = __memalign_hook;
-	vm_realloc_hook_old = __realloc_hook;
 	__free_hook = vm_free_hook;
 	__malloc_hook = vm_malloc_hook;
 	__memalign_hook = vm_memalign_hook;
@@ -853,6 +823,16 @@ static void vm_initialize_hook(void)
 }
 
 void	(*__malloc_initialize_hook)(void) = vm_initialize_hook;
+
+#if 0 /* 2012-02-29 this may be needed to cover shared libs */
+
+void __attribute__ ((constructor)) vm_initialize_initialize_hook(void)
+{
+	vm_initialize_hook();
+	__malloc_initialize_hook = vm_initialize_hook;
+}
+
+#endif
 
 #else
 

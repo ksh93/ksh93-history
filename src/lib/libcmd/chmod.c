@@ -288,7 +288,9 @@ b_chmod(int argc, char** argv, Shbltin_t* context)
 		case FTS_D:
 		anyway:
 			chmodf = chmod;
+#if _lib_lchmod
 		commit:
+#endif
 			if (amode)
 				mode = strperm(amode, &last, ent->fts_statp->st_mode);
 			if (show || (*chmodf)(ent->fts_accpath, mode) >= 0)

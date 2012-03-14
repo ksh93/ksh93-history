@@ -31,6 +31,11 @@ integer Errors=0
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
 
+if	$SHELL -c '[[ ~root == /* ]]'
+then	x=$(print -r -- ~root)
+	[[ $x == ~root ]] || err_exit '~user expanded in subshell prevent ~user from working'
+fi
+
 function home # id
 {
 	typeset IFS=: pwd=/etc/passwd

@@ -1103,14 +1103,14 @@ Note that no space is allowed before or after the
 Attributes assigned by the
 .I typeset\^
 special built-in command apply to all elements of the array.
-An array elemement can be a simple variable, a compound variable or an
+An array element can be a simple variable, a compound variable or an
 array variable.  An element of an indexed array can be either an indexed
-array or an associative array.  An element of an associative arrary can also
+array or an associative array.  An element of an associative array can also
 be either.  To refer to an array element that is part of an array
-element, contatenate the subscript in brackets.  For example, to refer
+element, concatenate the subscript in brackets.  For example, to refer
 to the
 .I foobar\^
-element of an assocative array that is defined as the
+element of an associative array that is defined as the
 third element of the indexed array, use
 .BI ${ vname [ 3 ][ foobar ]}
 .sp .5
@@ -1716,7 +1716,7 @@ of
 .B .sh.value
 is saved and
 .B .sh.value
-is set to long double precission floating point.
+is set to long double precision floating point.
 .B .sh.value
 is restored when the function returns.
 .TP
@@ -2753,6 +2753,12 @@ like the
 .IR xgrep (1)
 command.
 .TP
+.B P
+The remainder of the pattern uses
+.IR perl (1)
+regular expression syntax.  Not all perl regular expression syntax is
+currently implemented.
+.TP
 .B i
 Treat the match as case insensitive.
 .TP
@@ -2896,6 +2902,11 @@ arithmetic or long double precision floating point for
 systems that provide this data type.
 Floating point constants follow the ANSI-C programming language
 floating point conventions.
+The floating point constants
+.B Nan
+and
+.B Inf
+can be use to represent "not a number" and infinity respectfully.
 Integer constants follow the ANSI-C programming language
 integer constant conventions although only single byte
 character constants are recognized and character casts
@@ -2940,8 +2951,8 @@ can be used within an arithmetic expression:
 .PP
 .if t .RS
 .B
-.if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmin fmod hypot ilogb int isinf isnan j0 j1 jn lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc y0 y1 yn
-.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   j0      j1      jn      hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nexttoward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc   y0      y1      yn
+.if n abs acos acosh asin asinh atan atan2 atanh cbrt ceil copysign cos cosh erf erfc exp exp2 expm1 fabs fpclassify fdim finite floor fma fmax fmin fmod hypot ilogb int isfinite sinf isnan isnormal issubnormal issubordered iszero j0 j1 jn lgamma log log10 log2 logb nearbyint nextafter nexttoward pow remainder rint round scanb signbit sin sinh sqrt tan tanh tgamma trunc y0 y1 yn
+.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   ceil copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fpclassify fdim   finite   floor  fma   fmax   fmod   j0      j1      jn      hypot   ilogb   int   isfinite   isinf   isnan   isnormal  issubnormal   issubordered   iszero lgamma   log   log10 log2   logb   nearbyint   nextafter   nexttoward  pow   rint   round   scalb   signbit sin   sinh   sqrt   tan   tanh   tgamma   trunc   y0      y1      yn
 .if t .RE
 In addition, arithmetic functions can be define as shell functions with a
 variant of the
@@ -2956,7 +2967,7 @@ where
 .I name\^
 is the function name used in the arithmetic expression and each identifier,
 .I ident\^
-is a name reference to the long double precission floating point argument.
+is a name reference to the long double precision floating point argument.
 The value of
 .B .sh.value
 when the function returns is the value of this function.
@@ -4096,7 +4107,7 @@ Equivalent to
 Previous job.
 .PD
 In addition, unless noted otherwise, wherever a job can be specified,
-the name of a background job pool can be used to represet all the
+the name of a background job pool can be used to represent all the
 jobs in that pool.
 .PP
 The shell learns immediately whenever a process changes state.
@@ -6495,11 +6506,11 @@ The
 flag, when used with the
 .B %d
 format without an output base,
-displays the output in powers of 1000 inidicated by one of the following suffixes:
+displays the output in powers of 1000 indicated by one of the following suffixes:
 .BR "k M G T P E" ,
 and when used with the
 .B %i
-format displays the output in powers of 1024 inidicated by one of the following suffixes:
+format displays the output in powers of 1024 indicated by one of the following suffixes:
 .BR "Ki Mi Gi Ti Pi Ei" .
 .TP
 .B =
@@ -7171,11 +7182,6 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\f3true\fP
-Does nothing, and exits 0. Used with
-.B while
-for infinite loops.
-.TP
 \(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSfblmnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK   \*(OK \f3\+-M  \*(OK \f2mapname\fP \*(CK \*(CK \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
@@ -7357,7 +7363,7 @@ and
 .BR \-x .
 The \-S
 can be used with discipline functions defined in a type to indicate that
-the function is static.  For a static function, the same method will be used by all instances of that type no matter which instance references it.  In additon,
+the function is static.  For a static function, the same method will be used by all instances of that type no matter which instance references it.  In addition,
 it can only use value of variables from the original type definition.  These
 discipline functions cannot be redefined in any type instance.
 The
@@ -7381,6 +7387,12 @@ on standard output.  If
 is specified, then a line containing the function name followed
 by a shell comment containing the line number and path name of the
 file where this function was defined, if any, is displayed.
+The exit status can be used to determine whether the function is
+defined so that
+.BI "typeset \-f .sh.math." name\^
+will return 0 when math function
+.I name\^
+is defined and non-zero otherwise.
 .TP
 .B \-b
 The variable can hold any number of bytes of data.
@@ -7440,7 +7452,7 @@ Equivalent to
 moves or renames the variable.
 The value is the name of a variable whose value will be moved to
 .IR vname\^ .
-The orignal variable will be unset.
+The original variable will be unset.
 Cannot be used with any other options.
 .TP
 .B \-n
@@ -7865,7 +7877,7 @@ In this case \s-1TERM\s+1 is ignored (so that \f3kill 0\fP
 does not kill an interactive shell) and \s-1INTR\s+1 is caught and ignored
 (so that
 .B wait
-is interruptible).
+is ).
 In all cases, \s-1QUIT\s+1 is ignored by the shell.
 .TP
 .B \-r

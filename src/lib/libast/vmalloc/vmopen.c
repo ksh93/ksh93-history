@@ -65,7 +65,7 @@ int		mode;	/* type of region		*/
 	Vmdata_t	*vd;
 	Vminit_t	*init;
 	size_t		algn, size, incr;
-	Block_t		*bp;
+	Block_t		*bp, *np;
 	Seg_t		*seg;
 	Vmuchar_t	*addr;
 	int		rv;
@@ -142,13 +142,14 @@ int		mode;	/* type of region		*/
 	SEG(bp) = seg;
 	size = ((seg->baddr - (Vmuchar_t*)bp)/ALIGN) * ALIGN; /**/ ASSERT(size > 0);
 	SIZE(bp) = size - 2*sizeof(Head_t); /**/ASSERT(SIZE(bp) > 0 && (SIZE(bp)%ALIGN) == 0);
-	*SELF(bp) = bp;
+	SELF(bp) = bp;
 	/**/ ASSERT(SIZE(bp)%ALIGN == 0);
 	/**/ ASSERT(VLONG(bp)%ALIGN == 0);
 
 	/* make a fake header for next block in case of noncontiguous segments */
-	SEG(NEXT(bp)) = seg;
-	SIZE(NEXT(bp)) = BUSY|PFREE;
+	np = NEXT(bp);
+	SEG(np) = seg;
+	SIZE(np) = BUSY|PFREE;
 
 	if(vd->mode&(VM_MTLAST|VM_MTPOOL))
 		seg->free = bp;

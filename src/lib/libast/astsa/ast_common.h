@@ -19,7 +19,10 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#include "ast_sa.h"
+#ifndef _AST_COMMON_H
+#define _AST_COMMON_H	1
+
+#include <ast_sa.h>
 #include <sys/types.h>
 
 #define Void_t	void
@@ -41,4 +44,6 @@
 #define _typ_int32_t	1
 #ifdef _ast_int8_t
 #define _typ_int64_t	1
+#endif
+
 #endif

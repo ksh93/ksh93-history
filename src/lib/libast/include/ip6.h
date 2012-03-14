@@ -21,7 +21,7 @@
 ***********************************************************************/
 #pragma prototyped
 
-#if !_IP6_H
+#ifndef _IP6_H
 #define _IP6_H		1
 
 #define IP6ADDR		16

@@ -271,7 +271,7 @@ _win_iconv(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 #if DEBUG_TRACE
 error(DEBUG_TRACE, "AHA#%d _win_iconv from=0x%04x to=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
 #endif
-	if (cc->from.index == cc->to.index)
+	if (cc->from.index == cc->to.index || cc->from.index != CP_UCS2 && cc->to.index == 0)
 	{
 		/*
 		 * easy

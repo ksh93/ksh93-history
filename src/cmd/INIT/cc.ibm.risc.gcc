@@ -24,6 +24,7 @@ case " $* " in
 esac
 
 cc=gcc
+ccflags=
 
 case " $@ " in
 *" -shared "*)      

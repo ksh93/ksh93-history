@@ -47,7 +47,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 {
 	reg size_t	s;
 	reg Seg_t*	seg;
-	reg Block_t	*bp, *t;
+	reg Block_t	*bp, *tp, *np;
 	reg Vmuchar_t*	addr = (Vmuchar_t*)Version; /* shut compiler warning */
 	reg Vmdata_t*	vd = vm->data;
 
@@ -104,7 +104,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 				bp = LAST(bp);
 				if(bp == vd->wild)
 					vd->wild = NIL(Block_t*);
-				else	REMOVE(vd,bp,INDEX(SIZE(bp)),t,(*searchf));
+				else	REMOVE(vd,bp,INDEX(SIZE(bp)),tp,(*searchf));
 				SIZE(bp) += size;
 			}
 		}
@@ -160,19 +160,20 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	}
 
 	/* make a fake header for possible segmented memory */
-	t = NEXT(bp);
-	SEG(t) = seg;
-	SIZE(t) = BUSY;
+	tp = NEXT(bp);
+	SEG(tp) = seg;
+	SIZE(tp) = BUSY;
 
 	/* see if the wild block is still wild */
-	if((t = vd->wild) && (seg = SEG(t)) != vd->seg)
-	{	CLRPFREE(SIZE(NEXT(t)));
+	if((tp = vd->wild) && (seg = SEG(tp)) != vd->seg)
+	{	np = NEXT(tp);
+		CLRPFREE(SIZE(np));
 		if(vd->mode&(VM_MTBEST|VM_MTDEBUG|VM_MTPROFILE) )
-		{	SIZE(t) |= BUSY|JUNK;
-			LINK(t) = CACHE(vd)[C_INDEX(SIZE(t))];
-			CACHE(vd)[C_INDEX(SIZE(t))] = t;
+		{	SIZE(tp) |= BUSY|JUNK;
+			LINK(tp) = CACHE(vd)[C_INDEX(SIZE(tp))];
+			CACHE(vd)[C_INDEX(SIZE(tp))] = tp;
 		}
-		else	seg->free = t;
+		else	seg->free = tp;
 
 		vd->wild = NIL(Block_t*);
 	}

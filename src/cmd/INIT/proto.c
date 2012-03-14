@@ -80,7 +80,7 @@
 #line 1 "proto.c"
  
 
-#line 149
+#line 151
 # ifndef __STDC__
 # ifndef creat
 # define creat		_huh_creat
@@ -1478,7 +1478,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 
 
  
-#line 82
+#line 84
 typedef struct Buffer_s
 {
 	char*		buf;
@@ -1526,6 +1526,8 @@ static const Item_t	key[] =
 	{ "parent",sizeof( "parent")-1,0},
 	{ "query",sizeof( "query")-1,0},
 	{ "since",sizeof( "since")-1,0},
+	{ "source",sizeof( "source")-1,0},
+	{ "start",sizeof( "start")-1,0},
 	{ "type",sizeof( "type")-1,0},
 	{ "url",sizeof( "url")-1,0},
 	{ "urlmd5",sizeof( "urlmd5")-1,0},
@@ -1599,7 +1601,7 @@ copy __PARAM__((register Buffer_t* b, register char* s, int n), (b, s, n)) __OTO
 }
 
  
-#line 213
+#line 217
 static void
 comment __PARAM__((Notice_t* notice, register Buffer_t* b, register char* s, register int n, int u), (notice, b, s, n, u)) __OTORP__(Notice_t* notice; register Buffer_t* b; register char* s; register int n; int u;){
 	register int	i;
@@ -1735,10 +1737,14 @@ copyright __PARAM__((Notice_t* notice, register Buffer_t* b), (notice, b)) __OTO
 	copy(b, "Copyright (c) ", -1);
 	if (notice->test)
 		clock = (time_t)1000212300;
-	else
+	else if (!(t = notice->item[18].data))
+	{
 		time(&clock);
-	t = ctime(&clock) + 20;
-	if ((x = notice->item[17].data) && sstrncmp( x, t, 4))
+		t = ctime(&clock) + 20;
+	}
+	if ((x = notice->item[19].data) && sstrncmp( t, x, 4) < 0)
+		t = x;
+	if ((x = notice->item[17].data) && sstrncmp( x, t, 4) < 0)
 	{
 		expand(notice, b, &notice->item[17]);
 		((( b)->nxt<( b)->end)?(*( b)->nxt++=( '-')):(( '-'),(-1)));
@@ -1896,8 +1902,8 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	notice.cc[2] = cc3;
 	for (i = 0; i < (sizeof(key)/sizeof(key[0])-1); i++)
 		notice.item[i].data = 0;
-	notice.item[18] = notice.item[1] = lic[notice.type];
-	notice.item[18].quote = notice.item[1].quote = 0;
+	notice.item[20] = notice.item[1] = lic[notice.type];
+	notice.item[20].quote = notice.item[1].quote = 0;
 	contributor = i = k = 0;
 	for (;;)
 	{
@@ -2015,7 +2021,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				}
 				else
 				{
-					h = 18;
+					h = 20;
 					v = x;
 				}
 				if (c == '\n')
@@ -2079,7 +2085,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				}
 				else
 				{
-					if (h == 18)
+					if (h == 20)
 						switch (c = lookup(lic, v, s - v))
 						{
 						case 0:
@@ -2103,7 +2109,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 							notice.type = c;
 							notice.item[1].data = lic[lic[c].quote].data;
 							notice.item[1].size = lic[lic[c].quote].size;
-							if (notice.item[18].data != lic[0].data)
+							if (notice.item[20].data != lic[0].data)
 								h = -1;
 							break;
 						}
@@ -2174,10 +2180,10 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				copy(&tmp, "Eclipse Public License", -1);
 			else
 				copy(&tmp, "Common Public License", -1);
-			if (notice.item[21].data)
+			if (notice.item[23].data)
 			{
 				copy(&tmp, ", Version ", -1);
-				expand(&notice, &tmp, &notice.item[21]);
+				expand(&notice, &tmp, &notice.item[23]);
 			}
 			comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 			if (notice.item[5].data || notice.item[2].data)
@@ -2203,14 +2209,14 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			}
 			comment(&notice, &buf, ((char*)0), 0, 0);
 			comment( &notice, &buf, "A copy of the License is available at",sizeof( "A copy of the License is available at")-1, 0);
-			if (notice.item[19].data)
+			if (notice.item[21].data)
 			{
-				expand(&notice, &tmp, &notice.item[19]);
+				expand(&notice, &tmp, &notice.item[21]);
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
-				if (notice.item[20].data)
+				if (notice.item[22].data)
 				{
 					copy(&tmp, "(with md5 checksum ", -1);
-					expand(&notice, &tmp, &notice.item[20]);
+					expand(&notice, &tmp, &notice.item[22]);
 					copy(&tmp, ")", -1);
 					comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 				}
@@ -2248,7 +2254,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			}
 			else
 				i = -1;
-			if (notice.item[19].data)
+			if (notice.item[21].data)
 			{
 				comment( &notice, &buf, "A copy of the Source Code Agreement is available",sizeof( "A copy of the Source Code Agreement is available")-1, 0);
 				copy(&tmp, "at the ", -1);
@@ -2257,12 +2263,12 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				copy(&tmp, " Internet web site URL", -1);
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 				comment(&notice, &buf, ((char*)0), 0, 0);
-				expand(&notice, &tmp, &notice.item[19]);
+				expand(&notice, &tmp, &notice.item[21]);
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
-				if (notice.item[20].data)
+				if (notice.item[22].data)
 				{
 					copy(&tmp, "(with an md5 checksum of ", -1);
-					expand(&notice, &tmp, &notice.item[20]);
+					expand(&notice, &tmp, &notice.item[22]);
 					copy(&tmp, ")", -1);
 					comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 				}
@@ -2410,7 +2416,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				copy(&tmp, "Proprietary", -1);
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 1);
 				comment(&notice, &buf, ((char*)0), 0, 0);
-				if (notice.item[19].data)
+				if (notice.item[21].data)
 				{
 					copy(&tmp, "This is proprietary source code", -1);
 					if (i >= 0)
@@ -2463,12 +2469,12 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				comment( &notice, &buf, "For noncommercial use",sizeof( "For noncommercial use")-1, 1);
 				comment(&notice, &buf, ((char*)0), 0, 0);
 			}
-			if (notice.type >= 15 && !notice.item[19].data)
+			if (notice.type >= 15 && !notice.item[21].data)
 			{
 				comment( &notice, &buf, "Unpublished & Not for Publication",sizeof( "Unpublished & Not for Publication")-1, 0);
 				comment(&notice, &buf, ((char*)0), 0, 0);
 			}
-			if (notice.item[19].data)
+			if (notice.item[21].data)
 			{
 				copy(&tmp, "This software is licensed", -1);
 				if (notice.item[5].data || notice.item[2].data)
@@ -2497,12 +2503,12 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				}
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 				comment( &notice, &buf, "under the terms and conditions of the license in",sizeof( "under the terms and conditions of the license in")-1, 0);
-				expand(&notice, &tmp, &notice.item[19]);
+				expand(&notice, &tmp, &notice.item[21]);
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
-				if (notice.item[20].data)
+				if (notice.item[22].data)
 				{
 					copy(&tmp, "(with an md5 checksum of ", -1);
-					expand(&notice, &tmp, &notice.item[20]);
+					expand(&notice, &tmp, &notice.item[22]);
 					copy(&tmp, ")", -1);
 					comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 				}
@@ -2634,10 +2640,10 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		copy(&buf, "[-copyright?", -1);
 		copyright(&notice, &buf);
 		((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(( ']'),(-1)));
-		if (notice.item[19].data)
+		if (notice.item[21].data)
 		{
 			copy(&buf, "[-license?", -1);
-			expand(&notice, &buf, &notice.item[19]);
+			expand(&notice, &buf, &notice.item[21]);
 			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(( ']'),(-1)));
 		}
 		((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( '\n')):(( '\n'),(-1)));
@@ -4838,7 +4844,7 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
 
 
-#line 267 "proto.c"
+#line 269 "proto.c"
 
 
 

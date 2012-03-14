@@ -19,13 +19,12 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
 /*
  * standalone mini error interface
  */
 
 #ifndef _ERROR_H
-#define _ERROR_H
+#define _ERROR_H	1
 
 #include <option.h>
 #include <stdarg.h>

@@ -77,6 +77,7 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	register char**		p;
 	register char*		s;
 	char*			sh;
+	char*			exe;
 	int			c;
 	int			m;
 	int			argc;
@@ -134,29 +135,29 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	if (argmax <= 0 || argmax > c)
 		argmax = c;
 	s = cmd->buf;
-	if (!argv[0])
+	if (!(exe = argv[0]))
 	{
-		argv = (char**)echo;
+		exe = *(argv = (char**)echo);
 		cmd->echo = 1;
 	}
-	else if (streq(argv[0], echo[0]))
+	else if (streq(exe, echo[0]))
 	{
 		cmd->echo = 1;
 		flags &= ~CMD_NEWLINE;
 	}
 	else if (!(flags & CMD_CHECKED))
 	{
-		if (!pathpath(argv[0], NiL, PATH_REGULAR|PATH_EXECUTE, s, n + m))
+		if (!pathpath(exe, NiL, PATH_REGULAR|PATH_EXECUTE, s, n + m))
 		{
 			n = EXIT_NOTFOUND;
 			if (errorf)
-				(*cmd->errorf)(NiL, cmd, ERROR_SYSTEM|2, "%s: command not found", argv[0]);
+				(*cmd->errorf)(NiL, cmd, ERROR_SYSTEM|2, "%s: command not found", exe);
 			if (flags & CMD_EXIT)
 				(*error_info.exit)(n);
 			free(cmd);
 			return 0;
 		}
-		argv[0] = s;
+		exe = s;
 	}
 	s += strlen(s) + 1;
 	if (m)
@@ -169,7 +170,8 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	p = (char**)s;
 	n -= strlen(*p++ = sh) + 1;
 	cmd->argv = p;
-	while (*p = *argv++)
+	*p++ = exe;
+	while (*p = *++argv)
 		p++;
 	if (m)
 	{
@@ -368,10 +370,13 @@ cmdclose(Cmdarg_t* cmd)
 	{
 		if (cmd->errorf)
 			(*cmd->errorf)(NiL, cmd, 2, "only %d arguments for last command", cmd->argcount);
-		return -1;
+		n = -1;
 	}
-	cmd->flags &= ~CMD_MINIMUM;
-	n = cmdflush(cmd);
+	else
+	{
+		cmd->flags &= ~CMD_MINIMUM;
+		n = cmdflush(cmd);
+	}
 	free(cmd);
 	return n;
 }

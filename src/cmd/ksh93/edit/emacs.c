@@ -1074,9 +1074,9 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 					if(ep->lastdraw==APPEND && ep->prevdirection != -2)
 					{
 						out[cur] = 0;
-						gencpy(&((genchar*)lstring)[1],out);
+						gencpy((genchar*)lstring+1,out);
 #if SHOPT_MULTIBYTE
-						ed_external(&((genchar*)lstring)[1],lstring+1);
+						ed_external((genchar*)lstring+1,lstring+1);
 #endif /* SHOPT_MULTIBYTE */
 						*lstring = '^';
 						ep->prevdirection = -2;

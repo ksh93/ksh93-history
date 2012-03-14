@@ -136,7 +136,6 @@ static int
 visit(Vmalloc_t* vm, void* addr, size_t size, Vmdisc_t* disc, void* handle)
 {
 	State_t*	state = (State_t*)handle;
-	Vmstat_t	vs;
 
 	if (vm != state->vm)
 	{

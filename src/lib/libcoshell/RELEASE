@@ -1,3 +1,4 @@
+12-02-22 coinit.c: handle non-identifier export var names
 11-12-13 cowait.c: handle sfpoll() error return on interrupt
 11-11-21 cowait.c: poll before blocking read to weed out killed jobs (no 'x' message)
 11-08-30 codata.c,coopen.c: drop macro "..." catenation for old cc

@@ -1,3 +1,11 @@
+12-03-10 misc/optget.c: HELP_index for "PLUGIN" too
+12-02-29 include/shcmd.h: PLUGIN_VERSION 20111111 for cdt disc/meth change
+12-02-29 comp/spawnveg.c: fix sigcritical() to include waitpid() for internal child
+12-02-29 malloc.c: make __malloc_hook initialization thread safe
+12-02-24 comp/iconv.c: fix winix UTF-8 vs UCS-2 over-conversion
+12-02-24 astsa/*.h: clean up header guards
+12-02-24 astsa/astsa.omk: clean up standalone old make makefile interactions
+12-02-21 misc/cmdarg.c: fix bug that set argv[0]
 12-02-10 sfvprintf.c: fix 1 byte too long buffer access
 12-02-07 malloc.c/features/vmalloc: add gnu __malloc_hook tests
 12-02-06 vmmopen.c: fix ALIGN vs sys/param.h macro conflict

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-02-07
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-02-29
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -1326,7 +1326,7 @@ done mamake.rt
 exec - if [[ "1" || "mamake.rt" -nt "mamake.tst" ]]
 exec - then mktest --style=regress mamake.rt > mamake.tst
 exec - fi
-done mamake.tst virtual
+done mamake.tst generated
 exec - regress mamake.tst mamake
 done test.mamake virtual
 done test dontcare virtual

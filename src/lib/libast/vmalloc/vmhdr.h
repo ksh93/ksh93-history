@@ -261,9 +261,11 @@ struct _body_s
 	Block_t**	self;	/* self pointer when free	*/
 };
 #define BODYSIZE	ROUND(sizeof(struct _body_s),ALIGN)
+
 union _body_u
 {	Vmuchar_t	data[BODYSIZE];	/* to standardize size		*/
 	struct _body_s	body;
+	Block_t*	self[1];
 };
 
 /* After all the songs and dances, we should now have:
@@ -347,7 +349,7 @@ struct _seg_s
 
 #define DATA(b)		((Void_t*)((b)->body.data) )
 #define BLOCK(d)	((Block_t*)((char*)(d) - sizeof(Head_t)) )
-#define SELF(b)		((Block_t**)((b)->body.data + SIZE(b) - sizeof(Block_t*)) )
+#define SELF(b)		(b)->body.self[SIZE(b)/sizeof(Block_t*)-1]
 #define LAST(b)		(*((Block_t**)(((char*)(b)) - sizeof(Block_t*)) ) )
 #define NEXT(b)		((Block_t*)((b)->body.data + SIZE(b)) )
 

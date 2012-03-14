@@ -25,10 +25,9 @@
  */
 
 #ifndef _AST_H
-#define _AST_H
+#define _AST_H		1
 
-#include "ast_sa.h"
-
+#include <ast_sa.h>
 #include <ast_common.h>
 
 #include <stdio.h>

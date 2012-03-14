@@ -146,4 +146,15 @@ done
 (( d==2000 )) ||  err_exit "trap '' CHLD  causes side effects d=$d"
 trap - CHLD
 
+tmp=$(mktemp -dt)
+trap 'rm -rf $tmp' EXIT
+x=$($SHELL 2> /dev/null -ic '/bin/notfound; sleep .5 & sleep 1;jobs')
+[[ $x == *Done* ]] || err_exit 'SIGCHLD blocked after notfound'
+x=$($SHELL 2> /dev/null  -ic 'kill -0 12345678901234567876; sleep .5 & sleep 1;jobs')
+[[ $x == *Done* ]] || err_exit 'SIGCHLD blocked after error message'
+print 'set -o monitor;sleep .5 & sleep 1;jobs' > $tmp/foobar
+chmod +x $tmp/foobar
+x=$($SHELL  -c "echo | $tmp/foobar")
+[[ $x == *Done* ]] || err_exit 'SIGCHLD blocked for script at end of pipeline'
+
 exit $((Errors<125?Errors:125))

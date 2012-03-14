@@ -581,7 +581,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		job.waitall = job.curpgid = 0;
 		error_info.flags |= ERROR_INTERACTIVE;
 		t = (Shnode_t*)sh_parse(shp,iop,0);
-		if(!sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_CFLAG))
+		if(!sh_isstate(SH_INTERACTIVE) && !sh_isoption(SH_CFLAG))
 			error_info.flags &= ~ERROR_INTERACTIVE;
 		shp->readscript = 0;
 		if(sh_isstate(SH_INTERACTIVE) && shp->gd->hist_ptr)
@@ -591,7 +591,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		{
 			execflags = sh_state(SH_ERREXIT)|sh_state(SH_INTERACTIVE);
 			/* The last command may not have to fork */
-			if(!sh_isstate(SH_PROFILE) && sh_isstate(SH_CFLAG) &&
+			if(!sh_isstate(SH_PROFILE) && sh_isoption(SH_CFLAG) &&
 				(fno<0 || !(shp->fdstatus[fno]&(IOTTY|IONOSEEK)))
 				&& !sfreserve(iop,0,0))
 			{

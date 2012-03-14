@@ -2719,7 +2719,12 @@ skip:
 	if(!logins_tree)
 		logins_tree = dtopen(&_Nvdisc,Dtbag);
 	if(np=nv_search(string,logins_tree,NV_ADD))
+	{
+		c = shp->subshell;
+		shp->subshell = 0;
 		nv_putval(np, pw->pw_dir,0);
+		shp->subshell = c;
+	}
 	return(pw->pw_dir);
 }
 
