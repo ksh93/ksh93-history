@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -360,7 +360,7 @@ char	*sh_fmtq(const char *string)
 	for(;c;c= mbchar(cp))
 	{
 #if SHOPT_MULTIBYTE
-		if(c=='\'' || !iswprint(c))
+		if(c=='\'' || !iswprint(c) || (c>=128 && iswspace(c)))
 #else
 		if(c=='\'' || !isprint(c))
 #endif /* SHOPT_MULTIBYTE */
@@ -415,10 +415,9 @@ char	*sh_fmtq(const char *string)
 				break;
 			    default:
 #if SHOPT_MULTIBYTE
-				if(!iswprint(c))
+				if(!iswprint(c) || (c>=256 && iswspace(c)))
 				{
-					while(op<cp)
-						sfprintf(staksp,"\\%.3o",*(unsigned char*)op++);
+					sfprintf(staksp,"\\u%.4x",c);
 					continue;
 				}
 #else

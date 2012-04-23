@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-02-29
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-04-20
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -2479,16 +2479,18 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done tvtouch.o generated
 make cmdarg.o
 make misc/cmdarg.c
-prev include/proc.h implicit
 prev ast_api.h implicit
+prev include/proc.h implicit
+make misc/cmdlib.h implicit
 make include/cmdarg.h implicit
 prev include/error.h implicit
-done include/cmdarg.h
+done include/cmdarg.h dontcare
+done misc/cmdlib.h
 prev include/ast.h implicit
 done misc/cmdarg.c
 meta cmdarg.o %.c>%.o misc/cmdarg.c cmdarg
 prev misc/cmdarg.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c misc/cmdarg.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D_PACKAGE_ast -c misc/cmdarg.c
 done cmdarg.o generated
 make vecargs.o
 make vec/vecargs.c

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: sum (AT&T Research) 2010-07-28 $\n]"
+"[-?\n@(#)$Id: sum (AT&T Research) 2012-04-20 $\n]"
 USAGE_LICENSE
 "[+NAME?cksum,md5sum,sum - print file checksum and block count]"
 "[+DESCRIPTION?\bsum\b lists the checksum, and for most methods the block"
@@ -453,7 +453,7 @@ b_cksum(int argc, register char** argv, Shbltin_t* context)
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	memset(&state, 0, sizeof(state));
-	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER;
+	flags = fts_flags() | FTS_META | FTS_TOP | FTS_NOPOSTORDER;
 	state.flags = SUM_SIZE;
 	state.warn = 1;
 	logical = 1;

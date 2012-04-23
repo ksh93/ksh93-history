@@ -453,7 +453,7 @@ Pathcomp_t *path_nextcomp(Shell_t *shp,register Pathcomp_t *pp, const char *name
 			if(!pp->dev && !pp->ino)
 				path_checkdup(shp,pp);
 			if(pp->flags&PATH_SKIP)
-				continue;
+				return(ppnext);
 			if(!last || *pp->name!='/')
 				break;
 		}
@@ -728,6 +728,7 @@ int	path_search(Shell_t *shp,register const char *name,Pathcomp_t **oldpp, int f
 			return(0);
 		}
 		pp = path_absolute(shp,name,oldpp?*oldpp:NIL(Pathcomp_t*));
+		shp->bltin_dir = 0;
 		if(oldpp)
 			*oldpp = pp;
 		if(!pp && (np=nv_search(name,shp->fun_tree,0))&&np->nvalue.ip)
@@ -777,6 +778,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 	while(1)
 	{
 		sh_sigcheck(shp);
+		shp->bltin_dir = 0;
 		isfun = (pp->flags&PATH_FPATH);
 		if(oldpp=pp)
 		{
@@ -804,6 +806,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 				stakputs("b_");
 				stakputs(name);
 				stakputc(0);
+				shp->bltin_dir = oldpp->name;
 				if(!oldpp->bltin_lib)
 				{
 					if(cp = strrchr(oldpp->blib,'/'))
@@ -813,7 +816,10 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 					if(!strcmp(cp,LIBCMD) && (addr=(Shbltin_f)dlllook((void*)0,stakptr(n))))
 					{
 						if((np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) && nv_isattr(np,NV_BLTINOPT))
+						{
+							shp->bltin_dir = 0;
 							return(oldpp);
+						}
 					}
 #ifdef SH_PLUGIN_VERSION
 					if (oldpp->bltin_lib = dllplugin(SH_ID, oldpp->blib, NiL, SH_PLUGIN_VERSION, NiL, RTLD_LAZY, NiL, 0))
@@ -847,11 +853,18 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)))
 				{
 					np->nvenv = oldpp->bltin_lib;
+					shp->bltin_dir = 0;
+					return(oldpp);
+				}
+				if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),shp->bltin_tree,0))
+				{
+					shp->bltin_dir = 0;
 					return(oldpp);
 				}
 			}
 #endif /* SHOPT_DYNAMIC */
 		}
+		shp->bltin_dir = 0;
 		sh_stats(STAT_PATHS);
 		f = canexecute(shp,stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0 && (cp = strrchr(name,'.')))

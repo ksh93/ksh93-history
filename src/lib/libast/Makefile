@@ -232,6 +232,7 @@ virtual		ast/stdio.h
 "linux.i386-64*":NOOPTIMIZE: sfset.c
 "sol?.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c tmxfmt.c
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
+"win32*-64*"	:NOOPTIMIZE: sfvprintf.c
 
 /*
  * NOTE: sun4 runtime link botches ro data so advertised sig_info is rw

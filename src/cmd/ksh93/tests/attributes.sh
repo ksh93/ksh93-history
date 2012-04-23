@@ -414,5 +414,41 @@ typeset -u PS1='hello --- '
 HISTFILE=foo
 [[ $HISTFILE == foo ]] || err_exit  'typeset -u PS1 affects HISTFILE'
 
+typeset -a a=( aA= ZQ= bA= bA= bw= Cg= )
+typeset -b x
+for 	(( i=0 ; i < ${#a[@]} ; i++ ))
+do 	x+="${a[i]}"
+done
+[[ $(printf "%B" x) == hello ]] || err_exit "append for typeset -b not working: got '$(printf "%B" x)' should get hello"
+
+(
+	trap 'exit $?' EXIT
+	$SHELL -c 'typeset v=foo; [[ $(typeset -p v[0]) == v=foo ]]'
+) 2> /dev/null || err_exit 'typeset -p v[0] not working for simple variable v'
+
+unset x
+expected='typeset -a x=(a\=3 b\=4)'
+typeset -a x=( a=3 b=4)
+[[ $(typeset -p x) == "$expected" ]] || err_exit 'assignment elements in typeset -a assignment not working'
+
+unset z
+z='typeset -a q=(a b c)'
+$SHELL -c "$z; [[ \$(typeset -pa) == '$z' ]]" || err_exit 'typeset -pa does not list only index arrays'
+z='typeset -C z=(foo=bar)'
+$SHELL -c "$z; [[ \$(typeset -pC) == '$z' ]]" || err_exit 'typeset -pC does not list only compound variables'
+unset y
+z='typeset -A y=([a]=foo)'
+cd ~/src/cmd/ksh93/gsf8
+$SHELL -c "$z; [[ \$(typeset -pA) == '$z' ]]" || err_exit 'typeset -pA does not list only associative arrays'
+
+$SHELL 2> /dev/null -c 'typeset -C arr=( aa bb cc dd )' && err_exit 'invalid compound variable assignment not reported'
+
+unset x
+typeset -l x=
+[[ ${x:=foo} == foo ]] || err_exit '${x:=foo} with x unset, not foo when x is a lowercase variable'
+
+unset x
+typeset -L4 x=$'\001abcdef'
+[[ ${#x} == 5 ]] || err_exit "width of character '\01' is not zero" 
 
 exit $((Errors<125?Errors:125))

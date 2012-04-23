@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Research) 2011-03-28 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Research) 2012-04-20 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -175,7 +175,7 @@ b_chmod(int argc, char** argv, Shbltin_t* context)
 	struct stat	st;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
-	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
+	flags = fts_flags() | FTS_META | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 
 	/*
 	 * NOTE: we diverge from the normal optget boilerplate

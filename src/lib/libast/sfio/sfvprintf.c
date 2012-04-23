@@ -803,8 +803,8 @@ loop_fmt :
 						}
 						v -= (sp - osp);
 					}
-#endif
 					else
+#endif
 					{	sp += -n;
 						v += n;
 					}

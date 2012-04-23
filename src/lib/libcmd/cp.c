@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Research) 2011-05-03 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2012-04-20 $\n]"
 USAGE_LICENSE
 ;
 
@@ -458,7 +458,9 @@ visit(State_t* state, register FTSENT* ent)
 					/* ok */;
 				else if (state->interactive)
 				{
-					if (astquery(-1, "%s %s? ", state->opname, state->path) < 0 || sh_checksig(state->context))
+					if ((n = astquery(-1, "%s %s? ", state->opname, state->path)) < 0 || sh_checksig(state->context))
+						return -1;
+					if (n)
 						return 0;
 				}
 				else if (state->op == LN)
@@ -479,7 +481,9 @@ visit(State_t* state, register FTSENT* ent)
 				    fmtmode(st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO), 0) + 1;
 				if (state->interactive)
 				{
-					if (astquery(-1, "override protection %s for %s? ", protection, state->path) < 0 || sh_checksig(state->context))
+					if ((n = astquery(-1, "override protection %s for %s? ", protection, state->path)) < 0 || sh_checksig(state->context))
+						return -1;
+					if (n)
 						return 0;
 					rm = 1;
 				}
@@ -946,7 +950,7 @@ b_cp(int argc, register char** argv, Shbltin_t* context)
 	if (argc <= 0 || error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
 	if (!path_resolve)
-		state->flags |= fts_flags();
+		state->flags |= fts_flags() | FTS_META;
 	file = argv[argc];
 	argv[argc] = 0;
 	if (s = strrchr(file, '/'))

@@ -148,7 +148,7 @@ int		type;	/* operation being done		*/
 	}
 	else if(type == DB_WATCH)
 	{	bufp = (*_Vmstrcpy)(bufp, "size", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(DBSIZE(data),-1), ':');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)((Vmulong_t)DBSIZE(data),-1), ':');
 		if(where == DB_ALLOC)
 			bufp = (*_Vmstrcpy)(bufp,"just allocated", ':');
 		else if(where == DB_FREE)
@@ -179,7 +179,7 @@ int		type;	/* operation being done		*/
 	*bufp++ = '\n';
 	*bufp = '\0';
 
-	vmdbwarn(vm,buf,(bufp-buf));
+	vmdbwarn(vm,buf,(int)(bufp-buf));
 }
 
 /* check for watched address and issue warnings */
@@ -305,7 +305,7 @@ int		local;
 			{	data = DB2DEBUG(data);
 				if((Vmuchar_t*)addr >= data &&
 				   (Vmuchar_t*)addr < data+DBSIZE(data))
-					offset =  (Vmuchar_t*)addr - data;
+					offset = (long)((Vmuchar_t*)addr - data);
 			}
 			goto done;
 		}
@@ -604,7 +604,7 @@ Vmalloc_t*	vm;
 			{	if(*begp == DB_MAGIC)
 					continue;
 			set_bad:
-				dbwarn(vm,data,begp-data,vm->file,vm->line,0,DB_CHECK);
+				dbwarn(vm,data,(long)(begp-data),vm->file,vm->line,0,DB_CHECK);
 				DBSETBAD(data);
 				rv += 1;
 				goto next;

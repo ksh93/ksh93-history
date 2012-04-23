@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -229,7 +229,7 @@ int		line;
 	}
 
 	if((pf = pfsearch(vm,file,line)) )
-	{	PFALLOC(pf) += size;
+	{	PFALLOC(pf) += (Vmulong_t)size;
 		PFNALLOC(pf) += 1;
 	}
 	PFOBJ(data) = pf;
@@ -238,7 +238,7 @@ int		line;
 	if(pf)
 	{	/* update region statistics */
 		pf = PFREGION(pf);
-		PFALLOC(pf) += size;
+		PFALLOC(pf) += (Vmulong_t)size;
 		PFNALLOC(pf) += 1;
 		if((s = PFALLOC(pf) - PFFREE(pf)) > PFMAX(pf) )
 			PFMAX(pf) = s;
@@ -413,7 +413,7 @@ int		fd;
 			continue;
 		alloc = 0;
 		for(seg = PFVM(pf)->data->seg; seg; seg = seg->next)
-			alloc += seg->extent;
+			alloc += (Vmulong_t)seg->extent;
 		bufp = (*_Vmstrcpy)(bufp,"region", '=');
 		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(PFVM(pf)),0), ':');
 		bufp = pfsummary(bufp,PFNALLOC(pf),PFALLOC(pf),
@@ -523,10 +523,10 @@ int		local;
 	s = PFSIZE(data);
 	if(pf)
 	{	PFNFREE(pf) += 1;
-		PFFREE(pf) += s;
+		PFFREE(pf) += (Vmulong_t)s;
 		pf = PFREGION(pf);
 		PFNFREE(pf) += 1;
-		PFFREE(pf) += s;
+		PFFREE(pf) += (Vmulong_t)s;
 	}
 
 	if(!local && (vd->mode&VM_TRACE) && _Vmtrace)
@@ -583,10 +583,10 @@ int		local;
 	news = ROUND(size,ALIGN) + PF_EXTRA;
 	if((addr = KPVRESIZE(vm,data,news,(type&~VM_RSZERO),Vmbest->resizef)) )
 	{	if(pf)
-		{	PFFREE(pf) += s;
+		{	PFFREE(pf) += (Vmulong_t)s;
 			PFNFREE(pf) += 1;
 			pf = PFREGION(pf);
-			PFFREE(pf) += s;
+			PFFREE(pf) += (Vmulong_t)s;
 			PFNFREE(pf) += 1;
 			pfsetinfo(vm,(Vmuchar_t*)addr,size,file,line);
 		}
@@ -597,10 +597,10 @@ int		local;
 		}
 	}
 	else if(pf)	/* reset old info */
-	{	PFALLOC(pf) -= s;
+	{	PFALLOC(pf) -= (Vmulong_t)s;
 		PFNALLOC(pf) -= 1;
 		pf = PFREGION(pf);
-		PFALLOC(pf) -= s;
+		PFALLOC(pf) -= (Vmulong_t)s;
 		PFNALLOC(pf) -= 1;
 		file = PFFILE(pf);
 		line = PFLINE(pf);

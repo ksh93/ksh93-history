@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -654,5 +654,42 @@ function b
 }
 [[  $(a cfg.alarms) == 3 ]] || err_exit  "nameref scoping error in function"
 [[  $(b cfg.alarms) == 3 ]] || err_exit  "nameref scoping error in nested function"
+
+function yy
+{
+	nameref n=$1
+	n=( z=4 )
+}
+yy foo
+unset foo
+[[ $foo ]] && err_exit 'unset after creating via nameref in function not working'
+
+unset arr
+typeset -a arr=( ( 1 2 3 ) ( 4 5 6 ) ( 7 8 9 ))
+typeset -n ref=arr[1]
+[[ $ref == 4 ]] || err_exit '$ref should be 4'
+[[ ${ref[@]} == '4 5 6' ]] || err_exit '${ref[@]} should be "4 5 6"'
+[[ $ref == "${arr[1]}" ]] || err_exit '$ref shuld be ${arr[1]}'
+[[ ${ref[@]} == "${arr[1][@]}" ]] || err_exit '${ref[@]} should be ${arr[1][@]}'
+
+function fun2
+{
+	nameref var=$1.foo
+	var=$2
+}
+function fun1
+{
+	xxx=$1
+	fun2 $xxx bam
+}
+args=(bar=yes)
+fun1 args
+[[ $args == *foo=bam* ]] || err_exit 'nameref does not bind to correct scope'
+
+typeset +n ref
+unset ref ar
+typeset -a arr=( 1 2 3 )
+typeset -n ref='arr[2]'
+[[ $(typeset -p ref) == *'arr[2]'* ]] || err_exit 'typeset -p ref when ref is a reference to an index array element is wrong'
 
 exit $((Errors<125?Errors:125))

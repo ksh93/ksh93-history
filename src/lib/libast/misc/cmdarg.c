@@ -30,21 +30,31 @@
 #define _AST_API_H	1
 
 #include <ast.h>
-#include <cmdarg.h>
+#include <cmdlib.h>
+#include <proc.h>
+
+static const char lib[] = "libast:cmdarg";
+
+static int
+cmdrun(int argc, char** argv, Cmddisc_t* disc)
+{
+	return procrun(argv[0], argv, PROC_ARGMOD|PROC_IGNOREPATH);
+}
 
 Cmdarg_t*
 cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
 {
-	Error_f	ef;
+	Cmddisc_t	disc;
 
-	if (flags & CMD_SILENT)
-		ef = 0;
-	else
+	memset(&disc, 0, sizeof(disc));
+	disc.version = CMD_VERSION;
+	if (!(flags & CMD_SILENT))
 	{
-		ef = errorf;
 		flags |= CMD_EXIT;
+		disc.errorf = errorf;
 	}
-	return cmdopen_20110505(argv, argmax, size, argpat, flags, ef);
+	disc.flags = flags;
+	return cmdopen_20120411(argv, argmax, size, argpat, &disc);
 }
 
 #undef	_AST_API_H
@@ -63,6 +73,18 @@ cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
 
 static const char*	echo[] = { "echo", 0 };
 
+Cmdarg_t*
+cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flags, Error_f errorf)
+{
+	Cmddisc_t	disc;
+
+	memset(&disc, 0, sizeof(disc));
+	disc.version = CMD_VERSION;
+	disc.flags = flags;
+	disc.errorf = errorf;
+	return cmdopen_20120411(argv, argmax, size, argpat, &disc);
+}
+
 /*
  * open a cmdarg stream
  * initialize the command for execution
@@ -70,7 +92,7 @@ static const char*	echo[] = { "echo", 0 };
  */
 
 Cmdarg_t*
-cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flags, Error_f errorf)
+cmdopen_20120411(char** argv, int argmax, int size, const char* argpat, Cmddisc_t* disc)
 {
 	register Cmdarg_t*	cmd;
 	register int		n;
@@ -90,7 +112,7 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	{
 		for (p = argv + 1; *p; p++)
 		{
-			if ((flags & CMD_POST) && argpat && streq(*p, argpat))
+			if ((disc->flags & CMD_POST) && argpat && streq(*p, argpat))
 			{
 				*p = 0;
 				post = p + 1;
@@ -114,8 +136,8 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	m = roundof(m, sizeof(char**));
 	if (size < m)
 	{
-		if (errorf)
-			(*errorf)(NiL, sh, 2, "size must be at least %d", m);
+		if (disc->errorf)
+			(*disc->errorf)(NiL, sh, 2, "size must be at least %d", m);
 		return 0;
 	}
 	if ((m = x / 10) > 2048)
@@ -123,14 +145,18 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	if (size > (x - m))
 		size = x - m;
 	n = size - n;
-	m = ((flags & CMD_INSERT) && argpat) ? (strlen(argpat) + 1) : 0;
+	m = ((disc->flags & CMD_INSERT) && argpat) ? (strlen(argpat) + 1) : 0;
 	if (!(cmd = newof(0, Cmdarg_t, 1, n + m)))
 	{
-		if (errorf)
-			(*errorf)(NiL, sh, ERROR_SYSTEM|2, "out of space");
+		if (disc->errorf)
+			(*disc->errorf)(NiL, sh, ERROR_SYSTEM|2, "out of space");
 		return 0;
 	}
-	cmd->errorf = errorf;
+	cmd->id = lib;
+	cmd->disc = disc;
+	cmd->errorf = disc->errorf;
+	if (!(cmd->runf = disc->runf))
+		cmd->runf = cmdrun;
 	c = n / sizeof(char**);
 	if (argmax <= 0 || argmax > c)
 		argmax = c;
@@ -143,16 +169,16 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	else if (streq(exe, echo[0]))
 	{
 		cmd->echo = 1;
-		flags &= ~CMD_NEWLINE;
+		disc->flags &= ~CMD_NEWLINE;
 	}
-	else if (!(flags & CMD_CHECKED))
+	else if (!(disc->flags & CMD_CHECKED))
 	{
 		if (!pathpath(exe, NiL, PATH_REGULAR|PATH_EXECUTE, s, n + m))
 		{
 			n = EXIT_NOTFOUND;
-			if (errorf)
+			if (cmd->errorf)
 				(*cmd->errorf)(NiL, cmd, ERROR_SYSTEM|2, "%s: command not found", exe);
-			if (flags & CMD_EXIT)
+			if (disc->flags & CMD_EXIT)
 				(*error_info.exit)(n);
 			free(cmd);
 			return 0;
@@ -192,7 +218,7 @@ cmdopen_20110505(char** argv, int argmax, int size, const char* argpat, int flag
 	cmd->firstarg = cmd->nextarg = p;
 	cmd->laststr = cmd->nextstr = cmd->buf + n;
 	cmd->argmax = argmax;
-	cmd->flags = flags;
+	cmd->flags = disc->flags;
 	cmd->offset = ((cmd->postarg = post) ? (argc - (post - argv)) : 0) + 3;
 	return cmd;
 }
@@ -274,6 +300,7 @@ cmdflush(register Cmdarg_t* cmd)
 			return -1;
 		}
 	}
+	n = (int)(cmd->nextarg - cmd->argv);
 	cmd->nextarg = cmd->firstarg;
 	cmd->nextstr = cmd->laststr;
 	if (cmd->flags & (CMD_QUERY|CMD_TRACE))
@@ -285,7 +312,9 @@ cmdflush(register Cmdarg_t* cmd)
 		if (!(cmd->flags & CMD_QUERY))
 			sfprintf(sfstderr, "\n");
 		else if (astquery(1, "? "))
+		{
 			return 0;
+		}
 	}
 	if (cmd->echo)
 	{
@@ -294,14 +323,13 @@ cmdflush(register Cmdarg_t* cmd)
 			sfputr(sfstdout, s, *p ? n : '\n');
 		n = 0;
 	}
-	else if ((n = procrun(*cmd->argv, cmd->argv, PROC_ARGMOD|PROC_IGNOREPATH)) == -1)
+	else if ((n = (*cmd->runf)(n, cmd->argv, cmd->disc)) == -1)
 	{
 		n = EXIT_NOTFOUND - 1;
 		if (cmd->errorf)
 			(*cmd->errorf)(NiL, cmd, ERROR_SYSTEM|2, "%s: command exec error", *cmd->argv);
 		if (cmd->flags & CMD_EXIT)
 			(*error_info.exit)(n);
-		return n;
 	}
 	else if (n >= EXIT_NOTFOUND - 1)
 	{
@@ -329,7 +357,7 @@ cmdarg(register Cmdarg_t* cmd, const char* file, register int len)
 	int	r;
 
 	r = 0;
-	if (len)
+	if (len > 0)
 	{
 		while ((cmd->nextstr -= len + 1) < (char*)(cmd->nextarg + cmd->offset))
 		{
@@ -354,6 +382,8 @@ cmdarg(register Cmdarg_t* cmd, const char* file, register int len)
 		if (cmd->argcount >= cmd->argmax && (i = cmdflush(cmd)) > r)
 			r = i;
 	}
+	else
+		cmd->argcount += len;
 	return r;
 }
 

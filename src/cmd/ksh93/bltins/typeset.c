@@ -389,6 +389,8 @@ endargs:
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s", optusage(NIL(char*)));
+	if(tdata.argnum > SHRT_MAX)
+		errormsg(SH_DICT,ERROR_exit(2),"option argument cannot be greater than %d",SHRT_MAX);
 	if(isfloat)
 		flag |= NV_DOUBLE;
 	if(shortint)
@@ -445,7 +447,7 @@ endargs:
 		tdata.aflag = '-';
 	if(!tdata.sh->mktype)
 		tdata.help = 0;
-	if(tdata.aflag=='+' && (flag&(NV_ARRAY|NV_IARRAY|NV_COMVAR)))
+	if(tdata.aflag=='+' && (flag&(NV_ARRAY|NV_IARRAY|NV_COMVAR)) && argv[1])
 		errormsg(SH_DICT,ERROR_exit(1),e_nounattr);
 	return(setall(argv,flag,troot,&tdata));
 }
@@ -541,7 +543,7 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 				nvflags |= NV_NOREF;
 		}
 		if(tp->pflag)
-			nvflags |= NV_NOREF;
+			nvflags |= (NV_NOREF|NV_NOADD|NV_NOFAIL);
 		while(name = *++argv)
 		{
 			register unsigned newflag;
@@ -627,23 +629,21 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 				path_alias(np,path_absolute(shp,nv_name(np),NIL(Pathcomp_t*)));
 				continue;
 			}
-			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|((iarray|(nvflags&NV_REF))?NV_FARRAY:0));
+			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|((iarray|(nvflags&(NV_REF|NV_NOADD)==NV_REF))?NV_FARRAY:0));
 			if(!np)
 				continue;
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
 			else if(tp->tp && !nv_isattr(np,NV_MINIMAL|NV_EXPORT) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)) && (ap->nelem&ARRAY_TREE))
-#if 0
 				errormsg(SH_DICT,ERROR_exit(1),e_typecompat,nv_name(np));
-#else
-				errormsg(SH_DICT,ERROR_exit(1),"%s: typecompat",nv_name(np));
-#endif
 			else if((ap=nv_arrayptr(np)) && nv_aindex(np)>0 && ap->nelem==1 && nv_getval(np)==Empty)
 			{
 				ap->nelem++;
 				_nv_unset(np,0);
 				ap->nelem--;
 			}
+			else if(iarray && ap && ap->fun) 
+				errormsg(SH_DICT,ERROR_exit(1),"cannot change associative array %s to index array",nv_name(np));
 			if(tp->pflag)
 			{
 				if(!nv_istable(np))
@@ -839,8 +839,10 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 			else if(troot==shp->var_tree)
 			{
 				flag |= (nvflags&NV_ARRAY);
-				if(flag&NV_IARRAY)
-					flag |= NV_ARRAY;
+				if(iarray)
+					flag |= NV_ARRAY|NV_IARRAY;
+				if(comvar)
+					flag |= NV_TABLE;
 				if(!(flag&~NV_ASSIGN))
 					tp->noref = 1;
 			}

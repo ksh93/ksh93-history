@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -483,6 +483,15 @@ function dave.unset
 }
 unset dave
 [[ $(typeset +f) == *dave.* ]] && err_exit 'unset discipline not removed'
+
+x=$(
+	dave=dave
+	function dave.unset
+	{
+		print dave.unset
+	}
+)
+[[ $x == dave.unset ]] || err_exit 'unset discipline not called with subset completion'
 
 print 'print ${VAR}' > $tmp/script
 unset VAR

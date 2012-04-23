@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Research) 2011-04-28 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Research) 2012-04-20 $\n]"
 USAGE_LICENSE
 ;
 
@@ -242,7 +242,7 @@ b_chgrp(int argc, char** argv, Shbltin_t* context)
 	int		(*chownf)(const char*, uid_t, gid_t);
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
-	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
+	flags = fts_flags() | FTS_META | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 	before = ~0;
 	if (!(sp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space");

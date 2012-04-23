@@ -602,6 +602,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	}
 	if(!shp->savesig)
 		shp->savesig = -1;
+	nv_restore(sp);
 	if(comsub)
 	{
 		/* re-enable job control */
@@ -666,7 +667,6 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 	{
 		int n;
 		shp->options = sp->options;
-		nv_restore(sp);
 		if(sp->salias)
 		{
 			shp->alias_tree = dtview(sp->salias,0);

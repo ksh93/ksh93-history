@@ -955,7 +955,7 @@ init(register char* s, Optpass_t* p)
 				map[*t] = ++n;
 	}
 #if _BLD_DEBUG
-	error(-1, "optget debug");
+	error(-2, "optget debug");
 #endif
 	p->oopts = s;
 	p->version = 0;
@@ -1176,7 +1176,7 @@ init(register char* s, Optpass_t* p)
 		s += n;
 	}
 	p->opts = s;
-	message((-1, "version=%d prefix=%d section=%s flags=%04x id=%s catalog=%s oopts=%p", p->version, p->prefix, p->section, p->flags, p->id, p->catalog, p->oopts));
+	message((-2, "version=%d prefix=%d section=%s flags=%04x id=%s catalog=%s oopts=%p", p->version, p->prefix, p->section, p->flags, p->id, p->catalog, p->oopts));
 	return 0;
 }
 

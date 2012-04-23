@@ -424,7 +424,7 @@ int		c;
 				else if(ISJUNK(s))
 				{	/* reclaim any touched junk list */
 					if((int)C_INDEX(s) < c)
-						c = C_INDEX(s);
+						c = (int)C_INDEX(s);
 					SIZE(np) = 0;
 					CLRBITS(s);
 				}
@@ -751,7 +751,7 @@ int		local;
 			if((Vmuchar_t*)addr >= data && (Vmuchar_t*)addr < data+size)
 			{	if(ISJUNK(SIZE(b)) || !ISBUSY(SIZE(b)))
 					offset = -1L;
-				else	offset = (Vmuchar_t*)addr - data;
+				else	offset = (long)((Vmuchar_t*)addr - data);
 				goto done;
 			}
 
@@ -883,7 +883,7 @@ int		local;
 				CLRBITS(s);
 			}
 			else if(ISJUNK(s) )
-			{	if(!bestreclaim(vd,np,C_INDEX(s)) )
+			{	if(!bestreclaim(vd,np,(int)C_INDEX(s)) )
 					/**/ASSERT(0); /* oops: did not see np! */
 				s = SIZE(np); /**/ASSERT(s%ALIGN == 0);
 			}

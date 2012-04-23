@@ -1,4 +1,57 @@
+12-03-29  --- Release ksh93u++ ---
+12-03-29  A bug in which appending an index array onto an array without elements
+	  caused the first element to be 1 rather than 0 has been fixed.
+12-03-29  A bug which could cause a core dump when copying a large index array
+	  has been fixed.
+12-03-28  The shell now generates an error message when the sizes with L, Z,
+	  and R are > 32767 instead of generating a core dump.
+12-03-28  A bug in left and right justification in which the width of invalid
+	  characters was not taken as zero has been fixed.
+12-03-26  A bug in which typeset -p ref, when ref is a reference to an index
+	  array element did not display the subscript has been fixed.
+12-03-23  A bug in lowercase and uppercase fields when expanding ${name:=val}
+	  when name is the empty string has been fixed.
+12-03-22  A namespace bug in which a type t defined in namespace foo could not
+	  be referenced outside the namespace as .foo.t has been fixed.
+12-03-22  A bug in name reference scoping in which a name function called from
+	  another function is pass a name reference to a compound variable
+	  instance to be created and the compound variable is in the global
+	  scope.
+12-03-22  A bug in which ${ref[@}} did not behave like ${arr[i][@]} when
+	  ref is a name reference to arr[i] has been fixed.
+12-03-21  A bug in which assigning a compound variable into arr[i], where
+	  arr[i] is an array variable did not work correctly has been fixed.
+12-03-21  A bug with multi-dimenstional index arrays in which ${arr[i][j]}
+	  could generate a bogus error message when i was > 9 has been fixed.
+12-03-21  A bug in which typeset v=foo, typeset -p v[0] generated a core dump
+	  has been fixed.
+12-03-20  A bug which caused a core dump when defining a type with a field
+	  as ' integer -a data=([0]=0)' has been fixed.
+12-03-19  Using typeset -a array when array is an associative arry not
+	  generated an error message.
+12-03-19  typeset +a, typeset +A, and typeset +C not displays the variables
+	  with the attributes a, A, and C respectively instead of an error.
+12-03-19  A bug in which typeset -pC, typeset -pa, and typeset -pA output all
+	  variables rather than those of type C, a, or A only has been fixed.
+12-03-18  A bug in which unset foo where foo is a name reference to a compound
+	  variable defined inside a function is not unset has been fixed.
+12-03-18  A bug with SHOPT_EDPREDICT which could cause a core dump when the
+	  list of matches became empty has been fixed.  
+12-03-15  The assignment, typeset -C foo=(a b c) now generates a syntax
+	  error since a is not an assignment command.
+12-03-16  A bug in which an unset discipline from a variable defined in a
+	  subshell is not invoked in the subshell has been fixed.
+12-03-08  The assignment typeset -a (x=1 y=2) now creates an index array
+	  of two elements rathern than an array of one element which is
+	  a compound variable.
+12-03-02  A bug in which a program that exits with value 12 when called
+	  from a command substitution in which standard output has been
+	  redirected caused the shell to hang has been fixed.
+12-03-01  A bug in which the shell could not parse [[ ']' == ~(E)[]] ]]
+	  has been fixed.
 12-02-29  --- Release ksh93u+ ---
+12-02-29  A bug in which ~user expanded first in a subshell prevented it
+	  from expanding later in a program has been fixed.
 12-02-29  A bug which could lead to a core dump when more that four shared
 	  libraries were added with the builtin command has been fixed.
 12-02-29  Fixed a few bugs which caused SIGCHLD to be blocked preventing

@@ -819,7 +819,7 @@ void nv_addtype(Namval_t *np, const char *optstr, Optdisc_t *op, size_t optsz)
 			tp->nsp = bp;
 		if(!shp->strbuf2)
 			shp->strbuf2 = sfstropen();
-		sfprintf(shp->strbuf2,"%s.%s%c\n",nv_name(bp)+1,name,0);
+		sfprintf(shp->strbuf2,".%s.%s%c\n",nv_name(bp)+1,name,0);
 		name = sfstruse(shp->strbuf2);
 	}
 #endif /* SHOPT_NAMESPACE */
@@ -1147,7 +1147,10 @@ else sfprintf(sfstderr,"tp==NULL\n");
 		}
 		else
 		{
+			Namarr_t *ap;
 			j = nv_isattr(np,NV_NOFREE);
+			if(j==0 && (ap=nv_arrayptr(np)) && !ap->fun)
+				j = 1;
 			nq->nvfun = np->nvfun;
 			np->nvfun = 0;
 			nv_disc(nq, &pp->childfun.fun, NV_LAST);

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -2045,6 +2045,7 @@ grp(Cenv_t* env, int parno)
 	Rex_t*		e;
 	Rex_t*		f;
 	int		c;
+	int		g;
 	int		i;
 	int		n;
 	int		x;
@@ -2053,6 +2054,7 @@ grp(Cenv_t* env, int parno)
 	int		beg;
 	unsigned char*	p;
 
+	g = env->flags;
 	beg = env->pattern == env->cursor - env->token.len;
 	if (!(c = env->token.lex) && (c = *env->cursor))
 		env->cursor++;
@@ -2511,28 +2513,39 @@ grp(Cenv_t* env, int parno)
 		env->error = REG_BADRPT;
 		return 0;
 	}
-	if (x && !(e = alt(env, parno, 0)))
-		return 0;
+	p = env->pattern;
+	i = env->type;
+	if (x)
+	{
+		if (typ >= 0)
+			env->type = typ;
+		error(-1, "AHA#%d typ=%d '%s'", __LINE__, typ, env->cursor);
+		if (!(e = alt(env, parno, 0)))
+			goto nope;
+		error(-1, "AHA#%d typ=%d '%s'", __LINE__, typ, env->cursor);
+		env->flags = g;
+		env->type = i;
+	}
 	c = token(env);
 	env->parnest--;
 	if (c != T_CLOSE && (!(env->flags & REG_LITERAL) || c != ')'))
 	{
 		env->error = REG_EPAREN;
-		return 0;
+		goto nope;
 	}
 	eat(env);
-	if (typ >= 0)
-	{
-		if (beg)
-			env->pattern = env->cursor;
-		env->type = typ;
-	}
+	if (typ >= 0 && beg)
+		env->pattern = env->cursor;
 	if (!x)
+	{
+		if (typ >= 0)
+			env->type = typ;
 		return 0;
+	}
 	if (!(f = node(env, x, 0, 0, 0)))
 	{
 		drop(env->disc, e);
-		return 0;
+		goto nope;
 	}
 	f->re.group.expr.rex = e;
 	if (x == REX_GROUP_BEHIND || x == REX_GROUP_BEHIND_NOT)
@@ -2542,7 +2555,7 @@ grp(Cenv_t* env, int parno)
 			drop(env->disc, f);
 			if (!env->error)
 				env->error = REG_ECOUNT;
-			return 0;
+			goto nope;
 		}
 		f->re.group.size = env->stats.m;
 		memset(&env->stats, 0, sizeof(env->stats));
@@ -2554,7 +2567,13 @@ grp(Cenv_t* env, int parno)
 		f = rep(env, f, parno, env->parno);
 		break;
 	}
-	return f;
+	if (f)
+		return f;
+ nope:
+	env->flags = g;
+	env->pattern = p;
+	env->type = i;
+	return 0;
 }
 
 static Rex_t*
@@ -3020,7 +3039,7 @@ special(Cenv_t* env, regex_t* p)
 			Bm_mask_t*	h;
 			unsigned char*	v;
 			size_t*		q;
-			unsigned long	l;
+			size_t		l;
 			int		i;
 			int		j;
 

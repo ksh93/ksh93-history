@@ -970,7 +970,10 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int type)
 	ap->argflag |= array;
 	lexp->assignok = SH_ASSIGN;
 	if(type==NV_ARRAY)
+	{
 		lexp->noreserv = 1;
+		lexp->assignok = 0;
+	}
 	else
 		lexp->aliasok = 1;
 	array= (type==NV_ARRAY)?SH_ARRAY:0;
@@ -1056,7 +1059,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int type)
 		if(n==FUNCTSYM || n==SYMRES)
 			ac = (struct comnod*)funct(lexp);
 		else
-			ac = (struct comnod*)simple(lexp,SH_NOIO|SH_ASSIGN|array,NIL(struct ionod*));
+			ac = (struct comnod*)simple(lexp,SH_NOIO|SH_ASSIGN|type|array,NIL(struct ionod*));
 		if((n=lexp->token)==RPAREN)
 			break;
 		if(n!=NL && n!=';')
@@ -1478,6 +1481,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 						opt_get |= FOPTGET;
 				}
 			}
+			if((flag&NV_COMVAR) && !assignment)
+				sh_syntax(lexp);
 			*argtail = argp;
 			argtail = &(argp->argnxt.ap);
 			if(!(lexp->assignok=key_on)  && !(flag&SH_NOIO) && sh_isoption(SH_NOEXEC))
@@ -1514,6 +1519,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 							type = NV_TYPE;
 						else if(strchr(ap->argval,'a'))
 							type = NV_ARRAY;
+						else if(strchr(ap->argval,'C'))
+							type = NV_COMVAR;
 						else
 							continue;
 						break;

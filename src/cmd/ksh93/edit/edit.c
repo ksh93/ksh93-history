@@ -1660,9 +1660,19 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 	History_t	*hp;
 	off_t		offset;
 	int 		ac=0,l,m,n,index1,index2;
-	char		*cp, **argv, **av, **ar;
-	if(!(hp=ep->sh->gd->hist_ptr))
+	char		*cp, **argv=0, **av, **ar;
+	static		int maxmatch;
+	if(!(hp=ep->sh->gd->hist_ptr) && (!nv_getval(HISTFILE) || !sh_histinit(ep->sh)))
 		return(0);
+	if(ep->e_cur <=2)
+		maxmatch = 0;
+	else if(maxmatch && ep->e_cur > maxmatch)
+	{
+		ep->hlist = 0;
+		ep->hfirst = 0;
+		return(0);
+	}
+	hp = ep->sh->gd->hist_ptr;
 	if(*pattern=='#')
 		pattern++;
 	cp = stakalloc(m=strlen(pattern)+6);
@@ -1679,6 +1689,9 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 					*av++ = (char*)mp;
 			}
 			*av = 0;
+			ep->hmax = av-argv;
+			if(ep->hmax==0)
+				maxmatch = ep->e_cur;
 			return(ep->hmax=av-argv);
 		}
 		stakset(ep->e_stkptr,ep->e_stkoff);

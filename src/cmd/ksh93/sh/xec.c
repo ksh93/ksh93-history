@@ -871,6 +871,24 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 }
 #endif /*SHOPT_COSHELL*/
 
+#if SHOPT_FILESCAN
+    static Sfio_t *openstream(Shell_t *shp, struct ionod *iop, int *save)
+    {
+	int savein, fd = sh_redirect(shp,iop,3);
+	Sfio_t	*sp;
+	savein = dup(0);
+	if(fd==0)
+		fd = savein;
+	sp = sfnew(NULL,NULL,SF_UNBOUND,fd,SF_READ);
+	close(0);
+	open(e_devnull,O_RDONLY);
+	shp->offsets[0] = -1;
+	shp->offsets[1] = 0;
+	*save = savein;
+	return(sp);
+    }
+#endif /* SHOPT_FILESCAN */
+
 int sh_exec(register const Shnode_t *t, int flags)
 {
 	register Shell_t	*shp = sh_getinterp();
@@ -1623,7 +1641,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					else
 						job_wait(parent);
 					if(shp->topfd > topfd)
-						sh_iorestore(shp,topfd,sh.exitval);
+						sh_iorestore(shp,topfd,0);
 					if(usepipe && tsetio &&  subdup)
 						iounpipe(shp);
 					if(!sh_isoption(SH_MONITOR))
@@ -2266,7 +2284,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			Shnode_t *tt = t->wh.whtre;
 #if SHOPT_FILESCAN
 			Sfio_t *iop=0;
-			int savein,fd;
+			int savein;
 #endif /*SHOPT_FILESCAN*/
 #if SHOPT_OPTIMIZE
 			int  jmpval = ((struct checkpt*)shp->jmplist)->mode;
@@ -2310,15 +2328,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 #if SHOPT_FILESCAN
 			if(type==TWH && tt->tre.tretyp==TCOM && !tt->com.comarg && tt->com.comio)
 			{
-				fd = sh_redirect(shp,tt->com.comio,3);
-				savein = dup(0);
-				if(fd==0)
-					fd = savein;
-				iop = sfnew(NULL,NULL,SF_UNBOUND,fd,SF_READ);
-				close(0);
-				open(e_devnull,O_RDONLY);
-				shp->offsets[0] = -1;
-				shp->offsets[1] = 0;
+				iop = openstream(shp,tt->com.comio,&savein);
 				if(tt->com.comset)
 					nv_setlist(tt->com.comset,NV_IDENT|NV_ASSIGN,0);
 			}
@@ -3079,7 +3089,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 			if(!tsetio || !subdup)
 			{
 				if(shp->topfd > restorefd)
-					sh_iorestore(shp,restorefd,sh.exitval);
+					sh_iorestore(shp,restorefd,0);
 				iounpipe(shp);
 			}
 		}

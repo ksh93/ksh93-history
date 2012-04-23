@@ -325,6 +325,7 @@ int sh_lex(Lex_t* lp)
 	register int		n, c, mode=ST_BEGIN, wordflags=0;
 	Stk_t			*stkp = shp->stk;
 	int		inlevel=lp->lexd.level, assignment=0, ingrave=0;
+	int		epatchar=0;
 	Sfio_t *sp;
 #if SHOPT_MULTIBYTE
 	LEN=1;
@@ -333,6 +334,14 @@ int sh_lex(Lex_t* lp)
 	{
 		lp->lexd.paren = 0;
 		return(lp->token=LPAREN);
+	}
+	if(lp->noreserv)
+	{
+		lp->lex.reservok = 0;
+		while((fcgetc(c)) && c==' ' || c== '\t' || c=='\n');
+		fcseek(-LEN);
+		if(c=='[')
+			lp->assignok = SH_ASSIGN;
 	}
 	if(lp->lex.incase)
 		lp->assignok = 0;
@@ -371,8 +380,6 @@ int sh_lex(Lex_t* lp)
 			lp->lexd.first = 0;
 	}
 	lp->lastline = lp->sh->inlineno;
-	if(lp->noreserv)
-		lp->lex.reservok = 0;
 	while(1)
 	{
 		/* skip over characters in the current state */
@@ -524,7 +531,8 @@ int sh_lex(Lex_t* lp)
 						lp->digits = (c=='>');
 						lp->lex.skipword = 1;
 						lp->aliasok = lp->lex.reservok;
-						lp->lex.reservok = 0;
+						if(lp->lex.incase<2)
+							lp->lex.reservok = 0;
 					}
 				}
 				else
@@ -1067,6 +1075,11 @@ int sh_lex(Lex_t* lp)
 					errormsg(SH_DICT,ERROR_warn(0),e_lexusequote,shp->inlineno,c);
 				continue;
 			case S_PUSH:
+				fcgetc(n);
+				if(n==RPAREN)
+					continue;
+				else
+					fcseek(-LEN);
 				pushlevel(lp,RPAREN,mode);
 				mode = ST_NESTED;
 				continue;
@@ -1115,6 +1128,8 @@ int sh_lex(Lex_t* lp)
 				}
 				mode = oldmode(lp);
 				poplevel(lp);
+				if(epatchar!='~')
+					epatchar = '@';
 				/* quotes in subscript need expansion */
 				if(mode==ST_NAME && (wordflags&ARG_QUOTED))
 					wordflags |= ARG_MAC;
@@ -1187,16 +1202,16 @@ int sh_lex(Lex_t* lp)
 					(oldmode(lp)==ST_NONE) ||
 					(mode==ST_NAME && (lp->assignok||lp->lexd.level)))
 				{
-					if(mode==ST_NAME)
+					fcgetc(n);
+					if(n>0 && n==']')
 					{
-						fcgetc(n);
-						if(n>0)
-						{
-							if(n==']')
-								errormsg(SH_DICT,ERROR_exit(SYNBAD),e_lexsyntax1, shp->inlineno, "[]", "empty subscript");
-							fcseek(-LEN);
-						}
+						if(mode==ST_NAME)
+							errormsg(SH_DICT,ERROR_exit(SYNBAD),e_lexsyntax1, shp->inlineno, "[]", "empty subscript");
+						if(!epatchar || epatchar=='%')
+							continue;
 					}
+					else
+						fcseek(-LEN);
 					pushlevel(lp,RBRACT,mode);
 					wordflags |= ARG_QUOTED;
 					mode = ST_NESTED;
@@ -1263,6 +1278,7 @@ int sh_lex(Lex_t* lp)
 			epat:
 				if(fcgetc(n)==LPAREN && c!='[')
 				{
+					epatchar = c;
 					if(lp->lex.incase==TEST_RE)
 					{
 						lp->lex.incase++;

@@ -12,9 +12,13 @@ print	#endif
 print	#if !defined(_LARGEFILE_SOURCE)
 print	#define _LARGEFILE_SOURCE	1
 print	#endif
+print	#if !defined(_LARGE_FILE_API)
+print	#define _LARGE_FILE_API		1
+print	#endif
 print	#else
 print	#undef	_LARGEFILE64_SOURCE
 print	#undef	_LARGEFILE_SOURCE
+print	#undef	_LARGE_FILE_API
 print	#undef	_typ_off64_t
 print	#undef	_typ_struct_dirent64
 print	#undef	_lib_creat64

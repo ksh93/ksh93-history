@@ -1172,6 +1172,13 @@ Namval_t *sh_addbuiltin(const char *path, Shbltin_f bltin, void *extra)
 	int			offset=staktell();
 	if(name==path && bltin!=(Shbltin_f)SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
 		path = name = stakptr(offset);
+	else if(sh.bltin_dir && extra && extra!=(void*)1)
+	{
+		stakputs(sh.bltin_dir);
+		stakputc('/');
+		stakputs(name);
+		path = stakptr(offset);
+	}
 	if(np = nv_search(path,sh.bltin_tree,0))
 	{
 		/* exists without a path */
@@ -1206,6 +1213,7 @@ Namval_t *sh_addbuiltin(const char *path, Shbltin_f bltin, void *extra)
 	}
 	if(!np && !(np = nv_search(path,sh.bltin_tree,bltin?NV_ADD:0)))
 		return(0);
+	stakseek(offset);
 	if(nv_isattr(np,BLT_SPC))
 	{
 		if(extra)
@@ -1302,15 +1310,18 @@ static void put_table(register Namval_t* np, const char* val, int flags, Namfun_
 	register Namval_t	*nq, *mp;
 	Namarr_t		*ap;
 	struct adata		data;
-	nv_putv(np,val,flags,fp);
 	if(val)
+	{
+		nv_putv(np,val,flags,fp);
 		return;
+	}
 	if(nv_isarray(np) && (ap=nv_arrayptr(np)) && array_elem(ap))
 		return;
 	memset(&data,0,sizeof(data));
 	data.mapname = nv_name(np);
 	data.sh = ((struct table*)fp)->shp;
 	nv_scan(data.sh->fun_tree,delete_fun,(void*)&data,NV_FUNCTION,NV_FUNCTION|NV_NOSCOPE);
+	dtview(root,0);
 	for(mp=(Namval_t*)dtfirst(root);mp;mp=nq)
 	{
 		_nv_unset(mp,flags);

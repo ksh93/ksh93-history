@@ -1598,7 +1598,8 @@ retry1:
 				mp->assign = assign;
 				/* add null byte */
 				sfputc(stkp,0);
-				stkseek(stkp,stktell(stkp)-1);
+				if(c!='=')
+					stkseek(stkp,stktell(stkp)-1);
 			}
 			else
 			{

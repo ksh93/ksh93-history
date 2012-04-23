@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -283,7 +283,7 @@ int		local;
 
 	if(!vd->free || addr < (Void_t*)vd->free || addr >= (Void_t*)vd->seg->baddr)
 		offset = -1L;
-	else	offset = (Vmuchar_t*)addr - (Vmuchar_t*)vd->free;
+	else	offset = (long)((Vmuchar_t*)addr - (Vmuchar_t*)vd->free);
 
 	CLRLOCK(vm, local);
 
@@ -307,8 +307,8 @@ int		local;
 	if(!vd->free || addr != (Void_t*)vd->free )
 		size = -1L;
 	else if(vd->seg->free)
-		size = (Vmuchar_t*)vd->seg->free - (Vmuchar_t*)addr;
-	else	size = (Vmuchar_t*)vd->seg->baddr - (Vmuchar_t*)addr - sizeof(Head_t);
+		size = (long)((Vmuchar_t*)vd->seg->free - (Vmuchar_t*)addr);
+	else	size = (long)((Vmuchar_t*)vd->seg->baddr - (Vmuchar_t*)addr - sizeof(Head_t));
 
 	CLRLOCK(vm, local);
 

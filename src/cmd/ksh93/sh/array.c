@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1084,7 +1084,7 @@ int nv_nextsub(Namval_t *np)
 		Namval_t	*nq;
 		if(nq=(*ap->header.fun)(np,NIL(char*),NV_ANEXT))
 		{
-			if(nv_isattr(nq,NV_CHILD))
+			if(nq->nvalue.np && nv_isattr(nq,NV_CHILD))
 				nv_putsub(nq->nvalue.np,NIL(char*),ARRAY_UNDEF);
 			return(1);
 		}
@@ -1831,8 +1831,12 @@ void nv_setvec(register Namval_t *np,int append,register int argc,register char 
 			while(--arg0>0 && ap->val[arg0].cp==0 && aq->val[arg0].cp==0);
 			arg0++;
 		}
-		else if(!nv_isnull(np))
-			arg0=1;
+		else
+		{
+			nv_offattr(np,NV_ARRAY);
+			if(!nv_isnull(np) && np->nvalue.cp!=Empty)
+				arg0=1;
+		}
 	}
 	while(--argc >= 0)
 	{

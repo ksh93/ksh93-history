@@ -155,6 +155,7 @@ struct shared
 	int		path_err;	/* last error on path search */ \
 	Dt_t		*track_tree;	/* for tracked aliases*/ \
 	Dt_t		*var_base;	/* global level variables */ \
+	Dt_t		*openmatch; \
 	Namval_t	*namespace;	/* current active namespace*/ \
 	Namval_t	*last_table;	/* last table used in last nv_open  */ \
 	Namval_t	*prev_table;	/* previous table used in nv_open  */ \
@@ -183,7 +184,6 @@ struct shared
 	int		topfd; \
 	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
-	char		openmatch; \
 	char		intrap; \
 	char		login_sh; \
 	char		lastbase; \
@@ -264,6 +264,7 @@ struct shared
 	Namfun_t	nvfun; \
 	char		*mathnodes; \
 	void		*coshell; \
+	char		*bltin_dir; \
 	struct Regress_s*regress;
 
 #include	<shell.h>
