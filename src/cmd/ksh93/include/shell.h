@@ -208,7 +208,7 @@ extern mode_t 		sh_umask(mode_t);
 extern void		*sh_waitnotify(Shwait_f);
 extern Shscope_t	*sh_getscope(int,int);
 extern Shscope_t	*sh_setscope(Shscope_t*);
-extern void		sh_sigcheck(void);
+extern void		sh_sigcheck(Shell_t*);
 extern unsigned long	sh_isoption(int);
 extern unsigned long	sh_onoption(int);
 extern unsigned long	sh_offoption(int);

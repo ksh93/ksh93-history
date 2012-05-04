@@ -1111,10 +1111,10 @@ done:
 #endif
 #endif
 
-#if _SUNOS /* sunos guarantees that brk-addresses are valid */
-#define	chkaddr(a,n)	(0)
+#if __linux__
 
-#else /* make sure that allocated memory are addressable */
+/* make sure that allocated memory is addressable */
+
 #include	<signal.h>
 typedef void	(*Sig_f)(int);
 static int	Gotsegv = 0;
@@ -1140,7 +1140,13 @@ static int chkaddr(Vmuchar_t* addr, size_t nsize)
 
 	return rv;
 }
-#endif /*_SUNOS*/
+#else
+
+/* known !__linux__ guarantee that brk-addresses are valid */
+
+#define	chkaddr(a,n)	(0)
+
+#endif /*__linux__*/
 
 #if _mem_win32 /* getting memory on a window system */
 #if _PACKAGE_ast
@@ -1207,7 +1213,6 @@ static Void_t* sbrkmem(Void_t* caddr, size_t csize, size_t nsize)
 #ifndef OPEN_MAX
 #define	OPEN_MAX	64
 #endif
-#define FD_PRIVATE	(3*OPEN_MAX/4)	/* private file descriptor	*/
 #define FD_INIT		(-1)		/* uninitialized file desc	*/
 #define FD_NONE		(-2)		/* no mapping with file desc	*/
 
@@ -1227,12 +1232,7 @@ static Void_t* mmapmem(Void_t* caddr, size_t csize, size_t nsize, Mmdisc_t* mmdc
 			{	mmdc->fd = FD_NONE;
 				return NIL(Void_t*);
 			}
-			if(fd >= FD_PRIVATE || (mmdc->fd = dup2(fd, FD_PRIVATE)) < 0 )
-				mmdc->fd = fd;
-			else	close(fd);
-#ifdef FD_CLOEXEC
-			fcntl(mmdc->fd,  F_SETFD, FD_CLOEXEC);
-#endif
+			mmdc->fd = _vmfd(fd);
 		}
 
 		if(mmdc->fd == FD_NONE)

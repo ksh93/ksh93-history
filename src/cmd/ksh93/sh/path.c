@@ -728,7 +728,6 @@ int	path_search(Shell_t *shp,register const char *name,Pathcomp_t **oldpp, int f
 			return(0);
 		}
 		pp = path_absolute(shp,name,oldpp?*oldpp:NIL(Pathcomp_t*));
-		shp->bltin_dir = 0;
 		if(oldpp)
 			*oldpp = pp;
 		if(!pp && (np=nv_search(name,shp->fun_tree,0))&&np->nvalue.ip)
@@ -779,20 +778,18 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 	{
 		sh_sigcheck(shp);
 		shp->bltin_dir = 0;
-		isfun = (pp->flags&PATH_FPATH);
-		if(oldpp=pp)
+		while(oldpp=pp)
 		{
 			pp = path_nextcomp(shp,pp,name,0);
-			while(oldpp->flags&PATH_SKIP)
-			{
-				if(!(oldpp=oldpp->next))
-				{
-					shp->path_err = ENOENT;
-					return(0);
-				}
-			}
+			if(!(oldpp->flags&PATH_SKIP))
+				break;
 		}
-			
+		if(!oldpp)
+		{
+			shp->path_err = ENOENT;
+			return(0);
+		}
+		isfun = (oldpp->flags&PATH_FPATH);
 		if(!isfun && !sh_isoption(SH_RESTRICTED))
 		{
 			if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),shp->bltin_tree,0))

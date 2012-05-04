@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2011-05-18 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2012-05-01 $\0\n";
 
 #include "univlib.h"
 
@@ -43,7 +43,7 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2011-05-18 $\0\n";
 #include "FEATURE/libpath"
 
 #ifndef DEBUG_astconf
-#define DEBUG_astconf		0
+#define DEBUG_astconf		1
 #endif
 
 #ifndef _pth_getconf
@@ -1335,6 +1335,11 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			if (p->section > 1)
 				sfprintf(sp, "%d", p->section);
 			sfprintf(sp, "_%s=", (listflags & ASTCONF_lower) ? fmtlower(p->name) : p->name);
+			if (!defined && !name && (p->flags & CONF_MINMAX_DEF))
+			{
+				defined = 1;
+				v = p->minmax.number;
+			}
 			if (v != -1)
 				sfprintf(sp, "%I*d", sizeof(v), v);
 			else if (defined)

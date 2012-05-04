@@ -1160,6 +1160,31 @@ char*	ends;
 	return begs;
 }
 
+#define FD_PRIVATE	(3*OPEN_MAX/4)
+
+#if __STD_C
+int _vmfd(int fd)
+#else
+int _vmfd(fd)
+int	fd;
+#endif
+{
+	int	pd;
+
+	if (fd >= 0)
+	{
+		if (fd < FD_PRIVATE && (pd = fcntl(fd, F_DUPFD, FD_PRIVATE)) >= 0)
+		{
+			close(fd);
+			fd = pd;
+		}
+#ifdef FD_CLOEXEC
+		fcntl(fd,  F_SETFD, FD_CLOEXEC);
+#endif
+	}
+	return fd;
+}
+
 #if __STD_C
 static int createfile(char* file)
 #else
@@ -1170,6 +1195,7 @@ char*	file;
 	char	buf[1024];
 	char	*next, *endb;
 	int	fd;
+	int	pd;
 
 	next = buf;
 	endb = buf + sizeof(buf);
@@ -1200,11 +1226,14 @@ char*	file;
 	if (*file == '&' && *(file += 1) || strncmp(file, "/dev/fd/", 8) == 0 && *(file += 8))
 		fd = dup((int)atou(&file));
 	else if (*file)
+	{
 #if _PACKAGE_ast
 		fd = open(file, O_WRONLY|O_CREAT|O_TRUNC, CREAT_MODE);
 #else
 		fd = creat(file, CREAT_MODE);
 #endif
+		fd = _vmfd(fd);
+	}
 	else
 		return -1;
 #if _PACKAGE_ast

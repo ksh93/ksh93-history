@@ -155,6 +155,8 @@ int b_test(int argc, char *argv[],Shbltin_t *context)
 					return(test_unop(tdata.sh,cp[1],argv[3])!=0);
 				else if(argv[1][0]=='-' && argv[1][2]==0)
 					return(!test_unop(tdata.sh,argv[1][1],cp));
+				else if(not && c_eq(argv[2],'!'))
+					return(*argv[3]==0);
 				errormsg(SH_DICT,ERROR_exit(2),e_badop,cp);
 			}
 			return(test_binop(tdata.sh,op,argv[1],argv[3])^(argc!=5));

@@ -97,6 +97,7 @@ struct adata
 		char		*name;
 		Namval_t	*np;
 		Namval_t	*last_table;
+		Namval_t	*namespace;
 		int		flags;
 		short		size;
 		short		len;
@@ -475,7 +476,11 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 				if((tp->tre.tretyp&COMMSK)==TFUN)
 					goto skip;
 				if(tp->tre.tretyp==0 && !tp->com.comset && !tp->com.comarg)
+				{
+					if(!(arg->argflag&ARG_APPEND) && nv_isattr(np,NV_BINARY|NV_NOFREE|NV_RAW)!=(NV_BINARY|NV_NOFREE|NV_RAW))
+						_nv_unset(np,NV_EXPORT);
 					goto skip;
+				}
 				if(tp->tre.tretyp==TLST || !tp->com.comset || tp->com.comset->argval[0]!='[')
 				{
 					if(tp->tre.tretyp!=TLST && !tp->com.comnamp && tp->com.comset && tp->com.comset->argval[0]==0 && tp->com.comset->argchn.ap)
@@ -862,8 +867,20 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					}
 					else if(nq)
 					{
-						if(nv_isnull(np) && c!='.' && (np->nvfun=nv_cover(nq)))
+						if(nv_isnull(np) && c!='.' && ((np->nvfun=nv_cover(nq)) || nq==OPTINDNOD))
+						{
 							np->nvname = nq->nvname;
+#if SHOPT_NAMESPACE
+							if(shp->namespace && nv_dict(shp->namespace)==shp->var_tree && nv_isattr(nq,NV_EXPORT))
+								nv_onattr(np,NV_EXPORT);
+#endif /* SHOPT_NAMESPACE */
+							if(nq==OPTINDNOD)
+							{
+								np->nvfun = nq->nvfun;
+								np->nvalue.lp = (&shp->st.optindex);
+								nv_onattr(np,NV_INTEGER|NV_NOFREE);
+							}
+						}
 						flags |= NV_NOSCOPE;
 					}
 				}
@@ -1380,7 +1397,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	{
 		if(xp->root!=root)
 			continue;
-		if(*name==*xp->name && (flags&(NV_ARRAY|NV_NOSCOPE))==xp->flags && memcmp(xp->name,name,xp->len)==0 && (name[xp->len]==0 || name[xp->len]=='=' || name[xp->len]=='+'))
+		if(*name==*xp->name && xp->namespace==shp->namespace && (flags&(NV_ARRAY|NV_NOSCOPE))==xp->flags && memcmp(xp->name,name,xp->len)==0 && (name[xp->len]==0 || name[xp->len]=='=' || name[xp->len]=='+'))
 		{
 			sh_stats(STAT_NVHITS);
 			np = xp->np;
@@ -1422,6 +1439,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 		xp->name[xp->len] = 0;
 		xp->root = root;
 		xp->np = np;
+		xp->namespace = shp->namespace;
 		xp->last_table = shp->last_table;
 		xp->last_root = shp->last_root;
 		xp->flags = (flags&(NV_ARRAY|NV_NOSCOPE));
@@ -1492,8 +1510,8 @@ skip:
 				nv_offattr(np,NV_REF);
 			if(!append && (flags&NV_UNJUST))
 			{
-				nv_offattr(np,NV_LJUST|NV_RJUST|NV_ZFILL);
-				np->nvsize = 0;
+				if(!np->nvfun)
+					_nv_unset(np,NV_EXPORT);
 			}
 			if(flags&NV_MOVE)
 			{
@@ -1574,7 +1592,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	 * would cause a side effect
 	 */
 	shp->argaddr = 0;
-	if(shp->subshell && !nv_local)
+	if(shp->subshell && !nv_local && !(flags&NV_RDONLY))
 		np = sh_assignok(np,1);
 	if(np->nvfun && np->nvfun->disc && !(flags&NV_NODISC) && !nv_isref(np))
 	{
@@ -2306,10 +2324,7 @@ void sh_scope(Shell_t *shp, struct argnod *envlist, int fun)
 	struct Ufunction	*rp;
 #if SHOPT_NAMESPACE
 	if(shp->namespace)
-	{
 		newroot = nv_dict(shp->namespace);
-		dtview(newroot,(Dt_t*)shp->var_base);
-	}
 #endif /* SHOPT_NAMESPACE */
 	newscope = dtopen(&_Nvdisc,Dtoset);
 	if(envlist)

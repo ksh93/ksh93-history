@@ -593,42 +593,55 @@ set the maximum number of these extra regions to \fIregmax\fP.
 These functions are instrumented for run-time debugging, profiling and tracing.
 For accurate reporting of files and line numbers,
 application code should include \f5vmalloc.h\fP and compile with \f5-DVMFL\fP.
-The following environment variables can be set before any memory allocation
-(e.g., before a process starts) to drive different modes:
+The \fBVMALLOC_OPTIONS\fP environment variable, checked once before the first
+memory allocation, controls the memory allocation method, debugging and tracing;
+its value is a comma or space separated list of
+\fB[no]\fP\fIname\fP\fB[=\fP\fIvalue\fP\fB]\fP options.
+The options are:
 .TP
-.I VMETHOD
-This defines the method to use for allocation.
-Its value should be one of the strings:
-\fIVmbest, Vmdebug, Vmprofile, Vmlast, Vmpool\fP.
-The 'V' can be in lower case.
+.B abort
+If Vmregion==Vmdebug then VM_DBABORT is set, otherwise _BLD_DEBUG enabled assertions abort() on failure.
 .TP
-.I VMDEBUG
-This is ignored if
-a method other than \f5Vmdebug\fP has been selected with \fIVMETHOD\fP.
-\fIVMDEBUG\fP can be any combination of `a',
-a decimal number and a list of hexadecimal numbers.
-`a' causes the program to abort on any discovered allocation error.
-A hexadecimal number starts with either \fI0x\fP or \fI0X\fP
-and defines an address to watch (see \fIvmdbwatch\fP).
-Any other number is taken to be decimal and defines a period \fIp\fP
-to check the arena for integrity. The default period is 1, ie, the
-arena is checked on every call to a \fImalloc\fP function.
-Other letters not part of the defined set are ignored.
+.B break
+Try sbrk() block allocator first.
 .TP
-.I VMPROFILE
-This is ignored if a method other than \f5Vmprofile\fP
-has been selected by \fIVMETHOD\fP or \fIVMDEBUG\fP.
-\fIVMPROFILE\fP defines a file name to store profile data.
-Each instance of the pattern `%p' found in \fIVMPROFILE\fP
-is transformed to the process id of the running process.
-If the file cannot be created, file descriptor 2 (standard error)
-is used for output.
+.B check
+If Vmregion==Vmbest then the region is checked every op.
 .TP
-.I VMTRACE
-If this defines a valid writable file, trace messages of all allocation calls
-are written to the given file (see \fIvmopen()\fP and \fIvmtrace()\fP).
-Similar to \fIVMPROFILE\fP, each instance of the pattern `%p' found
-in \fIVMTRACE\fP is turned to the process id of the running process.
+.B free
+Disable addfreelist().
+.TP
+.B keep
+Disable free -- if code works with this enabled then it probably accesses freed data.
+.TP
+.BI method= method
+Sets Vmregion=\fImethod\fP if not defined, \fImethod\fP (Vm prefix optional) may be one of { \fBbest debug last profile\fP }.
+.TP
+.BI period= n
+Sets Vmregion=Vmdebug if not defined, if Vmregion==Vmdebug the region is checked every \fIn\fP ops.
+.TP
+.BI profile= file
+Sets Vmregion=Vmprofile if not set, if Vmregion==Vmprofile then profile info printed to file \fIfile\fP.
+.TP
+.BI start= n
+Sets Vmregion=Vmdebug if not defined, if Vmregion==Vmdebug region checking starts after \fIn\fP ops.
+.TP
+.BI trace= file
+Enables tracing to file \fIfile\fP.
+.TP
+.BI warn= file
+Sets Vmregion=Vmdebug if not defined, if Vmregion==Vmdebug then warnings printed to file \fIfile\fP.
+.TP
+.BI watch= address
+Sets Vmregion=Vmdebug if not defined, if Vmregion==Vmdebug then \fIaddress\fP is watched.
+.P
+Output files are created if they don't exist. \fB&\fP\fBn\fP and \fB/dev/fd/\fP\fIn\fP name
+the file descriptor \fIn\fP which must be open for writing. The pattern \fB%p\fP
+in a file name is replaced by the process ID.
+.P
+.B VMALLOC_OPTIONS
+combines the features of these obsolete environment variables:
+{ \fBVMCHECK VMDEBUG VMETHOD VMPROFILE VMTRACE\fP }.
 
 .SH RECENT CHANGES
 \f5Vmlast\fP: allocated blocks are now allowed to be resized (09/1998).

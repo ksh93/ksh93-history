@@ -1,10 +1,65 @@
+12-05-04  --- Release ksh93u+ ---
+12-05-04  A bug in which x=() was not unsetting the old value of x before
+	  creating an empty compound variable has been fixed.
+12-05-01  A bug in vi edit mode in which after <ESC>^V, the terminal was not
+	  restored to insert mode after a character is entered has been fixed.
+12-04-27  A bug in which old attributes were not cleared when assigning a
+	  value using typeset has been fixed.
+12-04-26 +Enabled multiline editing by default.  set +o multiline can disable.
+12-04-25  The 12-04-17 PATH fix created a new bug which was fixed.
+12-04-25  Fixed a big memory leak problem in which unsetting compound variables
+	  did not free all the space.
+12-04-25  A bug in which test ! ! ! was treated as an error has been fixed.
+12-04-24  A bug with print -v for a compound variable that contained fixed
+	  arrays which prevented the output from being used again as input
+	  has been fixed.
+12-04-23 +kill provides the STKFLT signal on systems that support it.
+12-04-23 +The -L option was added to kill.  The -L option is the same as -l
+	  except that without arguments the output format is in the form of
+	  a select menu.
+12-04-23  A bug in which the exit status for an interactive shell was always 
+	  0 has been fixed. 
+12-04-20  Entering blank lines interactively no longer resets the exit status.
+12-04-18  A bug in file completion in which the second tab completion on a file
+	  would list the completion rather than inserting the completion has
+	  been fixed.
+12-04-18  A bug in which "${arr[@]:i:j}" and "${@:i:j}" generated the empty
+	  string when i was a valid subscript and j was <=0 rather than
+	  generating nothing has been fixed.
+12-04-17  A bug in which read -d delim from a terminal did not respond to
+	  interrupt and did not termrinate when the delimiter was entered
+	  has been fixed.
+12-04-17  A bug in which a directory in PATH containing a .paths file that
+	  contains a line with FPATH=dir, where dir does not exist could
+	  cause the path search to fail has been fixed.
+12-04-16  A bug in which $(trap -p) did not display traps such as ERR and
+	  DEBUG that are not associated with signals has been fixed.
+12-04-11  A bug in which unsetting a variable did not unset attributes when
+	  the variable did not have a value has been fixed.
+12-04-11  A bug in which read -A for an array whose index is an enumeration
+	  type, lost the enumeration type has been fixed.
+12-04-10  Shared libraries loaded from a library named by a BUILTIN_LIB= found
+	  in a .paths file found in a directory on PATH now add builtins that
+	  are associated with the directory in PATH containing the .paths file.
+12-04-09  Increased I/O buffer sizes for better performance.
+12-04-09  A bug in which the leading 0 was stripped from $x, when $x contained
+	  a heximadecimal constant inside an arithmetic expression inside
+	  a for or while loop.
+12-04-06  Modified namespaces to hand variabes FPATH, PATH, and OPTIND that
+	  are defined in name spaces appropriately.  This also fixed OPTIND
+	  and OPTARG processing for functions.
+12-04-04  A bug in which cd .. fails when the current directory has been
+	  renamed has been fixed.
+12-04-02  Made some namespace changes and added a regression test.
+12-03-30  A bug with namespaces in which PATH and FPATH set in a namespace was
+	  not restored when leaving the namespace has been fixed.
 12-03-29  --- Release ksh93u++ ---
 12-03-29  A bug in which appending an index array onto an array without elements
 	  caused the first element to be 1 rather than 0 has been fixed.
 12-03-29  A bug which could cause a core dump when copying a large index array
 	  has been fixed.
-12-03-28  The shell now generates an error message when the sizes with L, Z,
-	  and R are > 32767 instead of generating a core dump.
+12-03-28  The shell now generates an error message when the sizes with L, Z, and
+	  R are > 32767 on 32 bit binaries instead of generating a core dump.
 12-03-28  A bug in left and right justification in which the width of invalid
 	  characters was not taken as zero has been fixed.
 12-03-26  A bug in which typeset -p ref, when ref is a reference to an index
@@ -25,6 +80,8 @@
 	  could generate a bogus error message when i was > 9 has been fixed.
 12-03-21  A bug in which typeset v=foo, typeset -p v[0] generated a core dump
 	  has been fixed.
+12-03-20  A bug in vi edit mode in which the sequence bar<ESC>0i<ESC>l left the
+	  cursor on the b rather than the a has been fixed.
 12-03-20  A bug which caused a core dump when defining a type with a field
 	  as ' integer -a data=([0]=0)' has been fixed.
 12-03-19  Using typeset -a array when array is an associative arry not
@@ -44,11 +101,14 @@
 12-03-08  The assignment typeset -a (x=1 y=2) now creates an index array
 	  of two elements rathern than an array of one element which is
 	  a compound variable.
+12-03-02 +The vi and emacs edit modes now list all the entries in a directory
+	  when entering a <tab> for completion after a /.  
 12-03-02  A bug in which a program that exits with value 12 when called
 	  from a command substitution in which standard output has been
 	  redirected caused the shell to hang has been fixed.
 12-03-01  A bug in which the shell could not parse [[ ']' == ~(E)[]] ]]
 	  has been fixed.
+
 12-02-29  --- Release ksh93u+ ---
 12-02-29  A bug in which ~user expanded first in a subshell prevented it
 	  from expanding later in a program has been fixed.

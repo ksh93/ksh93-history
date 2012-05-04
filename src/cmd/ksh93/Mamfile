@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-04-20
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-05-04
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -371,7 +371,7 @@ prev include/defs.h implicit
 done bltins/getopts.c
 meta getopts.o %.c>%.o bltins/getopts.c getopts
 prev bltins/getopts.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20100309 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_HISTEXPAND -DSHOPT_FIXEDARRAY -DSHOPT_ESH -c bltins/getopts.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20100309 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_COSHELL -DSHOPT_HISTEXPAND -DSHOPT_FIXEDARRAY -DSHOPT_ESH -c bltins/getopts.c
 done getopts.o generated
 make hist.o
 make bltins/hist.c

@@ -1,3 +1,4 @@
+12-04-25 ratz.c: add sear -k option to keep installation tmp dir on exit
 12-04-17 package.sh: skip sh version logic for ``use''
 12-04-17 cc.ibm.risc*: _LARGEFILE64_SOURCE => _LARGE_FILE_API moved to libast/features
 12-04-09 cc.ibm.risc*: speak aixese for _LARGEFILE64_SOURCE

@@ -559,4 +559,27 @@ v=$( $SHELL -c $'
 ' ) 2> /dev/null
 [[ $v == $'usr1\ndone' ]] ||  err_exit 'read not terminating when receiving USR1 signal'
 
+mkdir $tmp/tmpdir1
+cd $tmp/tmpdir1
+pwd=$PWD
+cd ../tmpdir1
+[[ $PWD == "$pwd" ]] || err_exit 'cd ../tmpdir1 causes directory to change'
+cd "$pwd"
+mv $tmp/tmpdir1 $tmp/tmpdir2
+cd ..  2> /dev/null || err_exit 'cannot change directory to .. after current directory has been renamed'
+[[ $PWD == "$tmp" ]] || err_exit 'after "cd $tmp/tmpdir1; cd .." directory is not $tmp'
+cd $tmp
+rm -rf tmpdir2
+
+$SHELL +E -i <<- \! && err_exit 'interactive shell should not exit 0 after false'
+	false
+	exit
+!
+
+if	kill -L > /dev/null 2>&1
+then	[[ $(kill -l HUP) == "$(kill -L HUP)" ]] || err_exit 'kill -l and kill -L are not the same when given a signal name'
+	[[ $(kill -l 9) == "$(kill -L 9)" ]] || err_exit 'kill -l and kill -L are not the same when given a signal number'
+	[[ $(kill -L) == *'9) KILL'* ]] || err_exit 'kill -L output does not contain 9) KILL'
+fi
+
 exit $((Errors<125?Errors:125))

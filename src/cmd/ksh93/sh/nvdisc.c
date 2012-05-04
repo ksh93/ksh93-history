@@ -1172,16 +1172,17 @@ Namval_t *sh_addbuiltin(const char *path, Shbltin_f bltin, void *extra)
 	int			offset=staktell();
 	if(name==path && bltin!=(Shbltin_f)SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
 		path = name = stakptr(offset);
-	else if(sh.bltin_dir && extra && extra!=(void*)1)
+	else if(sh.bltin_dir && extra!=(void*)1)
 	{
 		stakputs(sh.bltin_dir);
 		stakputc('/');
 		stakputs(name);
 		path = stakptr(offset);
 	}
-	if(np = nv_search(path,sh.bltin_tree,0))
+	if(np = nv_search(name,sh.bltin_tree,0))
 	{
 		/* exists without a path */
+		stakseek(offset);
 		if(extra == (void*)1)
 		{
 			if(np->nvfun && !nv_isattr(np,NV_NOFREE))

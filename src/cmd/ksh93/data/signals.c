@@ -187,6 +187,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGSYS
 	"SYS",		VAL(SIGSYS,SH_SIGDONE),				S("Bad system call"),
 #endif	/* SIGSYS */
+#ifdef SIGSTKFLT
+	"STKFLT",	VAL(SIGSTKFLT,SH_SIGDONE),			S("Stack Fault"),
+#endif /* SIGSTKFLT */
 	"TERM",		VAL(SIGTERM,SH_SIGDONE|SH_SIGINTERACTIVE),	S("Terminated"),
 #ifdef SIGTHAW
 	"THAW",		VAL(SIGTHAW,SH_SIGIGNORE),			S("Special signal used by CPR"),

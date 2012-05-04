@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-04-20
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-05-04
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -136,7 +136,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : conf contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n comp/conf.sh
 exec - fi

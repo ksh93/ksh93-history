@@ -579,4 +579,13 @@ then    integer i
         done
 fi
 
+trap USR1 USR1
+trap ERR ERR
+[[ $(trap -p USR1) == USR1 ]] || err_exit 'trap -p USR1 in subshell not working'
+[[ $(trap -p ERR) == ERR ]] || err_exit 'trap -p ERR in subshell not working'
+[[ $(trap -p) == *USR* ]] || err_exit 'trap -p in subshell does not contain USR'
+[[ $(trap -p) == *ERR* ]] || err_exit 'trap -p in subshell does not contain ERR'
+trap - USR1 ERR
+
+
 exit $((Errors<125?Errors:125))

@@ -1202,6 +1202,7 @@ else sfprintf(sfstderr,"tp==NULL\n");
 	}
 	else if(!mp->nvalue.cp)
 		mp->nvalue.cp = Empty;
+	nv_onattr(mp,NV_TAGGED);
 	nv_disc(mp, &pp->fun, NV_LAST);
 	if(nd>0)
 	{

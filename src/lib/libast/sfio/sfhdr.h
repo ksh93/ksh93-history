@@ -793,6 +793,7 @@ struct _fmtpos_s
 #define SFFMT_CLASS	040		/* %[			*/
 
 /* local variables used across sf-functions */
+typedef void  (*Sfnotify_f)_ARG_((Sfio_t*, int, void*));
 #define _Sfpage		(_Sfextern.sf_page)
 #define _Sfpool		(_Sfextern.sf_pool)
 #define _Sfpmove	(_Sfextern.sf_pmove)

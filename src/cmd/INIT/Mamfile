@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-04-20
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-05-04
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -45,7 +45,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : hurl contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n hurl.sh
 exec - fi
@@ -86,7 +86,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : iffe contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n iffe.sh
 exec - fi
@@ -127,7 +127,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : mktest contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n mktest.sh
 exec - fi
@@ -167,7 +167,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : package contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n package.sh
 exec - fi
@@ -208,7 +208,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : regress contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n regress.sh
 exec - fi
@@ -249,7 +249,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : rt contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n rt.sh
 exec - fi
@@ -289,7 +289,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : crossexec contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n crossexec.sh
 exec - fi
@@ -330,7 +330,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : ditto contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n ditto.sh
 exec - fi
@@ -371,7 +371,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : execrate contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n execrate.sh
 exec - fi
@@ -411,7 +411,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : filter contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n filter.sh
 exec - fi
@@ -451,7 +451,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : ignore contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n ignore.sh
 exec - fi
@@ -491,7 +491,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : silent contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n silent.sh
 exec - fi
@@ -591,7 +591,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : mprobe contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n mprobe.sh
 exec - fi
@@ -636,7 +636,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : probe contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n probe.sh
 exec - fi
@@ -720,7 +720,7 @@ exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - ;;
 exec - *) if ENV= LC_ALL=C x= $SHELL -nc '[[ a || b ]] && : ${list[level]}  !(pattern)' 2>/dev/null
-exec - then if grep -q '### .*archaic.* ###'
+exec - then if grep '### .*archaic.* ###' >/dev/null
 exec - then : mamprobe contains archaic constructs :
 exec - else ENV= LC_ALL=C $SHELL -n mamprobe.sh
 exec - fi

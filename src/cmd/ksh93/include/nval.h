@@ -72,7 +72,7 @@ struct Namfun
 	const Namdisc_t	*disc;
 	char		nofree;
 	unsigned char	subshell;
-	unsigned int	dsize;
+	uint32_t	dsize;
 	Namfun_t	*next;
 	char		*last;
 	Namval_t	*type;
@@ -113,8 +113,19 @@ struct Namval
 {
 	Dtlink_t	nvlink;		/* space for cdt links */
 	char		*nvname;	/* pointer to name of the node */
+#if _ast_sizeof_pointer == 8
+#   if _ast_intswap > 0
+	unsigned short	nvflag; 	/* attributes */
+	unsigned short	pad1;
+#   else
+	unsigned short	pad1;
+	unsigned short	nvflag; 	/* attributes */
+#   endif
+	uint32_t  	nvsize;		/* size or base */
+#else
 	unsigned short	nvflag; 	/* attributes */
 	unsigned short 	nvsize;		/* size or base */
+#endif
 #ifdef _NV_PRIVATE
 	_NV_PRIVATE
 #else

@@ -550,6 +550,10 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 			}
 		}
 #if SHOPT_FIXEDARRAY
+		if(fp)
+			outtype(np,fp,out,prefix);
+		if(noname)
+			return;
 		if(fixed)
 		{
 			sfprintf(out,"%s",nv_name(np));
@@ -557,10 +561,6 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 			sfputc(out,';');
 		}
 #endif /* SHOPT_FIXEDARRAY */
-		if(fp)
-			outtype(np,fp,out,prefix);
-		if(noname)
-			return;
 		sfputr(out,nv_name(np),'\n');
 	}
 }
@@ -756,7 +756,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		_nv_unset(np,NV_RDONLY);
 		if(sh.subshell || (wp->flags!=NV_RDONLY) || nv_isattr(np,NV_MINIMAL|NV_NOFREE))
 			wp->root = 0;
-		nv_delete(np,wp->root,NV_NOFREE);
+		nv_delete(np,wp->root,nv_isattr(np,NV_MINIMAL)?NV_NOFREE:0);
 		return;
 	}
 	if(isarray==1 && !nq)
@@ -774,7 +774,16 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	if(!special)
 	{
 		if(*name!='.')
+		{
+			Namarr_t *ap;
 			nv_attribute(np,wp->out,"typeset",'=');
+			if((ap=nv_arrayptr(np)) && ap->fixed)
+			{
+				sfprintf(wp->out,"%s",name);
+				nv_arrfixed(np,wp->out,0,(char*)0);
+				sfputc(wp->out,';');
+			}
+		}
 		nv_outname(wp->out,name,-1);
 		if((np->nvalue.cp && np->nvalue.cp!=Empty) || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)) || nv_isvtree(np))  
 			sfputc(wp->out,(isarray==2?(wp->indent>=0?'\n':';'):'='));

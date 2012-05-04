@@ -389,7 +389,7 @@ endargs:
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s", optusage(NIL(char*)));
-	if(tdata.argnum > SHRT_MAX)
+	if(sizeof(char*)<8 && tdata.argnum > SHRT_MAX)
 		errormsg(SH_DICT,ERROR_exit(2),"option argument cannot be greater than %d",SHRT_MAX);
 	if(isfloat)
 		flag |= NV_DOUBLE;
@@ -442,6 +442,11 @@ endargs:
 			nv_newtype(tdata.tp);
 		tdata.tp->nvenv = tdata.help;
 		flag &= ~NV_TYPE;
+		if(nv_isattr(tdata.tp,NV_TAGGED))
+		{
+			nv_offattr(tdata.tp,NV_TAGGED);
+			return(0);
+		}
 	}
 	else if(tdata.aflag==0 && ntp && ntp->tp)
 		tdata.aflag = '-';
@@ -466,7 +471,10 @@ static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
 	{
 		Dt_t	*root = tp->sh->last_root;
 		Namval_t *nsp = tp->sh->namespace;
-		char *cp = name = nv_name(np);
+		char *cp;
+		if(!tp->pflag)
+			return;
+		cp = name = nv_name(np);
 		if(*name=='.')
 			name++;
 		if(tp->indent)
@@ -1131,7 +1139,7 @@ static int unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 {
 	register Namval_t *np;
 	register const char *name;
-	register int r;
+	volatile int r;
 	Dt_t	*dp;
 	int nflag=0,all=0,isfun,jmpval;
 	struct checkpt buff;
@@ -1224,7 +1232,7 @@ static int unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 				if(shp->subshell)
 					np=sh_assignok(np,0);
 			}
-			if(!nv_isnull(np))
+			if(!nv_isnull(np) || nv_size(np) || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)))
 				_nv_unset(np,0);
 			if(troot==shp->var_tree && shp->st.real_fun && (dp=shp->var_tree->walk) && dp==shp->st.real_fun->sdict)
 				nv_delete(np,dp,NV_NOFREE);
@@ -1259,15 +1267,15 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 		flag = '\n';
 	if(tp->noref && nv_isref(np))
 		return(0);
-	if(nv_istable(np))
-	{
-		print_value(file,np,tp);
-		return(0);
-	}
 	if(nv_isattr(np,NV_NOPRINT|NV_INTEGER)==NV_NOPRINT)
 	{
 		if(is_abuiltin(np))
 			sfputr(file,nv_name(np),'\n');
+		return(0);
+	}
+	if(nv_istable(np))
+	{
+		print_value(file,np,tp);
 		return(0);
 	}
 	isfun = is_afunction(np);
@@ -1452,7 +1460,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 			tp->scanmask = flag&~NV_NOSCOPE;
 			tp->scanroot = root;
 			print_namval(file,np,option,tp);
-			if(nv_isvtree(np))
+			if(!is_abuiltin(np) && nv_isvtree(np))
 			{
 				name = nv_name(np);
 				len = strlen(name);

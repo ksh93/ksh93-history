@@ -37,7 +37,11 @@ static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 {
 	Shell_t	*shp = *(Shell_t**)(dp+1);
 	Stk_t	*stkp = shp->stk;
+#if SHOPT_NAMESPACE
+	if((shp->namespace && sh_fsearch(shp,s,0)) || nv_search(s,shp->fun_tree,0))
+#else
 	if(nv_search(s,shp->fun_tree,0))
+#endif /* SHOPT_NAMESPACE */
 	{
 		int savtop = stktell(stkp);
 		char *savptr = stkfreeze(stkp,0);
@@ -57,8 +61,8 @@ int	b_getopts(int argc,char *argv[],Shbltin_t *context)
 	register int flag, mode;
 	register Shell_t *shp = context->shp;
 	char value[2], key[2];
-	int jmpval,extended;
-	volatile int r= -1;
+	int jmpval;
+	volatile int extended, r= -1;
 	struct checkpt buff, *pp;
 	struct {
 	        Optdisc_t	hdr;
@@ -174,7 +178,7 @@ int	b_getopts(int argc,char *argv[],Shbltin_t *context)
 	shp->st.optchar = opt_info.offset;
 	nv_putval(np, options, 0);
 	nv_close(np);
-	np = nv_open(nv_name(OPTARGNOD),shp->var_tree,NV_NOSCOPE);
+	np = nv_open(nv_name(OPTARGNOD),shp->var_tree,0);
 	if(opt_info.num == LONG_MIN)
 		nv_putval(np, opt_info.arg, NV_RDONLY);
 	else if (opt_info.arg && opt_info.num > 0 && isalpha((char)opt_info.num) && !isdigit(opt_info.arg[0]) && opt_info.arg[0] != '-' && opt_info.arg[0] != '+')

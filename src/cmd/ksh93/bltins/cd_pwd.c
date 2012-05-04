@@ -115,7 +115,22 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		if(*(dp=dir+1) == '.')
 			dp++;
 		if(*dp==0 || *dp=='/')
+		{
+			struct stat statb;
+			if((dp-dir)==2)
+			{
+				char *sp;
+				sfputr(shp->strbuf,oldpwd,0);
+				if(*dp)
+					sfputr(shp->strbuf,dp+1,0);
+				sp = sfstruse(shp->strbuf);
+				*(dir=strrchr(sp,'/'))=0;
+				if(*dp)
+					strcpy(dir,dp);
+				dir = (char*)sp;
+			}
 			cdpath = 0;
+		}
 	}
 	rval = -1;
 	do

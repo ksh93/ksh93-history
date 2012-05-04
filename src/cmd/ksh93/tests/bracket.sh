@@ -339,4 +339,15 @@ $SHELL 2> /dev/null -c '[[(-n foo)]]' || err_exit '[[(-n foo)]] should not requi
 
 $SHELL 2> /dev/null -c '[[ "]" == ~(E)[]] ]]' || err_exit 'pattern "~(E)[]]" does not match "]"'
 
+unset var
+[[ -v var ]] &&  err_exit '[[ -v var ]] should be false after unset var'
+float var
+[[ -v var ]]  ||  err_exit '[[ -v var ]] should be true after float var'
+unset var
+[[ -v var ]] &&  err_exit '[[ -v var ]] should be false after unset var again'
+
+test ! ! ! 2> /dev/null || err_exit 'test ! ! ! should return 0'
+test ! ! x 2> /dev/null || err_exit 'test ! ! x should return 0'
+test ! ! '' 2> /dev/null && err_exit 'test ! ! "" should return non-zero'
+
 exit $((Errors<125?Errors:125))

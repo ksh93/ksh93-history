@@ -1154,4 +1154,22 @@ val=$($SHELL 2> /dev/null <<- \EOF
 EOF)
 [[ $val == f1xtrace*on*off*f2xtrace*on* ]] || err_exit "'.sh.fun.set() { set -x; }' not tracing all functions"
 
+function foo
+{
+	typeset opt OPTIND=1 OPTARG hflag=
+	while getopts hi: opt
+	do	case $opt in
+		h)	hflag=1;;
+	        i)	[[ $OPTARG == foobar ]] || err_exit 'OPTARG should be set to foobar in function foo';;
+		esac
+	done
+	shift $((OPTIND - 1))
+	(( OPTIND == 4 )) || err_exit "OPTIND is $OPTIND at end of function foo; it should be 4"  
+	[[ $1 == foo2 ]] || err_exit "\$1 is $1, not foo after getopts in function"
+}
+OPTIND=6 OPTARG=xxx
+foo -h -i foobar foo2
+[[ $OPTARG == xxx ]] || err_exit 'getopts in function changes global OPTARG'
+(( OPTIND == 6 )) || err_exit 'getopts in function changes global OPTIND'
+
 exit $((Errors<125?Errors:125))

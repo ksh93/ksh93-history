@@ -1,3 +1,8 @@
+12-05-01 port/astconf.c: fix astconflist() to list standard minmax value if defined
+12-04-26 sfio/sftmp.c: fix memory leak due to inadvertent SF_STATIC copy
+12-04-26 sfio/sfwrite.c: fix subtle memory leak (with Vmlast or Vmpool or freeBSD malloc)
+12-04-26 vmalloc/vmbest.c: SIGSEGV overcommit check for __linux__ only
+12-04-25 vmalloc: add _vmfd() for private close-on-exec fds
 12-04-23 sfio_t.h: change getr to 32 bits to prepare for UTF-8 delimiters
 12-04-23 features/signal.c: add SIGSTKFLT
 12-04-17 regex/regcomp.c: fix (E:...) vs (E)... scoping

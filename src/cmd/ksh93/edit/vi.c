@@ -737,6 +737,8 @@ static int cntlmode(Vi_t *vp)
 		/*** make sure cursor is at the last char ***/
 		sync_cursor(vp);
 	}
+	else if(last_virt > INVALID )
+		cur_virt++;
 
 	/*** Read control char until something happens to cause a ***/
 	/* return to APPEND/REPLACE mode	*/
@@ -828,6 +830,7 @@ static int cntlmode(Vi_t *vp)
 			refresh(vp,CONTROL);
 			ed_getchar(vp->ed,-1);
 			restore_v(vp);
+			ed_ungetchar(vp->ed,'a');
 			break;
 		}
 
@@ -1398,6 +1401,8 @@ static void getline(register Vi_t* vp,register int mode)
 			refresh(vp,INPUT);
 			continue;
 		}
+		if(c!='\t')
+			vp->ed->e_tabcount = 0;
 
 		switch( c )
 		{
@@ -2415,6 +2420,8 @@ addin:
 	case '\\':		/** do file name completion in place **/
 		if( cur_virt == INVALID )
 			return(BAD);
+		if(virtual[cur_virt]=='/')
+			c = '=';
 	case '=':		/** list file name expansions **/
 		save_v(vp);
 		i = last_virt;

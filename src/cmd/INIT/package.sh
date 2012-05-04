@@ -34,12 +34,10 @@ checksh()
 	$1 -c '(( .sh.version >= 20111111 ))' >/dev/null 2>&1
 }
 
-case $1:$_AST_BIN_PACKAGE_:$SHELL:$0 in
-use:*)
+case $_AST_BIN_PACKAGE_:$SHELL:$0 in
+1:*:*|*:/bin/sh:*)
 	;;
-*:1:*|*:/bin/sh:*)
-	;;
-*:*:*/*:*/*)
+*:*/*:*/*)
 	_AST_BIN_PACKAGE_=1 # prevent non-interactive sh .rc referencing bin/package recursion #
 	export _AST_BIN_PACKAGE_
 	if	checksh $SHELL
@@ -99,7 +97,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-04-17 $
+@(#)$Id: package (AT&T Research) 2012-04-24 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary

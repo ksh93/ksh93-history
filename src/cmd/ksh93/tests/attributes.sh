@@ -438,7 +438,6 @@ z='typeset -C z=(foo=bar)'
 $SHELL -c "$z; [[ \$(typeset -pC) == '$z' ]]" || err_exit 'typeset -pC does not list only compound variables'
 unset y
 z='typeset -A y=([a]=foo)'
-cd ~/src/cmd/ksh93/gsf8
 $SHELL -c "$z; [[ \$(typeset -pA) == '$z' ]]" || err_exit 'typeset -pA does not list only associative arrays'
 
 $SHELL 2> /dev/null -c 'typeset -C arr=( aa bb cc dd )' && err_exit 'invalid compound variable assignment not reported'
@@ -450,5 +449,14 @@ typeset -l x=
 unset x
 typeset -L4 x=$'\001abcdef'
 [[ ${#x} == 5 ]] || err_exit "width of character '\01' is not zero" 
+
+unset x
+typeset -L x=-1
+command typeset -F x=0-1 2> /dev/null || err_exit 'typeset -F after typeset -L fails'
+
+unset val
+typeset -i val=10#0-3
+typeset -Z val=0-1
+[[ $val == 0-1 ]] || err_exit 'integer attribute not cleared for subsequent typeset'
 
 exit $((Errors<125?Errors:125))

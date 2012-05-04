@@ -734,4 +734,24 @@ print -- -020 | read x
 print -- -8#20 | read x
 ((x == -16)) || err_exit 'numbers with leading -8# should be treated as octal'
 
+unset x
+x=0x1
+let "$x==1" || err_exit 'hex constants not working with let'
+(( $x == 1 )) || err_exit 'arithmetic with $x, where $x is hex constant not working'
+for i in 1
+do	(($x == 1)) || err_exit 'arithmetic in for loop with $x, where $x is hex constant not working'
+done
+x=010
+let "$x==10" || err_exit 'arithmetic with $x where $x is 010 should be decimal in let'
+(( 9.$x == 9.01 )) || err_exit 'arithmetic with 9.$x where x=010 should be 9.01' 
+(( 9$x == 9010 )) || err_exit 'arithmetic with 9$x where x=010 should be 9010' 
+x010=99
+((x$x == 99 )) || err_exit 'arithtmetic with x$x where x=010 should be $x010'
+(( 3+$x == 11 )) || err_exit '3+$x where x=010 should be 11 in ((...))'
+let "(3+$x)==13" || err_exit 'let should not recognize leading 0 as octal'
+unset x
+typeset -RZ3 x=10 
+(( $x == 10 )) || err_exit 'leading 0 in -RZ should not create octal constant wiht ((...))'
+let "$x==10" || err_exit 'leading 0 in -RZ should not create octal constant wiht let'
+
 exit $((Errors<125?Errors:125))

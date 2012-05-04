@@ -2187,7 +2187,7 @@ static void	sftrack(Sfio_t* sp, int flag, void* data)
 	if(sh_isstate(SH_NOTRACK))
 		return;
 	mode = sfset(sp,0,0);
-	if(sp==shp->heredocs && fd < 10 && flag==SF_NEW)
+	if(sp==shp->heredocs && fd < 10 && flag==SF_SETFD)
 	{
 		fd = sfsetfd(sp,10);
 		fcntl(fd,F_SETFD,FD_CLOEXEC);

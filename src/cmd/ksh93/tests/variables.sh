@@ -108,7 +108,7 @@ fi
 # check for attributes across subshells
 typeset -i x=3
 y=1/0
-if	( typeset x=y ) 2> /dev/null
+if	( x=y ) 2> /dev/null
 then	err_exit "attributes not passed to subshells"
 fi
 unset x

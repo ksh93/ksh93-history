@@ -90,6 +90,7 @@ struct sh_scoped
 	int		ioset;
 	unsigned short	trapmax;
 	char		*trap[SH_DEBUGTRAP+1];
+	char		**otrap;
 	char		**trapcom;
 	char		**otrapcom;
 	void		*timetrap;

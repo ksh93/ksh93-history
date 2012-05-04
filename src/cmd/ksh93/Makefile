@@ -210,11 +210,11 @@ end
 	attributes.sh basic.sh bracket.sh builtins.sh case.sh \
 	comvar.sh comvario.sh coprocess.sh cubetype.sh enum.sh exit.sh \
 	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
-	leaks.sh locale.sh math.sh nameref.sh options.sh path.sh \
-	pointtype.sh pty.sh quoting.sh quoting2.sh readcsv.sh recttype.sh \
-	restricted.sh return.sh select.sh shtests sigchld.sh \
-	signal.sh statics.sh subshell.sh substring.sh tilde.sh \
-	timetype.sh treemove.sh types.sh variables.sh \
+	leaks.sh locale.sh math.sh nameref.sh namespace.sh options.sh \
+	path.sh pointtype.sh pty.sh quoting.sh quoting2.sh readcsv.sh \
+	recttype.sh restricted.sh return.sh select.sh shtests \
+	sigchld.sh signal.sh statics.sh subshell.sh substring.sh \
+	tilde.sh timetype.sh treemove.sh types.sh variables.sh \
 	vartree1.sh vartree2.sh
 
 :: ksh-regress.rt ksh-regress.tst

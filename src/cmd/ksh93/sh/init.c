@@ -1431,6 +1431,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 #endif /* SHOPT_TIMEOUT */
 	/* initialize jobs table */
 	job_clear();
+	sh_onoption(SH_MULTILINE);
 	if(argc>0)
 	{
 		/* check for restricted shell */
@@ -2135,9 +2136,10 @@ unsigned long sh_offoption DISABLE (int opt)
 	return(sh_offoption(opt));
 }
 
-void	sh_sigcheck DISABLE (void)
+void	sh_sigcheck DISABLE (Shell_t *shp)
 {
-	Shell_t *shp = sh_getinterp();
+	if(!shp)
+		shp = sh_getinterp();
 	sh_sigcheck(shp);
 }
 

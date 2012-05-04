@@ -211,9 +211,10 @@ int    b_dot_cmd(register int n,char *argv[],Shbltin_t *context)
 	register int jmpval;
 	register Shell_t *shp = context->shp;
 	struct sh_scoped savst, *prevscope = shp->st.self;
-	char *filename=0;
+	char *filename=0, *buffer=0;
 	int	fd;
-	struct dolnod   *argsave=0, *saveargfor;
+	struct dolnod   *saveargfor;
+	volatile struct dolnod   *argsave=0;
 	struct checkpt buff;
 	Sfio_t *iop=0;
 	short level;
@@ -288,13 +289,15 @@ int    b_dot_cmd(register int n,char *argv[],Shbltin_t *context)
 			sh_exec((Shnode_t*)(nv_funtree(np)),sh_isstate(SH_ERREXIT));
 		else
 		{
-			char buff[IOBSIZE+1];
-			iop = sfnew(NIL(Sfio_t*),buff,IOBSIZE,fd,SF_READ);
+			buffer = malloc(IOBSIZE+1);
+			iop = sfnew(NIL(Sfio_t*),buffer,IOBSIZE,fd,SF_READ);
 			sh_offstate(SH_NOFORK);
 			sh_eval(iop,sh_isstate(SH_PROFILE)?SH_FUNEVAL:0);
 		}
 	}
 	sh_popcontext(shp,&buff);
+	if(buffer)
+		free(buffer);
 	if(!np)
 		free((void*)shp->st.filename);
 	shp->dot_depth--;

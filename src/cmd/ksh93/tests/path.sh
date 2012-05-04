@@ -371,5 +371,18 @@ FPATH=/foobar:
 PATH=$FPATH:$PATH:.
 [[ $(user_to_group_relationship.hdr.query foobar) == foobar ]] 2> /dev/null || err_exit 'Cannot execute command with . in name when PATH and FPATH end in :.'
 
+mkdir -p $tmp/new/bin
+mkdir $tmp/new/fun
+print FPATH=../fun > $tmp/new/bin/.paths
+print FPATH=../xxfun > $tmp/bin/.paths
+cp "$(whence -p echo)" $tmp/new/bin
+PATH=$tmp/bin:$tmp/new/bin:$PATH
+x=$(whence -p echo 2> /dev/null)
+[[ $x == "$tmp/new/bin/echo" ]] ||  err_exit 'nonexistant FPATH directory in .paths file causes path search to fail'
+
+$SHELL 2> /dev/null <<- \EOF || err_exit 'path search problem with non-existant directories in PATH'
+	PATH=/usr/nogood1/bin:/usr/nogood2/bin:/bin:/usr/bin
+	tail /dev/null && tail /dev/null
+EOF
 exit $((Errors<125?Errors:125))
 

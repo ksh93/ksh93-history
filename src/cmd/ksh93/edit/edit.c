@@ -811,7 +811,7 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 {
 	register Edit_t *ep = (Edit_t*)context;
 	register int rv= -1;
-	register int delim = (ep->e_raw==RAWMODE?'\r':'\n');
+	register int delim = ((ep->e_raw&RAWMODE)?nttyparm.c_cc[VEOL]:'\n');
 	Shell_t *shp = ep->sh;
 	int mode = -1;
 	int (*waitevent)(int,long,int) = shp->gd->waitevent;

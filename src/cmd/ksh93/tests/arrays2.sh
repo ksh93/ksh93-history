@@ -214,4 +214,11 @@ typeset -i i=10 j=0
 {  y=$( echo ${arr[i][j]} ) ;} 2> /dev/null
 [[ $y == 10 ]] || err_exit '${arr[10][0] should be 10 '
 
+unset cx l
+compound cx
+typeset -a cx.ar[4][4]
+print -v cx > /dev/null
+print -v cx | read -C l 2> /dev/null || err_exit 'read -C fails from output of print -v'
+[[ ${cx%cx=} ==  "${l%l=}" ]] || err_exit 'print -v for compound variable with fixed 2d array not working'
+
 exit $((Errors<125?Errors:125))

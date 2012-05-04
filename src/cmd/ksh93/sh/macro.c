@@ -1430,7 +1430,7 @@ retry1:
 					v = nv_getval(np);
 				mp->atmode = (v && mp->quoted && mode=='@');
 				/* special case --- ignore leading zeros */  
-				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isalnum(c)))
+				if((mp->let || (mp->arith&&nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL)))) && !nv_isattr(np,NV_INTEGER) && (offset==0 || isspace(c) || strchr(",.+-*/=%&|^?!<>",c)))
 					mp->zeros = 1;
 			}
 			if(savptr==stakptr(0))
@@ -1689,7 +1689,10 @@ retry1:
 		if(*ptr==':')
 		{
 			if((type = (int)sh_strnum(ptr+1,&ptr,1)) <=0)
+			{
 				v = 0;
+				mp->atmode = 0;
+			}
 			else if(isastchar(mode))
 			{
 				if(dolg>=0)
@@ -2115,7 +2118,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 					num = lseek(fd, (off_t)0, SEEK_CUR);
 				goto out_offset;
 			}
-			sp = sfnew(NIL(Sfio_t*),(char*)malloc(IOBSIZE+1),IOBSIZE,fd,SF_READ|SF_MALLOC);
+			if(!(sp=mp->shp->sftable[fd]))
+				sp = sfnew(NIL(Sfio_t*),(char*)malloc(IOBSIZE+1),IOBSIZE,fd,SF_READ|SF_MALLOC);
 			type = 3;
 		}
 		else
@@ -2275,7 +2279,11 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 	{
 		/* prevent leading 0's from becomming octal constants */
 		while(size>1 && *str=='0')
+		{
+			if(str[1]=='x' || str[1]=='X')
+				break;
 			str++,size--;
+		}
 		mp->zeros = 0;
 		cp = str;
 	}

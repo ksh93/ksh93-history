@@ -628,7 +628,8 @@ x=$(
 		print ')'
 	) | read -C hugecpv
 	compound hugecpv2=hugecpv
-	[[ $(typeset -p hugecpv) == "$(typeset -p hugecpv)" ]]
+	v=$(typeset -p hugecpv)
+	[[ ${v/hugecpv/hugecpv2} == "$(typeset -p hugecpv2)" ]]
 EOF
 ) 2> /dev/null || err_exit 'copying a large array fails'
 

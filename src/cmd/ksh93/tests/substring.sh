@@ -625,4 +625,33 @@ x="a 1 b"
 d=${x/~(E)(([[:digit:]])[[:space:]]*|([[:alpha:]]))/X}
 [[ $(print -v .sh.match) == $'(\n\t[0]=a\n\t[1]=a\n\t[3]=a\n)' ]] || err_exit '.sh.match not sparse'
 
+unset v
+typeset -a arr=( 0 1 2 3 4 )
+for v in "${arr[@]:5}"
+do	err_exit "\${arr[@]:5} should not generate $v" 
+	break
+done
+for v in "${arr[@]:1:0}"
+do	err_exit "\${arr[@]:1:0} should not generate ${v:-empty_string}"
+	break
+done
+for v in "${arr[@]:0:-1}"
+do	err_exit "\${arr[@]:0:-1} should not generate ${v:-empty_string}"
+	break
+done
+
+set 1 2 3 4
+for v in "${@:5}"
+do	err_exit "\${@:5} should not generate $v" 
+	break
+done
+for v in "${@:1:0}"
+do	err_exit "\${@:1:0} should not generate ${v:-empty_string}"
+	break
+done
+for v in "${@:0:-1}"
+do	err_exit "\${@:0:-1} should not generate ${v:-empty_string}"
+	break
+done
+
 exit $((Errors<125?Errors:125))

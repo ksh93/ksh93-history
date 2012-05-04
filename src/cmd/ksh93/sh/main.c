@@ -486,7 +486,6 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		shp->nextprompt = 1;
 		sh_freeup(shp);
 		stakset(NIL(char*),0);
-		exitset();
 		sh_offstate(SH_STOPOK);
 		sh_offstate(SH_ERREXIT);
 		sh_offstate(SH_VERBOSE);
@@ -535,7 +534,6 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 #endif /* SHOPT_TIMEOUT */
 			shp->inlineno = 1;
 			error_info.line = 1;
-			shp->exitval = 0;
 			shp->trapnote = 0;
 			if(buff.mode == SH_JMPEXIT)
 			{

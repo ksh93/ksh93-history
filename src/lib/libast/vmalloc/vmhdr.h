@@ -472,6 +472,7 @@ typedef struct _vmextern_s
 #define VMOPTIONS()     do { if (!_Vmoptions) { _vmoptions(); } } while (0)
 
 extern int		_vmbestcheck _ARG_((Vmdata_t*, Block_t*));
+extern int		_vmfd _ARG_((int));
 extern int		_vmlock _ARG_((Vmalloc_t*, int));
 extern void		_vmoptions _ARG_((void));
 

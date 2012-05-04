@@ -991,7 +991,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optkill[]	 = 
-"[-1c?\n@(#)$Id: kill (AT&T Research) 1999-06-17 $\n]"
+"[-1c?\n@(#)$Id: kill (AT&T Research) 2012-04-13 $\n]"
 USAGE_LICENSE
 "[+NAME?kill - terminate or signal process]"
 "[+DESCRIPTION?With the first form in which \b-l\b is not specified, "
@@ -1011,6 +1011,8 @@ _JOB_
 "[l?List signal names or signal numbers rather than sending signals as "
 	"described above.  "
 	"The \b-n\b and \b-s\b options cannot be specified.]"
+"[L?Same as \b-l\b except that of no argument is specified the signals will "
+	"be listed in menu format as with select compound command.]"
 "[n]#[signum?Specify a signal number to send.  Signal numbers are not "
 	"portable across platforms, except for the following:]{"
 		"[+0?No signal]"

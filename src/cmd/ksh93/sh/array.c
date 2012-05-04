@@ -1081,13 +1081,8 @@ int nv_nextsub(Namval_t *np)
 		return(0);
 	if(is_associative(ap))
 	{
-		Namval_t	*nq;
-		if(nq=(*ap->header.fun)(np,NIL(char*),NV_ANEXT))
-		{
-			if(nq->nvalue.np && nv_isattr(nq,NV_CHILD))
-				nv_putsub(nq->nvalue.np,NIL(char*),ARRAY_UNDEF);
+		if((*ap->header.fun)(np,NIL(char*),NV_ANEXT))
 			return(1);
-		}
 		ap->header.nelem &= ~(ARRAY_SCAN|ARRAY_NOCHILD);
 		return(0);
 	}

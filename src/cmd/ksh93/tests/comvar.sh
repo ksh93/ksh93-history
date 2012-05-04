@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -685,5 +685,10 @@ exp='typeset -C zz=([2]=def;foo=abc)'
 	exp='typeset -C zz=([2]=def;typeset -i [3]=123;foo=abc)'
 	[[ $(typeset -p zz) == "$exp" ]] || err_exit 'expansion of compound variables with non-identifiers not working in subshells'
 )  3>&2 2> /dev/null || err_exit 'syntax errors expansion of compound variables with non-identifiers'
+
+unset xx
+xx=(foo=bar)
+xx=()
+[[ $xx == $'(\n)' ]] || err_exit 'xx=() not unsetting previous value'
 
 exit $((Errors<125?Errors:125))

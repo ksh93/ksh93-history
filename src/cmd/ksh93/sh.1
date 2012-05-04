@@ -2709,7 +2709,12 @@ Finally a pattern can contain sub-patterns of the form
 where either \f2options\^\fP or \f3:\fP\f2pattern-list\^\fP
 can be omitted.  Unlike the other compound patterns,
 these sub-patterns are not counted in the numbered sub-patterns.
-\f3:\fP\f2pattern-list\^\fP must be omitted for the upper-case options below.
+\f3:\fP\f2pattern-list\^\fP must be omitted for options
+.BR F ,
+.BR G ,
+and
+.B N
+below.
 If \f2options\^\fP is present, it can consist of one or more
 of the following:
 .PD 0
@@ -4195,11 +4200,14 @@ or a user defined
 but it is one of the built-in commands listed below,
 it is executed in the current shell process.
 .PP
-The shell variable
+The shell variables
 .B
 .SM PATH
-defines the search path for
-the directory containing the command.
+followed by the variable
+.B
+.SM FPATH
+defines the list of directories to
+search for the command name.
 Alternative directory names are separated by
 a colon
 .RB ( : ).
@@ -4215,68 +4223,65 @@ two or more adjacent colons, or by a colon
 at the beginning or end of the path list.
 If the command name contains a \f3/\fP, then the search path
 is not used.
-Otherwise, each directory in the path is
-searched for an executable file
-of the given name
-that is not a directory.
-If found, and if the shell
-determines that there is a built-in version
-of a command corresponding to a given pathname,
-this built-in is invoked in the current process.
-If found, and this directory is also contained in the value of the
+Otherwise, each directory in the list of directories defined by
+.B
+.SM PATH
+and
 .B
 .SM FPATH
-variable,
+is checked in order.
+If the directory being searched is contained in
+.B
+.SM FPATH
+and contains a file whose name matches the command being searched,
 then this file is loaded into the current shell environment
 as if it were the argument to the \fB.\fP command
 except that only preset aliases are expanded,
 and a function of the given name is executed
 as described above.
-If not found, and the file
+.P
+If this directory is not in
+.B
+.SM FPATH
+the shell first
+determines whether there is a built-in version
+of a command corresponding to a given pathname and if so
+it is invoked in the current process.
+If no built-in is found, the shell checks for a file named
 .B .paths
-is found, and this file contains a line of the form
+in this directory.
+If found and there is a line of the form
 .BI FPATH= path
 where
 .I path\^
 names an
-existing directory, and this directory contains
-a file of the given name,
-then this file is loaded into the current shell environment
-as if it were the argument to the \fB.\fP special built-in command
-and a function of the given name is executed.
-Otherwise, if found,
-a process is created and
-an attempt is made to execute the command via
-.IR exec (2).
+existing directory
+then that directory is searched after immediately after the current directory 
+as if it were found in the
+.B
+.SM FPATH
+variable.
+If
+.I path\^
+does not begin with /, it is checked for relative to the directory
+being searched.
 .P
-When an executable is found, the directory where it is found
-in is searched for a file named
-.BR .paths .
-If this file is found and it contains a line of the form
-.BI BUILTIN_LIB= value\^
-, then the library named by
-.I value\^
+The
+.B .paths
+file is then checked  for lines of the form
+.BI BUILTIN_LIB= libname.
+For each, the library named by
+.I libname\^
 will be searched for as if it were an option argument to
 .BR "builtin -f" ,
 and if it contains a built-in of the specified name
 this will be executed instead of a command by this name.
-Otherwise, if this file is found and it contains a line of the form
-.IB name\^ = value\^
-in the first or second line, then the environment variable
-.I name\^
-is modified by prepending the directory specified by
-.I value\^
-to the directory list.
-If
-.I value\^
-is not an absolute directory, then it
-specifies a directory relative to the directory that the
-executable was found.
-If the environment variable
-.I name\^
-does not already exist it will be added to the environment
-list for the specified command.
+Any built-in loaded from a library found this way will be associated
+with the directory containing the
+.B .paths
+file so it will only execute if not found in an earlier directory.
 .P
+Finally, the directory will be checked for a file of the given name.
 If the file has execute permission but is not an
 .B a.out
 file,
@@ -4293,6 +4298,24 @@ bits are set on the file,
 then the shell executes an agent whose job it is to
 set up the permissions and execute the shell with the
 shell command file passed down as an open file.
+If the
+.B .paths
+contains a line of the form
+.IB name\^ = value\^
+in the first or second line, then the environment variable
+.I name\^
+is modified by prepending the directory specified by
+.I value\^
+to the directory list.
+If
+.I value\^
+is not an absolute directory, then it
+specifies a directory relative to the directory that the
+executable was found.
+If the environment variable
+.I name\^
+does not already exist it will be added to the environment
+list for the specified command.
 A parenthesized command is executed in
 a sub-shell without removing non-exported variables.
 .SS Command Re-entry.
@@ -5625,6 +5648,14 @@ represents the pathname whose basename is the name of the built-in.
 The entry point function name is determined by prepending
 .B b_
 to the built-in name.
+A built-in specified by a pathname will only be executed when that pathname
+would be found during the path search.  Built-ins found in libraries loaded
+via the
+.B .paths
+file will be associate with the pathname of the directory containing the
+.B .paths
+file.
+.P
 The ISO C/C++ prototype is
 \f3b_\fP\f2mycommand\fP\f3(int\fP \f2argc\fP, \f3char *\fP\f2argv\fP\f3[]\fP, \f3void *\fP\f2context\fP\f3)\fP
 for the builtin command
@@ -6179,7 +6210,7 @@ for a description of the format of
 .PD 0
 \f3kill\fP \*(OK \f3\-n\fP \f2signum\^\fP \*(CK \f2job\^\fP .\|.\|.
 .TP
-\f3kill\fP \f3\-l\fP \*(OK \f2sig\^\fP .\|.\|. \*(CK
+\f3kill\fP \f3\-Ll\fP \*(OK \f2sig\^\fP .\|.\|. \*(CK
 .PD
 Sends either the TERM (terminate) signal or the
 specified signal to the specified jobs or processes.
@@ -6212,10 +6243,17 @@ for a description of the format of
 .IR job .
 In the third form,
 .BR "kill \-l" ,
+or
+.BR "kill \-L" ,
 if
 .I sig\^
 is not specified,
 the signal names are listed.
+The 
+.B \-l
+option list only the signal names.
+.B \-L
+options lists each signal name and corresponding number. 
 Otherwise, for each
 .I sig\^
 that is a name, the corresponding signal number is listed.
