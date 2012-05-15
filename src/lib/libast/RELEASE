@@ -1,3 +1,6 @@
+12-05-15 misc/optget.c: #? option with no value should have opt_info.num==0
+12-05-11 misc/stk.c: fix memmove() read of 1 uninitialized byte
+12-05-11 regex/regcoll.c: avoid memcpy() to self
 12-05-01 port/astconf.c: fix astconflist() to list standard minmax value if defined
 12-04-26 sfio/sftmp.c: fix memory leak due to inadvertent SF_STATIC copy
 12-04-26 sfio/sfwrite.c: fix subtle memory leak (with Vmlast or Vmpool or freeBSD malloc)

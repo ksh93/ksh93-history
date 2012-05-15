@@ -1863,6 +1863,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
        	 	if (sp)
 		{
 			append=0;
+			if(sp==up->cp && !(flags&NV_APPEND))
+				return;
 			dot = strlen(sp);
 #if (_AST_VERSION>=20030127L)
 			if(nv_isattr(np,NV_BINARY))
@@ -1883,7 +1885,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					size = nv_size(np);
 				if(size==0)
 					size = oldsize + (3*dot/4);
-				cp = (char*)malloc(size+1);
+				*(cp = (char*)malloc(size+1)) = 0;
 				nv_offattr(np,NV_NOFREE);
 				if(oldsize)
 					memcpy((void*)cp,(void*)up->cp,oldsize);
@@ -2298,6 +2300,7 @@ static int scanfilter(Dt_t *dict, void *arg, void *data)
  */
 int nv_scan(Dt_t *root, void (*fn)(Namval_t*,void*), void *data,int mask, int flags)
 {
+	Namval_t *np;
 	Dt_t *base=0;
 	struct scan sdata;
 	int (*hashfn)(Dt_t*, void*, void*);
@@ -2309,7 +2312,8 @@ int nv_scan(Dt_t *root, void (*fn)(Namval_t*,void*), void *data,int mask, int fl
 	hashfn = scanfilter;
 	if(flags&NV_NOSCOPE)
 		base = dtview((Dt_t*)root,0);
-	dtwalk(root, hashfn,&sdata);
+	for(np=(Namval_t*)dtfirst(root);np; np=(Namval_t*)dtnext(root,np))
+		hashfn(root, np, &sdata);
 	if(base)
 		 dtview((Dt_t*)root,base);
 	return(sdata.scancount);
@@ -2427,20 +2431,21 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 			if(nv_isattr(nq,NV_EXPORT))
 				sh_envput(shp->env,nq);
 		}
-		npnext = (Namval_t*)dtnext(root,np);
 		shp->last_root = root;
 		shp->last_table = 0;
 		if(nv_isvtree(np))
 		{
 			int len = strlen(np->nvname);
+			npnext = (Namval_t*)dtnext(root,np);
 			while((nq=npnext) && memcmp(np->nvname,nq->nvname,len)==0 && nq->nvname[len]=='.')
 
 			{
-				npnext = (Namval_t*)dtnext(root,nq);
 				_nv_unset(nq,flags);
+				npnext = (Namval_t*)dtnext(root,nq);
 				nv_delete(nq,root,0);
 			}
 		}
+		npnext = (Namval_t*)dtnext(root,np);
 		_nv_unset(np,flags);
 		nv_delete(np,root,0);
 	}
@@ -2468,6 +2473,11 @@ void	_nv_unset(register Namval_t *np,int flags)
 	if(is_afunction(np) && np->nvalue.ip)
 	{
 		register struct slnod *slp = (struct slnod*)(np->nvenv);
+		if(shp->st.real_fun == np->nvalue.rp)
+		{
+			np->nvalue.rp->running |= 1;
+			return;
+		}
 		if(slp && !nv_isattr(np,NV_NOFREE))
 		{
 			struct Ufunction *rq,*rp = np->nvalue.rp;
@@ -3504,14 +3514,17 @@ void sh_unscope(Shell_t *shp)
 {
 	register Dt_t *root = shp->var_tree;
 	register Dt_t *dp = dtview(root,(Dt_t*)0);
-	table_unset(shp,root,NV_RDONLY|NV_NOSCOPE,dp);
-	if(shp->st.real_fun  && dp==shp->st.real_fun->sdict)
+	if(dp)
 	{
-		dp = dtview(dp,(Dt_t*)0);
-		shp->st.real_fun->sdict->view = dp;
+		table_unset(shp,root,NV_RDONLY|NV_NOSCOPE,dp);
+		if(shp->st.real_fun  && dp==shp->st.real_fun->sdict)
+		{
+			dp = dtview(dp,(Dt_t*)0);
+			shp->st.real_fun->sdict->view = dp;
+		}
+		shp->var_tree=dp;
+		dtclose(root);
 	}
-	shp->var_tree=dp;
-	dtclose(root);
 }
 
 /*

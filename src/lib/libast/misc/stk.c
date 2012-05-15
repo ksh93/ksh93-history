@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -538,8 +538,8 @@ static char *stkgrow(register Sfio_t *stream, size_t size)
 	if(fp->nalias=nn)
 	{
 		fp->aliases = (char**)fp->end;
-		if(end)
-			memmove(fp->aliases,end,nn*sizeof(char*));
+		if(end && nn>1)
+			memmove(fp->aliases,end,(nn-1)*sizeof(char*));
 		if(add)
 			fp->aliases[nn-1] =  dp + roundof(sizeof(struct frame),STK_ALIGN);
 	}

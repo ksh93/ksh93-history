@@ -638,4 +638,11 @@ typeset -a foo
 foo+=(bar)
 [[ ${foo[0]} == bar ]] || 'appending to empty array not working'
 
+unset isnull
+typeset -A isnull
+isnull[mdapp]=Y
+: ${isnull[@]}
+isnull[mdapp]=N
+[[ ${isnull[*]} != *N* ]] && err_exit 'bug after ${arr[@]} with one element associative array'
+
 exit $((Errors<125?Errors:125))

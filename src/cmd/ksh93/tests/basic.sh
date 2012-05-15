@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -509,5 +509,7 @@ done
 $SHELL -c 'kill -0 123456789123456789123456789' 2> /dev/null && err_exit 'kill not catching process id overflows'
 
 [[ $($SHELL -c '{ cd..; print ok;}' 2> /dev/null) == ok ]] || err_exit 'command name ending in .. causes shell to abort'
+
+$SHELL -xc '$(LD_LIBRARY_PATH=$LD_LIBRARY_PATH exec $SHELL -c :)' > /dev/null 2>&1  || err_exit "ksh -xc '(name=value exec ksh)' fails with err=$?"
 
 exit $((Errors<125?Errors:125))

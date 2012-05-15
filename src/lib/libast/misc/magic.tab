@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2011-11-02
+# @(#)magic (AT&T Research) 2012-05-11
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1276,6 +1276,8 @@ v{
 v()
 0	long		0x0e13130d	NOC switch summary stats
 v()
+
+0	string		\x{FD}7zXZ	xz compressed data		application/xz
 
 0	leshort		0		windows icon resource		application/x-ms-icon
 &2	leshort		1

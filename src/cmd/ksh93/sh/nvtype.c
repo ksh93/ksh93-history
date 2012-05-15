@@ -125,6 +125,8 @@ typedef struct
 	short		_dshort;
 	char		_cpointer;
 	char		*_dpointer;
+	int32_t		_cint32_t;
+	int32_t		*_dint32_t;
 } _Align_;
 
 #define alignof(t)	((char*)&((_Align_*)0)->_d##t-(char*)&((_Align_*)0)->_c##t)
@@ -188,8 +190,8 @@ size_t nv_datasize(Namval_t *np, size_t *offset)
 			}
 			else
 			{
-				a = alignof(long);
-				s = sizeof(long);
+				a = alignof(int32_t);
+				s = sizeof(int32_t);
 			}
 		}
 	}

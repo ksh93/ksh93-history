@@ -479,10 +479,13 @@ y=$(printf "%a" x)
 r=$y
 [[ $r == $n ]] || err_exit "output of printf %a not self preserving -- expected $x, got $y"
 unset x y r
-x=-0
-y=$(printf "%g %g %g %g %g %g\n" -0. -0 $((-0)) x $x $((x)))
-r="-0 -0 -0 -0 -0 -0"
-[[ $y == "$r" ]] || err_exit "-0 vs -0.0 inconsistency -- expected '$r', got '$y'"
+float x=-0 y=-0.0
+r=-0
+[[ $((-0)) == 0 ]] || err_exit '$((-0)) should be 0'
+[[ $(( -1*0)) == 0 ]] || err_exit '$(( -1*0)) should be 0'
+[[ $(( -1.0*0)) == -0 ]] || err_exit '$(( -1.0*0)) should be -0'
+[[ $(printf "%g %g %g\n" x $x $((x)) ) == '-0 -0 -0' ]] || err_exit '%g of x $x $((x)) for x=-0 should all be -0'
+[[ $(printf "%g %g %g\n" y $x $((y)) ) == '-0 -0 -0' ]] || err_exit '%g of y $y $((y)) for y=-0.0 should all be -0'
 $SHELL -c '(( x=));:' 2> /dev/null && err_exit '((x=)) should be an error'
 $SHELL -c '(( x+=));:' 2> /dev/null && err_exit '((x+=)) should be an error'
 $SHELL -c '(( x=+));:' 2> /dev/null && err_exit '((x=+)) should be an error'

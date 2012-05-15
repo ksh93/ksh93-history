@@ -215,10 +215,6 @@ extern unsigned long	sh_offoption(int);
 extern int 		sh_waitsafe(void);
 extern int		sh_exec(const Shnode_t*,int);
 
-#if SHOPT_DYNAMIC
-    extern void		**sh_getliblist(void);
-#endif /* SHOPT_DYNAMIC */
-
 /*
  * direct access to sh is obsolete, use sh_getinterp() instead
  */

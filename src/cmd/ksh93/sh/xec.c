@@ -2734,8 +2734,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					shp->last_root = rp->sdict;
 					for(mp=(Namval_t*)dtfirst(rp->sdict);mp;mp=nq)
 					{
-						nq = dtnext(rp->sdict,mp);
 						_nv_unset(mp,NV_RDONLY);
+						nq = dtnext(rp->sdict,mp);
 						nv_delete(mp,rp->sdict,0);
 					}
 					dtclose(rp->sdict);
@@ -3410,22 +3410,18 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 			r = shp->exitval;
 		}
 	}
+	if(shp->topscope != (Shscope_t*)shp->st.self)
+		sh_setscope(shp->topscope);
 	if(--shp->fn_depth==1 && jmpval==SH_JMPERRFN)
 		errormsg(SH_DICT,ERROR_exit(1),e_toodeep,argv[0]);
 	sh_popcontext(shp,buffp);
-	if (shp->st.self != &savst)
-		shp->var_tree = (Dt_t*)savst.save_tree;
 	sh_unscope(shp);
 	shp->namespace = nspace;
 	shp->var_tree = (Dt_t*)prevscope->save_tree;
-	if(shp->topscope != (Shscope_t*)shp->st.self)
-		sh_setscope(shp->topscope);
 	sh_argreset(shp,argsav,saveargfor);
 	trap = shp->st.trapcom[0];
 	shp->st.trapcom[0] = 0;
 	sh_sigreset(1);
-	if (shp->st.self != &savst)
-		*shp->st.self = shp->st;
 	shp->st = *prevscope;
 	shp->topscope = (Shscope_t*)prevscope;
 	nv_getval(sh_scoped(shp,IFSNOD));
@@ -3471,6 +3467,7 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	level = lp->maxlevel = shp->dot_depth + shp->fn_depth+1;
 	SH_LEVELNOD->nvalue.s = lp->maxlevel;
 	shp->st.lineno = error_info.line;
+	np->nvalue.rp->running  += 2;
 	if(nv_isattr(np,NV_FPOSIX))
 	{
 		char *save;
@@ -3511,6 +3508,7 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 #endif
 	nv_putval(SH_PATHNAMENOD,shp->st.filename,NV_NOFREE);
 	shp->pipepid = pipepid;
+	np->nvalue.rp->running  -= 2;
 }
 
 /*

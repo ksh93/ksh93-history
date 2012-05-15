@@ -2519,10 +2519,8 @@ grp(Cenv_t* env, int parno)
 	{
 		if (typ >= 0)
 			env->type = typ;
-		error(-1, "AHA#%d typ=%d '%s'", __LINE__, typ, env->cursor);
 		if (!(e = alt(env, parno, 0)))
 			goto nope;
-		error(-1, "AHA#%d typ=%d '%s'", __LINE__, typ, env->cursor);
 		env->flags = g;
 		env->type = i;
 	}

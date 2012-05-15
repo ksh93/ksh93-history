@@ -459,4 +459,8 @@ typeset -i val=10#0-3
 typeset -Z val=0-1
 [[ $val == 0-1 ]] || err_exit 'integer attribute not cleared for subsequent typeset'
 
+unset x
+typeset -L -Z x=foo
+[[ $(typeset -p x) == 'typeset -Z 3 -L 3 x=foo' ]] || err_exit '-LRZ without [n] not defaulting to width of variable'
+
 exit $((Errors<125?Errors:125))

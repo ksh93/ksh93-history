@@ -385,7 +385,6 @@ struct shared
 
 extern struct shared	*shgd;
 extern Shell_t		*nv_shell(Namval_t*);
-extern int		sh_addlib(Shell_t*,void*);
 extern void		sh_applyopts(Shell_t*,Shopt_t);
 extern char 		**sh_argbuild(Shell_t*,int*,const struct comnod*,int);
 extern struct dolnod	*sh_argfree(Shell_t *, struct dolnod*,int);

@@ -1,4 +1,22 @@
-12-05-04  --- Release ksh93u+ ---
+12-05-15  --- Release ksh93u+ ---
+12-05-15  The default value for -L, -R, and -Z when the size was not set was
+	  incorrectly defaulting to 1 and has been fixed.
+12-05-15  A bug in which a subshell of the form (name=value exec ...) could
+	  coredump when name is an environment variable and xtrace is on has
+	  been fixed.
+12-05-15  Fixed a .paths bug in which only the first BUILTIN_LIB assignment worked.
+12-05-14  Arithmetic expressions and subexpressions that are not floating point
+	  now treat -0 as 0, so that $((-0)) is 0 and $((-0.0)) is -0. 
+12-05-11  'unset .sh' now fails with readonly message instead of coredump. 
+12-05-11  A bug which left an associative array arr containing one element in
+	  the wrong state after expanding with ${arr[@]} has been fixed. 
+12-05-10  A bug in which typeset -f did not display options that called getopts
+	  has been fixed.
+12-05-08  Fixed a number of potential bugs uncovered by valgrind.
+12-05-08  A bug in which typeset -b -Z10 var did not initialize var to the
+	  empty string has been fixed.
+12-05-07  A bug in which the exit value of an interactive shell could be
+	  affected by the evaluation of the PS1 prompt has been fixed.
 12-05-04  A bug in which x=() was not unsetting the old value of x before
 	  creating an empty compound variable has been fixed.
 12-05-01  A bug in vi edit mode in which after <ESC>^V, the terminal was not

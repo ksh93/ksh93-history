@@ -64,6 +64,9 @@ if CC.HOSTTYPE == "*.s390-64"
 end
 
 if SHOPT_DYNAMIC && ( "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIONS:N=optimize-space)" )
+	if "$(PACKAGE_OPTIONS:N=optimize-space)" && ! SHOPT_CMDLIB_HDR && ! SHOPT_CMDLIB_DIR
+		SHOPT_CMDLIB_HDR == 1
+	end
 	CCFLAGS += $$(CC.DLL) $$(CC.SUFFIX.DEBUG:+$$(CC.DEBUG))
 	LIBS_req = -lshell$(RELEASE)
 else
@@ -122,7 +125,7 @@ if CC.HOSTTYPE == "linux.sparc*"
 end
 LIBS_opt += -lsecdb
 if CC.HOSTTYPE == "sol.*"
-	LIBS_opt += +lw
+	LIBS_opt += -lw
 end
 $(LIBS_opt)	: .DONTCARE
 

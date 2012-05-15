@@ -206,8 +206,6 @@ success:
 	if(*dir != '/')
 		return(0);
 	nv_putval(opwdnod,oldpwd,NV_RDONLY);
-	if(oldpwd)
-		free(oldpwd);
 	flag = strlen(dir);
 	/* delete trailing '/' */
 	while(--flag>0 && dir[flag]=='/')
@@ -218,6 +216,8 @@ success:
 	nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
 	path_newdir(shp,shp->pathlist);
 	path_newdir(shp,shp->cdpathlist);
+	if(oldpwd)
+		free(oldpwd);
 	return(0);
 }
 

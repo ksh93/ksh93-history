@@ -432,7 +432,7 @@ static void sig_list(register Shell_t *shp,register int flag)
 		if(flag)
 		{
 			names[sig] = 0;
-			sh_menu(sfstdout,shp->gd->sigmax,names+1);
+			sh_menu(sfstdout,shp->gd->sigmax,(char**)names+1);
 		}
 	}
 }

@@ -567,6 +567,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 			}
 			goto done;
 		}
+		shp->exitval = sh.savexit;
 		maxtry = IOMAXTRY;
 		if(sh_isstate(SH_INTERACTIVE) && shp->gd->hist_ptr)
 		{

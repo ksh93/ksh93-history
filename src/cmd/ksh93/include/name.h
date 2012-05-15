@@ -101,6 +101,7 @@ struct Ufunction
 	int		*ptree;		/* address of parse tree */
 	int		lineno;		/* line number of function start */
 	short		argc;		/* number of references */
+	short		running;	/* function is running */
 	char		**argv;		/* reference argument list */
 	off_t		hoffset;	/* offset into source or history file */
 	Namval_t	*nspace;	/* pointer to name space */

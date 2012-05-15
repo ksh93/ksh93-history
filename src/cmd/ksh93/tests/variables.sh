@@ -671,4 +671,7 @@ level=$($SHELL -c $'$SHELL -c \'print -r "$SHLVL"\'')
 
 [[ $($SHELL -c '{ x=1; : ${x.};print ok;}' 2> /dev/null) == ok ]] || err_exit '${x.} where x is a simple variable causes shell to abort'
 
+$SHELL -c 'unset .sh' 2> /dev/null
+[[ $? == 1 ]] || err_exit 'unset .sh should return 1'
+
 exit $((Errors<125?Errors:125))

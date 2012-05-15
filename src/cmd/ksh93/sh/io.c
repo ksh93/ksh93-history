@@ -1073,8 +1073,6 @@ static char *io_usename(char *name, int *perm, int fno, int mode)
 	tname = stakfreeze(1);
 	switch(mode)
 	{
-		unlink(tname);
-		break;
 	    case 1:
 		rename(tname,name);
 		break;
@@ -2364,6 +2362,7 @@ static int subexcept(Sfio_t* sp,register int mode, void *data, Sfdisc_t* handle)
 	if(mode==SF_CLOSING)
 	{
 		sfdisc(sp,SF_POPDISC);
+		sfsetfd(sp,-1);
 		return(0);
 	}
 	else if(disp && (mode==SF_DPOP || mode==SF_FINAL))

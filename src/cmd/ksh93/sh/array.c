@@ -199,7 +199,7 @@ static union Value *array_getup(Namval_t *np, Namarr_t *arp, int update)
 #if SHOPT_FIXEDARRAY
 	struct fixed_array *fp;
 #endif /* SHOPT_FIXEDARRAY */
-	int	nofree;
+	int	nofree=0;
 	if(!arp)
 		return(&np->nvalue);
 	if(is_associative(ap))

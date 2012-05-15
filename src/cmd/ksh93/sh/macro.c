@@ -35,6 +35,7 @@
 #include	<fcin.h>
 #include	<pwd.h>
 #include	<ctype.h>
+#include	<regex.h>
 #include	"name.h"
 #include	"variables.h"
 #include	"shlex.h"
@@ -1461,7 +1462,11 @@ retry1:
 			if(isastchar(mode) && array_elem(ap)> !c)
 				dolg = -1;
 			else
+			{
+				ap->nelem &= ~ARRAY_SCAN;
 				dolg = 0;
+		
+			}
 		}
 		break;
 	    case S_EOF:
@@ -1779,7 +1784,8 @@ retry2:
 	if(v && (!nulflg || *v ) && c!='+')
 	{
 		register int d = (mode=='@'?' ':mp->ifs);
-		int match[2*(MATCH_MAX+1)], nmatch, nmatch_prev, vsize_last;
+		regoff_t match[2*(MATCH_MAX+1)];
+		int nmatch, nmatch_prev, vsize_last;
 		char *vlast;
 		while(1)
 		{

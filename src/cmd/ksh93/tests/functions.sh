@@ -27,6 +27,9 @@ alias err_exit='err_exit $LINENO'
 
 integer Errors=0
 Command=${0##*/}
+compiled=''
+read -N14 c < $0 2> /dev/null
+[[ $c == *$'\ck'* ]] && compiled=1
 
 ulimit -c 0
 
@@ -1171,5 +1174,10 @@ OPTIND=6 OPTARG=xxx
 foo -h -i foobar foo2
 [[ $OPTARG == xxx ]] || err_exit 'getopts in function changes global OPTARG'
 (( OPTIND == 6 )) || err_exit 'getopts in function changes global OPTIND'
+
+if	[[ ! $compiled ]]
+then	function foo { getopts --man; }
+	[[ $(typeset -f foo) == 'function foo { getopts --man; }' ]] || err_exit 'typeset -f not work for function with getopts'
+fi
 
 exit $((Errors<125?Errors:125))

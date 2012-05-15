@@ -32,6 +32,7 @@
 #include        <ccode.h>
 #include        <pwd.h>
 #include        <tmx.h>
+#include        <regex.h>
 #include        "variables.h"
 #include        "path.h"
 #include        "fault.h"
@@ -168,9 +169,9 @@ struct match
 	const char	*v;
 	char		*val;
 	char		*rval[2];
-	int		*match;
+	regoff_t	*match;
 	char		node[NV_MINSZ+sizeof(char*)];
-	int		first;
+	regoff_t	first;
 	int		vsize;
 	int		nmatch;
 	int		index;
@@ -762,7 +763,7 @@ static int hasgetdisc(register Namfun_t *fp)
  * store the most recent value for use in .sh.match
  * treat .sh.match as a two dimensional array
  */
-void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],int index)
+void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, regoff_t match[],int index)
 {
 	struct match	*mp = &ip->SH_MATCH_init;
 	Namval_t	*np = nv_namptr(mp->node,0); 
@@ -1913,6 +1914,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_mount(DOTSHNOD, "type", shp->typedict=dtopen(&_Nvdisc,Dtoset));
 	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
 	DOTSHNOD->nvalue.cp = Empty;
+	nv_onattr(DOTSHNOD,NV_RDONLY);
 	SH_LINENO->nvalue.ip = &shp->st.lineno;
 	VERSIONNOD->nvalue.nrp = newof(0,struct Namref,1,0);
         VERSIONNOD->nvalue.nrp->np = SH_VERSIONNOD;
