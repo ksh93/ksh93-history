@@ -613,7 +613,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 #endif /* SHOPT_FIXEDARRAY */
 	do
 	{
-		int xfree = is_associative(ap)?0:array_isbit(aq->bits,aq->cur,ARRAY_NOFREE);
+		int xfree = (ap->fixed||is_associative(ap))?0:array_isbit(aq->bits,aq->cur,ARRAY_NOFREE);
 		mp = array_find(np,ap,string?ARRAY_ASSIGN:ARRAY_DELETE);
 		scan = ap->nelem&ARRAY_SCAN;
 		if(mp && mp!=np)

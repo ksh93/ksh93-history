@@ -1,4 +1,8 @@
-12-05-15  --- Release ksh93u+ ---
+12-05-17  --- Release ksh93u+ ---
+12-05-17  A bug with fixed size arrays which could cause a core dump has been
+	  fixed.
+12-05-17  A bug in which the here-document <<< $(<file) was not processed
+	  correctly has been fixed.
 12-05-15  The default value for -L, -R, and -Z when the size was not set was
 	  incorrectly defaulting to 1 and has been fixed.
 12-05-15  A bug in which a subshell of the form (name=value exec ...) could

@@ -773,12 +773,15 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 			{
 				Shbltin_f addr;
 				int n = staktell();
+				char *fp;
 				void *dll;
 				if(!*(oldpp->blib += strlen(bp) + 1))
 				{
-					free(oldpp->bbuf);
+					fp = oldpp->bbuf;
 					oldpp->blib = oldpp->bbuf = 0;
 				}
+				else
+					fp = 0;
 				stakputs("b_");
 				stakputs(name);
 				stakputc(0);
@@ -792,6 +795,9 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) &&
 				   nv_isattr(np,NV_BLTINOPT))
 				{
+				found:
+					if(fp)
+						free(fp);
 					shp->bltin_dir = 0;
 					return(oldpp);
 				}
@@ -825,14 +831,12 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)))
 				{
 					np->nvenv = dll;
-					shp->bltin_dir = 0;
-					return(oldpp);
+					goto found;
 				}
 				if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),shp->bltin_tree,0))
-				{
-					shp->bltin_dir = 0;
-					return(oldpp);
-				}
+					goto found;
+				if(fp)
+					free(fp);
 			}
 #endif /* SHOPT_DYNAMIC */
 		}

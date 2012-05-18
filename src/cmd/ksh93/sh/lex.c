@@ -870,7 +870,9 @@ int sh_lex(Lex_t* lp)
 				mode = oldmode(lp);
 				poplevel(lp);
 				fcseek(-LEN);
+				n = lp->digits;
 				wordflags |= comsub(lp,c);
+				lp->digits = n;
 				continue;
 			case S_RBRA:
 				if((n=endchar(lp)) == '$')
