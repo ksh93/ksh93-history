@@ -43,14 +43,12 @@ static Namval_t Infnod =
 {
 	{ 0 },
 	"Inf",
-	NV_NOFREE|NV_LDOUBLE,NV_RDONLY
 };
 
 static Namval_t NaNnod =
 {
 	{ 0 },
 	"NaN",
-	NV_NOFREE|NV_LDOUBLE,NV_RDONLY
 };
 
 static Namval_t FunNode =
@@ -338,12 +336,14 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					Inf = strtold("Inf", NiL);
 					Infnod.nvalue.ldp = &Inf;
 					np = &Infnod;
+					nv_onattr(np,NV_NOFREE|NV_LDOUBLE|NV_RDONLY);
 				}
 				else if ((cp[0] == 'n' || cp[0] == 'N') && (cp[1] == 'a' || cp[1] == 'A') && (cp[2] == 'n' || cp[2] == 'N') && cp[3] == 0)
 				{
 					NaN = strtold("NaN", NiL);
 					NaNnod.nvalue.ldp = &NaN;
 					np = &NaNnod;
+					nv_onattr(np,NV_NOFREE|NV_LDOUBLE|NV_RDONLY);
 				}
 				else if(!(np = nv_open(*ptr,root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|dot)))
 				{

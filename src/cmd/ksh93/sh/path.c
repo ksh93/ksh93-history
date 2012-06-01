@@ -766,30 +766,58 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 		isfun = (oldpp->flags&PATH_FPATH);
 		if(!isfun && !sh_isoption(SH_RESTRICTED))
 		{
+#if SHOPT_DYNAMIC
+			Shbltin_f addr;
+			int n;
+#endif
 			if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),shp->bltin_tree,0))
 				return(oldpp);
 #if SHOPT_DYNAMIC
+			n = staktell();
+			stakputs("b_");
+			stakputs(name);
+			stakputc(0);
+			if((addr = sh_getlib(shp, stakptr(n), oldpp)) &&
+			   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) &&
+			   nv_isattr(np,NV_BLTINOPT))
+			{
+				shp->bltin_dir = 0;
+				return(oldpp);
+			}
+			stakseek(n);
 			while(bp = oldpp->blib)
 			{
-				Shbltin_f addr;
-				int n = staktell();
 				char *fp;
 				void *dll;
-				if(!*(oldpp->blib += strlen(bp) + 1))
+				int m;
+				if(fp = strchr(bp, ':'))
+				{
+					*fp++ = 0;
+					oldpp->blib = fp;
+					fp = 0;
+				}
+				else
 				{
 					fp = oldpp->bbuf;
 					oldpp->blib = oldpp->bbuf = 0;
 				}
-				else
-					fp = 0;
+				n = staktell();
 				stakputs("b_");
 				stakputs(name);
 				stakputc(0);
+				m = staktell();
 				shp->bltin_dir = oldpp->name;
-				if(cp = strrchr(bp,'/'))
+				if(*bp!='/')
+				{
+					stakputs(oldpp->name);
+					stakputc('/');
+				}
+				stakputs(bp);
+				stakputc(0);
+				if(cp = strrchr(stakptr(m),'/'))
 					cp++;
 				else
-					cp = bp;
+					cp = stakptr(m);
 				if(!strcmp(cp,LIBCMD) &&
 				   (addr=(Shbltin_f)dlllook((void*)0,stakptr(n))) &&
 				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) &&
@@ -802,13 +830,13 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 					return(oldpp);
 				}
 #ifdef SH_PLUGIN_VERSION
-				if (dll = dllplugin(SH_ID, bp, NiL, SH_PLUGIN_VERSION, NiL, RTLD_LAZY, NiL, 0))
-					sh_addlib(shp,dll,bp,oldpp);
+				if (dll = dllplugin(SH_ID, stakptr(m), NiL, SH_PLUGIN_VERSION, NiL, RTLD_LAZY, NiL, 0))
+					sh_addlib(shp,dll,stakptr(m),oldpp);
 #else
 #if (_AST_VERSION>=20040404)
-				if (dll = dllplug(SH_ID, bp, NiL, RTLD_LAZY, NiL, 0))
+				if (dll = dllplug(SH_ID, stakptr(m), NiL, RTLD_LAZY, NiL, 0))
 #else
-				if (dll = dllfind(bp, NiL, RTLD_LAZY, NiL, 0))
+				if (dll = dllfind(stakptr(m), NiL, RTLD_LAZY, NiL, 0))
 #endif
 				{
 					/*
@@ -822,7 +850,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 						dll = 0;
 					}
 					else
-						sh_addlib(shp,dll,bp,oldpp);
+						sh_addlib(shp,dll,stakptr(m),oldpp);
 				}
 #endif
 				if(dll &&
@@ -837,6 +865,7 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 					goto found;
 				if(fp)
 					free(fp);
+				stakseek(n);
 			}
 #endif /* SHOPT_DYNAMIC */
 		}
@@ -1480,7 +1509,6 @@ static int path_chkpaths(Shell_t *shp,Pathcomp_t *first, Pathcomp_t* old,Pathcom
 {
 	struct stat statb;
 	int k,m,n,fd;
-	size_t size=0;
 	char *sp,*cp,*ep;
 	stakseek(offset+pp->len);
 	if(pp->len==1 && *stakptr(offset)=='/')
@@ -1524,26 +1552,9 @@ static int path_chkpaths(Shell_t *shp,Pathcomp_t *first, Pathcomp_t* old,Pathcom
 			}
 			else if(m==12 && memcmp((void*)sp,(void*)"BUILTIN_LIB=",12)==0)
 			{
-				k = strlen(ep)+1;
-				if (*ep != '/')
-					k +=  pp->len+1;
-				if(size==0)
-					pp->bbuf = sp = malloc(k+1);
-				else
-				{
-					pp->bbuf = realloc(pp->bbuf,size+k+1); 
-					sp = pp->bbuf + size;
-				}
-				pp->blib = pp->bbuf;
-				sp[k] = 0;
-				size += k;
-				if (*ep != '/')
-				{
-					strcpy(sp,pp->name);
-					sp += pp->len;
-					*sp++ = '/';
-				}
-				strcpy(sp,ep);
+				if(pp->bbuf)
+					free(pp->bbuf);
+				pp->blib = pp->bbuf = strdup(ep);
 			}
 			else if(m)
 			{

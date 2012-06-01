@@ -65,6 +65,25 @@ struct printf
 	Shell_t		*sh;
 };
 
+struct printmap
+{
+	size_t		size;
+	char		*name;
+	char		map[3];
+	const char	*description;
+};
+
+const struct printmap  Pmap[] =
+{
+	3,	"csv",	"q+",	"Equivalent to %#q",
+	4,	"html",	"H",	"Equivalent to %H",
+	3,	"ere",	"R",	"Equivalent to %R",
+	7,	"pattern","P",	"Equivalent to %#P",
+	3,	"url",	"H+",	"Equivalent to %#H",
+	0,	0,	0,
+};
+
+
 static int		extend(Sfio_t*,void*, Sffmt_t*);
 static const char   	preformat[] = "";
 static char		*genformat(char*);
@@ -133,6 +152,17 @@ int    b_printf(int argc, char *argv[],Shbltin_t *context)
 	return(b_print(-1,argv,(Shbltin_t*)&prdata));
 }
 
+static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
+{
+	const struct printmap *pm;
+	char c='%';
+	for(pm=Pmap;pm->size>0;pm++)
+	{
+		sfprintf(sp, "[+%c(%s)q?%s.]",c,pm->name,pm->description);
+	}
+	return(1);
+}
+
 /*
  * argc==0 when called from echo
  * argc==-1 when called from printf
@@ -146,6 +176,10 @@ int    b_print(int argc, char *argv[], Shbltin_t *context)
 	const char *options, *msg = e_file+4;
 	char *format = 0;
 	int sflag = 0, nflag=0, rflag=0, vflag=0;
+	Optdisc_t disc;
+	disc.version = OPT_VERSION;
+	disc.infof = infof;
+	opt_info.disc = &disc;
 	if(argc>0)
 	{
 		options = sh_optprint;
@@ -629,6 +663,18 @@ static int varname(const char *str, int n)
 	return(n==0);
 }
 
+static const char *mapformat(Sffmt_t *fe)
+{
+	const struct printmap *pm = Pmap;
+	while(pm->size>0)
+	{
+		if(pm->size==fe->n_str && memcmp(pm->name,fe->t_str,fe->n_str)==0)
+			return(pm->map);
+		pm++;
+	}
+	return(0);
+}
+
 static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 {
 	char*		lastchar = "";
@@ -645,7 +691,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 	register char*	argp = *pp->nextarg;
 	char		*w,*s;
 
-	if(fe->n_str>0 && varname(fe->t_str,fe->n_str) && (!argp || varname(argp,-1)))
+	if(fe->n_str>0 && (format=='T'||format=='Q') && varname(fe->t_str,fe->n_str) && (!argp || varname(argp,-1)))
 	{
 		if(argp)
 			pp->lastarg = argp;
@@ -742,6 +788,16 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			break;
 		}
 		case 'q':
+			if(fe->n_str)
+			{
+				const char *fp = mapformat(fe);
+				if(fp)
+				{
+					format = *fp;
+					if(fp[1])
+						fe->flags |=SFFMT_ALTER;
+				}
+			}
 		case 'b':
 		case 's':
 		case 'B':

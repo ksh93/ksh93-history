@@ -100,11 +100,19 @@ struct funenv
  * to use a pipe and to wait for the pipe to close before restoring to a
  * temp file.
  */
-static int	subpipe[3] = {-1};
-static int	subdup,tsetio,usepipe;
+static int      subpipe[3],subdup,tsetio,usepipe;
+static void iounpipe(Shell_t*);
+
 static void iousepipe(Shell_t *shp)
 {
 	int i;
+	if(usepipe)
+	{
+		usepipe++;
+		iounpipe(shp);
+	}
+	if(sh_pipe(subpipe) < 0)
+		return;
 	usepipe++;
 	fcntl(subpipe[0],F_SETFD,FD_CLOEXEC);
 	subpipe[2] = fcntl(1,F_DUPFD,10);
@@ -129,10 +137,10 @@ static void iounpipe(Shell_t *shp)
 {
 	int n;
 	char buff[SF_BUFSIZE];
-	usepipe = 0;
 	close(1);
 	fcntl(subpipe[2], F_DUPFD, 1);
 	shp->fdstatus[1] = shp->fdstatus[subpipe[2]];
+	--usepipe;
 	if(subdup) for(n=0; n < 10; n++)
 	{
 		if(subdup&(1<<n))
@@ -144,7 +152,7 @@ static void iounpipe(Shell_t *shp)
 	}
 	shp->subdup = 0;
 	sh_close(subpipe[2]);
-	while((n = read(subpipe[0],buff,sizeof(buff)))!=0)
+	if(usepipe==0)while((n = read(subpipe[0],buff,sizeof(buff)))!=0)
 	{
 		if(n>0)
 			sfwrite(sfstdout,buff,n);
@@ -154,6 +162,11 @@ static void iounpipe(Shell_t *shp)
 	sh_close(subpipe[0]);
 	subpipe[0] = -1;
 	tsetio = 0;
+	if(usepipe)
+	{
+		usepipe = 0;
+		iousepipe(shp);
+	}
 }
 
 /*
@@ -1573,12 +1586,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(shp->subshell)
 			{
 				sh_subtmpfile(shp);
-				if(!usepipe)
-				{
-					subpipe[0] = -1;
-					if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK) && sh_pipe(subpipe)>=0)
-						iousepipe(shp);
-				}
+				if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK))
+					iousepipe(shp);
 				if((type&(FAMP|TFORK))==(FAMP|TFORK))
 					sh_subfork();
 			}
@@ -1656,7 +1665,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					parent = sh_fork(shp,type,&jobid);
 				if(parent<0)
 				{
-					if(shp->comsub==1 && subpipe[0]>=0)
+					if(shp->comsub==1 && usepipe)
 						iounpipe(shp);
 					break;
 				}
@@ -1673,7 +1682,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 #   endif /* _lib_fork */
 				if(parent<0)
 				{
-					if(shp->comsub==1 && subpipe[0]>=0)
+					if(shp->comsub==1 && usepipe)
 						iounpipe(shp);
 					break;
 				}
@@ -1932,7 +1941,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(type || !sh_isoption(SH_PIPEFAIL))
 						shp->exitval = type;
 				}
-				if(shp->comsub==1 && subpipe[0]>=0)
+				if(shp->comsub==1 && usepipe)
 					iounpipe(shp);
 				shp->pipepid = 0;
 				shp->st.ioset = 0;
@@ -2039,12 +2048,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(shp->subshell)
 			{
 				sh_subtmpfile(shp);
-				if(!usepipe)
-				{
-					subpipe[0] = -1;
-					if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK) && sh_pipe(subpipe)>=0)
-						iousepipe(shp);
-				}
+				if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK))
+					iousepipe(shp);
 			}
 			shp->inpipe = pvo;
 			shp->outpipe = pvn;
@@ -3136,7 +3141,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 			job.curpgid = curpgid;
 		if(jobid)
 			*jobid = myjob;
-		if(shp->comsub==1 && subpipe[0]>=0)
+		if(shp->comsub==1 && usepipe)
 		{
 			if(!tsetio || !subdup)
 			{
@@ -3313,9 +3318,6 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	Namval_t		*nspace = shp->namespace;
 	Dt_t			*last_root = shp->last_root;
 	Shopt_t			options;
-#if SHOPT_NAMESPACE
-	Namval_t		*np;
-#endif /* SHOPT_NAMESPACE */
 	options = shp->options;
 	if(shp->fn_depth==0)
 		shp->glob_options =  shp->options;

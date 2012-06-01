@@ -953,6 +953,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int type)
 	{
 		ap->argval[n--]=0;
 		array = ARG_APPEND;
+		type |= NV_APPEND;
 	}
 	/* shift right */
 	while(n > 0)
@@ -1634,7 +1635,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			errormsg(SH_DICT,ERROR_warn(0),e_lexobsolete5,lexp->sh->inlineno-(lexp->token=='\n'),argp->argval);
 	}
 	/* expand argument list if possible */
-	if(argno>0 && !(flag&SH_ARRAY))
+	if(argno>0 && !(flag&(SH_ARRAY|NV_APPEND)))
 		t->comarg = qscan(t,argno);
 	else if(t->comarg)
 		t->comtyp |= COMSCAN;

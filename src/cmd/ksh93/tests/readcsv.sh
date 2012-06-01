@@ -44,21 +44,26 @@ cat > $tmp1 <<- \EOF
 EOF
 integer count=0 nfields
 IFS=${2-,}
-typeset -a arr
-while read -A -S arr
-do	((nfields=${#arr[@]}))
-	if	((++count==1))
-	then	((nfields==10)) || err_exit 'first record should contain 10 fields'
-		[[ ${arr[7]} == $'New Inter""State\nTerm' ]] || err_exit $'7th field of record 1 should contain New Inter""State\nTerm'
-	fi
-	for	((i=0; i < nfields;i++))
-	do	delim=$IFS
-		if	((i == nfields-1))
-		then	delim=$'\r\n'
+for j in 1 2
+do	typeset -a arr
+	while read -A -S arr
+	do	((nfields=${#arr[@]}))
+		if	((++count==1))
+		then	((nfields==10)) || err_exit 'first record should contain 10 fields'
+			[[ ${arr[7]} == $'New Inter""State\nTerm' ]] || err_exit $'7th field of record 1 should contain New Inter""State\nTerm'
 		fi
-		printf "%#q%s"  "${arr[i]}" "$delim"
-	done
-done < $tmp1 > $tmp2
+		for	((i=0; i < nfields;i++))
+		do	delim=$IFS
+			if	((i == nfields-1))
+			then	delim=$'\r\n'
+			fi
+			if ((i==1))
+			then	printf "%#q%s"  "${arr[i]}" "$delim"
+			else	printf "%(csv)q%s"  "${arr[i]}" "$delim"
+			fi
+		done
+	done < $tmp1 > $tmp2
+done
 diff "$tmp1" "$tmp2" >/dev/null 2>&1 || err_exit "files $tmp1 and $tmp2 differ"
 
 exit $((Errors<125?Errors:125))

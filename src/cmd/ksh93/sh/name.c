@@ -373,6 +373,20 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 					}
 				}
 				np = nv_open(cp,shp->var_tree,flag|NV_ASSIGN);
+				if((arg->argflag&ARG_APPEND) && (tp->tre.tretyp&COMMSK)==TCOM && tp->com.comset && !nv_isvtree(np) && (ap=nv_arrayptr(np)) && !ap->fun && !nv_opensub(np)) 
+				{
+					if(tp->com.comarg)
+					{
+						struct argnod *ap = tp->com.comset;
+						while(ap->argnxt.ap)
+							ap = ap->argnxt.ap;
+						ap->argnxt.ap = tp->com.comarg;
+						
+					}
+					tp->com.comarg = tp->com.comset;
+					tp->com.comset = 0;
+					tp->com.comtyp = COMSCAN;
+				}
 				if(nv_isattr(np,NV_RDONLY) && np->nvfun && !(flags&NV_RDONLY))
 					errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 				if(nv_isattr(np,NV_NOFREE) && nv_isnull(np))
@@ -3214,7 +3228,7 @@ int nv_rename(register Namval_t *np, int flags)
 	Shell_t			*shp = sh_getinterp();
 	register Namval_t	*mp=0,*nr=0;
 	register char		*cp;
-	int			r=0,arraynp=0,arraynr,index= -1;
+	int			arraynp=0,arraynr,index= -1;
 	Namval_t		*last_table = shp->last_table;
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;

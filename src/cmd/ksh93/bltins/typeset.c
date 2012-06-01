@@ -938,12 +938,12 @@ int sh_addlib(Shell_t* shp, void* dll, char* name, Pathcomp_t* pp)
 	return !r;
 }
 
-Shbltin_f sh_getlib(Shell_t* shp, char* sym, char* lib, Pathcomp_t* pp)
+Shbltin_f sh_getlib(Shell_t* shp, char* sym, Pathcomp_t* pp)
 {
 	register int	n;
 
 	for (n = 0; n < nlib; n++)
-		if (liblist[n].ino == pp->ino && liblist[n].dev == pp->dev && !strcmp(lib, liblist[n].lib))
+		if (liblist[n].ino == pp->ino && liblist[n].dev == pp->dev)
 			return (Shbltin_f)dlllook(liblist[n].dll, sym);
 	return 0;
 }
@@ -955,7 +955,7 @@ int sh_addlib(Shell_t* shp, void* library, char* name, Pathcomp_t* pp)
 	return 0;
 }
 
-Shbltin_f sh_getlib(Shell_t* shp, char* name, char* lib, Pathcomp_t* pp)
+Shbltin_f sh_getlib(Shell_t* shp, char* name, Pathcomp_t* pp)
 {
 	return 0;
 }

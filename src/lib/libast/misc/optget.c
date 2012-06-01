@@ -2406,7 +2406,6 @@ opthelp(const char* oopts, const char* what)
 	int			bflags = 0;
 	int			dflags = 0;
 	int			hflags = 0;
-	int			sflags = 0;
 	int			matched = 0;
 	int			paragraph = 0;
 	Push_t*			psp = 0;

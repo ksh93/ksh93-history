@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-05-14
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-05-22
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
+make ${PACKAGEROOT}/lib/package/ast.lic
+done ${PACKAGEROOT}/lib/package/ast.lic
 make install
 make dll
 make libdll.a archive
@@ -98,10 +98,14 @@ done ${PACKAGE_ast_INCLUDE}/endian.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 make ${PACKAGE_ast_INCLUDE}/regex.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_api.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
 make ${PACKAGE_ast_INCLUDE}/wctype.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_wctype.h implicit
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
+make ${PACKAGE_ast_INCLUDE}/wchar.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
+done ${PACKAGE_ast_INCLUDE}/wchar.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_wctype.h dontcare
 done ${PACKAGE_ast_INCLUDE}/wctype.h dontcare
 make ${PACKAGE_ast_INCLUDE}/stdio.h implicit
@@ -116,8 +120,6 @@ prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_wchar.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
 done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
 done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
 make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
@@ -162,7 +164,7 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/error.h
 make dlldefs.h implicit
 make FEATURE/dll
-meta FEATURE/dll features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libdll/features/dll dll
+meta FEATURE/dll features/%>FEATURE/% features/dll dll
 make features/dll
 done features/dll
 bind -ldl dontcare
@@ -173,7 +175,7 @@ exec - cmp 2>/dev/null -s FEATURE/dll dlldefs.h || { rm -f dlldefs.h; silent tes
 done dlldefs.h generated
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlfcn.c
-meta dlfcn.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dlfcn.c dlfcn
+meta dlfcn.o %.c>%.o dlfcn.c dlfcn
 prev dlfcn.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dlfcn.c
 done dlfcn.o generated
@@ -185,7 +187,7 @@ prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlllib.h
 done dllopen.c
-meta dllopen.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllopen.c dllopen
+meta dllopen.o %.c>%.o dllopen.c dllopen
 prev dllopen.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllopen.c
 done dllopen.o generated
@@ -195,7 +197,7 @@ prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllfind.c
-meta dllfind.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllfind.c dllfind
+meta dllfind.o %.c>%.o dllfind.c dllfind
 prev dllfind.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllfind.c
 done dllfind.o generated
@@ -203,7 +205,7 @@ make dllplug.o
 make dllplug.c
 prev dlllib.h implicit
 done dllplug.c
-meta dllplug.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllplug.c dllplug
+meta dllplug.o %.c>%.o dllplug.c dllplug
 prev dllplug.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllplug.c
 done dllplug.o generated
@@ -211,7 +213,7 @@ make dll_lib.o
 make dll_lib.c
 prev dlllib.h implicit
 done dll_lib.c
-meta dll_lib.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dll_lib.c dll_lib
+meta dll_lib.o %.c>%.o dll_lib.c dll_lib
 prev dll_lib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dll_lib.c
 done dll_lib.o generated
@@ -222,7 +224,7 @@ done rld_interface.h dontcare virtual
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllnext.c
-meta dllnext.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllnext.c dllnext
+meta dllnext.o %.c>%.o dllnext.c dllnext
 prev dllnext.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllnext.c
 done dllnext.o generated
@@ -231,7 +233,7 @@ make dlllook.c
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlllook.c
-meta dlllook.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dlllook.c dlllook
+meta dlllook.o %.c>%.o dlllook.c dlllook
 prev dlllook.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dlllook.c
 done dlllook.o generated
@@ -254,7 +256,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/cdt.h
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllscan.c
-meta dllscan.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllscan.c dllscan
+meta dllscan.o %.c>%.o dllscan.c dllscan
 prev dllscan.c
 exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
 done dllscan.o generated
@@ -262,7 +264,7 @@ make dllcheck.o
 make dllcheck.c
 prev dlllib.h implicit
 done dllcheck.c
-meta dllcheck.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllcheck.c dllcheck
+meta dllcheck.o %.c>%.o dllcheck.c dllcheck
 prev dllcheck.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllcheck.c
 done dllcheck.o generated
@@ -270,7 +272,7 @@ make dllerror.o
 make dllerror.c
 prev dlllib.h implicit
 done dllerror.c
-meta dllerror.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllerror.c dllerror
+meta dllerror.o %.c>%.o dllerror.c dllerror
 prev dllerror.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllerror.c
 done dllerror.o generated

@@ -423,7 +423,7 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 	const _ast_iconv_list_t*		bp;
 	register int				c;
 	register char*				e;
-	int					sub[2];
+	ssize_t					sub[2];
 	char					buf[16];
 #if DEBUG_TRACE
 	char*					o;

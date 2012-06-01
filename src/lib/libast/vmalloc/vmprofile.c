@@ -665,7 +665,7 @@ int		local;
 	reg size_t	s;
 	reg Void_t	*data;
 	reg char	*file;
-	reg int		line, inuse;
+	reg int		line;
 	reg Void_t	*func;
 	reg Vmdata_t	*vd = vm->data;
 

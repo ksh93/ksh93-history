@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -428,7 +428,7 @@ __INLINE__ ssize_t sfmaxr(ssize_t n, int s)	{ return __sf_maxr(n,s); }
 		 (((f)->_next < (f)->_data || (f)->_next > (f)->_data+(f)->_size) ? \
 			((f)->_next -= (p), (char*)0) : (char*)(f)->_next ) ) \
 	: (m) == SEEK_END ? \
-		( ((p) > 0 || (f)->_size+(p) < 0) ? (char*)0 : \
+		( ((p) > 0 || (f)->_size < -(p)) ? (char*)0 : \
 			(char*)((f)->_next = (f)->_data+(f)->_size+(p)) ) \
 	: (char*)0 \
 	)

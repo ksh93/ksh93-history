@@ -31,7 +31,7 @@
 #include	<stak.h>
 #include	"name.h"
 
-#define NUMSIZE	(4+(ARRAY_MAX>999)+(ARRAY_MAX>9999)+(ARRAY_MAX>99999))
+#define NUMSIZE	11
 #define is_associative(ap)	array_assoc((Namarr_t*)(ap))
 #define array_setbit(cp, n, b)	(cp[n] |= (b))
 #define array_clrbit(cp, n, b)	(cp[n] &= ~(b))
@@ -893,7 +893,7 @@ int nv_atypeindex(Namval_t *np, const char *tname)
 {
 	Namval_t	*tp;
 	int		offset = staktell();
-	int		n = strlen(tname)-1;
+	size_t		n = strlen(tname)-1;
 	sfprintf(stkstd,"%s.%.*s%c",NV_CLASS,n,tname,0);
 	tp = nv_open(stakptr(offset), sh.var_tree, NV_NOADD|NV_VARNAME);
 	stakseek(offset);
@@ -1598,7 +1598,7 @@ Namval_t *nv_opensub(Namval_t* np)
 
 char	*nv_getsub(Namval_t* np)
 {
-	static char numbuff[NUMSIZE];
+	static char numbuff[NUMSIZE+1];
 	register struct index_array *ap;
 	register unsigned dot, n;
 	register char *cp = &numbuff[NUMSIZE];

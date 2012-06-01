@@ -168,6 +168,9 @@ fi
 if	[[ $(print -f "%P" "[^x].*b\$") != '*[!x]*b' ]]
 then	err_exit 'print -f "%P" not working'
 fi
+if	[[ $(print -f "%(pattern)q" "[^x].*b\$") != '*[!x]*b' ]]
+then	err_exit 'print -f "%(pattern)q" not working'
+fi
 if	[[ $(abc: for i in foo bar;do print $i;break abc;done) != foo ]]
 then	err_exit 'break labels not working'
 fi
@@ -274,11 +277,17 @@ fi
 if	[[ $(printf '%H\n' $'<>"& \'\tabc') != '&lt;&gt;&quot;&amp;&nbsp;&apos;&#9;abc' ]]
 then	err_exit 'printf %H not working'
 fi
-if	[[ $( printf 'foo://ab_c%#H\n' $'<>"& \'\tabc') != 'foo://ab_c%3C%3E%22%26%20%27%09abc' ]]
-then	err_exit 'printf %#H not working'
+if	[[ $(printf '%(html)q\n' $'<>"& \'\tabc') != '&lt;&gt;&quot;&amp;&nbsp;&apos;&#9;abc' ]]
+then	err_exit 'printf %(html)q not working'
+fi
+if	[[ $( printf 'foo://ab_c%(url)q\n' $'<>"& \'\tabc') != 'foo://ab_c%3C%3E%22%26%20%27%09abc' ]]
+then	err_exit 'printf %(url)q not working'
 fi
 if	[[ $(printf '%R %R %R %R\n' 'a.b' '*.c' '^'  '!(*.*)') != '^a\.b$ \.c$ ^\^$ ^(.*\..*)!$' ]]
-then	err_exit 'printf %R not working'
+then	err_exit 'printf %T not working'
+fi
+if	[[ $(printf '%(ere)q %(ere)q %(ere)q %(ere)q\n' 'a.b' '*.c' '^'  '!(*.*)') != '^a\.b$ \.c$ ^\^$ ^(.*\..*)!$' ]]
+then	err_exit 'printf %(ere)q not working'
 fi
 if	[[ $(printf '%..:c\n' abc) != a:b:c ]]
 then	err_exit "printf '%..:c' not working"
@@ -581,5 +590,9 @@ then	[[ $(kill -l HUP) == "$(kill -L HUP)" ]] || err_exit 'kill -l and kill -L a
 	[[ $(kill -l 9) == "$(kill -L 9)" ]] || err_exit 'kill -l and kill -L are not the same when given a signal number'
 	[[ $(kill -L) == *'9) KILL'* ]] || err_exit 'kill -L output does not contain 9) KILL'
 fi
+
+unset ENV
+v=$($SHELL 2> /dev/null +o rc -ic $'getopts a:bc: opt --man\nprint $?')
+[[ $v == 2* ]] || err_exit 'getopts --man does not exit 2 for interactive shells'
 
 exit $((Errors<125?Errors:125))

@@ -62,6 +62,14 @@
 #   define O_SERVICE	O_NOCTTY
 #endif
 
+#ifndef ERROR_PIPE
+#ifdef ECONNRESET
+#define ERROR_PIPE(e)	((e)==EPIPE||(e)==ECONNRESET)
+#else
+#define ERROR_PIPE(e)	((e)==EPIPE)
+#endif
+#endif
+
 #define RW_ALL	(S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH)
 
 static void	*timeout;
@@ -1038,8 +1046,13 @@ void sh_pclose(register int pv[])
 static char *io_usename(char *name, int *perm, int fno, int mode)
 {
 	struct stat	statb;
-	char		*tname, *sp, *ep;
+	char		*tname, *sp, *ep, path[PATH_MAX+1];
 	int		fd;
+	while((fd=readlink(name, path, PATH_MAX)) >0)
+	{
+		name=path;
+		name[fd] = 0;
+	}
 	if(mode==0)
 	{
 		if((fd = sh_open(name,O_RDONLY,0)) > 0)
@@ -1511,6 +1524,7 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 	register Sfio_t	*infile = 0, *outfile, *tmp;
 	register int		fd;
 	Sfoff_t			off;
+write(-1,"gothere1\n",9);
 	if(!(iop->iofile&IOSTRG) && (!shp->heredocs || iop->iosize==0))
 		return(sh_open(e_devnull,O_RDONLY));
 	/* create an unnamed temporary file */
@@ -1799,7 +1813,7 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 	NOT_USED(handle);
 	if(type==SF_DPOP || type==SF_FINAL)
 		free((void*)handle);
-	if(type==SF_WRITE && errno==EPIPE)
+	if(type==SF_WRITE && ERROR_PIPE(errno))
 	{
 		sfpurge(iop);
 		return(-1);
@@ -2140,7 +2154,7 @@ static int pipeexcept(Sfio_t* iop, int mode, void *data, Sfdisc_t* handle)
 {
 	if(mode==SF_DPOP || mode==SF_FINAL)
 		free((void*)handle);
-	else if(mode==SF_WRITE && errno==EPIPE)
+	else if(mode==SF_WRITE && ERROR_PIPE(errno))
 	{
 		sfpurge(iop);
 		return(-1);

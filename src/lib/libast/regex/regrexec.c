@@ -143,3 +143,36 @@ regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 	env->rex = e;
 	return n;
 }
+
+/*
+ * 20120528: regoff_t changed from int to ssize_t
+ */
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+#undef	regrexec
+
+extern int
+regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, oldregmatch_t* oldmatch, regflags_t flags, int sep, void* handle, regrecord_t record)
+{
+	if (oldmatch)
+	{
+		regmatch_t*	match;
+		ssize_t		i;
+		int		r;
+
+		if (!(match = oldof(0, regmatch_t, nmatch, 0)))
+			return -1;
+		if (!(r = regrexec_20120528(p, s, len, nmatch, match, flags, sep, handle, record)))
+			for (i = 0; i < nmatch; i++)
+			{
+				oldmatch[i].rm_so = match[i].rm_so;
+				oldmatch[i].rm_eo = match[i].rm_eo;
+			}
+		free(match);
+		return r;
+	}
+	return regrexec_20120528(p, s, len, 0, NiL, flags, sep, handle, record);
+}

@@ -1,3 +1,9 @@
+12-05-31 error.h: add ERROR_PIPE(errno) to handle EPIPE and ECONNRESET
+12-05-31 Makefile: don't install $(INCLUDEDIR)/prototyped.h: src/cmd/INIT does it
+12-05-31 regcomp.c: add (?V...) ~(V...) REG_REGEXP switch
+12-05-28 regex: regoff_t in => ssize_t via api 20120528
+12-05-21 features/asometh: split intrinsic and method tests so code only instantiated in aso.c
+12-05-21 comp/strdup.c: use oldof() since mem overwritten by string copy
 12-05-18 misc/stk.c: fix access of moved realloc() data
 12-05-15 misc/optget.c: #? option with no value should have opt_info.num==0
 12-05-11 misc/stk.c: fix memmove() read of 1 uninitialized byte

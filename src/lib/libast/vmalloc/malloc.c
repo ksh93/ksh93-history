@@ -1195,7 +1195,6 @@ char*	file;
 	char	buf[1024];
 	char	*next, *endb;
 	int	fd;
-	int	pd;
 
 	next = buf;
 	endb = buf + sizeof(buf);

@@ -1,4 +1,23 @@
-12-05-17  --- Release ksh93u+ ---
+12-05-31  --- Release ksh93u+ ---
+12-05-31  Use getrlimit64/setrlimit64 on systems that support it.
+12-05-31  Fix 64 bit big-endian arithmentic bug that mishandled nan and inf.
+12-05-31  Handle ECONNRESET like EPIPE.
+12-05-31  Change .paths parse to use only the last BUILTIN_LIB from the top
+	  and treat BUILTIN_LIB value as a ':' separated list of lib names.
+12-05-29  Fix BUILTIN_LIB binding bug that ignored subsequent lookups.
+12-05-29  shtests: --nocompile omits the compile test and --compile does only
+	  the compile test.
+12-05-25  A command subsitution containing a here-document that itself contains
+	  a here-document no longer hangs.
+12-05-24  When the redirection operatory >; is directed to a symlink, it now
+	  overwrites the file named by the link rather than the link.
+12-05-21 +Added printf formats %(type)q where type can be html, url, pattern,
+	  ere, or csv. 
+12-05-18  A bug with appending elements to an indexed array has been fixed.
+12-05-18  The exit status from getopts --man interactively was 0 instead of 2
+	  and has been fixed.
+12-05-18  Another bug with SHOPT_EDPREDICT which could cause a core dump has
+	  been fixed.  
 12-05-17  A bug with fixed size arrays which could cause a core dump has been
 	  fixed.
 12-05-17  A bug in which the here-document <<< $(<file) was not processed

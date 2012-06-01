@@ -1,3 +1,6 @@
+12-05-31 Makefile: ID=ast; $(INSTALLROOT)/prototyped.h => $(INSTALLROOT)/$(ID)/prototyped.h
+12-05-28 iffe.sh: api foo YYYYMMDD => FOOAPI(rel) test macro
+12-05-24 package.sh: change admin.db comment => owner attributes
 12-04-25 ratz.c: add sear -k option to keep installation tmp dir on exit
 12-04-17 package.sh: skip sh version logic for ``use''
 12-04-17 cc.ibm.risc*: _LARGEFILE64_SOURCE => _LARGE_FILE_API moved to libast/features

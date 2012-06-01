@@ -104,7 +104,7 @@ extern int		path_complete(Shell_t*,const char*, const char*,struct argnod**);
 
 /* builtin/plugin routines */
 extern int		sh_addlib(Shell_t*,void*,char*,Pathcomp_t*);
-extern Shbltin_f	sh_getlib(Shell_t*,char*,char*,Pathcomp_t*);
+extern Shbltin_f	sh_getlib(Shell_t*,char*,Pathcomp_t*);
 
 /* constant strings needed for whence */
 extern const char e_timeformat[];

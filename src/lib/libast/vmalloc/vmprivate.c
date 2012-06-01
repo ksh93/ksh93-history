@@ -256,8 +256,6 @@ int		exact;
 
 int _vmlock(Vmalloc_t* vm, int locking)
 {
-	int	k;
-
 	if(!vm) /* some sort of global locking */
 	{	if(!locking) /* turn off lock */
 			asolock(&_Vmlock, 1, ASO_UNLOCK);

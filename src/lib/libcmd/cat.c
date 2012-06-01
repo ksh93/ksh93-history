@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Research) 2012-01-01 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Research) 2012-05-31 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -539,7 +539,7 @@ b_cat(int argc, char** argv, Shbltin_t* context)
 			n = -1;
 		if (fp != sfstdin)
 			sfclose(fp);
-		if (n < 0 && errno != EPIPE && errno != EINTR)
+		if (n < 0 && !ERROR_PIPE(errno) && errno != EINTR)
 		{
 			if (cp)
 				error(ERROR_system(0), "%s: read error", cp);

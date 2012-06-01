@@ -28,7 +28,7 @@ alias err_exit='err_exit $LINENO'
 integer Errors=0
 Command=${0##*/}
 compiled=''
-read -N14 c < $0 2> /dev/null
+read -n4 c < $0 2> /dev/null
 [[ $c == *$'\ck'* ]] && compiled=1
 
 ulimit -c 0

@@ -454,6 +454,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 			sh_offstate(SH_MONITOR);
 			goto done;
 		}
+		exitset();
 		/* skip over remaining input */
 		if(top = fcfile())
 		{

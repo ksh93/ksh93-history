@@ -43,7 +43,6 @@ Vmstat_t*	st;
 	size_t		s;
 	Seg_t		*seg;
 	Block_t		*b, *endb;
-	int		local;
 	Vmdata_t	*vd;
 	Void_t		*d;
 

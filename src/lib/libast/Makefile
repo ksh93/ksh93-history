@@ -299,15 +299,6 @@ $(HEADEROPT:D=$(INCLUDEDIR):B:S) : $$(<:B:S) ast_lib.h
 		;;
 	esac
 
-/* a few headers are problematic */
-
-$(INCLUDEDIR)/prototyped.h :INSTALL: $(INCLUDEDIR)
-	echo "#include <../prototyped.h>" > 1.$(tmp).x
-	if	$(CMP) -s $(<) 1.$(tmp).x
-	then	$(RM) -f 1.$(tmp).x
-	else	$(MV) 1.$(tmp).x $(<)
-	fi
-
 /*
  * FEATURE/common for iffe probes, <ast_common.h> for ast source
  * *but* <ast_common.h> may get pulled in by intercepted headers

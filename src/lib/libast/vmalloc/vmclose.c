@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -39,7 +39,7 @@ Vmalloc_t*	vm;
 #endif
 {
 	Seg_t		*seg, *vmseg, *next;
-	Vmalloc_t	*v, *last, vmp;
+	Vmalloc_t	*v, *last;
 	Vmdata_t*	vd = vm->data;
 	Vmdisc_t*	disc = vm->disc;
 	int		mode, rv = 0;

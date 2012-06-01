@@ -302,7 +302,7 @@ int    b_dot_cmd(register int n,char *argv[],Shbltin_t *context)
 		free((void*)shp->st.filename);
 	shp->dot_depth--;
 	if((np || argv[1]) && jmpval!=SH_JMPSCRIPT)
-		sh_argreset(shp,argsave,saveargfor);
+		sh_argreset(shp,(struct dolnod*)argsave,saveargfor);
 	else
 	{
 		prevscope->dolc = shp->st.dolc;

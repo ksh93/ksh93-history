@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -57,7 +57,6 @@ Dtdisc_t*	disc;
 int		type;
 #endif
 {
-	Dtsearch_f	searchf;
 	Dtdisc_t	*old;
 	Dtlink_t	*list;
 
@@ -70,8 +69,6 @@ int		type;
 
 	if(!disc) /* only want to know current discipline */
 		return old;
-
-	searchf = dt->meth->searchf;
 
 	if(old->eventf && (*old->eventf)(dt,DT_DISC,(Void_t*)disc,old) < 0)
 		return NIL(Dtdisc_t*);

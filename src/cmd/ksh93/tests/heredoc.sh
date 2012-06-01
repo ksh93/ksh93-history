@@ -493,8 +493,8 @@ EOF
 $SHELL $f > $g
 [[ $(grep meep $g | grep -v foobar) != '' ]] && err_exit 'here-doc loosing $var expansions on boundaries in rare cases'
 
-print foo > foofile
-x=$( $SHELL 2> /dev/null 'read <<< $(<foofile) 2> /dev/null;print -r "$REPLY"')
+print foo > $tmp/foofile
+x=$( $SHELL 2> /dev/null 'read <<< $(<'"$tmp"'/foofile) 2> /dev/null;print -r "$REPLY"')
 [[ $x == foo ]] || err_exit '<<< $(<file) not working'
 
 exit $((Errors<125?Errors:125))

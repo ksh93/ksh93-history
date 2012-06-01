@@ -50,6 +50,7 @@ USAGE_LICENSE
 
 #include <cmd.h>
 #include <vmalloc.h>
+#include <sfdisc.h>
 
 typedef struct State_s
 {

@@ -1659,7 +1659,8 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 	Histmatch_t	*mp,*mplast=0;
 	History_t	*hp;
 	off_t		offset;
-	int 		ac=0,l,m,n,index1,index2;
+	int 		ac=0,l,n,index1,index2;
+	size_t		m;
 	char		*cp, **argv=0, **av, **ar;
 	static		int maxmatch;
 	if(!(hp=ep->sh->gd->hist_ptr) && (!nv_getval(HISTFILE) || !sh_histinit(ep->sh)))
@@ -1673,8 +1674,8 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 		return(0);
 	}
 	hp = ep->sh->gd->hist_ptr;
-	if(*pattern=='#')
-		pattern++;
+	if(*pattern=='#' && *++pattern=='#')
+		return(0);
 	cp = stakalloc(m=strlen(pattern)+6);
 	sfsprintf(cp,m,"@(%s)*%c",pattern,0);
 	if(ep->hlist)
@@ -1696,7 +1697,11 @@ int ed_histgen(Edit_t *ep,const char *pattern)
 		}
 		stakset(ep->e_stkptr,ep->e_stkoff);
 	}
-	pattern = ep->hpat = cp;
+	if((m=strlen(cp)) >= sizeof(ep->hpat))
+		m = sizeof(ep->hpat)-1;
+	memcpy(ep->hpat,cp,m);
+	ep->hpat[m] = 0;
+	pattern = cp;
 	index1 = (int)hp->histind;
 	for(index2=index1-hp->histsize; index1>index2; index1--)
 	{

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-n?\n@(#)$Id: head (AT&T Research) 2012-01-01 $\n]"
+"[-n?\n@(#)$Id: head (AT&T Research) 2012-05-31 $\n]"
 USAGE_LICENSE
 "[+NAME?head - output beginning portion of one or more files ]"
 "[+DESCRIPTION?\bhead\b copies one or more input files to standard "
@@ -139,7 +139,7 @@ b_head(int argc, register char** argv, Shbltin_t* context)
 		format = (char*)header_fmt;
 		if (skip > 0)
 			sfmove(fp, NiL, skip, delim);
-		if (sfmove(fp, sfstdout, keep, delim) < 0 && errno != EPIPE && errno != EINTR)
+		if (sfmove(fp, sfstdout, keep, delim) < 0 && !ERROR_PIPE(errno) && errno != EINTR)
 			error(ERROR_system(0), "%s: read error", cp);
 		if (fp != sfstdin)
 			sfclose(fp);

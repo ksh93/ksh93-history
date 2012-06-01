@@ -116,7 +116,6 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 			dp++;
 		if(*dp==0 || *dp=='/')
 		{
-			struct stat statb;
 			if((dp-dir)==2)
 			{
 				char *sp;

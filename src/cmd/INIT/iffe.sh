@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2012-02-23 # update in USAGE too #
+version=2012-05-28 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -711,7 +711,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2012-02-23 $
+@(#)$Id: iffe (AT&T Research) 2012-05-28 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -3004,7 +3004,9 @@ int x;
 							esac
 							case $apis in
 							?*)	for api in $apis
-								do	map=
+								do	API=`echo $api | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+									echo "#define ${API}API(rel)	( _BLD_${api} || !_API_${api} || _API_${api} >= rel )"
+									map=
 									sep=
 									eval syms='"${'api_sym_${api}'}"'
 									# old solaris requires -k<space><junk> #
@@ -3036,7 +3038,7 @@ int x;
 												;;
 											esac
 											echo
-											echo "#if ( _BLD_${api} || !_API_${api} || _API_${api} >= $rel )"
+											echo "#if ${API}API($rel)"
 											;;
 										esac
 										echo "#undef	${sym}"

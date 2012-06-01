@@ -2712,8 +2712,9 @@ these sub-patterns are not counted in the numbered sub-patterns.
 \f3:\fP\f2pattern-list\^\fP must be omitted for options
 .BR F ,
 .BR G ,
+.B N ,
 and
-.B N
+.B V
 below.
 If \f2options\^\fP is present, it can consist of one or more
 of the following:
@@ -2763,6 +2764,9 @@ The remainder of the pattern uses
 .IR perl (1)
 regular expression syntax.  Not all perl regular expression syntax is
 currently implemented.
+.TP
+.B V
+The remainder of the pattern uses System V regular expression syntax.
 .TP
 .B i
 Treat the match as case insensitive.
@@ -4278,9 +4282,10 @@ being searched.
 .P
 The
 .B .paths
-file is then checked  for lines of the form
-.BI BUILTIN_LIB= libname.
-For each, the library named by
+file is then checked  for a line of the form
+.BI BUILTIN_LIB= libname
+\*(OK \f3:\fP \f2libname\^\fP \*(CK .\|.\|. .
+Each library named by
 .I libname\^
 will be searched for as if it were an option argument to
 .BR "builtin -f" ,

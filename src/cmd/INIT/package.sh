@@ -97,7 +97,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-04-24 $
+@(#)$Id: package (AT&T Research) 2012-05-24 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4412,10 +4412,10 @@ admin)	while	test ! -f $admin_db
 	esac
 	trap 'kill $pids >/dev/null 2>&1' 1 2 3 15
 	index=0
-	while	read type host root date time make test write comment
+	while	read type host root date time make test write owner attributes
 	do	case $type in
 		''|'#'*);;
-		*=*)	eval "$type $host $root $date $time $make $test $write $comment"
+		*=*)	eval "$type $host $root $date $time $make $test $write $owner $attributes"
 			;;
 		*)	case $admin_action in
 			make|test|write)

@@ -295,7 +295,7 @@ void sh_utol(register char const *str1,register char *str2)
  */
 static char	*sh_fmtcsv(const char *string)
 {
-	register const char *cp = string, *op;
+	register const char *cp = string;
 	register int c;
 	int offset;
 	if(!cp)

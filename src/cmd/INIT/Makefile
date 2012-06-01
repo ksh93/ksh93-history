@@ -2,7 +2,9 @@
  * initialization for all packages
  */
 
-:PACKAGE: license=ast
+ID = ast
+
+:PACKAGE: license=$(ID)
 
 LICENSE = since=1994,author=gsf
 
@@ -228,7 +230,7 @@ probe.ini : (CC.HOSTTYPE) probe.win32
  * proto initialization
  */
 
-$(INCLUDEDIR) :INSTALLDIR: prototyped.h
+$(INCLUDEDIR)/$(ID) :INSTALLDIR: prototyped.h
 
 prototyped.h : $(BINDIR)/proto
 	proto -f /dev/null > h.$(tmp).h

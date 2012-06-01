@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -149,10 +149,6 @@ Dt_t*		dt;
 Dtstat_t*	st;
 #endif
 {
-	ssize_t		size;
-	Dtlink_t	*lnk;
-	Dtlist_t	*list = (Dtlist_t*)dt->data;
-
 	if(st)
 	{	memset(st, 0, sizeof(Dtstat_t));
 		st->meth  = dt->meth->type;

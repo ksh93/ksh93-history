@@ -1992,7 +1992,7 @@ void *job_subsave(void)
 
 void job_subrestore(void* ptr)
 {
-	register struct jobsave *jp, *jpnext;
+	register struct jobsave *jp;
 	register struct back_save *bp = (struct back_save*)ptr;
 	register struct process *pw, *px, *pwnext;
 	struct jobsave *end=NULL;

@@ -481,4 +481,11 @@ do      out=$(/bin/ls "$tmp/junk" 2>/dev/null)
 	fi
 done
 
+rm -f $tmp/file1 $tmp/file2
+print foo > $tmp/file3
+ln -s $tmp/file3 $tmp/file2
+ln -s $tmp/file2 $tmp/file1
+print bar >; $tmp/file1
+[[ $(<$tmp/file3) == bar ]] || err_exit '>; not following symlinks'
+
 exit $((Errors<125?Errors:125))

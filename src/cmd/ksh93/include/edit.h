@@ -173,7 +173,7 @@ typedef struct edit
 	unsigned short	nhlist;
 	unsigned short	hoff;
 	unsigned short	hmax;
-	char		*hpat;
+	char		hpat[40];
 	char		*hstak;
 #endif /* SHOPT_EDPREDICT */
 } Edit_t;

@@ -258,7 +258,6 @@ cutcols(Cut_t* cut, Sfio_t* fdin, Sfio_t* fdout)
 	register char*		bp;
 	register int		skip; /* non-zero for don't copy */
 	int			must;
-	char*			ep;
 	const char*		xx;
 
 	for (;;)
@@ -270,7 +269,6 @@ cutcols(Cut_t* cut, Sfio_t* fdin, Sfio_t* fdout)
 		if (!bp && !(bp = sfgetr(fdin, 0, SF_LASTR)))
 			break;
 		len = sfvalue(fdin);
-		ep = bp + len;
 		xx = 0;
 		if (!(ncol = skip  = *(lp = cut->list)))
 			ncol = *++lp;

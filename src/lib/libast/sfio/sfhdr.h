@@ -438,6 +438,9 @@
 /* functions for polling readiness of streams */
 #if _lib_select
 #undef _lib_poll
+#if _sys_select
+#include	<sys/select.h>
+#endif
 #else
 #if _lib_poll_fd_1 || _lib_poll_fd_2
 #define _lib_poll	1

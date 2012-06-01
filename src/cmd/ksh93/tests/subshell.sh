@@ -587,5 +587,14 @@ trap ERR ERR
 [[ $(trap -p) == *ERR* ]] || err_exit 'trap -p in subshell does not contain ERR'
 trap - USR1 ERR
 
+( PATH=/bin:/usr/bin
+dot=$(cat <<-EOF
+		$(ls -d .)
+	EOF
+) ) & sleep 1
+if      kill -0 $! 2> /dev/null
+then    err_exit  'command substitution containg here-doc with command substitution fails'
+fi
+
 
 exit $((Errors<125?Errors:125))

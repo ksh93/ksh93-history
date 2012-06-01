@@ -156,7 +156,6 @@ static Mmvm_t* mmfix(Mmvm_t* mmvm, Mmdisc_t* mmdc, int fd)
 /* initialize region data */
 static int mminit(Mmdisc_t* mmdc)
 {
-	struct shmid_ds	shmds;
 	Void_t		*base;
 	int		try, k;
 	int		fd = -1;
@@ -344,7 +343,6 @@ Vmdisc_t*	disc;
 {
 	int		rv;
 	Void_t		*base;
-	Vmdata_t	*vd = vm->data;
 	Mmdisc_t	*mmdc = (Mmdisc_t*)disc;
 
 	if(type == VM_OPEN)
@@ -440,7 +438,6 @@ int		oper;	/* operation type		*/
 #endif
 {
 	Mmuser_t	*u;
-	Vmdata_t	*vd = vm->data;
 	Mmdisc_t	*mmdc = (Mmdisc_t*)vm->disc;
 	Mmvm_t		*mmvm = mmdc->mmvm;
 
