@@ -26,7 +26,7 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c \
 	vmstate.c wc.c revlib.c wclib.c sumlib.o \
 	fts_fix.c lib.c \
-	-lfsg -lmd
+	-lfsg -lmd -lutil
 
 sumlib.o : +lsum
 	$(AR) x $(*:O=1) $(<)
@@ -61,7 +61,7 @@ cmdext.h : (src) $$(-mam:+$$(src))
 	else	$(MV) 1.$(tmp).h $(<)
 	fi
 
-cmdlist.h : (src)
+cmdlist.h : (src) $$(-mam:+$$(src))
 	{
 	cat <<!
 	$("#")pragma prototyped

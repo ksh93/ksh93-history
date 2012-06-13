@@ -384,5 +384,12 @@ $SHELL 2> /dev/null <<- \EOF || err_exit 'path search problem with non-existant 
 	PATH=/usr/nogood1/bin:/usr/nogood2/bin:/bin:/usr/bin
 	tail /dev/null && tail /dev/null
 EOF
+
+( PATH=/bin:usr/bin
+cat << END >/dev/null 2>&1
+${.sh.version}
+END
+) || err_exit '${.sh.xxx} variables causes cat not be found'
+
 exit $((Errors<125?Errors:125))
 

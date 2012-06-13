@@ -162,11 +162,7 @@ static void iounpipe(Shell_t *shp)
 	sh_close(subpipe[0]);
 	subpipe[0] = -1;
 	tsetio = 0;
-	if(usepipe)
-	{
-		usepipe = 0;
-		iousepipe(shp);
-	}
+	usepipe = 0;
 }
 
 /*
@@ -1332,13 +1328,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 						}
 						if(!(nv_isattr(np,BLT_ENV)))
 						{
-							if(bp->nosfio)
-							{
-								if(!shp->pwd)
-									path_pwd(shp,0);
-								if(shp->pwd)
-									stat(".",&statb);
-							}
+							if(!shp->pwd)
+								path_pwd(shp,0);
+							if(shp->pwd)
+								stat(".",&statb);
 							sfsync(NULL);
 							share = sfset(sfstdin,SF_SHARE,0);
 							sh_onstate(SH_STOPOK);
@@ -1417,7 +1410,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh_offstate(SH_NOFORK);
 					if(!(nv_isattr(np,BLT_ENV)))
 					{
-						if(bp->nosfio && shp->pwd)
+						if(shp->pwd)
 						{
 							struct stat stata;
 							stat(".",&stata);
@@ -1837,6 +1830,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						_sh_fork(shp,parent, 0, (int*)0);
 					if(parent)
 					{
+						job.toclear = 0;
 						job_post(shp,parent,0);
 						job_wait(parent);
 						sh_iorestore(shp,topfd,SH_JMPCMD);

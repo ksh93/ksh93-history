@@ -73,8 +73,8 @@ const struct shtable3 shtab_builtins[] =
 #if _bin_newgrp || _usr_bin_newgrp
 	"newgrp",	NV_BLTIN|BLT_ENV|BLT_SPC,	Bltin(login),
 #endif	/* _bin_newgrp || _usr_bin_newgrp */
-	"alias",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
-	"hash",		NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
+	"alias",	NV_BLTIN|BLT_SPC,		bltin(alias),
+	"hash",		NV_BLTIN|BLT_SPC,		bltin(alias),
 	"enum",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(enum),
 	"eval",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_EXIT,bltin(eval),
 	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),

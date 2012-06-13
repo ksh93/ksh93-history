@@ -1532,6 +1532,7 @@ breakloop:
 				(np=nv_search(state,shp->alias_tree,HASH_SCOPE))
 				&& !nv_isattr(np,NV_NOEXPAND)
 #if KSHELL
+				&& (lp->aliasok!=2 || nv_isattr(np,BLT_DCL))
 				&& (!sh_isstate(SH_NOALIAS) || nv_isattr(np,NV_NOFREE))
 #endif /* KSHELL */
 				&& (state=nv_getval(np)))

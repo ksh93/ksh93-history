@@ -2763,6 +2763,7 @@ done strtod.o generated
 make strtold.o
 make comp/strtold.c
 prev sfio/sfstrtof.h implicit
+prev include/ast.h implicit
 prev ast_sys.h implicit
 prev ast_lib.h implicit
 prev ast_common.h implicit

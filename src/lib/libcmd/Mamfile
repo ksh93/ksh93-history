@@ -48,7 +48,7 @@ exec - {
 exec - case "" in
 exec - *?) echo " " ;;
 exec - esac
-exec - for i in cmd fsg md ast
+exec - for i in cmd fsg md util ast
 exec - do case $i in
 exec - "cmd"|cmd)
 exec - ;;
@@ -103,8 +103,9 @@ make FEATURE/symlink implicit
 meta FEATURE/symlink features/%>FEATURE/% features/symlink symlink
 make features/symlink
 done features/symlink
+bind -lutil
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/symlink
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/symlink
 done FEATURE/symlink generated
 make fts_fix.h implicit
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
@@ -296,7 +297,7 @@ make FEATURE/sockets implicit
 meta FEATURE/sockets features/%>FEATURE/% features/sockets sockets
 make features/sockets
 done features/sockets
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/sockets
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/sockets
 done FEATURE/sockets generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -324,7 +325,7 @@ make FEATURE/ids implicit
 meta FEATURE/ids features/%>FEATURE/% features/ids ids
 make features/ids
 done features/ids
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/ids
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/ids
 done FEATURE/ids generated
 prev cmd.h implicit
 done id.c
@@ -420,7 +421,7 @@ make FEATURE/utsname implicit
 meta FEATURE/utsname features/%>FEATURE/% features/utsname utsname
 make features/utsname
 done features/utsname
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/utsname
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/utsname
 done FEATURE/utsname generated
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmd.h implicit
@@ -835,6 +836,54 @@ exec - fi
 done ${PACKAGE_ast_INCLUDE}/cmdext.h generated
 make ${PACKAGE_ast_INCLUDE}/cmdlist.h
 make cmdlist.h
+prev cmdinit.c
+prev basename.c
+prev cat.c
+prev chgrp.c
+prev chmod.c
+prev chown.c
+prev cksum.c
+prev cmp.c
+prev comm.c
+prev cp.c
+prev cut.c
+prev dirname.c
+prev date.c
+prev expr.c
+prev fds.c
+prev fmt.c
+prev fold.c
+prev getconf.c
+prev head.c
+prev id.c
+prev join.c
+prev ln.c
+prev logname.c
+prev md5sum.c
+prev mkdir.c
+prev mkfifo.c
+prev mktemp.c
+prev mv.c
+prev paste.c
+prev pathchk.c
+prev pids.c
+prev rev.c
+prev rm.c
+prev rmdir.c
+prev stty.c
+prev sum.c
+prev sync.c
+prev tail.c
+prev tee.c
+prev tty.c
+prev uname.c
+prev uniq.c
+prev vmstate.c
+prev wc.c
+prev revlib.c
+prev wclib.c
+prev fts_fix.c
+prev lib.c
 exec - {
 exec - cat <<!
 exec - #pragma prototyped
@@ -848,7 +897,7 @@ exec - -e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - -e 's/^b_//' \
 exec - -e 's/(.*//' \
 exec - -e 's/.*/CMDLIST(&)/' \
-exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c |
+exec - |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if cmp 2>/dev/null -s 1.${COTEMP}.h cmdlist.h

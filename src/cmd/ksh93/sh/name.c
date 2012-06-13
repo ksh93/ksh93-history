@@ -373,7 +373,7 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 					}
 				}
 				np = nv_open(cp,shp->var_tree,flag|NV_ASSIGN);
-				if((arg->argflag&ARG_APPEND) && (tp->tre.tretyp&COMMSK)==TCOM && tp->com.comset && !nv_isvtree(np) && (ap=nv_arrayptr(np)) && !ap->fun && !nv_opensub(np)) 
+				if((arg->argflag&ARG_APPEND) && (tp->tre.tretyp&COMMSK)==TCOM && tp->com.comset && !nv_isvtree(np) && (((ap=nv_arrayptr(np)) && !ap->fun && !nv_opensub(np))  || (!ap && nv_isarray(np) && tp->com.comarg && !((mp=nv_search(tp->com.comarg->argval,shp->fun_tree,0)) && nv_isattr(mp,BLT_DCL)))))
 				{
 					if(tp->com.comarg)
 					{
@@ -3003,9 +3003,17 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	{
 		/* record changes to the environment */
 		if(n&NV_EXPORT)
+		{
+			nv_offattr(np,NV_EXPORT);
 			env_delete(shp->env,nv_name(np));
+		}
 		else
+		{
+			nv_onattr(np,NV_EXPORT);
 			sh_envput(shp->env,np);
+		}
+		if((n^newatts)==NV_EXPORT)
+			return;
 	}
 	oldsize = nv_size(np);
 	if((size==oldsize|| (n&NV_INTEGER)) && !trans && ((n^newatts)&~NV_NOCHANGE)==0)

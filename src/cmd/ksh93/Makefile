@@ -18,7 +18,7 @@ SHCOMP := shcomp$(RELEASE)
 SHOPT_2DMATCH == 1		/* two dimensional .sh.match for ${var//pat/str} */
 SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
-SHOPT_AUDIT ==
+SHOPT_AUDIT == 1		/* enable auditing per SHOPT_AUDITFILE */
 SHOPT_AUDITFILE == "/etc/ksh_audit"  		/* auditing file */
 SHOPT_BASH ==			/* bash compatibility code */
 SHOPT_BGX == 1			/* one SIGCHLD trap per completed job */

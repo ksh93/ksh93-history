@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2012-05-28 # update in USAGE too #
+version=2012-06-06 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -711,7 +711,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2012-05-28 $
+@(#)$Id: iffe (AT&T Research) 2012-06-08 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -2656,7 +2656,10 @@ int x;
 		# check the candidate libraries
 
 		case $lib in
-		?*)	z=$lib
+		?*)	z=
+			for p in $lib
+			do	z="$p $z"
+			done
 			lib=
 			p=
 			hit=0
@@ -2670,14 +2673,14 @@ int x;
 					;;
 				*"+ $p "*)
 					success +
-					lib="$lib $p"
+					lib="$p $lib"
 					;;
 				*)	rm -f $tmp.exe
 					is LIB $p
-					if	compile $cc -o $tmp.exe $tmp.c $p <&$nullin >&$nullout
+					if	compile $cc -o $tmp.exe $tmp.c $p $lib <&$nullin >&$nullout
 					then	success
 						gotlib="$gotlib + $p"
-						lib="$lib $p"
+						lib="$p $lib"
 						e=0
 					else	a=
 						e=1
@@ -2699,7 +2702,7 @@ int x;
 								if	compile $cc -o $tmp.exe $tmp.c $a <&$nullin >&$nullout
 								then	success
 									gotlib="$gotlib + $p"
-									lib="$lib $p"
+									lib="$p $lib"
 									e=0
 									break
 								fi

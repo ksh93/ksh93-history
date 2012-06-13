@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -272,6 +272,10 @@ extern _Ast_info_t	_ast_info;
 
 /* largefile hackery -- ast uses the large versions by default */
 
+#if _typ_ino64_t
+#undef	ino_t
+#define ino_t		ino64_t
+#endif
 #if _typ_off64_t
 #undef	off_t
 #define off_t		off64_t

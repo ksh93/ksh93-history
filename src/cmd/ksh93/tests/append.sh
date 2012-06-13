@@ -99,4 +99,18 @@ typeset -a z=(a=b b=c)
 { z+=(d=3 e f=l); } 2> /dev/null
 [[ $(typeset -p z) == "$exp" ]] || err_exit 'append (d=3 e f=l) to index array not working'
 
+unset arr2
+exp='typeset -a arr2=(b\=c :)'
+typeset -a arr2
+arr2+=(b=c :)
+[[ $(typeset -p arr2) == "$exp" ]] || err_exit 'append (b=c :) to index array not working'
+
+unset arr2
+exp='typeset -a arr2=(b\=c xxxxx)'
+typeset -a arr2
+{
+	arr2+=(b=c xxxxx)
+} 2> /dev/null
+[[ $(typeset -p arr2) == "$exp" ]] || err_exit 'append (b=c xxxxx) to index array not working'
+
 exit $((Errors<125?Errors:125))

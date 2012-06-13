@@ -500,18 +500,18 @@ getconf UNIVERSE - ucb
 [[ $($SHELL -c 'echo -3') == -3 ]] || err_exit "echo -3 not working in ucb universe"
 typeset -F3 start_x=SECONDS total_t delay=0.02
 typeset reps=50 leeway=5
-#sleep $(( 2 * leeway * reps * delay )) |
-#for (( i=0 ; i < reps ; i++ ))
-#do	read -N1 -t $delay
-#done
-#(( total_t = SECONDS - start_x ))
-#if	(( total_t > leeway * reps * delay ))
-#then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too long"
-#elif	(( total_t < reps * delay ))
-#then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast"
-#fi
-#$SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
-#$SHELL -c 'test \( ! -e \)' 2> /dev/null ; [[ $? == 1 ]] || err_exit 'test \( ! -e \) not working'
+sleep $(( 2 * leeway * reps * delay )) |
+for (( i=0 ; i < reps ; i++ ))
+do	read -N1 -t $delay
+done
+(( total_t = SECONDS - start_x ))
+if	(( total_t > leeway * reps * delay ))
+then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too long"
+elif	(( total_t < reps * delay ))
+then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast"
+fi
+$SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
+$SHELL -c 'test \( ! -e \)' 2> /dev/null ; [[ $? == 1 ]] || err_exit 'test \( ! -e \) not working'
 [[ $(ulimit) == "$(ulimit -fS)" ]] || err_exit 'ulimit is not the same as ulimit -fS'
 tmpfile=$tmp/file.2
 print $'\nprint -r -- "${.sh.file} ${LINENO} ${.sh.lineno}"' > $tmpfile
@@ -519,14 +519,14 @@ print $'\nprint -r -- "${.sh.file} ${LINENO} ${.sh.lineno}"' > $tmpfile
 print -r -- "'xxx" > $tmpfile
 [[ $($SHELL -c ". $tmpfile"$'\n print ok' 2> /dev/null) == ok ]] || err_exit 'syntax error in dot command affects next command'
 
-#float sec=$SECONDS del=4
-#exec 3>&2 2>/dev/null
-#$SHELL -c "( sleep 1; kill -ALRM \$\$ ) & sleep $del" 2> /dev/null
-#exitval=$?
-#(( sec = SECONDS - sec ))
-#exec 2>&3-
-#(( exitval )) && err_exit "sleep doesn't exit 0 with ALRM interupt"
-#(( sec > (del - 1) )) || err_exit "ALRM signal causes sleep to terminate prematurely -- expected 3 sec, got $sec"
+float sec=$SECONDS del=4
+exec 3>&2 2>/dev/null
+$SHELL -c "( sleep 1; kill -ALRM \$\$ ) & sleep $del" 2> /dev/null
+exitval=$?
+(( sec = SECONDS - sec ))
+exec 2>&3-
+(( exitval )) && err_exit "sleep doesn't exit 0 with ALRM interupt"
+(( sec > (del - 1) )) || err_exit "ALRM signal causes sleep to terminate prematurely -- expected 3 sec, got $sec"
 typeset -r z=3
 y=5
 for i in 123 z  %x a.b.c
@@ -594,5 +594,8 @@ fi
 unset ENV
 v=$($SHELL 2> /dev/null +o rc -ic $'getopts a:bc: opt --man\nprint $?')
 [[ $v == 2* ]] || err_exit 'getopts --man does not exit 2 for interactive shells'
+
+read baz <<< 'foo\\\\bar'
+[[ $baz == 'foo\\bar' ]] || err_exit 'read of foo\\\\bar not getting foo\\bar'
 
 exit $((Errors<125?Errors:125))

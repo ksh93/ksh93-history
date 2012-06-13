@@ -645,4 +645,22 @@ isnull[mdapp]=Y
 isnull[mdapp]=N
 [[ ${isnull[*]} != *N* ]] && err_exit 'bug after ${arr[@]} with one element associative array'
 
+unset arr2
+arr2=()
+typeset -A arr2
+unset arr2
+[[ $(typeset -p arr2) ]] && err_exit 'unset associative array of compound variables not working'
+
+arr3=(x=3)
+typeset -A arr3
+[[  $(typeset -p arr3) == 'typeset -A arr3=()' ]] || err_exit 'typeset -A does not first unset compound variable.'
+
+arr4=(x=3)
+typeset -a arr4
+[[  $(typeset -p arr4) == 'typeset -a arr4' ]] || err_exit 'typeset -a does not first unset compound variable.'
+
+alias foo=bar
+arr5=(foo bar)
+[[ $(typeset -p arr5) == 'typeset -a arr5=(foo bar)' ]] || err_exit 'typeset expanding non-declaration aliases'
+
 exit $((Errors<125?Errors:125))

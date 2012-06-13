@@ -191,7 +191,7 @@ void	sh_fault(register int sig)
 			{
 				sigrelease(sig);
 				sh_exit(SH_EXITSIG);
-				flag = 0;
+				return;
 			}
 		}
 #endif /* SIGTSTP */
@@ -533,11 +533,13 @@ void sh_exit(register int xno)
 		sh_onstate(SH_MONITOR);
 		sh_offstate(SH_STOPOK);
 		shp->trapnote = 0;
+		shp->forked = 1;
 		if(!shp->subshell && (sig=sh_fork(shp,0,NIL(int*))))
 		{
 			job.curpgid = 0;
 			job.parent = (pid_t)-1;
 			job_wait(sig);
+			shp->forked = 0;
 			job.parent = 0;
 			shp->sigflag[SIGTSTP] = 0;
 			/* wait for child to stop */
@@ -557,7 +559,6 @@ void sh_exit(register int xno)
 			killpg(job.curpgid,SIGTSTP);
 			/* child resumes */
 			job_clear();
-			shp->forked = 1;
 			shp->exitval = (xno&SH_EXITMASK);
 			return;
 		}

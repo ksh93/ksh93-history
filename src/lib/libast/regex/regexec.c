@@ -58,10 +58,13 @@ regexec(const regex_t* p, const char* s, size_t nmatch, regmatch_t* match, regfl
  */
 
 #if defined(__EXPORT__)
-#define extern	__EXPORT__
+#define extern		__EXPORT__
 #endif
 
 #undef	regexec
+#if _map_libc
+#define regexec		_ast_regexec
+#endif
 
 extern int
 regexec(const regex_t* p, const char* s, size_t nmatch, oldregmatch_t* oldmatch, regflags_t flags)

@@ -1047,17 +1047,14 @@ static char *io_usename(char *name, int *perm, int fno, int mode)
 {
 	struct stat	statb;
 	char		*tname, *sp, *ep, path[PATH_MAX+1];
-	int		fd;
-	while((fd=readlink(name, path, PATH_MAX)) >0)
-	{
-		name=path;
-		name[fd] = 0;
-	}
+	int		fd,r;
 	if(mode==0)
 	{
-		if((fd = sh_open(name,O_RDONLY,0)) > 0)
+		if((fd = sh_open(name,O_RDONLY,0)) >= 0)
 		{
-			if(fstat(fd,&statb) < 0)
+			r = fstat(fd,&statb);
+			close(fd);
+			if(r)
 				return(0);
 			if(!S_ISREG(statb.st_mode))
 				return(0);
@@ -1065,6 +1062,11 @@ static char *io_usename(char *name, int *perm, int fno, int mode)
 		}
 		else if(fd < 0  && errno!=ENOENT)
 			return(0);
+	}
+	while((fd=readlink(name, path, PATH_MAX)) >0)
+	{
+		name=path;
+		name[fd] = 0;
 	}
 	stakseek(1);
 	stakputs(name);
@@ -1524,7 +1526,6 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 	register Sfio_t	*infile = 0, *outfile, *tmp;
 	register int		fd;
 	Sfoff_t			off;
-write(-1,"gothere1\n",9);
 	if(!(iop->iofile&IOSTRG) && (!shp->heredocs || iop->iosize==0))
 		return(sh_open(e_devnull,O_RDONLY));
 	/* create an unnamed temporary file */

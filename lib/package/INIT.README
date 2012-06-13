@@ -93,6 +93,9 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+12-06-08 iffe.sh: fix 12-06-06 typo
+12-06-06 iffe.sh: check for -l* in reverse and accumulative order (e.g., for -last & -lm)
+12-06-04 package.sh: always check $INSTALLROOT/lib/package/profile
 12-05-31 Makefile: ID=ast; $(INSTALLROOT)/prototyped.h => $(INSTALLROOT)/$(ID)/prototyped.h
 12-05-28 iffe.sh: api foo YYYYMMDD => FOOAPI(rel) test macro
 12-05-24 package.sh: change admin.db comment => owner attributes
@@ -152,7 +155,7 @@ All recorded changes follow.
 10-08-11 mktest.sh: add "DO command ..."
 10-07-27 rt.sh: handle "rt X=Y ..."
 10-06-29 ratz.c: non-option sear args passed to sear_exec()
-10-06-25 iffe.sh: "api" op chanegd to not do "map-libc" type mappings
+10-06-25 iffe.sh: "api" op changed to not do "map-libc" type mappings
 10-06-25 package.sh: "force admin ditto" => no ditto --update option
 10-06-22 C+probe: handle cc that require .[ci] input for version info
 10-06-21 ditto.sh: change default remote access to ssh (about time)

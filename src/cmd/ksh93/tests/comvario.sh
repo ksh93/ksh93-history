@@ -264,7 +264,7 @@ count_brackets "$y2" || err_exit "y2: bracket open ${bracketstat.bopen} != brack
 count_brackets "$(print -v y2)" || err_exit "y2: bracket open ${bracketstat.bopen} != bracket close ${bracketstat.bclose}"
 count_brackets "$(print -C y2)" || err_exit "y2: bracket open ${bracketstat.bopen} != bracket close ${bracketstat.bclose}"
 [[ "$y1" == "$y2" ]] || err_exit "Expected $(printf "%q\n" "${y1}") == $(printf "%q\n" "${y2}")."
-[[ "$x"  == "$y1" ]] || err_exit "Expected $(printf "%q\n" "${x}") == $(printf "%q\n" "${y}")."
+[[ "$x"  == "$y1" ]] || err_exit "Expected $(printf "%q\n" "${x}") == $(printf "%q\n" "${y1}")."
 
 # cleanup
 unset x y1 y2 || err_exit "unset failed"

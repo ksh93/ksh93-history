@@ -55,7 +55,6 @@ static Namval_t FunNode =
 {
 	{ 0 },
 	"?",
-	NV_NOFREE|NV_LDOUBLE,NV_RDONLY
 };
 
 static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
@@ -84,6 +83,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		{
 			Fun = sh_arith(shp,sub=stakptr(offset));
 			FunNode.nvalue.ldp = &Fun;
+			nv_onattr(&FunNode,NV_NOFREE|NV_LDOUBLE|NV_RDONLY);
 			cp[flag] = c;
 			return(&FunNode);
 		}

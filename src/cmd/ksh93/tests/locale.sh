@@ -318,11 +318,19 @@ x=$(LC_ALL=debug $SHELL -c 'typeset -L10 x="a<2b|>c";print -r -- "${x}"')
 
 if      $SHELL -c "export LC_ALL=en_US.UTF-8; c=$'\342\202\254'; [[ \${#c} == 1 ]]" 2>/dev/null
 then	LC_ALL=en_US.UTF-8
-	unset i
-	for i in 9 b c d 20 1680 2000 2001 2002 2003 2004 2005 2006 2008 2009 200a 2028 2029 205f 3000 # 1803 202f 
-	do	eval  "[[ \$'\\u[$i]' == [[:space:]] ]]"  || err_exit "unicode char $i is not a space character in locale C.UTF-8"
+	unset i p1 p2 x
+	for i in 9 b c d 20 1680 2000 2001 2002 2003 2004 2005 2006 2008 2009 200a 2028 2029 3000 # 1803 2007 202f  205f
+	do	if	! eval "[[ \$'\\u[$i]' == [[:space:]] ]]"
+		then	x+=,$i
+		fi
 	done
+	if	[[ $x ]]
+	then	if	[[ $x == ,*,* ]]
+		then	p1=s p2="are not space characters"
+		else	p1=  p2="is not a space character"
+		fi
+		err_exit "unicode char$p1 ${x#?} $p2 in locale $LC_ALL"
+	fi
 fi
-
 
 exit $((Errors<125?Errors:125))

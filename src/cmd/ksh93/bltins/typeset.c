@@ -652,6 +652,8 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 			}
 			else if(iarray && ap && ap->fun) 
 				errormsg(SH_DICT,ERROR_exit(1),"cannot change associative array %s to index array",nv_name(np));
+			else if( (iarray||(flag&NV_ARRAY)) && nv_isvtree(np) && !nv_type(np))
+				_nv_unset(np,NV_EXPORT);
 			if(tp->pflag)
 			{
 				if(!nv_istable(np))
@@ -791,12 +793,6 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 					int len=strlen(name);
 					if(tp->argnum==1 && newflag==NV_INTEGER && nv_isattr(np,NV_INTEGER))
 						tp->argnum = 10;
-					/* use reference name for export */
-					if((newflag^curflag)&NV_EXPORT)
-					{
-						oldname = np->nvname;
-						np->nvname = name;
-					}
 					if(np->nvfun && !nv_isarray(np) && name[len-1]=='.')
 						newflag |= NV_NODISC;
 					nv_newattr (np, newflag&~NV_ASSIGN,tp->argnum);

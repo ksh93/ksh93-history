@@ -149,10 +149,13 @@ regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
  */
 
 #if defined(__EXPORT__)
-#define extern	__EXPORT__
+#define extern		__EXPORT__
 #endif
 
 #undef	regrexec
+#if _map_libc
+#define regrexec	_ast_regrexec
+#endif
 
 extern int
 regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, oldregmatch_t* oldmatch, regflags_t flags, int sep, void* handle, regrecord_t record)

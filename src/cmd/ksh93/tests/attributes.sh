@@ -463,4 +463,10 @@ unset x
 typeset -L -Z x=foo
 [[ $(typeset -p x) == 'typeset -Z 3 -L 3 x=foo' ]] || err_exit '-LRZ without [n] not defaulting to width of variable'
 
+unset foo
+typeset -Z2 foo=3
+[[ $(typeset -p foo) == 'typeset -Z 2 -R 2 foo=03' ]] || err_exit '-Z2  not working'
+export foo
+[[ $(typeset -p foo) == 'typeset -x -Z 2 -R 2 foo=03' ]] || err_exit '-Z2  not working after export'
+
 exit $((Errors<125?Errors:125))

@@ -53,7 +53,7 @@ mem	inheritance.pgroup spawn.h
 sys	dir,filio,jioctl,localedef,ptem,resource
 sys	socket,stream,systeminfo,universe,vfork
 
-typ	off64_t -D_LARGEFILE64_SOURCE
+typ	ino64_t,off64_t -D_LARGEFILE64_SOURCE
 typ	struct.dirent64 -D_LARGEFILE64_SOURCE dirent.h
 
 tst	tst_errno note{ errno can be assigned }end link{

@@ -1470,7 +1470,7 @@ static Pathcomp_t *path_addcomp(Shell_t *shp,Pathcomp_t *first, Pathcomp_t *old,
 		len = strlen(name);
 	for(pp=first; pp; pp=pp->next)
 	{
-		if(memcmp(name,pp->name,len)==0 && (pp->name[len]==':' || pp->name[len]==0))
+		if(len == pp->len && memcmp(name,pp->name,len)==0)
 		{
 			pp->flags |= flag;
 			return(first);
@@ -1774,6 +1774,7 @@ static char *talias_get(Namval_t *np, Namfun_t *nvp)
 	char *ptr;
 	if(!pp)
 		return(NULL);
+	pp->shp->last_table = 0;
 	path_nextcomp(pp->shp,pp,nv_name(np),pp);
 	ptr = stakfreeze(0);
 	return(ptr+PATH_OFFSET);

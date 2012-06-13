@@ -862,6 +862,7 @@ static Shnode_t *funct(Lex_t *lexp)
 		fp = (struct functnod*)(slp+1);
 		fp->functtyp = TFUN|FAMP;
 		fp->functnam = 0;
+		fp->functargs = 0;
 		fp->functline = t->funct.functline;
 		if(shp->st.filename)
 			fp->functnam = stakcopy(shp->st.filename);
@@ -976,7 +977,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int type)
 		lexp->assignok = 0;
 	}
 	else
-		lexp->aliasok = 1;
+		lexp->aliasok = 2;
 	array= (type==NV_ARRAY)?SH_ARRAY:0;
 	if((n=skipnl(lexp,0))==RPAREN || n==LPAREN)
 	{
@@ -1254,16 +1255,17 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 
 #if SHOPT_NAMESPACE
 	    case NSPACESYM:
-		t = getnode(fornod);
-		t->for_.fortyp=TNSPACE;
-		t->for_.forlst=0;
+		t = getnode(functnod);
+		t->funct.functtyp=TNSPACE;
+		t->funct.functargs = 0;
+		t->funct.functloc = 0;
 		if(sh_lex(lexp))
 			sh_syntax(lexp);
-		t->for_.fornam=(char*) lexp->arg->argval;
+		t->funct.functnam=(char*) lexp->arg->argval;
 		while((tok=sh_lex(lexp))==NL);
 		if(tok!=LBRACE)
 			sh_syntax(lexp);
-		t->for_.fortre = sh_cmd(lexp,RBRACE,SH_NL);
+		t->funct.functtre = sh_cmd(lexp,RBRACE,SH_NL);
 		break;
 #endif /* SHOPT_NAMESPACE */
 

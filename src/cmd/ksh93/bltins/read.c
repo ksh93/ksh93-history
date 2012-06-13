@@ -570,18 +570,24 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,l
 		    case S_QUOTE:
 			c = shp->ifstable[*cp++];
 			inquote = !inquote;
-			goto skip;
+			if(val)
+			{
+				stakputs(val);
+				use_stak = 1;
+				*val = 0;
+			}
+			continue;
 		    case S_ESC:
 			/* process escape character */
 			if((c = shp->ifstable[*cp++]) == S_NL)
 				was_escape = 1;
 			else
 				c = 0;
-		skip:
 			if(val)
 			{
 				stakputs(val);
 				use_stak = 1;
+				was_escape = 1;
 				*val = 0;
 			}
 			continue;

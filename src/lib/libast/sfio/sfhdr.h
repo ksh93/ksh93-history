@@ -471,7 +471,7 @@
 #endif
 
 /* alternative process forking */
-#if _lib_vfork && !defined(fork) && !defined(sparc) && !defined(__sparc)
+#if _lib_vfork && !defined(fork) && !defined(__sparc) && !defined(__sparc__)
 #if _hdr_vfork
 #include	<vfork.h>
 #endif

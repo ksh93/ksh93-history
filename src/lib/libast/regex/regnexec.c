@@ -2049,10 +2049,13 @@ regfree(regex_t* p)
  */
 
 #if defined(__EXPORT__)
-#define extern	__EXPORT__
+#define extern		__EXPORT__
 #endif
 
 #undef	regnexec
+#if _map_libc
+#define regnexec	_ast_regnexec
+#endif
 
 extern int
 regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, oldregmatch_t* oldmatch, regflags_t flags)

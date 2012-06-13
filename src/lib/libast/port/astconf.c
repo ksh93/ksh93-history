@@ -608,7 +608,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 		break;
 	}
 #if DEBUG_astconf
-	error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s ok=%d", __LINE__,  state.std, fp->name, ok ? succeed : fail, fp->std, fp->ast, fp->value, ok);
+	error(-2, "state.std=%d %s [%s] std=%s ast=%s value=%s ok=%d", state.std, fp->name, ok ? succeed : fail, fp->std, fp->ast, fp->value, ok);
 #endif
 	synthesize(fp, path, ok ? succeed : fail);
 }
@@ -671,14 +671,14 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 			value = fp->std;
 		state.std = streq(fp->value, fp->std);
 #if DEBUG_astconf
-		error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s", __LINE__,  state.std, fp->name, value, fp->std, fp->ast, fp->value);
+		error(-2, "state.std=%d %s [%s] std=%s ast=%s value=%s", state.std, fp->name, value, fp->std, fp->ast, fp->value);
 #endif
 		if (state.synthesizing && value == (char*)fp->std)
 			fp->value = (char*)value;
 		else if (!synthesize(fp, path, value))
 			initialize(fp, path, NiL, fp->std, fp->value);
 #if DEBUG_astconf
-		error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s", __LINE__,  state.std, fp->name, value, fp->std, fp->ast, fp->value);
+		error(-2, "state.std=%d %s [%s] std=%s ast=%s value=%s", state.std, fp->name, value, fp->std, fp->ast, fp->value);
 #endif
 		if (!state.std && value == fp->std)
 		{
@@ -688,7 +688,7 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 					feature(sp, 0, path, sp->std, 0, 0);
 		}
 #if DEBUG_astconf
-		error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s", __LINE__,  state.std, fp->name, value, fp->std, fp->ast, fp->value);
+		error(-2, "state.std=%d %s [%s] std=%s ast=%s value=%s", state.std, fp->name, value, fp->std, fp->ast, fp->value);
 #endif
 		break;
 

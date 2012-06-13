@@ -265,7 +265,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 		Namval_t	fake;
 		Dt_t		*walk, *root=shp->var_tree;
 		char		*name = nv_name(np);
-		int		len = strlen(name);
+		size_t		len = strlen(name);
 		fake.nvname = name;
 		mpnext = dtnext(root,&fake);
 		dp = root->walk?root->walk:root;
@@ -744,7 +744,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			sp->prev->sig = sp->sig;
 		else
 		{
-			sh_fault(sp->sig);
+			kill(getpid(),sp->sig);
 			sh_chktrap(shp);
 		}
 	}
@@ -753,7 +753,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	nsig = shp->savesig;
 	shp->savesig = 0;
 	if(nsig>0)
-		sh_fault(nsig);
+		kill(getpid(),nsig);
 	if(sp->subpid)
 		job_wait(sp->subpid);
 	if(comsub && iop && sp->pipefd<0)
@@ -764,7 +764,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	{
 		int sig = shp->exitval&SH_EXITMASK;
 		if(sig==SIGINT || sig== SIGQUIT)
-			sh_fault(sig);
+			kill(getpid(),sig);
 	}
 	if(duped)
 	{
@@ -773,9 +773,9 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		errormsg(SH_DICT,ERROR_system(1),e_redirect);
 	}
 	if(shp->ignsig)
-		sh_fault(shp->ignsig);
+		kill(getpid(),shp->ignsig);
 	if(jmpval==SH_JMPSUB && shp->lastsig)
-		sh_fault(shp->lastsig);
+		kill(getpid(),shp->lastsig);
 	if(jmpval && shp->toomany)
 		siglongjmp(*shp->jmplist,jmpval);
 	return(iop);

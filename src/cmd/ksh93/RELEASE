@@ -1,4 +1,28 @@
-12-05-31  --- Release ksh93u+ ---
+12-06-12  --- Release ksh93u+ ---
+12-06-12  For assignments if the form x=(foo bar), foo is only check for an
+	  alias if it is float, integer, compound, or nameref.
+12-06-12 +The shell supports 64 bit i-nodes even for 32 bit binaries.
+12-06-11  A bug wth >; redirection systems for which vfork() was the same a
+	  fork() has been fixed.
+12-06-11  A bug in path lookup that ignored buffer boundaries has been fixed.
+12-06-08  typeset -a var and typeset -A var, first unset var when var is
+	  a compound variable.
+12-06-08  A bug in which running shcomp on a program containg namespace
+	  could core dump has been fixed.
+12-06-06  A bug in which unset of an associative array of compound variables
+	  did not completely unset the variable has been fixed.
+12-06-06  A bug in which exporting left or right justfied fields could loose
+	  the field width has been fixed.
+12-06-06  A bug on Solaris11 in which >; did not work for /dev/null was fixed.
+12-06-05  A race condition which occured when stopping a builtin command
+	  invoked from a subshell has been fixed.
+12-06-05  A bug with appending elements to an empty indexed array has been
+	  fixed.
+12-06-04  A bug in which continuing a stopped builtin could cause it to
+	  terminate has been fixed.
+12-06-04  By default, builtins added at runtime will restore the current
+	  directory if they are killed or stopped.
+12-06-04  A bug in handling \\ in read has been fixed.
 12-05-31  Use getrlimit64/setrlimit64 on systems that support it.
 12-05-31  Fix 64 bit big-endian arithmentic bug that mishandled nan and inf.
 12-05-31  Handle ECONNRESET like EPIPE.

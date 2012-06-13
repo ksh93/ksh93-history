@@ -833,7 +833,9 @@ static void job_set(register struct process *pw)
 	if((pw->p_flag&P_STOPPED) || tcgetpgrp(job.fd) == shp->gd->pid)
 		tcsetpgrp(job.fd,pw->p_fgrp);
 	/* if job is stopped, resume it in the background */
-	job_unstop(pw);
+	if(!shp->forked)
+		job_unstop(pw);
+	shp->forked = 0;
 #endif	/* SIGTSTP */
 }
 

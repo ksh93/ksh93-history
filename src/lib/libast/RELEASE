@@ -1,3 +1,7 @@
+12-06-08 sfio/sfclose.c,sfmode.c: sfclose() for sfopopen() stream returns sh-compatible $?
+12-06-08 comp/strtold.c: fix header botch that missed ldexpl() prototype -- ouch
+12-06-06 misc/proclib.h: partially undo <ast_standards.h> for leaked ancient bsd-isms
+12-05-31 misc/proclib.h: <ast_standards.h> for linux undefined struct mmsghdr*
 12-05-31 error.h: add ERROR_PIPE(errno) to handle EPIPE and ECONNRESET
 12-05-31 Makefile: don't install $(INCLUDEDIR)/prototyped.h: src/cmd/INIT does it
 12-05-31 regcomp.c: add (?V...) ~(V...) REG_REGEXP switch

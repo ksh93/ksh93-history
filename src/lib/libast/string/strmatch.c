@@ -66,14 +66,6 @@ static struct State_s
 
 #define STR_INT		040000
 
-#undef	strgrpmatch
-
-int
-strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
-{
-	return strgrpmatch_20120528(b, p, (ssize_t*)sub, n, flags|STR_INT);
-}
-
 /*
  * subgroup match
  * 0 returned if no match
@@ -85,7 +77,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
  */
 
 int
-strgrpmatch_20120528(const char* b, const char* p, ssize_t* sub, int n, register int flags)
+strgrpmatch(const char* b, const char* p, ssize_t* sub, int n, register int flags)
 {
 	register regex_t*	re;
 	register ssize_t*	end;
@@ -200,5 +192,16 @@ strsubmatch(const char* s, const char* p, int flags)
 {
 	ssize_t	match[2];
 
-	return strgrpmatch_20120528(s, p, match, 1, (flags ? STR_MAXIMAL : 0)|STR_LEFT) ? (char*)s + match[1] : (char*)0;
+	return strgrpmatch(s, p, match, 1, (flags ? STR_MAXIMAL : 0)|STR_LEFT) ? (char*)s + match[1] : (char*)0;
+}
+
+#undef	strgrpmatch
+#if _map_libc
+#define strgrpmatch	_ast_strgrpmatch
+#endif
+
+int
+strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
+{
+	return strgrpmatch_20120528(b, p, (ssize_t*)sub, n, flags|STR_INT);
 }

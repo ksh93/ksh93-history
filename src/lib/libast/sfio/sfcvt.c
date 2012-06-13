@@ -21,6 +21,9 @@
 ***********************************************************************/
 #if __STDC__
 #include	"FEATURE/standards"
+#if __MACH__ /* bsd legacy at the root of another header/typedef conflict */
+#undef	_POSIX_SOURCE
+#endif
 #endif
 #include	"sfhdr.h"
 
