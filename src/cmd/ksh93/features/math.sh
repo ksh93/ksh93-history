@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -20,7 +20,7 @@
 : generate the ksh math builtin table
 : include math.tab
 
-# @(#)math.sh (AT&T Research) 2010-10-26
+# @(#)math.sh (AT&T Research) 2012-06-13
 
 command=$0
 iffeflags="-n -v"
@@ -249,7 +249,10 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name} r='$'TYPE_${name} a='$'ARGS_${name}
 	*:*:1)	code="extern $r $f("
 		sep=
 		for p in 1 2 3 4 5 6 7
-		do	code="$code${sep}$t"
+		do	case $p:$f in
+			2:ldexp*)	code="$code${sep}int" ;;
+			*)		code="$code${sep}$t" ;;
+			esac
 			case $a in
 			$p)	break ;;
 			esac

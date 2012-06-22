@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -129,7 +129,7 @@ ttctl(register int fd, int op, void* tt)
 	{
 		for (fd = 0; fd <= 2; fd++)
 			if (!ioctl(fd, op, tt)) return(0);
-		if ((fd = open("/dev/tty", O_RDONLY)) >= 0)
+		if ((fd = open("/dev/tty", O_RDONLY|O_cloexec)) >= 0)
 		{
 			v = ioctl(fd, op, tt);
 			close(fd);

@@ -153,3 +153,19 @@ if tst -D_ISOC99_SOURCE -lm note{ _ISOC99_SOURCE plays nice }end link{
 		#endif
 	}
 endif
+
+cat{
+
+/*
+ * this is a nasty game we all play to honor standards symbol visibility
+ * it would help if all implementations had
+ *	_KITCHEN_SINK_SOURCE
+ * that enabled all symbols from the latest implemented standards
+ * that's probably the most useful but least portable request
+ */
+
+#if __MACH__
+#undef  _POSIX_SOURCE
+#endif
+
+}end

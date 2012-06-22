@@ -644,8 +644,13 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 		    case S_ENDCH:
 			if((mp->lit || cp[-1]!=endch || mp->quote!=newquote))
 				goto pattern;
-			if(endch==RBRACE && *cp==LPAREN && mp->pattern && brace)
-				goto pattern;
+			if(endch==RBRACE && mp->pattern && brace)
+			{
+				brace--;
+				if(*cp==LPAREN && mp->pattern!=2)
+					goto pattern;
+				continue;
+			}
 		    case S_EOF:
 			if(c)
 			{
@@ -770,7 +775,7 @@ e_badsubscript,*cp);
 			if(!(mp->quote || mp->lit))
 			{
 				mp->patfound = mp->split && sh_isoption(SH_BRACEEXPAND);
-				brace = 1;
+				brace++;
 			}
 		    pattern:
 			if(!mp->pattern || !(mp->quote || mp->lit))

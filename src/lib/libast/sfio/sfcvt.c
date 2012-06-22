@@ -21,9 +21,6 @@
 ***********************************************************************/
 #if __STDC__
 #include	"FEATURE/standards"
-#if __MACH__ /* bsd legacy at the root of another header/typedef conflict */
-#undef	_POSIX_SOURCE
-#endif
 #endif
 #include	"sfhdr.h"
 
@@ -40,7 +37,9 @@ static char		*Zero = "0";
 #define SF_ZERO		((_Sfi = 1), strlcpy(buf, Zero, size), buf)
 #define SF_INTPART	(SF_IDIGITS/2)
 
-#if ! _lib_isnan
+#if !_lib_isnan
+#undef	isnan
+#undef	isnanl
 #if _lib_fpclassify
 #define isnan(n)	(fpclassify(n)==FP_NAN)
 #define isnanl(n)	(fpclassify(n)==FP_NAN)
@@ -49,13 +48,14 @@ static char		*Zero = "0";
 #define isnanl(n)	(memcmp((void*)&n,(void*)&_Sflnan,sizeof(n))==0)
 #endif
 #else
-#if ! _lib_isnanl
+#if !_lib_isnanl
+#undef	isnanl
 #define isnanl(n)	isnan(n)
 #endif
 #endif
 
-#if ! _lib_signbit
-#if ! _ast_fltmax_double
+#if !_lib_signbit
+#if !_ast_fltmax_double
 static int neg0ld(Sfdouble_t f)
 {
 	Sfdouble_t	z = 0;

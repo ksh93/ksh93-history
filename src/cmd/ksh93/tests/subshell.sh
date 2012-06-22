@@ -31,6 +31,7 @@ integer Errors=0 Error_fd=2
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
 
+builtin getconf
 bincat=$(PATH=$(getconf PATH) whence -p cat)
 
 z=()

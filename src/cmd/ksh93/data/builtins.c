@@ -37,9 +37,14 @@
 #   define bltin(x)	0
 #endif
 
-#if defined(SHOPT_CMDLIB_DIR) && !defined(SHOPT_CMDLIB_HDR)
+#ifndef SHOPT_CMDLIB_DIR
+#   define SHOPT_CMDLIB_DIR	SH_CMDLIB_DIR
+#else
+#   ifndef SHOPT_CMDLIB_HDR
 #	define SHOPT_CMDLIB_HDR	<cmdlist.h>
+#   endif
 #endif
+
 #define Q(f)		#f	/* libpp cpp workaround -- fixed 2005-04-11 */
 #define CMDLIST(f)	SH_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE, bltin(f),
 
@@ -123,6 +128,7 @@ const struct shtable3 shtab_builtins[] =
 	"type",		NV_BLTIN|BLT_ENV,		bltin(whence),
 	"whence",	NV_BLTIN|BLT_ENV,		bltin(whence),
 #ifdef SHOPT_CMDLIB_HDR
+#undef	mktemp		/* undo possible map-libc mktemp => _ast_mktemp */
 #include SHOPT_CMDLIB_HDR
 #else
 	CMDLIST(basename)

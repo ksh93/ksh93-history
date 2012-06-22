@@ -98,9 +98,7 @@ extern int		path_complete(Shell_t*,const char*, const char*,struct argnod**);
 #if SHOPT_BRACEPAT
     extern int 		path_generate(Shell_t*,struct argnod*,struct argnod**);
 #endif /* SHOPT_BRACEPAT */
-#if SHOPT_PFSH
     extern int		path_xattr(Shell_t*, const char*, char*);
-#endif /* SHOPT_PFSH */
 
 /* builtin/plugin routines */
 extern int		sh_addlib(Shell_t*,void*,char*,Pathcomp_t*);

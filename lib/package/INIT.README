@@ -19,7 +19,7 @@ Source Package Installation Instructions:
   (4) If the bin/package script does not exist then run:
 		test -d bin || mkdir bin
 		url=$URL/package
-		(wget -O bin/package $url||curl -L $url||hurl $url) > bin/package
+		(wget -O - $url||curl -L $url||hurl $url) > bin/package
 		chmod +x bin/package
   (5) Determine the list of package names you want from the download site, then
       use the package(1) command to do the actual download:
@@ -93,6 +93,10 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+12-06-20 package.sh: use $KSH for rt in "results test"
+12-06-15 Makefile: add PLUGIN_LIB to $INSTALLROOT/bin/.paths and BUILTIN_LIB => PLUGIN_LIB
+12-06-15 package.sh: add PLUGIN_LIB to $INSTALLROOT/bin/.paths and BUILTIN_LIB => PLUGIN_LIB
+12-06-13 package.sh: handle admin.db column output
 12-06-08 iffe.sh: fix 12-06-06 typo
 12-06-06 iffe.sh: check for -l* in reverse and accumulative order (e.g., for -last & -lm)
 12-06-04 package.sh: always check $INSTALLROOT/lib/package/profile

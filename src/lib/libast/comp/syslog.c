@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -268,9 +268,11 @@ sendlog(const char* msg)
 				continue;
 			if (*(s = p->name) != '/' && !(s = pathpath(buf, s, "", PATH_REGULAR|PATH_READ, sizeof(buf))))
 				continue;
-			if ((log.fd = open(s, O_WRONLY|O_APPEND|O_NOCTTY)) < 0 && (log.fd = sockopen(s)) < 0)
+			if ((log.fd = open(s, O_WRONLY|O_APPEND|O_NOCTTY|O_cloexec)) < 0 && (log.fd = sockopen(s)) < 0)
 				continue;
+#if !O_cloexec
 			fcntl(log.fd, F_SETFD, FD_CLOEXEC);
+#endif
 		}
 		if (!n || write(log.fd, msg, n) > 0)
 			break;

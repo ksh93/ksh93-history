@@ -450,7 +450,7 @@ visit(State_t* state, register FTSENT* ent)
 		rm = state->remove || ent->fts_info == FTS_SL;
 		if (!rm || !state->force)
 		{
-			if (S_ISLNK(st.st_mode) && (n = -1) || (n = open(state->path, O_RDWR|O_BINARY)) >= 0)
+			if (S_ISLNK(st.st_mode) && (n = -1) || (n = open(state->path, O_RDWR|O_BINARY|O_cloexec)) >= 0)
 			{
 				if (n >= 0)
 					close(n);
@@ -590,12 +590,12 @@ visit(State_t* state, register FTSENT* ent)
 		}
 		else if (state->op == CP || S_ISREG(ent->fts_statp->st_mode) || S_ISDIR(ent->fts_statp->st_mode))
 		{
-			if (ent->fts_statp->st_size > 0 && (rfd = open(ent->fts_path, O_RDONLY|O_BINARY)) < 0)
+			if (ent->fts_statp->st_size > 0 && (rfd = open(ent->fts_path, O_RDONLY|O_BINARY|O_cloexec)) < 0)
 			{
 				error(ERROR_SYSTEM|2, "%s: cannot read", ent->fts_path);
 				return 0;
 			}
-			else if ((wfd = open(state->path, st.st_mode ? (state->wflags & ~O_EXCL) : state->wflags, ent->fts_statp->st_mode & state->perm)) < 0)
+			else if ((wfd = open(state->path, (st.st_mode ? (state->wflags & ~O_EXCL) : state->wflags)|O_cloexec, ent->fts_statp->st_mode & state->perm)) < 0)
 			{
 				error(ERROR_SYSTEM|2, "%s: cannot write", state->path);
 				if (ent->fts_statp->st_size > 0)

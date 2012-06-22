@@ -618,6 +618,8 @@
 #	endif /*FIOCLEX*/
 #endif /*F_SETFD*/
 
+#define SF_FD_CLOEXEC			0x0001
+
 /* a couple of error number that we use, default values are like Linux */
 #ifndef EINTR
 #define EINTR	4
@@ -1192,7 +1194,7 @@ extern char**		_sfgetpath _ARG_((char*));
 extern Sfextern_t	_Sfextern;
 
 extern int		_sfmode _ARG_((Sfio_t*, int, int));
-extern int		_sftype _ARG_((const char*, int*, int*));
+extern int		_sftype _ARG_((const char*, int*, int*, int*));
 
 #undef	extern
 
@@ -1205,7 +1207,7 @@ extern int		errno;
 #if _ast_fltmax_double
 #define frexpl		frexp
 #endif
-#if !__STDC__
+#if !_lib_frexpl
 extern Sfdouble_t	frexpl _ARG_((Sfdouble_t, int*));
 #endif
 #endif
@@ -1213,7 +1215,7 @@ extern Sfdouble_t	frexpl _ARG_((Sfdouble_t, int*));
 #if _ast_fltmax_double
 #define ldexpl		ldexp
 #endif
-#if !__STDC__
+#if !_lib_ldexpl
 extern Sfdouble_t	ldexpl _ARG_((Sfdouble_t, int));
 #endif
 #endif

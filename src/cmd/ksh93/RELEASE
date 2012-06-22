@@ -1,4 +1,13 @@
-12-06-12  --- Release ksh93u+ ---
+12-06-19  --- Release ksh93u+ ---
+12-06-19  Tab completion after a / when there is only one match not completes
+	  with that match rather than generating a menu of matches.
+12-06-19  A bug in which patterns containing {...} where not processed
+	  correctly inside ${var/pattern/string} has been fixed.  
+12-06-18  Code modified to eliminate fts_notify variable.
+12-06-15  Change the .paths plugin/builtin library variable name from
+	  BUILTIN_LIB to PLUGIN_LIB to prevent new plugin_version() aware
+	  -lcmd from causing older non-plugin_version() aware ksh to dump core.
+12-06-14  builtin without argument no longer lists .sh.tilde as a built-in.
 12-06-12  For assignments if the form x=(foo bar), foo is only check for an
 	  alias if it is float, integer, compound, or nameref.
 12-06-12 +The shell supports 64 bit i-nodes even for 32 bit binaries.

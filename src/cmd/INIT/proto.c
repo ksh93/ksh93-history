@@ -1478,7 +1478,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 
 
  
-#line 84
+#line 92
 typedef struct Buffer_s
 {
 	char*		buf;
@@ -1601,7 +1601,7 @@ copy __PARAM__((register Buffer_t* b, register char* s, int n), (b, s, n)) __OTO
 }
 
  
-#line 217
+#line 225
 static void
 comment __PARAM__((Notice_t* notice, register Buffer_t* b, register char* s, register int n, int u), (notice, b, s, n, u)) __OTORP__(Notice_t* notice; register Buffer_t* b; register char* s; register int n; int u;){
 	register int	i;
@@ -1736,7 +1736,10 @@ copyright __PARAM__((Notice_t* notice, register Buffer_t* b), (notice, b)) __OTO
 
 	copy(b, "Copyright (c) ", -1);
 	if (notice->test)
+	{
 		clock = (time_t)1000212300;
+		t = ctime(&clock) + 20;
+	}
 	else if (!(t = notice->item[18].data))
 	{
 		time(&clock);
@@ -1805,7 +1808,7 @@ push __PARAM__((Stack_t* sp, char* file, char* parent, char* info, int size, Buf
 			file = path;
 		}
 	}
-	if ((i = open(file, O_RDONLY)) < 0)
+	if ((i = open(file, O_RDONLY|0)) < 0)
 	{
  
 		if (file == path)
@@ -1815,7 +1818,7 @@ push __PARAM__((Stack_t* sp, char* file, char* parent, char* info, int size, Buf
 					t = s;
 					for (s += 6; *s && *s != '/'; s++);
 					while (*t++ = *s++);
-					i = open(file, O_RDONLY);
+					i = open(file, O_RDONLY|0);
 				}
 		if (i < 0)
 		{

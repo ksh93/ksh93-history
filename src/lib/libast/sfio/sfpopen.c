@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -148,7 +148,7 @@ char*	mode;		/* mode of the stream */
 
 	if (!command || !command[0] || !mode)
 		return 0;
-	sflags = _sftype(mode, NiL, NiL);
+	sflags = _sftype(mode, NIL(int*), NIL(int*), NIL(int*));
 
 	if(f == (Sfio_t*)(-1))
 	{	/* stdio compatibility mode */
@@ -196,7 +196,7 @@ char*	mode;		/* mode of the stream */
 	/* sanity check */
 	if(!command || !command[0] || !mode)
 		return NIL(Sfio_t*);
-	sflags = _sftype(mode,NIL(int*),NIL(int*));
+	sflags = _sftype(mode,NIL(int*),NIL(int*),NIL(int*));
 
 	/* make pipes */
 	parent[0] = parent[1] = child[0] = child[1] = -1;

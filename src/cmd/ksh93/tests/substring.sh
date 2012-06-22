@@ -654,4 +654,11 @@ do	err_exit "\${@:0:-1} should not generate ${v:-empty_string}"
 	break
 done
 
+unset v d
+v=abbbc
+d="${v/~(E)b{2,4}/dummy}"
+[[ ${.sh.match} == bbb ]] || err_exit '.sh.match wrong after ${s/~(E)b{2,4}/dummy}'
+[[ $d == adummyc ]] || err_exit '${s/~(E)b{2,4}/dummy} not working'
+
+
 exit $((Errors<125?Errors:125))

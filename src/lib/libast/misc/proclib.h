@@ -31,9 +31,6 @@
 #define _PROCLIB_H
 
 #include <ast_standards.h>
-#if __MACH__ /* bsd legacy at the root of another header/typedef conflict */
-#undef	_POSIX_SOURCE
-#endif
 #include <ast.h>
 #include <errno.h>
 #include <sig.h>

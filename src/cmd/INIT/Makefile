@@ -3,6 +3,7 @@
  */
 
 ID = ast
+SILENT = /* this component builds silent -- this prevents us from using it while building it */
 
 :PACKAGE: license=$(ID)
 
@@ -85,98 +86,148 @@ $(BINDIR)/mkdir :INSTALL: mkdir.sh
 
 $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 	if	test ! -f $(<) -o -w $(<)
-	then	nl="
-"
-		o=`cat $(<) 2>/dev/null` || :
-		v=
-		n=
-		case $nl$o in
-		*${nl}FPATH=*|*#FPATH=*|*[Nn][Oo]FPATH=*)
-			;;
-		*)	case $n in
-			'')	;;
-			*)	n="$n$nl" v="$v|" ;;
-			esac
-			n="${n}FPATH=../fun"
-			v="${v}FPATH"
-			;;
-		esac
-		case $nl$o in
-		*${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*|*[Nn][Oo]BUILTIN_LIB=*)
-			;;
-		*)	case $n in
-			'')	;;
-			*)	n="$n$nl" v="$v|" ;;
-			esac
-			case '$(CC.DIALECT:N=*EXPORT=[AD]LL*)' in
-			?*)	p= c= ;;
-			*)	p='XX' ;;
-			esac
-			n="${n}${p}BUILTIN_LIB=cmd"
-			v="${v}BUILTIN_LIB"
-			;;
-		esac
-		set x x : $(-mam:??$(.GETCONF LIBPATH:/:/ /G:/,/ : /G:Q)?)
-		p=
+	then	N='$("\n")'
+		H=$(CC.HOSTTYPE)
+		P="$(-mam:??$(.GETCONF LIBPATH:/:/ /G:/,/ : /G:Q)?)"
+		b= f= h= l= n= p= u= B= L=
+		set : $P
 		while	:
 		do	while	:
-			do	case $# in
-				0)	break ;;
+			do	case $1 in
+				'')	break 2 ;;
+				:)	shift; break ;;
 				esac
-				x=$1
 				shift
-				case $x in
-				:)	break ;;
-				esac
 			done
 			case $# in
-			0|1)	break
-				;;
-			2)	p=$2
-				;;
-			*)	case "$(CC.HOSTTYPE)" in
-				$3)	p=$2; break ;;
-				esac
-				;;
+			0|1)	break ;;
 			esac
+			case $L in
+			?*)	L="$L|" ;;
+			esac
+			L="$L$2=*"
+			B=$1
 		done
+		if	test -f $(<)
+		then	while	read x
+			do	case $x in
+				*'$$("'*)	break # to fix 2012-06-18 edit botch #
+						;;
+				'#'?*)		case $h in
+						'')	h=$x ;;
+						esac
+						;;
+				$L)		l=$x
+						;;
+				*BUILTIN_LIB=*)	b=$x
+						;;
+				*FPATH=*)	f=$x
+						;;
+				*PLUGIN_LIB=*)	p=$x
+						;;
+				*)		case $u in
+						?*)	u=$u$N ;;
+						esac
+						u=$u$x
+						;;
+				esac
+			done < $(<)
+		fi
+		ifs=$IFS
+		m=
 		case $p in
-		'')	if	test -x /lib/dld.sl
-			then	p=SHLIB_PATH
-			elif	test -x /usr/lib/dyld
-			then	p=DYLD_LIBRARY_PATH
-			else	case "$(CC.HOSTTYPE)" in
-				ibm.*|mvs.*)
-					p=LIBPATH
+		?*)	b=
+			;;
+		esac
+		case $b in
+		?*)	IFS='='
+			set $b
+			IFS=$ifs
+			shift
+			p="PLUGIN_LIB=$*"
+			case $b in
+			[Nn][Oo]*)	p=no$p ;;
+			esac
+			m=1
+			;;
+		esac
+		case $f in
+		'')	f="FPATH=../fun"
+			m=1
+			;;
+		esac
+		case $h in
+		'')	h='# use { no NO } prefix to permanently disable #' ;;
+		esac
+		case $l in
+		'')	set x x : $P
+			l=
+			while	:
+			do	while	:
+				do	case $# in
+					0)	break ;;
+					esac
+					x=$1
+					shift
+					case $x in
+					:)	break ;;
+					esac
+				done
+				case $# in
+				0|1)	break
 					;;
-				sgi.mips3)	
-					p=LD_LIBRARYN32_PATH
+				2)	l=$2
 					;;
-				sgi.mips4)	
-					p=LD_LIBRARYN64_PATH
-					;;
-				*)	p=LD_LIBRARY_PATH
+				*)	case "$H" in
+					$3)	l=$2; break ;;
+					esac
 					;;
 				esac
-			fi
+			done
+			case $l in
+			'')	if	test -x /lib/dld.sl
+				then	l=SHLIB_PATH
+				elif	test -x /usr/lib/dyld
+				then	l=DYLD_LIBRARY_PATH
+				else	case "$H" in
+					ibm.*|mvs.*)
+						l=LIBPATH
+						;;
+					sgi.mips3)	
+						l=LD_LIBRARYN32_PATH
+						;;
+					sgi.mips4)	
+						l=LD_LIBRARYN64_PATH
+						;;
+					*)	l=LD_LIBRARY_PATH
+						;;
+					esac
+				fi
+				;;
+			esac
+			case $l in
+			?*)	case $B in
+				'')	B=lib ;;
+				esac
+				l="$l=../$B"
+				m=1
+				;;
+			esac
 			;;
 		esac
-		case $nl$o in
-		*${nl}${p}=*|*#${p}=*|*[Nn][Oo]${p}=*)
-			;;
-		*)	case $n in
-			'')	;;
-			*)	n="$n$nl" v="$v|" ;;
+		case $p in
+		'')	p="PLUGIN_LIB=cmd"
+			case '$(CC.DIALECT:N=*EXPORT=[AD]LL*)' in
+			'')	p=no$p ;;
 			esac
-			n="${n}${p}=../lib"
-			v="${v}${p}"
+			m=1
 			;;
 		esac
-		case $n in
-		?*)	case $o in
-			?*)	o=`egrep -v "($v)=" $(<)`$nl ;;
+		case $m in
+		1)	case $u in
+			?*)	u=$N$u ;;
 			esac
-			echo "# use { # no NO } prefix instead of XX to permanently disable #$nl$o$n" > $(<)
+			echo "$h$N$p$N$f$N$l$u" > $(<)
 			;;
 		esac
 	fi

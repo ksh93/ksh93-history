@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -177,7 +177,7 @@ static History_t *hist_ptr;
 #if SHOPT_AUDIT
 static int sh_checkaudit(History_t *hp, const char *name, char *logbuf, size_t len)
 {
-	char	*buff, *cp, *last;
+	char	*cp, *last;
 	int	id1, id2, r=0, n, fd;
 	if((fd=open(name, O_RDONLY)) < 0)
 		return(0);

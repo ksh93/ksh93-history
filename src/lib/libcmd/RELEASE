@@ -1,3 +1,4 @@
+12-06-19 tail.c: be nice and use sh_sigcheck() and tvsleep() to verify interrupts
 12-05-31 cat,head,tee: use errno==EPIPE => ERROR_PIPE(errno)
 12-05-25 vmstate.c: #include <sfdisc.h> for sfkeyprintf() prototype
 12-04-20 chgrp.c,chmod.c,cksum.c,cp.c: default fts_flags()|FTS_META (to disable pure FTS_PHYSICAL)

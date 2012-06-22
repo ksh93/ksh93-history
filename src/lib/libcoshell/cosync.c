@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -67,11 +67,13 @@ cosync(Coshell_t* co, const char* file, int fd, int mode)
 			t = b;
 			while (t < &tmp[sizeof(tmp) - 1] && (*t++ = *s++));
 			*t = 0;
-			if ((td = open(tmp, O_WRONLY|O_CREAT|O_TRUNC, 0)) >= 0) close(td);
+			if ((td = open(tmp, O_WRONLY|O_CREAT|O_TRUNC|O_cloexec, 0)) >= 0)
+				close(td);
 			unlink(tmp);
 			if (fd >= 0 && mode >= 0)
 			{
-				if ((td = open(file, mode)) < 0) return(-1);
+				if ((td = open(file, mode|O_cloexec)) < 0)
+					return(-1);
 				close(fd);
 				dup2(td, fd);
 				close(td);
@@ -85,7 +87,7 @@ cosync(Coshell_t* co, const char* file, int fd, int mode)
 
 			if (fd < 0)
 			{
-				if (!file || mode < 0 || (fd = open(file, O_RDONLY)) < 0) return(-1);
+				if (!file || mode < 0 || (fd = open(file, O_RDONLY|O_cloexec)) < 0) return(-1);
 				clean = 1;
 			}
 

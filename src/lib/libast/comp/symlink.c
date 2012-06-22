@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -45,7 +45,7 @@ symlink(const char* a, char* b)
 		int	n;
 		int	fd;
 
-		if ((fd = open(b, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
+		if ((fd = open(b, O_CREAT|O_TRUNC|O_WRONLY|O_cloexec, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
 			return -1;
 		n = strlen(a) + 1;
 		n = (write(fd, FAKELINK_MAGIC, sizeof(FAKELINK_MAGIC)) != sizeof(FAKELINK_MAGIC) || write(fd, a, n) != n) ? -1 : 0;

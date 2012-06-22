@@ -2988,7 +2988,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	Namarr_t *ap = 0;
 	int oldsize,oldatts,trans;
 	Namfun_t *fp= (newatts&NV_NODISC)?np->nvfun:0;
-	char *prefix = shp->prefix,*sub;
+	char *prefix = shp->prefix;
 	newatts &= ~NV_NODISC;
 
 	/* check for restrictions */
@@ -3056,7 +3056,6 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 			strcpy(cp, sp);
 			if(sp && (mp=nv_opensub(np)))
 			{
-				sub = nv_getsub(mp);
 				if(trans)
 				{
 					nv_disc(np, &ap->hdr,NV_POP);
@@ -3241,7 +3240,7 @@ int nv_rename(register Namval_t *np, int flags)
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;
 	char			*nvenv=0,*prefix=shp->prefix;
-	Namarr_t		*ap,*aq=0;
+	Namarr_t		*ap;
 	if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
 	{
 		if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
@@ -3325,7 +3324,7 @@ int nv_rename(register Namval_t *np, int flags)
 		if(arraynp && !nv_isattr(np,NV_MINIMAL) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)))
 			ap->nelem++;
 	}
-	if(((aq=nv_arrayptr(nr)) && !arraynr) || nv_isvtree(nr))
+	if((nv_arrayptr(nr) && !arraynr) || nv_isvtree(nr))
 	{
 		if(ap=nv_arrayptr(np))
 		{

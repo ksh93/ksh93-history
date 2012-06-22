@@ -463,7 +463,7 @@ int job_reap(register int sig)
 			pw->p_flag |= (P_NOTIFY|P_SIGNALLED|P_STOPPED);
 			pw->p_exit = WSTOPSIG(wstat);
 			if(pw->p_pgrp && pw->p_pgrp==job.curpgid && sh_isstate(SH_STOPOK))
-				sh_fault(pw->p_exit); 
+				kill(getpid(),pw->p_exit); 
 			if(px)
 			{
 				/* move to top of job list */
@@ -501,7 +501,7 @@ int job_reap(register int sig)
 				{
 					pw->p_flag &= ~P_NOTIFY;
 					sh_offstate(SH_STOPOK);
-					sh_fault(SIGINT); 
+					kill(getpid(),SIGINT); 
 					sh_onstate(SH_STOPOK);
 				}
 			}
@@ -1640,12 +1640,12 @@ int	job_wait(register pid_t pid)
 		job_reset(pw);
 		/* propogate keyboard interrupts to parent */
 		if((pw->p_flag&P_SIGNALLED) && pw->p_exit==SIGINT && !(shp->sigflag[SIGINT]&SH_SIGOFF))
-			sh_fault(SIGINT); 
+			kill(getpid(),SIGINT); 
 #ifdef SIGTSTP
 		else if((pw->p_flag&P_STOPPED) && pw->p_exit==SIGTSTP)
 		{
 			job.parent = 0;
-			sh_fault(SIGTSTP); 
+			kill(getpid(),SIGTSTP); 
 		}
 #endif /* SIGTSTP */
 	}
@@ -2049,6 +2049,7 @@ void job_fork(pid_t parent)
 		job.in_critical = 0;
 		break;
 	default:
+		job_chksave(parent);
 		jobfork=0;
 		job_unlock();
 		break;

@@ -36,6 +36,14 @@
 #include <time.h>
 #endif
 
+#ifndef O_cloexec
+#ifdef	O_CLOEXEC
+#define O_cloexec		0
+#else
+#define O_cloexec		0
+#endif
+#endif
+
 #undef	copy
 #undef	BSD			/* guess who defines this */
 #undef	END
@@ -372,7 +380,10 @@ copyright(Notice_t* notice, register Buffer_t* b)
 
 	copy(b, "Copyright (c) ", -1);
 	if (notice->test)
+	{
 		clock = (time_t)1000212300;
+		t = ctime(&clock) + 20;
+	}
 	else if (!(t = notice->item[SOURCE].data))
 	{
 		time(&clock);
@@ -442,7 +453,7 @@ push(Stack_t* sp, char* file, char* parent, char* info, int size, Buffer_t* buf)
 			file = path;
 		}
 	}
-	if ((i = open(file, O_RDONLY)) < 0)
+	if ((i = open(file, O_RDONLY|O_cloexec)) < 0)
 	{
 		/* this hack viewpath lookup works for default package setups */
 		if (file == path)
@@ -452,7 +463,7 @@ push(Stack_t* sp, char* file, char* parent, char* info, int size, Buffer_t* buf)
 					t = s;
 					for (s += 6; *s && *s != '/'; s++);
 					while (*t++ = *s++);
-					i = open(file, O_RDONLY);
+					i = open(file, O_RDONLY|O_cloexec);
 				}
 		if (i < 0)
 		{

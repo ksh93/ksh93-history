@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-05-22
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-06-20
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -74,7 +74,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w hurl -a -x hurl || chmod u+w,+x hurl
+exec - test -w hurl -a -x hurl || chmod u+w,+x hurl
 done hurl generated
 make iffe
 make iffe.sh
@@ -115,7 +115,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phon
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w iffe -a -x iffe || chmod u+w,+x iffe
+exec - test -w iffe -a -x iffe || chmod u+w,+x iffe
 done iffe generated
 make mktest
 make mktest.sh
@@ -156,7 +156,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w mktest -a -x mktest || chmod u+w,+x mktest
+exec - test -w mktest -a -x mktest || chmod u+w,+x mktest
 done mktest generated
 make package
 make package.sh
@@ -196,7 +196,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w package -a -x package || chmod u+w,+x package
+exec - test -w package -a -x package || chmod u+w,+x package
 done package generated
 make regress
 make regress.sh
@@ -237,7 +237,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w regress -a -x regress || chmod u+w,+x regress
+exec - test -w regress -a -x regress || chmod u+w,+x regress
 done regress generated
 make rt
 make rt.sh
@@ -278,7 +278,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w rt -a -x rt || chmod u+w,+x rt
+exec - test -w rt -a -x rt || chmod u+w,+x rt
 done rt generated
 make crossexec
 make crossexec.sh
@@ -318,7 +318,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w crossexec -a -x crossexec || chmod u+w,+x crossexec
+exec - test -w crossexec -a -x crossexec || chmod u+w,+x crossexec
 done crossexec generated
 make ditto
 make ditto.sh
@@ -359,7 +359,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Left
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w ditto -a -x ditto || chmod u+w,+x ditto
+exec - test -w ditto -a -x ditto || chmod u+w,+x ditto
 done ditto generated
 make execrate
 make execrate.sh
@@ -400,7 +400,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w execrate -a -x execrate || chmod u+w,+x execrate
+exec - test -w execrate -a -x execrate || chmod u+w,+x execrate
 done execrate generated
 make filter
 make filter.sh
@@ -440,7 +440,7 @@ exec - USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?C
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w filter -a -x filter || chmod u+w,+x filter
+exec - test -w filter -a -x filter || chmod u+w,+x filter
 done filter generated
 make ignore
 make ignore.sh
@@ -480,7 +480,7 @@ exec -
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w ignore -a -x ignore || chmod u+w,+x ignore
+exec - test -w ignore -a -x ignore || chmod u+w,+x ignore
 done ignore generated
 make silent
 make silent.sh
@@ -520,7 +520,7 @@ exec -
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w silent -a -x silent || chmod u+w,+x silent
+exec - test -w silent -a -x silent || chmod u+w,+x silent
 done silent generated
 make mamake
 make mamake.o
@@ -620,7 +620,7 @@ exec -
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w mprobe -a -x mprobe || chmod u+w,+x mprobe
+exec - test -w mprobe -a -x mprobe || chmod u+w,+x mprobe
 done mprobe generated
 make probe
 make probe.sh
@@ -665,10 +665,10 @@ exec -
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w probe -a -x probe || chmod u+w,+x probe
+exec - test -w probe -a -x probe || chmod u+w,+x probe
 done probe generated
 make ${INSTALLROOT}/bin
-exec - if silent test ! -d ${INSTALLROOT}/bin
+exec - if test ! -d ${INSTALLROOT}/bin
 exec - then mkdir -p ${INSTALLROOT}/bin
 exec - fi
 done ${INSTALLROOT}/bin generated
@@ -698,7 +698,7 @@ prev rt
 exec - test '' = 'rt' || ${STDCMP} 2>/dev/null -s rt ${INSTALLROOT}/bin/rt || { ${STDMV} ${INSTALLROOT}/bin/rt ${INSTALLROOT}/bin/rt.old 2>/dev/null || true; ${STDCP} rt ${INSTALLROOT}/bin/rt ;}
 done ${INSTALLROOT}/bin/rt generated
 make ${PACKAGEROOT}/bin
-exec - if silent test ! -d ${PACKAGEROOT}/bin
+exec - if test ! -d ${PACKAGEROOT}/bin
 exec - then mkdir -p ${PACKAGEROOT}/bin
 exec - fi
 done ${PACKAGEROOT}/bin generated
@@ -749,7 +749,7 @@ exec -
 exec - !
 exec - ;;
 exec - esac
-exec - silent test -w mamprobe -a -x mamprobe || chmod u+w,+x mamprobe
+exec - test -w mamprobe -a -x mamprobe || chmod u+w,+x mamprobe
 done mamprobe generated
 exec - test '' = 'mamprobe' || ${STDCMP} 2>/dev/null -s mamprobe ${PACKAGEROOT}/bin/mamprobe || { ${STDMV} ${PACKAGEROOT}/bin/mamprobe ${PACKAGEROOT}/bin/mamprobe.old 2>/dev/null || true; ${STDCP} mamprobe ${PACKAGEROOT}/bin/mamprobe ;}
 done ${PACKAGEROOT}/bin/mamprobe generated
@@ -774,7 +774,7 @@ prev filter
 exec - test '' = 'filter' || ${STDCMP} 2>/dev/null -s filter ${INSTALLROOT}/bin/filter || { ${STDMV} ${INSTALLROOT}/bin/filter ${INSTALLROOT}/bin/filter.old 2>/dev/null || true; ${STDCP} filter ${INSTALLROOT}/bin/filter ;}
 done ${INSTALLROOT}/bin/filter generated
 make ${PACKAGEROOT}/lib/package
-exec - if silent test ! -d ${PACKAGEROOT}/lib/package
+exec - if test ! -d ${PACKAGEROOT}/lib/package
 exec - then mkdir -p ${PACKAGEROOT}/lib/package
 exec - fi
 done ${PACKAGEROOT}/lib/package generated
@@ -790,7 +790,7 @@ done CONVERT.mk
 exec - test '' = 'CONVERT.mk' || ${STDCMP} 2>/dev/null -s CONVERT.mk ${PACKAGEROOT}/lib/package/CONVERT.mk || { ${STDMV} ${PACKAGEROOT}/lib/package/CONVERT.mk ${PACKAGEROOT}/lib/package/CONVERT.mk.old 2>/dev/null || true; ${STDCP} CONVERT.mk ${PACKAGEROOT}/lib/package/CONVERT.mk ;}
 done ${PACKAGEROOT}/lib/package/CONVERT.mk generated
 make ${INSTALLROOT}/lib/make
-exec - if silent test ! -d ${INSTALLROOT}/lib/make
+exec - if test ! -d ${INSTALLROOT}/lib/make
 exec - then mkdir -p ${INSTALLROOT}/lib/make
 exec - fi
 done ${INSTALLROOT}/lib/make generated
@@ -859,39 +859,83 @@ exec - fi
 done ${INSTALLROOT}/bin/mkdir generated
 make ${INSTALLROOT}/bin/.paths
 exec - if test ! -f ${INSTALLROOT}/bin/.paths -o -w ${INSTALLROOT}/bin/.paths
-exec - then nl="
-exec - "
-exec - o=`cat ${INSTALLROOT}/bin/.paths 2>/dev/null` || :
-exec - v=
-exec - n=
-exec - case $nl$o in
-exec - *${nl}FPATH=*|*#FPATH=*|*[Nn][Oo]FPATH=*)
+exec - then N='
+exec - '
+exec - H=${mam_cc_HOSTTYPE}
+exec - P=""
+exec - b= f= h= l= n= p= u= B= L=
+exec - set : $P
+exec - while :
+exec - do while :
+exec - do case $1 in
+exec - '') break 2 ;;
+exec - :) shift; break ;;
+exec - esac
+exec - shift
+exec - done
+exec - case $# in
+exec - 0|1) break ;;
+exec - esac
+exec - case $L in
+exec - ?*) L="$L|" ;;
+exec - esac
+exec - L="$L$2=*"
+exec - B=$1
+exec - done
+exec - if test -f ${INSTALLROOT}/bin/.paths
+exec - then while read x
+exec - do case $x in
+exec - *'
 exec - ;;
-exec - *) case $n in
-exec - '') ;;
-exec - *) n="$n$nl" v="$v|" ;;
+exec - '#'?*) case $h in
+exec - '') h=$x ;;
 exec - esac
-exec - n="${n}FPATH=../fun"
-exec - v="${v}FPATH"
+exec - ;;
+exec - $L) l=$x
+exec - ;;
+exec - *BUILTIN_LIB=*) b=$x
+exec - ;;
+exec - *FPATH=*) f=$x
+exec - ;;
+exec - *PLUGIN_LIB=*) p=$x
+exec - ;;
+exec - *) case $u in
+exec - ?*) u=$u$N ;;
+exec - esac
+exec - u=$u$x
 exec - ;;
 exec - esac
-exec - case $nl$o in
-exec - *${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*|*[Nn][Oo]BUILTIN_LIB=*)
-exec - ;;
-exec - *) case $n in
-exec - '') ;;
-exec - *) n="$n$nl" v="$v|" ;;
-exec - esac
-exec - case '' in
-exec - ?*) p= c= ;;
-exec - *) p='XX' ;;
-exec - esac
-exec - n="${n}${p}BUILTIN_LIB=cmd"
-exec - v="${v}BUILTIN_LIB"
+exec - done < ${INSTALLROOT}/bin/.paths
+exec - fi
+exec - ifs=$IFS
+exec - m=
+exec - case $p in
+exec - ?*) b=
 exec - ;;
 exec - esac
-exec - set x x :
-exec - p=
+exec - case $b in
+exec - ?*) IFS='='
+exec - set $b
+exec - IFS=$ifs
+exec - shift
+exec - p="PLUGIN_LIB=$*"
+exec - case $b in
+exec - [Nn][Oo]*) p=no$p ;;
+exec - esac
+exec - m=1
+exec - ;;
+exec - esac
+exec - case $f in
+exec - '') f="FPATH=../fun"
+exec - m=1
+exec - ;;
+exec - esac
+exec - case $h in
+exec - '') h='# use { no NO } prefix to permanently disable #' ;;
+exec - esac
+exec - case $l in
+exec - '') set x x : $P
+exec - l=
 exec - while :
 exec - do while :
 exec - do case $# in
@@ -906,57 +950,64 @@ exec - done
 exec - case $# in
 exec - 0|1) break
 exec - ;;
-exec - 2) p=$2
+exec - 2) l=$2
 exec - ;;
-exec - *) case "${mam_cc_HOSTTYPE}" in
-exec - $3) p=$2; break ;;
+exec - *) case "$H" in
+exec - $3) l=$2; break ;;
 exec - esac
 exec - ;;
 exec - esac
 exec - done
-exec - case $p in
+exec - case $l in
 exec - '') if test -x /lib/dld.sl
-exec - then p=SHLIB_PATH
+exec - then l=SHLIB_PATH
 exec - elif test -x /usr/lib/dyld
-exec - then p=DYLD_LIBRARY_PATH
-exec - else case "${mam_cc_HOSTTYPE}" in
+exec - then l=DYLD_LIBRARY_PATH
+exec - else case "$H" in
 exec - ibm.*|mvs.*)
-exec - p=LIBPATH
+exec - l=LIBPATH
 exec - ;;
 exec - sgi.mips3)
-exec - p=LD_LIBRARYN32_PATH
+exec - l=LD_LIBRARYN32_PATH
 exec - ;;
 exec - sgi.mips4)
-exec - p=LD_LIBRARYN64_PATH
+exec - l=LD_LIBRARYN64_PATH
 exec - ;;
-exec - *) p=LD_LIBRARY_PATH
+exec - *) l=LD_LIBRARY_PATH
 exec - ;;
 exec - esac
 exec - fi
 exec - ;;
 exec - esac
-exec - case $nl$o in
-exec - *${nl}${p}=*|*#${p}=*|*[Nn][Oo]${p}=*)
-exec - ;;
-exec - *) case $n in
-exec - '') ;;
-exec - *) n="$n$nl" v="$v|" ;;
+exec - case $l in
+exec - ?*) case $B in
+exec - '') B=lib ;;
 exec - esac
-exec - n="${n}${p}=../lib"
-exec - v="${v}${p}"
+exec - l="$l=../$B"
+exec - m=1
 exec - ;;
 exec - esac
-exec - case $n in
-exec - ?*) case $o in
-exec - ?*) o=`egrep -v "($v)=" ${INSTALLROOT}/bin/.paths`$nl ;;
+exec - ;;
 exec - esac
-exec - echo "# use { # no NO } prefix instead of XX to permanently disable #$nl$o$n" > ${INSTALLROOT}/bin/.paths
+exec - case $p in
+exec - '') p="PLUGIN_LIB=cmd"
+exec - case '' in
+exec - '') p=no$p ;;
+exec - esac
+exec - m=1
+exec - ;;
+exec - esac
+exec - case $m in
+exec - 1) case $u in
+exec - ?*) u=$N$u ;;
+exec - esac
+exec - echo "$h$N$p$N$f$N$l$u" > ${INSTALLROOT}/bin/.paths
 exec - ;;
 exec - esac
 exec - fi
 done ${INSTALLROOT}/bin/.paths generated
 make ${INSTALLROOT}/lib/probe/C
-exec - if silent test ! -d ${INSTALLROOT}/lib/probe/C
+exec - if test ! -d ${INSTALLROOT}/lib/probe/C
 exec - then mkdir -p ${INSTALLROOT}/lib/probe/C
 exec - fi
 done ${INSTALLROOT}/lib/probe/C generated
@@ -966,19 +1017,19 @@ prev C+probe
 exec - test '' = 'C+probe' || ${STDCMP} 2>/dev/null -s C+probe ${INSTALLROOT}/lib/probe/C/probe || { ${STDMV} ${INSTALLROOT}/lib/probe/C/probe ${INSTALLROOT}/lib/probe/C/probe.old 2>/dev/null || true; ${STDCP} C+probe ${INSTALLROOT}/lib/probe/C/probe ;}
 done ${INSTALLROOT}/lib/probe/C/probe generated
 make ${INSTALLROOT}/lib/probe/C/make
-exec - if silent test ! -d ${INSTALLROOT}/lib/probe/C/make
+exec - if test ! -d ${INSTALLROOT}/lib/probe/C/make
 exec - then mkdir -p ${INSTALLROOT}/lib/probe/C/make
 exec - fi
 done ${INSTALLROOT}/lib/probe/C/make generated
 prev ${INSTALLROOT}/lib/probe/C/make
 make ${INSTALLROOT}/lib/probe/C/pp
-exec - if silent test ! -d ${INSTALLROOT}/lib/probe/C/pp
+exec - if test ! -d ${INSTALLROOT}/lib/probe/C/pp
 exec - then mkdir -p ${INSTALLROOT}/lib/probe/C/pp
 exec - fi
 done ${INSTALLROOT}/lib/probe/C/pp generated
 prev ${INSTALLROOT}/lib/probe/C/pp
 make ${INSTALLROOT}/lib/probe/C/mam
-exec - if silent test ! -d ${INSTALLROOT}/lib/probe/C/mam
+exec - if test ! -d ${INSTALLROOT}/lib/probe/C/mam
 exec - then mkdir -p ${INSTALLROOT}/lib/probe/C/mam
 exec - fi
 done ${INSTALLROOT}/lib/probe/C/mam generated
@@ -1024,7 +1075,7 @@ done probe.ini generated
 exec - test '' = 'probe.ini' || ${STDCMP} 2>/dev/null -s probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini || { ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini.old 2>/dev/null || true; ${STDCP} probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini ;}
 done ${INSTALLROOT}/lib/probe/C/make/probe.ini generated
 make ${INSTALLROOT}/include/ast
-exec - if silent test ! -d ${INSTALLROOT}/include/ast
+exec - if test ! -d ${INSTALLROOT}/include/ast
 exec - then mkdir -p ${INSTALLROOT}/include/ast
 exec - fi
 done ${INSTALLROOT}/include/ast generated
@@ -1041,7 +1092,7 @@ done prototyped.h generated
 exec - test '' = 'prototyped.h' || ${STDCMP} 2>/dev/null -s prototyped.h ${INSTALLROOT}/include/ast/prototyped.h || { ${STDMV} ${INSTALLROOT}/include/ast/prototyped.h ${INSTALLROOT}/include/ast/prototyped.h.old 2>/dev/null || true; ${STDCP} prototyped.h ${INSTALLROOT}/include/ast/prototyped.h ;}
 done ${INSTALLROOT}/include/ast/prototyped.h generated
 make ${INSTALLROOT}/lib/lib
-exec - if silent test ! -d ${INSTALLROOT}/lib/lib
+exec - if test ! -d ${INSTALLROOT}/lib/lib
 exec - then mkdir -p ${INSTALLROOT}/lib/lib
 exec - fi
 done ${INSTALLROOT}/lib/lib generated

@@ -2,7 +2,7 @@ set	prototyped
 set	nooptimize
 set	stdio FEATURE/standards
 hdr	float,limits,math,values
-lib	frexp,frexpl,ldexp,ldexpl,finite,finitel,isinfl,isnanl,copysign,copysignl FEATURE/standards math.h -lm
+lib,npt	frexp,frexpl,ldexp,ldexpl,finite,finitel,isinfl,isnanl,copysign,copysignl FEATURE/standards math.h -lm
 lib	fpclassify -lm note{ fpclassify present and works }end link{
 		#include <sys/types.h>
 		#include <sys/stat.h>
@@ -879,16 +879,16 @@ tst	- note{ missing floating point limits }end output{
 	#endif
 
 		printf("\n");
-	#if !_lib_frexp
+	#if !_lib_frexp || _npt_frexp
 		printf("extern double		frexp(double, int*);\n");
 	#endif
-	#if !_lib_frexpl
+	#if !_lib_frexpl || _npt_frexpl
 		printf("extern _ast_fltmax_t	frexpl(_ast_fltmax_t, int*);\n");
 	#endif
-	#if !_lib_ldexp
+	#if !_lib_ldexp || _npt_ldexp
 		printf("extern double		ldexp(double, int);\n");
 	#endif
-	#if !_lib_ldexpl
+	#if !_lib_ldexpl || _npt_ldexpl
 		printf("extern _ast_fltmax_t	ldexpl(_ast_fltmax_t, int);\n");
 	#endif
 

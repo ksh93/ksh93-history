@@ -1721,7 +1721,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					{
 						shp->trapnote &= ~SH_SIGIGNORE;
 						if(shp->exitval == (SH_EXITSIG|SIGINT))
-							sh_fault(SIGINT);
+							kill(getpid(),SIGINT);
 					}
 				}
 				if(type&FAMP)
@@ -3202,7 +3202,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 	sig = shp->savesig;
 	shp->savesig = 0;
 	if(sig>0)
-		sh_fault(sig);
+		kill(getpid(),sig);
 	sh_sigcheck(shp);
 	usepipe=0;
 	return(0);
@@ -3225,7 +3225,7 @@ pid_t sh_fork(Shell_t *shp,int flags, int *jobid)
 		sig = shp->savesig;
 		shp->savesig = 0;
 		if(sig>0)
-			sh_fault(sig);
+			kill(getpid(),sig);
 	}
 	job_fork(parent);
 	return(parent);
@@ -3438,7 +3438,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	if(jmpval)
 		r=shp->exitval;
 	if(r>SH_EXITSIG && ((r&SH_EXITMASK)==SIGINT || ((r&SH_EXITMASK)==SIGQUIT)))
-		sh_fault(r&SH_EXITMASK);
+		kill(getpid(),r&SH_EXITMASK);
 	if(jmpval > SH_JMPFUN)
 	{
 		sh_chktrap(shp);

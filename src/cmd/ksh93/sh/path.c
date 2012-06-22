@@ -1540,7 +1540,7 @@ static int path_chkpaths(Shell_t *shp,Pathcomp_t *first, Pathcomp_t* old,Pathcom
 			}
 			*cp = 0;
 			m = ep ? (ep-sp) : 0;
-			if(m==0 || m==6 && memcmp((void*)sp,(void*)"FPATH=",6)==0)
+			if(m==0 || m==6 && memcmp((void*)sp,(void*)"FPATH=",m)==0)
 			{
 				if(first)
 				{
@@ -1550,7 +1550,7 @@ static int path_chkpaths(Shell_t *shp,Pathcomp_t *first, Pathcomp_t* old,Pathcom
 					path_addcomp(shp,first,old,stakptr(offset),PATH_FPATH|PATH_BFPATH);
 				}
 			}
-			else if(m==12 && memcmp((void*)sp,(void*)"BUILTIN_LIB=",12)==0)
+			else if(m==11 && memcmp((void*)sp,(void*)"PLUGIN_LIB=",m)==0)
 			{
 				if(pp->bbuf)
 					free(pp->bbuf);

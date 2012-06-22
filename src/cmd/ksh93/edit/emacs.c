@@ -317,7 +317,7 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 			count = 1;
 		adjust = -1;
 		i = cur;
-		if(c!='\t')
+		if(c!='\t' && c!=ESC && !isdigit(c))
 			ep->ed->e_tabcount = 0;
 		switch(c)
 		{
@@ -994,8 +994,6 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		case '*':		/* filename expansion */
 		case '=':	/* escape = - list all matching file names */
 			ep->mark = cur;
-			if(out[cur-1]=='/')
-				i = '=';
 			if(ed_expand(ep->ed,(char*)out,&cur,&eol,i,count) < 0)
 			{
 				if(ep->ed->e_tabcount==1)

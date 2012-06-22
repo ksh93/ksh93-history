@@ -19,7 +19,7 @@ Source Package Installation Instructions:
   (4) If the bin/package script does not exist then run:
 		test -d bin || mkdir bin
 		url=$URL/package
-		(wget -O bin/package $url||curl -L $url||hurl $url) > bin/package
+		(wget -O - $url||curl -L $url||hurl $url) > bin/package
 		chmod +x bin/package
   (5) Determine the list of package names you want from the download site, then
       use the package(1) command to do the actual download:
@@ -93,7 +93,16 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-12-06-12  --- Release ksh93u+ ---
+12-06-19  --- Release ksh93u+ ---
+12-06-19  Tab completion after a / when there is only one match not completes
+	  with that match rather than generating a menu of matches.
+12-06-19  A bug in which patterns containing {...} where not processed
+	  correctly inside ${var/pattern/string} has been fixed.  
+12-06-18  Code modified to eliminate fts_notify variable.
+12-06-15  Change the .paths plugin/builtin library variable name from
+	  BUILTIN_LIB to PLUGIN_LIB to prevent new plugin_version() aware
+	  -lcmd from causing older non-plugin_version() aware ksh to dump core.
+12-06-14  builtin without argument no longer lists .sh.tilde as a built-in.
 12-06-12  For assignments if the form x=(foo bar), foo is only check for an
 	  alias if it is float, integer, compound, or nameref.
 12-06-12 +The shell supports 64 bit i-nodes even for 32 bit binaries.
@@ -3162,6 +3171,11 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+12-06-20 port/astconf.c: increase DEBUG_astconf error debug levels (may leach into rt output)
+12-06-18 sfio/_sfopen.c: add 'e' => O_CLOEXEC
+12-06-18 features/fcntl.c: add #define O_CLOEXEC 0 if not defined
+12-06-13 features/float: handle __mips c99 peculiarities
+12-06-13 features/standards: handle __MACH__ posix peculiarities
 12-06-08 sfio/sfclose.c,sfmode.c: sfclose() for sfopopen() stream returns sh-compatible $?
 12-06-08 comp/strtold.c: fix header botch that missed ldexpl() prototype -- ouch
 12-06-06 misc/proclib.h: partially undo <ast_standards.h> for leaked ancient bsd-isms
@@ -4960,6 +4974,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+12-06-19 tail.c: be nice and use sh_sigcheck() and tvsleep() to verify interrupts
 12-05-31 cat,head,tee: use errno==EPIPE => ERROR_PIPE(errno)
 12-05-25 vmstate.c: #include <sfdisc.h> for sfkeyprintf() prototype
 12-04-20 chgrp.c,chmod.c,cksum.c,cp.c: default fts_flags()|FTS_META (to disable pure FTS_PHYSICAL)

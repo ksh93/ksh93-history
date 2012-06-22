@@ -110,7 +110,7 @@ int
 b_tee(int argc, register char** argv, Shbltin_t* context)
 {
 	register Tee_t*		tp = 0;
-	register int		oflag = O_WRONLY|O_TRUNC|O_CREAT|O_BINARY;
+	register int		oflag = O_WRONLY|O_TRUNC|O_CREAT|O_BINARY|O_cloexec;
 	register int*		hp;
 	register char*		cp;
 	int			line;

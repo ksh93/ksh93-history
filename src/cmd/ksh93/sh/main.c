@@ -80,23 +80,6 @@ static char	beenhere = 0;
     }
 #endif /* _lib_sigvec */
 
-#ifdef _lib_fts_notify
-#   include	<fts.h>
-    /* check for interrupts during tree walks */
-    static int fts_sigcheck(FTS* fp, FTSENT* ep, void* context)
-    {
-	Shell_t *shp = (Shell_t*)context;
-	NOT_USED(fp);
-	NOT_USED(ep);
-	if(shp->trapnote&SH_SIGSET)
-	{
-		errno = EINTR;
-		return(-1);
-	}
-	return(0);
-    }
-#endif /* _lib_fts_notify */
-
 #ifdef PATH_BFPATH
 #define PATHCOMP	NIL(Pathcomp_t*)
 #else
@@ -159,9 +142,6 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	time(&mailtime);
 	if(rshflag=sh_isoption(SH_RESTRICTED))
 		sh_offoption(SH_RESTRICTED);
-#ifdef _lib_fts_notify
-	fts_notify(fts_sigcheck,(void*)shp);
-#endif /* _lib_fts_notify */
 	if(sigsetjmp(*((sigjmp_buf*)shp->jmpbuffer),0))
 	{
 		/* begin script execution here */

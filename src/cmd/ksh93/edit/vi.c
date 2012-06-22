@@ -2420,8 +2420,6 @@ addin:
 	case '\\':		/** do file name completion in place **/
 		if( cur_virt == INVALID )
 			return(BAD);
-		if(virtual[cur_virt]=='/')
-			c = '=';
 	case '=':		/** list file name expansions **/
 		save_v(vp);
 		i = last_virt;

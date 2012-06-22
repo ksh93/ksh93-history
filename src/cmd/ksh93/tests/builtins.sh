@@ -598,4 +598,7 @@ v=$($SHELL 2> /dev/null +o rc -ic $'getopts a:bc: opt --man\nprint $?')
 read baz <<< 'foo\\\\bar'
 [[ $baz == 'foo\\bar' ]] || err_exit 'read of foo\\\\bar not getting foo\\bar'
 
+: ~root
+[[ $(builtin) == *.sh.tilde* ]] &&  err_exit 'builtin contains .sh.tilde'
+
 exit $((Errors<125?Errors:125))

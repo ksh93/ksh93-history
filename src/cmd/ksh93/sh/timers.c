@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -94,7 +94,7 @@ static void sigalrm(int sig)
 	if(time_state&SIGALRM_CALL)
 		time_state &= ~SIGALRM_CALL;
 	else if(alarm(0))
-		sh_fault(SIGALRM|SH_TRAP);
+		kill(getpid(),SIGALRM|SH_TRAP);
 	if(time_state)
 	{
 		if(time_state&IN_ADDTIMEOUT)

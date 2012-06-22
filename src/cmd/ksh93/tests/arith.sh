@@ -754,7 +754,12 @@ x010=99
 let "(3+$x)==13" || err_exit 'let should not recognize leading 0 as octal'
 unset x
 typeset -RZ3 x=10 
-(( $x == 10 )) || err_exit 'leading 0 in -RZ should not create octal constant wiht ((...))'
-let "$x==10" || err_exit 'leading 0 in -RZ should not create octal constant wiht let'
+(( $x == 10 )) || err_exit 'leading 0 in -RZ should not create octal constant with ((...))'
+let "$x==10" || err_exit 'leading 0 in -RZ should not create octal constant with let'
+
+unset v x
+x=0x1.0000000000000000000000000000p+6
+v=$(printf $'%.28a\n' 64)
+[[ $v == "$x" ]] || err_exit "'printf %.28a 64' failed -- expected '$x', got '$v'"
 
 exit $((Errors<125?Errors:125))

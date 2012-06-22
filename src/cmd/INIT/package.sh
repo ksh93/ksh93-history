@@ -97,7 +97,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-06-04 $
+@(#)$Id: package (AT&T Research) 2012-06-20 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -200,6 +200,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
                 [+M T W?The \badmin\b action \bmake\b, \btest\b and
                     \bwrite\b action error counts. A non-numeric value in
                     any of these fields disables the corresponding action.]
+	    	[+owner?The owner contact information.]
+		[+attributes?\aname=value\a attributes. Should at least contain
+		    \bcc\b=\acompiler-version\a.]
             }
 	[+clean | clobber?Delete the \barch/\b\aHOSTTYPE\a hierarchy; this
 	    deletes all generated files and directories for \aHOSTTYPE\a.
@@ -725,7 +728,7 @@ ${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package l
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
 		url=\$URL/package
-		(wget -O bin/package \$url||curl -L \$url||hurl \$url) > bin/package
+		(wget -O - \$url||curl -L \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
@@ -884,7 +887,7 @@ ${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package l
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
 		url=\$URL/package
-		(wget -O bin/package \$url||curl -L \$url||hurl \$url) > bin/package
+		(wget -O - \$url||curl -L \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
@@ -1017,6 +1020,10 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		   M T W   The admin action make, test and write action error
 			   counts. A non-numeric value in any of these fields
 			   disables the corresponding action.
+	    	   owner   The owner contact information.
+		   attributes
+		           NAME=VALUE attributes. Should at least contain
+			   cc=compiler-version.
 	clean | clobber
 	    Delete the arch/HOSTTYPE hierarchy; this deletes all generated
 	    files and directories for HOSTTYPE. The heirarchy can be rebuilt
@@ -4938,14 +4945,23 @@ admin)	while	test ! -f $admin_db
 					H=$2$t2
 					R=$3$t3
 					case $# in
-					[0-8])	C=
+					[0-8])	O=
+						K=
 						;;
 					*)	shift 8
-						C=" $*"
+						O=$1
+						K=$2
+						case $O in
+						''|?|??|???)	K="	$K" ;;
+						esac
+						case $# in
+						[0-2])	;;
+						*)	K="$K $*" ;;
+						esac
 						;;
 					esac
-					echo "$A	$H	$R	$D	$E	$M $T $W$C"
-					echo "$A	$H	$R	$D	$E	$M $T $W$C" >&9
+					echo "$A	$H	$R	$D	$E	$M $T $W $O	$K"
+					echo "$A	$H	$R	$D	$E	$M $T $W $O	$K" >&9
 					continue
 					;;
 				esac
@@ -5855,42 +5871,69 @@ cat $j $k
 
 	case $exec in
 	'')	if	test ! -f $INSTALLROOT/bin/.paths -o -w $INSTALLROOT/bin/.paths
-		then	nl="
-"
-			o=`cat $INSTALLROOT/bin/.paths 2>/dev/null`
-			v=
-			n=
-			case $nl$o in
-			*${nl}FPATH=*|*#FPATH=*|*[Nn][Oo]FPATH=*)
-				;;
-			*)	case $n in
-				'')	;;
-				*)	n="$n$nl" v="$v|" ;;
-				esac
-				n="${n}FPATH=../fun"
-				v="${v}FPATH"
+		then	N='$("\n")'
+			b= f= h= n= p= u= B= L=
+			if	test -f $INSTALLROOT/bin/.paths
+			then	exec < $INSTALLROOT/bin/.paths
+				while	read x
+				do	case $x in
+					'#'?*)		case $h in
+							'')	h=$x ;;
+							esac
+							;;
+					*BUILTIN_LIB=*)	b=$x
+							;;
+					*FPATH=*)	f=$x
+							;;
+					*PLUGIN_LIB=*)	p=$x
+							;;
+					*)		case $u in
+							?*)	u=$u$N ;;
+							esac
+							u=$u$x
+							;;
+					esac
+				done
+			fi
+			ifs=$IFS
+			m=
+			case $p in
+			?*)	b=
 				;;
 			esac
-			case $nl$o in
-			*${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*|*[Nn][Oo]BUILTIN_LIB=*)
-				;;
-			*)	case $n in
-				'')	;;
-				*)	n="$n$nl" v="$v|" ;;
+			case $b in
+			?*)	IFS='='
+				set $b
+				IFS=$ifs
+				shift
+				p="PLUGIN_LIB=$*"
+				case $b in
+				[Nn][Oo]*)	p=no$p ;;
 				esac
+				m=1
+				;;
+			esac
+			case $f in
+			'')	f="FPATH=../fun"
+				m=1
+				;;
+			esac
+			case $h in
+			'')	h='# use { no NO } prefix to permanently disable #' ;;
+			esac
+			case $p in
+			'')	p="PLUGIN_LIB=cmd"
 				if	grep '^setv mam_cc_DIALECT .* EXPORT=[AD]LL' $INSTALLROOT/lib/probe/C/mam/* >/dev/null 2>&1
-				then	x=
-				else	x='no'
+				then	p=no$p
 				fi
-				n="${n}${x}BUILTIN_LIB=cmd"
-				v="${v}BUILTIN_LIB"
+				m=1
 				;;
 			esac
-			case $n in
-			?*)	case $o in
-				?*)	o=`egrep -v "($v)=" $INSTALLROOT/bin/.paths`$nl ;;
+			case $m in
+			1)	case $u in
+				?*)	u=$N$u ;;
 				esac
-				echo "# use { # no NO } prefix instead of XX to permanently disable #$nl$o$n" > $INSTALLROOT/bin/.paths
+				echo "$h$N$p$N$f$N$u" > $INSTALLROOT/bin/.paths
 				;;
 			esac
 		fi
@@ -6583,7 +6626,7 @@ results)set '' $target
 					;;
 				errors)	$exec egrep -i '\*\*\*|FAIL[ES]|^TEST.* [123456789][0123456789]* error|core.*dump' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
 					;;
-				rt)	$exec rt - $j
+				rt)	$exec $KSH rt - $j
 					;;
 				*)	$exec egrep -i '^TEST|FAIL' $j
 					;;

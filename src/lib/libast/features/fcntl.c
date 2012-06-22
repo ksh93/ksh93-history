@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -219,6 +219,11 @@ main()
 	}
 	printf("\n");
 #endif
+#ifdef F_DUPFD_CLOEXEC
+	printf("#define F_dupfd_cloexec	F_DUPFD_CLOEXEC\n");
+#else
+	printf("#define F_dupfd_cloexec	F_DUPFD\n");
+#endif
 
 #ifndef	O_APPEND
 #define NEED_O	1
@@ -314,6 +319,11 @@ main()
 #endif
 #ifndef	O_BINARY
 	printf("#define O_BINARY		0\n");
+#endif
+#ifdef	O_CLOEXEC
+	printf("#define O_cloexec		O_CLOEXEC\n");
+#else
+	printf("#define O_cloexec		0\n");
 #endif
 #ifndef	O_TEMPORARY
 	printf("#define O_TEMPORARY		0\n");

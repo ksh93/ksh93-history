@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -117,7 +117,7 @@ aso_init_fcntl(void* data, const char* details)
 	}
 	if (!(apl = newof(0, APL_t, 1, strlen(path))))
 		goto bad;
-	if (fd >= 0 || (fd = open(path, O_RDWR)) < 0 && (fd = open(path, O_CREAT|O_RDWR, perm)) >= 0)
+	if (fd >= 0 || (fd = open(path, O_RDWR|O_cloexec)) < 0 && (fd = open(path, O_CREAT|O_RDWR|O_cloexec, perm)) >= 0)
 	{
 		if (lseek(fd, size, SEEK_SET) != size)
 			goto bad;
