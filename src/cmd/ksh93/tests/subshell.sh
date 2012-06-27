@@ -597,5 +597,7 @@ if      kill -0 $! 2> /dev/null
 then    err_exit  'command substitution containg here-doc with command substitution fails'
 fi
 
+printf=$(whence -p printf)
+[[ $( { trap "echo foobar" EXIT; ( $printf ""); } & wait) == foobar ]] || err_exit  'exit trap not being invoked'
 
 exit $((Errors<125?Errors:125))

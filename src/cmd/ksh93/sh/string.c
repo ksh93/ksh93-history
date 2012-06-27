@@ -360,7 +360,7 @@ char	*sh_fmtq(const char *string)
 	for(;c;c= mbchar(cp))
 	{
 #if SHOPT_MULTIBYTE
-		if(c=='\'' || !iswprint(c) || (c>=128 && iswspace(c)))
+		if(c=='\'' || c>=128 || c<0 || !iswprint(c)) 
 #else
 		if(c=='\'' || !isprint(c))
 #endif /* SHOPT_MULTIBYTE */
@@ -379,6 +379,7 @@ char	*sh_fmtq(const char *string)
 	}
 	else
 	{
+		int isbyte=0;
 		stakwrite("$'",2);
 		cp = string;
 #if SHOPT_MULTIBYTE
@@ -415,18 +416,26 @@ char	*sh_fmtq(const char *string)
 				break;
 			    default:
 #if SHOPT_MULTIBYTE
-				if(!iswprint(c) || (c>=256 && iswspace(c)))
+				isbyte = 0;
+				if(c<0)
 				{
-					sfprintf(staksp,"\\u%.4x",c);
+					c = *((unsigned char *)op);
+					cp = op+1;
+					isbyte = 1;
+				}
+				if(mbwide() && ((cp-op)>1))
+				{
+					sfprintf(staksp,"\\u[%x]",c);
 					continue;
 				}
+				else if(!iswprint(c) || isbyte)
 #else
 				if(!isprint(c))
+#endif
 				{
-					sfprintf(staksp,"\\%.3o",c);
+					sfprintf(staksp,"\\x%.2x",c);
 					continue;
 				}
-#endif
 				state=0;
 				break;
 			}

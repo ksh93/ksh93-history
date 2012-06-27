@@ -1,3 +1,7 @@
+12-06-26 regex/regnexec.c: fix uninitialized variable reference
+12-06-26 comp/setlocale.c: utf8_wctomb() now calls (the corrrect) wc2utf8()
+12-06-25 string/chresc.c: accept \u[U+<hex>] and \u{U+<hex>}
+12-06-24 regex/regcomp.c: mb [^...] must be marked "complicated"
 12-06-20 port/astconf.c: increase DEBUG_astconf error debug levels (may leach into rt output)
 12-06-18 sfio/_sfopen.c: add 'e' => O_CLOEXEC
 12-06-18 features/fcntl.c: add #define O_CLOEXEC 0 if not defined

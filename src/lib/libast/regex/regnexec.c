@@ -1615,6 +1615,7 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 				}
 				else
 				{
+					e = env->end;
 					if (!(rex->flags & REG_ICASE))
 					{
 						for (i = 0; i < m && s < e; i++, s = t)

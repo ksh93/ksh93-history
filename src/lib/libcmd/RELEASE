@@ -1,3 +1,4 @@
+12-06-25 getconf.c: don't defer to native getconf if we are it -- doh
 12-06-19 tail.c: be nice and use sh_sigcheck() and tvsleep() to verify interrupts
 12-05-31 cat,head,tee: use errno==EPIPE => ERROR_PIPE(errno)
 12-05-25 vmstate.c: #include <sfdisc.h> for sfkeyprintf() prototype

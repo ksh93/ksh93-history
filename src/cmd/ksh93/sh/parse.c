@@ -1239,7 +1239,7 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 		}
 		/* 'for i;do cmd' is valid syntax */
 		else if(tok==';')
-			tok=sh_lex(lexp);
+			while((tok=sh_lex(lexp))==NL);
 		if(tok!=DOSYM && tok!=LBRACE)
 			sh_syntax(lexp);
 		loop_level++;

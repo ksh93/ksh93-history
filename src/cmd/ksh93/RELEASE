@@ -1,4 +1,13 @@
-12-06-19  --- Release ksh93u+ ---
+12-06-26  --- Release ksh93u+ ---
+12-06-26  The formatting of printf "%q" for multibyte locales has changed to
+	  output using \u[xxx] format for valid wide characters.
+12-06-25  The size limit for read -N and read -n has been raised to INT_MAX.
+12-06-22  A bug in which an exit trap set in a subshell might not be triggered
+	  when the last command was a simple executable has been fixed.
+12-06-22  A bug which could cause the shell to hang when a coprocess exits
+	  while a command inside a command substitution is reading from it has
+	  been fixed.
+12-06-21 +ksh new accepts for commands of the form for i; <nl> do;...;done
 12-06-19  Tab completion after a / when there is only one match not completes
 	  with that match rather than generating a menu of matches.
 12-06-19  A bug in which patterns containing {...} where not processed

@@ -69,6 +69,7 @@ static int	trim_eq(const char*, const char*);
 static void	coproc_init(Shell_t*, int pipes[]);
 
 static void	*timeout;
+static char	nlock;
 static char	pipejob;
 static char	nopost;
 static int	restorefd;
@@ -152,8 +153,21 @@ static void iounpipe(Shell_t *shp)
 	}
 	shp->subdup = 0;
 	sh_close(subpipe[2]);
-	if(usepipe==0)while((n = read(subpipe[0],buff,sizeof(buff)))!=0)
+	if(usepipe==0) while(1)
 	{
+		while(job.waitsafe && job.savesig==SIGCHLD)
+		{
+			if(!vmbusy())
+			{
+				job.in_critical++;
+				job_reap(SIGCHLD);
+				job.in_critical--;
+				break;
+			}
+			sh_delay(1);
+		}
+		if((n = read(subpipe[0],buff,sizeof(buff)))==0)
+			break;
 		if(n>0)
 			sfwrite(sfstdout,buff,n);
 		else if(errno!=EINTR)
@@ -979,6 +993,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 		{
 			if(pipejob==2)
 				job_unlock();
+			nlock = 0;
 			pipejob = 0;
 			job.curpgid = 0;
 			job.curjobid = 0;
@@ -1273,6 +1288,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(np && pipejob==2)
 				{
 					job_unlock();
+					nlock--;
 					pipejob = 1;
 				}
 				/* check for builtins */
@@ -1584,12 +1600,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if((type&(FAMP|TFORK))==(FAMP|TFORK))
 					sh_subfork();
 			}
-			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
+			no_fork = !ntflag && !(type&(FAMP|FPOU)) && !shp->subshell &&
 			    !(shp->st.trapcom[SIGINT] && *shp->st.trapcom[SIGINT]) &&
 			    !shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] &&
 				((struct checkpt*)shp->jmplist)->mode!=SH_JMPEVAL &&
-				(execflg2 || (execflg && 
-				!shp->subshell && shp->fn_depth==0 &&
+				(execflg2 || (execflg && shp->fn_depth==0 &&
 				!(pipejob && sh_isoption(SH_PIPEFAIL))
 			    ));
 			if(sh_isstate(SH_PROFILE) || shp->dot_depth)
@@ -1695,6 +1710,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(pipejob==2)
 				{
 					pipejob = 1;
+					nlock--;
 					job_unlock();
 				}
 				if(type&FPCL)
@@ -2011,6 +2027,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int	pvo[3];	/* old pipe for multi-stage */
 			int	pvn[3];	/* current set up pipe */
 			int	savepipe = pipejob;
+			int	savelock = nlock;
 			int	showme = t->tre.tretyp&FSHOWME;
 			int	n,waitall,savewaitall=job.waitall;
 			int	savejobid = job.curjobid;
@@ -2061,6 +2078,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			else
 				job.waitall |= !pipejob && sh_isstate(SH_MONITOR);
 			job_lock();
+			nlock++;
 			do
 			{
 				/* create the pipe */
@@ -2132,7 +2150,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 				sh_pclose(pvn);
 			if(pipejob==2)
 				job_unlock();
-			pipejob = savepipe;
+			if((pipejob = savepipe) && nlock<savelock)
+				pipejob = 1;
 			n = shp->exitval;
 			if(job.waitall = waitall)
 			{
@@ -2264,7 +2283,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					save_prompt = shp->nextprompt;
 					shp->nextprompt = 3;
 					shp->timeout = 0;
-					shp->exitval=sh_readline(shp,&nullptr,0,1,1000*shp->st.tmout);
+					shp->exitval=sh_readline(shp,&nullptr,0,1,(size_t)0,1000*shp->st.tmout);
 					shp->nextprompt = save_prompt;
 					if(shp->exitval||sfeof(sfstdin)||sferror(sfstdin))
 					{

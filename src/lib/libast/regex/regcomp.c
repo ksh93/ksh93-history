@@ -1195,7 +1195,7 @@ bra(Cenv_t* env)
 	if (*env->cursor == '^' || env->type >= SRE && *env->cursor == '!')
 	{
 		env->cursor++;
-		neg = 1;
+		complicated = neg = 1;
 	}
 	else
 		neg = 0;

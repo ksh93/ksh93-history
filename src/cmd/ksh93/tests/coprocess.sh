@@ -155,6 +155,7 @@ e=12345
 	done
 	print
 ) 2>/dev/null | read -t 10 r
+cat=$(whence -p cat)
 [[ $r == $e ]] || err_exit "coprocess timing bug -- expected $e, got '$r'"
 r=
 (
@@ -162,7 +163,7 @@ r=
 	for ((i = 1; i <= N; i++))
 	do	print $i |&
 		sleep 0.01
-		r=$r$(cat <&p)
+		r=$r$($cat <&p)
 		wait $!
 	done
 	print $r

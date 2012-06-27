@@ -133,24 +133,17 @@ static pid_t path_pfexecve(Shell_t *shp,const char *path, char *argv[],char *con
 
 static pid_t _spawnveg(Shell_t *shp,const char *path, char* const argv[], char* const envp[], pid_t pgid)
 {
-	int waitsafe = job.waitsafe;
 	pid_t pid;
-	job_lock();
 	while(1)
 	{
 		sh_stats(STAT_SPAWN);
 		pid = spawnveg(path,argv,envp,pgid);
 		if(pid>=0 || errno!=EAGAIN)
 			break;
-		_sh_fork(shp,pid, 0, (int*)0);
 	}
-	job.waitsafe = waitsafe;
-	if(pid>0)
-		job_fork(pid);
-	else
-		job_unlock();
 	return(pid);
 }
+
 /*
  * used with command -x to run the command in multiple passes
  * spawn is non-zero when invoked via spawn

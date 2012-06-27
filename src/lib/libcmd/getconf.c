@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: getconf (AT&T Research) 2008-04-24 $\n]"
+"[-?\n@(#)$Id: getconf (AT&T Research) 2012-06-25 $\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -242,7 +242,8 @@ b_getconf(int argc, char** argv, Shbltin_t* context)
 		astconflist(sfstdout, path, flags, pattern);
 	else
 	{
-		flags = native ? (ASTCONF_system|ASTCONF_error) : 0;
+		if (native)
+			flags |= (ASTCONF_system|ASTCONF_error);
 		do
 		{
 			if (!(path = *++argv))
@@ -264,7 +265,12 @@ b_getconf(int argc, char** argv, Shbltin_t* context)
 			if (error_info.errors)
 				break;
 			if (!s)
-				goto defer;
+			{
+				if (native)
+					goto defer;
+				error(2, "%s: unknown name", name);
+				break;
+			}
 			if (!value)
 			{
 				if (flags & ASTCONF_write)

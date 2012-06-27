@@ -420,13 +420,10 @@ loop_fmt :
 				base = v;
 			goto loop_flags;
 
+		case 'z' : /* ssize_t or z* sizeof */
 		case 'I' : /* object length */
 			size = -1; flags = (flags & ~SFFMT_TYPES) | SFFMT_IFLAG;
-			if(isdigit(*form) )
-			{	for(size = 0, n = *form; isdigit(n); n = *++form)
-					size = size*10 + (n - '0');
-			}
-			else if(*form == '*')
+			if(*form == '*')
 			{	form = (*_Sffmtintf)(form+1,&n);
 				if(*form == '$')
 				{	form += 1;
@@ -449,6 +446,13 @@ loop_fmt :
 					else	size = va_arg(args,int);
 				}
 				else	size = va_arg(args,int);
+			}
+			else if (fmt == 'z')
+			{	size = -1; flags = (flags&~SFFMT_TYPES) | SFFMT_ZFLAG;
+			}
+			else if(isdigit(*form) )
+			{	for(size = 0, n = *form; isdigit(n); n = *++form)
+					size = size*10 + (n - '0');
 			}
 			goto loop_flags;
 
@@ -474,9 +478,6 @@ loop_fmt :
 
 		case 'j' :
 			size = -1; flags = (flags&~SFFMT_TYPES) | SFFMT_JFLAG;
-			goto loop_flags;
-		case 'z' :
-			size = -1; flags = (flags&~SFFMT_TYPES) | SFFMT_ZFLAG;
 			goto loop_flags;
 		case 't' :
 			size = -1; flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;

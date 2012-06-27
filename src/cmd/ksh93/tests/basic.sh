@@ -512,4 +512,6 @@ $SHELL -c 'kill -0 123456789123456789123456789' 2> /dev/null && err_exit 'kill n
 
 $SHELL -xc '$(LD_LIBRARY_PATH=$LD_LIBRARY_PATH exec $SHELL -c :)' > /dev/null 2>&1  || err_exit "ksh -xc '(name=value exec ksh)' fails with err=$?"
 
+$SHELL 2> /dev/null -c $'for i;\ndo :;done' || err_exit 'for i ; <newline> not vaid'
+
 exit $((Errors<125?Errors:125))

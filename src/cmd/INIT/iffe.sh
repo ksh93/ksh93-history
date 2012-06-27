@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2012-06-06 # update in USAGE too #
+version=2012-06-26 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -4171,7 +4171,11 @@ $pre
 $inc
 _BEGIN_EXTERNS_
 struct _iffe_struct { int _iffe_member; };
-extern struct _iffe_struct* $v _ARG_((struct _iffe_struct*));
+#if _STD_
+extern struct _iffe_struct* $v(struct _iffe_struct*);
+#else
+extern struct _iffe_struct* $v();
+#endif
 _END_EXTERNS_
 "
 					# some compilers with -O only warn for invalid intrinsic prototypes

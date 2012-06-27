@@ -121,7 +121,7 @@ gobble(Match_t* mp, register char* s, register int sub, int* g, int clear)
 		case '[':
 			if (!b)
 			{
-				if (*s == '!')
+				if (*s == '!' || *s == '^')
 					mbgetchar(s);
 				b = s;
 			}
@@ -351,7 +351,7 @@ onematch(Match_t* mp, int g, char* s, char* p, char* e, char* r, int flags)
 		return 0;
 	range = 0;
 	n = 0;
-	if (invert = *p == '!')
+	if (invert = *p == '!' || *p == '^')
 		p++;
 	for (;;)
 	{

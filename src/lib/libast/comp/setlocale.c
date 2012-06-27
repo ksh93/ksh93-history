@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -555,23 +555,7 @@ sjis_mbtowc(register wchar_t* p, register const char* s, size_t n)
 static int
 utf8_wctomb(char* u, wchar_t w) 
 {
-	if (!u)
-		return 0;
-	if (w >= (1<<11))
-	{
-		*u++ = 0xe0|(w>>12);  
-		*u++ = 0x80|((w>>6)&0x3f);
-		*u++ = 0x80|(w&0x3f);
-		return 3;
-	}
-	if (w >= (1<<7))
-	{
-		*u++ = 0xc0|(w>>6);  
-		*u++ = 0x80|(w&0x3f);
-		return 2;
-	}
-	*u++ = w;
-	return 1;
+	return u ? wc2utf8(u, w) : 0;
 }
 
 #endif
