@@ -1,3 +1,6 @@
+12-06-28 vmalloc/malloc.c: use sbrk() unless VMALLOC_OPTIONS=mmap or asoinit(0,0,0)!=0 (workaround until next malloc update)
+12-06-28 aso/aso.c: asoinit(0,0,0): 0: no specific init, 1: app initialized
+12-06-27 sfio/sfvprintf.c: allow { L* z* } aliases for I* -- posix will probably pick one
 12-06-26 regex/regnexec.c: fix uninitialized variable reference
 12-06-26 comp/setlocale.c: utf8_wctomb() now calls (the corrrect) wc2utf8()
 12-06-25 string/chresc.c: accept \u[U+<hex>] and \u{U+<hex>}

@@ -2033,6 +2033,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	int			was_verbose = sh_isstate(SH_VERBOSE);
 	int			was_interactive = sh_isstate(SH_INTERACTIVE);
 	int			newlines,bufsize,nextnewlines;
+	Sfoff_t			foff;
 	Namval_t		*np;
 	mp->shp->argaddr = 0;
 	savemac = *mp;
@@ -2159,6 +2160,13 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	/* read command substitution output and put on stack or here-doc */
 	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
 	sh_offstate(SH_INTERACTIVE);
+	if((foff = sfseek(sp,(Sfoff_t)0,SEEK_END)) > 0)
+	{
+		size_t soff = stktell(stkp); 
+		sfseek(sp,(Sfoff_t)0,SEEK_SET);
+		stkseek(stkp,soff+foff+64);
+		stkseek(stkp,soff);
+	}
 	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c=bufsize=sfvalue(sp))>0)
 	{
 #if SHOPT_CRNL

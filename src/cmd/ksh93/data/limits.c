@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -30,7 +30,7 @@
 #ifndef _no_ulimit 
 
 const char	e_unlimited[] = "unlimited";
-const char*	e_units[] = { 0, "block", "byte", "kbyte", "second" };
+const char*	e_units[] = { 0, "block", "byte", "Kibyte", "second" };
 
 const int	shtab_units[] = { 1, 512, 1, 1024, 1 };
 

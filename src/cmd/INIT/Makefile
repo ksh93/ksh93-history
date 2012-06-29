@@ -111,7 +111,7 @@ $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 		if	test -f $(<)
 		then	while	read x
 			do	case $x in
-				*'$$("'*)	break # to fix 2012-06-18 edit botch #
+				*\$\(\"*)	break # to fix 2012-06-18 edit botch #
 						;;
 				'#'?*)		case $h in
 						'')	h=$x ;;

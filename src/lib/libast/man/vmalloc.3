@@ -617,6 +617,11 @@ Disable free -- if code works with this enabled then it probably accesses freed 
 .BI method= method
 Sets Vmregion=\fImethod\fP if not defined, \fImethod\fP (Vm prefix optional) may be one of { \fBbest debug last profile\fP }.
 .TP
+.B mmap
+Try mmap() block allocator first if
+.B break
+is not set.
+.TP
 .BI period= n
 Sets Vmregion=Vmdebug if not defined, if Vmregion==Vmdebug the region is checked every \fIn\fP ops.
 .TP

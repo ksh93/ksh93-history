@@ -104,6 +104,7 @@ typedef struct ______mstats Mstats_t;
 **	    		probably accesses free'd data
 **	    method=m	sets Vmregion=m if not defined, m (Vm prefix optional)
 **			may be one of { best debug last profile }
+**	    mmap	try mmap() block allocator first
 **	    period=n	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug the region is checked every n ops
 **	    profile=f	sets Vmregion=Vmprofile if not set, if
@@ -1330,19 +1331,28 @@ void _vmoptions()
 				_Vmassert |= VM_keep;
 				break;
 			case 'm':
-				if (v && !vm)
-				{
-					if ((v[0] == 'V' || v[0] == 'v') && (v[1] == 'M' || v[1] == 'm'))
-						v += 2;
-					if (strcmp(v, "debug") == 0)
-						vm = vmopen(Vmdcsystem, Vmdebug, 0);
-					else if (strcmp(v, "profile") == 0)
-						vm = vmopen(Vmdcsystem, Vmprofile, 0);
-					else if (strcmp(v, "last") == 0)
-						vm = vmopen(Vmdcsystem, Vmlast, 0);
-					else if (strcmp(v, "best") == 0)
-						vm = Vmheap;
-				}
+				if (v)
+					switch (t[1])
+					{
+					case 'e': /* method=METHOD */
+						if (!vm)
+						{
+							if ((v[0] == 'V' || v[0] == 'v') && (v[1] == 'M' || v[1] == 'm'))
+								v += 2;
+							if (strcmp(v, "debug") == 0)
+								vm = vmopen(Vmdcsystem, Vmdebug, 0);
+							else if (strcmp(v, "profile") == 0)
+								vm = vmopen(Vmdcsystem, Vmprofile, 0);
+							else if (strcmp(v, "last") == 0)
+								vm = vmopen(Vmdcsystem, Vmlast, 0);
+							else if (strcmp(v, "best") == 0)
+								vm = Vmheap;
+						}
+						break;
+					case 'm': /* mmap */
+						_Vmassert |= VM_mmap;
+						break;
+					}
 				break;
 			case 'p':
 				if (v)

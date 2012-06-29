@@ -125,6 +125,7 @@ typedef struct _pfobj_s	Pfobj_t;
 #define VM_check	0x0004	/* enable detailed checks		*/
 #define VM_free		0x0008	/* disable addfreelist()		*/
 #define VM_keep		0x0010	/* disable free()			*/
+#define VM_mmap		0x0020	/* try mmap() block allocator first	*/
 
 #if _UWIN
 #include <ast_windows.h>

@@ -1,4 +1,6 @@
-12-06-26  --- Release ksh93u+ ---
+12-06-28  --- Release ksh93u+ ---
+12-06-28  Fix ulimit -a to list (Kibytes) instead of (kbytes).
+12-06-27  Fix unitialized data reference for <CR> as first char in --vi mode.
 12-06-26  The formatting of printf "%q" for multibyte locales has changed to
 	  output using \u[xxx] format for valid wide characters.
 12-06-25  The size limit for read -N and read -n has been raised to INT_MAX.

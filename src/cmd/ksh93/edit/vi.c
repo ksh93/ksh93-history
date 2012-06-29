@@ -1542,7 +1542,7 @@ static void getline(register Vi_t* vp,register int mode)
 			if( mode != SEARCH )
 				save_last(vp);
 			refresh(vp,INPUT);
-			last_phys++;
+			physical[++last_phys] = 0;
 			return;
 
 		case '\t':		/** command completion **/

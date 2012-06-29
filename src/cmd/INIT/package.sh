@@ -97,7 +97,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-06-20 $
+@(#)$Id: package (AT&T Research) 2012-06-28 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -5871,7 +5871,8 @@ cat $j $k
 
 	case $exec in
 	'')	if	test ! -f $INSTALLROOT/bin/.paths -o -w $INSTALLROOT/bin/.paths
-		then	N='$("\n")'
+		then	N='
+'
 			b= f= h= n= p= u= B= L=
 			if	test -f $INSTALLROOT/bin/.paths
 			then	exec < $INSTALLROOT/bin/.paths

@@ -1304,7 +1304,11 @@ static Void_t* getmemory(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsiz
 		return (Void_t*)addr;
 #endif
 #if _mem_sbrk
+#if 1 /* no sbrk() unless explicit VM_break */
 	if((_Vmassert & VM_break) && (addr = sbrkmem(caddr, csize, nsize)) )
+#else /* asoinit(0,0,0)==0 => the application did not request a specific aso method => sbrk() ok */
+	if(((_Vmassert & VM_break) || !(_Vmassert & VM_mmap) && !asoinit(0, 0, 0)) && (addr = sbrkmem(caddr, csize, nsize)) )
+#endif
 		return (Void_t*)addr;
 #endif
 #if _mem_mmap_anon

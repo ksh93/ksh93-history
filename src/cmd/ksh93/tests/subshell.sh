@@ -535,7 +535,7 @@ $SHELL <<- \EOF
 	(( ${#out} == 96011 )) || err_exit "\${#out} is ${#out} should be 96011"
 EOF
 } & pid=$!
-$SHELL -c "{ sleep 2 && kill $pid ;}" 2> /dev/null
+$SHELL -c "{ sleep 4 && kill $pid ;}" 2> /dev/null
 (( $? == 0 )) &&  err_exit 'process has hung'
 
 {

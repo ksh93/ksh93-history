@@ -885,7 +885,7 @@ exec - done
 exec - if test -f ${INSTALLROOT}/bin/.paths
 exec - then while read x
 exec - do case $x in
-exec - *'
+exec - *\$\(\"*) break
 exec - ;;
 exec - '#'?*) case $h in
 exec - '') h=$x ;;
