@@ -2026,9 +2026,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	struct _mac_		savemac;
 	int			savtop = stktell(stkp);
 	char			lastc=0, *savptr = stkfreeze(stkp,0);
-#if SHOPT_MULTIBYTE
-	wchar_t			lastw=0;
-#endif /* SHOPT_MULTIBYTE */
 	int			was_history = sh_isstate(SH_HISTORY);
 	int			was_verbose = sh_isstate(SH_VERBOSE);
 	int			was_interactive = sh_isstate(SH_INTERACTIVE);
@@ -2212,17 +2209,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		}
 		else if(lastc)
 		{
-#if SHOPT_MULTIBYTE
-			if(lastw)
-			{
-				int	n;
-				char	mb[8];
-				n = mbconv(mb, lastw);
-				mac_copy(mp,mb,n);
-				lastw = 0;
-			}
-			else
-#endif /* SHOPT_MULTIBYTE */
 			mac_copy(mp,&lastc,1);
 			lastc = 0;
 		}
@@ -2234,17 +2220,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			ssize_t len = 1;
 
 			/* can't write past buffer so save last character */
-#if SHOPT_MULTIBYTE
-			if ((len = mbsize(str))>1)
-			{
-				len = mb2wc(lastw,str,len);
-				if (len < 0)
-				{
-					lastw = 0;
-					len = 1;
-				}
-			}
-#endif /* SHOPT_MULTIBYTE */
 			c -= len;
 			lastc = str[c];
 			str[c] = 0;
@@ -2265,17 +2240,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	}
 	if(lastc)
 	{
-#if SHOPT_MULTIBYTE
-		if(lastw)
-		{
-			int	n;
-			char	mb[8];
-			n = mbconv(mb, lastw);
-			mac_copy(mp,mb,n);
-			lastw = 0;
-		}
-		else
-#endif /* SHOPT_MULTIBYTE */
 		mac_copy(mp,&lastc,1);
 		lastc = 0;
 	}

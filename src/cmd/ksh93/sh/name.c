@@ -542,7 +542,12 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 							sub=1;
 					}
 					else if(((np->nvalue.cp && np->nvalue.cp!=Empty)||nv_isvtree(np)|| nv_arrayptr(np)) && !nv_type(np))
+					{
 						_nv_unset(np,NV_EXPORT);
+						if(ap && ap->fun)
+							 nv_setarray(np,nv_associative);
+				
+					}
 				}
 				else
 				{
