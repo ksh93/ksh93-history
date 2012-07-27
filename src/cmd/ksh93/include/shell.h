@@ -191,8 +191,10 @@ extern char		*sh_fmtqf(const char*, int, int);
 extern Sfdouble_t	sh_strnum(const char*, char**, int);
 extern int		sh_access(const char*,int);
 extern int 		sh_close(int);
+extern int		sh_chdir(const char*);
 extern int 		sh_dup(int);
 extern void 		sh_exit(int);
+extern int		sh_fchdir(int);
 extern int		sh_fcntl(int, int, ...);
 extern Sfio_t		*sh_fd2sfio(int);
 extern int		(*sh_fdnotify(int(*)(int,int)))(int,int);
@@ -228,6 +230,8 @@ extern int		sh_exec(const Shnode_t*,int);
 #   undef extern
 #endif /* _DLL */
 
+#define chdir(a)	sh_chdir(a)
+#define fchdir(a)	sh_fchdir(a)
 #ifndef _SH_PRIVATE
 #   define access(a,b)	sh_access(a,b)
 #   define close(a)	sh_close(a)

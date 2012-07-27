@@ -231,6 +231,7 @@ done dllnext.o generated
 make dlllook.o
 make dlllook.c
 prev dlldefs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlllook.c
 meta dlllook.o %.c>%.o dlllook.c dlllook

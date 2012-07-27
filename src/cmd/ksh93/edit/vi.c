@@ -43,16 +43,11 @@
 #include	"terminal.h"
 #include	"FEATURE/time"
 
-#if SHOPT_OLDTERMIO
-#   undef ECHOCTL
-#   define echoctl	(vp->ed->e_echoctl)
+#ifdef ECHOCTL
+#   define echoctl	ECHOCTL
 #else
-#   ifdef ECHOCTL
-#	define echoctl	ECHOCTL
-#   else
-#	define echoctl	0
-#   endif /* ECHOCTL */
-#endif /*SHOPT_OLDTERMIO */
+#   define echoctl	0
+#endif /* ECHOCTL */
 
 #ifndef FIORDCHK
 #   define NTICKS	5		/* number of ticks for typeahead */
@@ -2202,7 +2197,7 @@ static void save_v(register Vi_t *vp)
  */
 static int curline_search(Vi_t *vp, const char *string)
 {
-	register int len=strlen(string);
+	register size_t len=strlen(string);
 	register const char *dp,*cp=string, *dpmax;
 #if SHOPT_MULTIBYTE
 	ed_external(vp->u_space,(char*)vp->u_space);
@@ -2438,7 +2433,7 @@ addin:
 			last_virt = i;
 			ed_ringbell();
 		}
-		else if(c == '=' && !vp->repeat_set)
+		else if((c=='=' || (c=='\\'&&virtual[i]=='/')) && !vp->repeat_set)
 		{
 			last_virt = i;
 			vp->nonewline++;

@@ -93,7 +93,32 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-12-06-26  --- Release ksh93u+ ---
+12-07-25  --- Release ksh93u+ ---
+12-07-25  Fix builtin/plugin lookup logic that skipped uwin dlls.
+12-07-24  Work around freebsd bug where tcgetpgrp() returns 0 for no process group.
+12-07-23  A scoping error with namrefs to compound associative arrays has
+	  been fixed.
+12-07-20  A bug where builtin -d /path/foo deleted foo has been fixed.
+12-07-18  A bug in which /dev/stdout did not work in command substitution on
+	  some systems has been fixed.
+12-07-17  A bug in which the restricted option set in a subshell prevented
+	  some variables from getting restored when the subshell completed
+	  has been fixed.
+12-07-09  A bug in which the directory is not restored after a subshell changes
+	  the name of the directory for subshells executed in the same process
+	  has been fixed.
+12-07-09  A bug in which file descriptors created with {n}< file were not being
+	  closed has been fixed.
+12-07-09  The 12-04-04 fix for cd .. was not correct causing cd /etc;cd .. to
+	  remain in /etc.  This has been fixed.
+12-07-02  A bug in which builtin name did now work for builtins found in a
+	  library added by builtin -f lib has been fixed.
+12-07-02  A bug in the edit modes which <tab> after a directory did not refresh
+          the input line has been fixed.
+12-07-02  A bug in which an exit status > 256 corresponding to a signal was
+          not returned by a function to indicate a signal exit has been fixed.
+12-06-28  Fix ulimit -a to list (Kibytes) instead of (kbytes).
+12-06-27  Fix unitialized data reference for <CR> as first char in --vi mode.
 12-06-26  The formatting of printf "%q" for multibyte locales has changed to
 	  output using \u[xxx] format for valid wide characters.
 12-06-25  The size limit for read -N and read -n has been raised to INT_MAX.
@@ -231,7 +256,6 @@ All recorded changes follow.
 12-04-02  Made some namespace changes and added a regression test.
 12-03-30  A bug with namespaces in which PATH and FPATH set in a namespace was
 	  not restored when leaving the namespace has been fixed.
-12-03-29  --- Release ksh93u++ ---
 12-03-29  A bug in which appending an index array onto an array without elements
 	  caused the first element to be 1 rather than 0 has been fixed.
 12-03-29  A bug which could cause a core dump when copying a large index array
@@ -3180,6 +3204,10 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+12-07-25 pathprobe.c: fix read() loop to handle EINTR
+12-06-28 vmalloc/malloc.c: use sbrk() unless VMALLOC_OPTIONS=mmap or asoinit(0,0,0)!=0 (workaround until next malloc update)
+12-06-28 aso/aso.c: asoinit(0,0,0): 0: no specific init, 1: app initialized
+12-06-27 sfio/sfvprintf.c: allow { L* z* } aliases for I* -- posix will probably pick one
 12-06-26 regex/regnexec.c: fix uninitialized variable reference
 12-06-26 comp/setlocale.c: utf8_wctomb() now calls (the corrrect) wc2utf8()
 12-06-25 string/chresc.c: accept \u[U+<hex>] and \u{U+<hex>}
@@ -5395,6 +5423,7 @@ All recorded changes follow.
 
 :::::::: libdll ::::::::
 
+12-07-25 add debug diagnostics
 11-10-11 dll_lib.c: add { dllnames() dll_lib() }
 10-10-20 dllscan.c: version arg "-" => 0
 10-10-19 dllplug.c: fix bug that wiped out dlopen() error message

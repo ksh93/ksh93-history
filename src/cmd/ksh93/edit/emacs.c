@@ -730,7 +730,7 @@ process:
 #if SHOPT_MULTIBYTE
 	ed_external(out,buff);
 #endif /* SHOPT_MULTIBYTE */
-	i = strlen(buff);
+	i = (int)strlen(buff);
 	if (i)
 		return(i);
 	return(-1);
@@ -1004,7 +1004,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 				}
 				beep();
 			}
-			else if(i=='=')
+			else if(i=='=' || (i=='\\' && out[cur-1]=='/'))
 			{
 				draw(ep,REFRESH);
 				if(count>0)

@@ -104,7 +104,7 @@ struct funenv
 static int      subpipe[3],subdup,tsetio,usepipe;
 static void iounpipe(Shell_t*);
 
-static void iousepipe(Shell_t *shp)
+static int iousepipe(Shell_t *shp)
 {
 	int i;
 	if(usepipe)
@@ -112,8 +112,8 @@ static void iousepipe(Shell_t *shp)
 		usepipe++;
 		iounpipe(shp);
 	}
-	if(sh_pipe(subpipe) < 0)
-		return;
+	if(sh_rpipe(subpipe) < 0)
+		return(0);
 	usepipe++;
 	fcntl(subpipe[0],F_SETFD,FD_CLOEXEC);
 	subpipe[2] = fcntl(1,F_DUPFD,10);
@@ -132,6 +132,7 @@ static void iousepipe(Shell_t *shp)
 			shp->fdstatus[i] = shp->fdstatus[1];
 		}
 	}
+	return(1);
 }
 
 static void iounpipe(Shell_t *shp)
@@ -966,6 +967,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 {
 	register Shell_t	*shp = sh_getinterp();
 	Stk_t			*stkp = shp->stk;
+	int			unpipe=0;
 	sh_sigcheck(shp);
 	if(t && !shp->st.execbrk && !sh_isoption(SH_NOEXEC))
 	{
@@ -1596,7 +1598,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			{
 				sh_subtmpfile(shp);
 				if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK))
-					iousepipe(shp);
+					unpipe=iousepipe(shp);
 				if((type&(FAMP|TFORK))==(FAMP|TFORK))
 					sh_subfork();
 			}
@@ -1673,7 +1675,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					parent = sh_fork(shp,type,&jobid);
 				if(parent<0)
 				{
-					if(shp->comsub==1 && usepipe)
+					if(shp->comsub==1 && usepipe && unpipe)
 						iounpipe(shp);
 					break;
 				}
@@ -1690,7 +1692,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 #   endif /* _lib_fork */
 				if(parent<0)
 				{
-					if(shp->comsub==1 && usepipe)
+					if(shp->comsub==1 && usepipe && unpipe)
 						iounpipe(shp);
 					break;
 				}
@@ -1731,7 +1733,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						job_wait(parent);
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
-					if(usepipe && tsetio &&  subdup)
+					if(usepipe && tsetio &&  subdup && unpipe)
 						iounpipe(shp);
 					if(!sh_isoption(SH_MONITOR))
 					{

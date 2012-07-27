@@ -577,8 +577,46 @@ cd "$pwd"
 mv $tmp/tmpdir1 $tmp/tmpdir2
 cd ..  2> /dev/null || err_exit 'cannot change directory to .. after current directory has been renamed'
 [[ $PWD == "$tmp" ]] || err_exit 'after "cd $tmp/tmpdir1; cd .." directory is not $tmp'
-cd $tmp
-rm -rf tmpdir2
+
+cd "$tmp"
+mkdir $tmp/tmpdir2/foo
+pwd=$PWD
+cd $tmp/tmpdir2/foo
+mv $tmp/tmpdir2 $tmp/tmpdir1
+cd ../.. 2> /dev/null || err_exit 'cannot change directory to ../.. after current directory has been renamed'
+[[ $PWD == "$tmp" ]] || err_exit 'after "cd $tmp/tmpdir2; cd ../.." directory is not $tmp'
+cd "$tmp"
+rm -rf tmpdir1
+
+cd /etc
+cd ..
+[[ $(pwd) == / ]] || err_exit 'cd /etc;cd ..;pwd is not /'
+cd /etc
+cd ../..
+[[ $(pwd) == / ]] || err_exit 'cd /etc;cd ../..;pwd is not /'
+cd /etc
+cd .././..
+[[ $(pwd) == / ]] || err_exit 'cd /etc;cd .././..;pwd is not /'
+cd /usr/bin
+cd ../..
+[[ $(pwd) == / ]] || err_exit 'cd /usr/bin;cd ../..;pwd is not /'
+cd /usr/bin
+cd ..
+[[ $(pwd) == /usr ]] || err_exit 'cd /usr/bin;cd ..;pwd is not /usr'
+cd "$tmp"
+if	mkdir $tmp/t1
+then	(
+		cd $tmp/t1
+		> real_t1
+		(
+			cd ..
+			mv t1 t2
+			mkdir t1
+		)
+		[[ -f real_t1 ]] || err_exit 'real_t1 not found after parent directory renamed in subshell'
+	)
+fi
+cd "$tmp"
 
 $SHELL +E -i <<- \! && err_exit 'interactive shell should not exit 0 after false'
 	false

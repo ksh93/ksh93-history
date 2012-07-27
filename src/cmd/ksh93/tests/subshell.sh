@@ -600,4 +600,21 @@ fi
 printf=$(whence -p printf)
 [[ $( { trap "echo foobar" EXIT; ( $printf ""); } & wait) == foobar ]] || err_exit  'exit trap not being invoked'
 
+$SHELL 2> /dev/null -c '( PATH=/bin; set -o restricted) ; exit 0'  || err_exit 'restoring PATH when a subshell enables restricted exits not working'
+
+$SHELL <<- \EOF
+	wc=$(whence wc) head=$(whence head)
+	print > /dev/null  $( ( $head -c 1 /dev/zero | ( $wc -c) 3>&1 ) 3>&1) &
+	pid=$!
+	sleep 2
+	kill -9 $! 2> /dev/null && err_exit '/dev/zero in command substitution hangs'
+	wait $!
+EOF
+
+for f in /dev/stdout /dev/fd/1
+do	if	[[ -e $f ]]
+	then	$SHELL -c "x=\$(command -p tee $f </dev/null 2>/dev/null)" || err_exit "$f in command substitution fails"
+	fi
+done
+
 exit $((Errors<125?Errors:125))

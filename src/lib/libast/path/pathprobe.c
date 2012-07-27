@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -256,11 +256,20 @@ pathprobe_20100601(const char* lang, const char* tool, const char* aproc, int op
 								{
 									if ((v = x - e) >= sizeof(ver))
 										v = sizeof(ver) - 1;
-									for (k = p = ver;; k++)
+									k = p = ver;
+									for (;;)
 									{
 										if (k >= p)
 										{
-											if (v <= 0 || (r = read(pp->rfd, k, v)) <= 0)
+											if (v <= 0)
+												break;
+											if ((r = read(pp->rfd, k, v)) < 0)
+											{
+												if (errno == EINTR)
+													continue;
+												break;
+											}
+											if (r <= 0)
 												break;
 											v -= r;
 											p = k + r;
@@ -269,6 +278,7 @@ pathprobe_20100601(const char* lang, const char* tool, const char* aproc, int op
 											break;
 										if (*k == n)
 											*k = ' ';
+										k++;
 									}
 									*k = 0;
 									if (strcmp(ver, e))

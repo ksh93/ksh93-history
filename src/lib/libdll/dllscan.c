@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1997-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1997-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -521,5 +521,6 @@ dllsread(register Dllscan_t* scan)
 		strcpy(scan->uniq->name, b);
 	scan->entry.name = b;
 	scan->entry.path = p;
+	errorf("dll", NiL, -1, "dllsread: %s bound to %s", b, p);
 	return &scan->entry;
 }

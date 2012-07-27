@@ -64,7 +64,9 @@ done:
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	pp->mode = (**argv=='e'?SH_JMPEXIT:SH_JMPFUN);
 	argv += opt_info.index;
-	n = (((arg= *argv)?(int)strtol(arg, (char**)0, 10)&SH_EXITMASK:shp->oldexit));
+	n = (((arg= *argv)?(int)strtol(arg, (char**)0, 10):shp->oldexit));
+	if(n<0 || n==256 || n > SH_EXITMASK+shp->gd->sigmax+1)
+			n &= ((unsigned int)n)&SH_EXITMASK;
 	/* return outside of function, dotscript and profile is exit */
 	if(shp->fn_depth==0 && shp->dot_depth==0 && !sh_isstate(SH_PROFILE))
 		pp->mode = SH_JMPEXIT;
@@ -100,7 +102,7 @@ int	b_break(register int n, register char *argv[],Shbltin_t *context)
 	n=1;
 	if(arg= *argv)
 	{
-		n = strtol(arg,&arg,10);
+		n = (int)strtol(arg,&arg,10);
 		if(n<=0 || *arg)
 			errormsg(SH_DICT,ERROR_exit(1),e_nolabels,*argv);
 	}

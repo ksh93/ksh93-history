@@ -277,7 +277,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			np = REPLYNOD;
 	}
 	keytrap =  ep?ep->e_keytrap:0;
-	if(flags>>D_FLAG)	/* delimiter not new-line or fixed size read */
+	if(size || (flags>>D_FLAG))	/* delimiter not new-line or fixed size read */
 	{
 		if((shp->fdstatus[fd]&IOTTY) && !keytrap)
 			tty_raw(fd,1);

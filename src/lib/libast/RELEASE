@@ -1,3 +1,4 @@
+12-07-25 pathprobe.c: fix read() loop to handle EINTR
 12-06-28 vmalloc/malloc.c: use sbrk() unless VMALLOC_OPTIONS=mmap or asoinit(0,0,0)!=0 (workaround until next malloc update)
 12-06-28 aso/aso.c: asoinit(0,0,0): 0: no specific init, 1: app initialized
 12-06-27 sfio/sfvprintf.c: allow { L* z* } aliases for I* -- posix will probably pick one

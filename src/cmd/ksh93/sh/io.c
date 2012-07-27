@@ -691,9 +691,11 @@ int sh_close(register int fd)
 		sh_iovalidfd(shp,fd);
 	if(!(sp=shp->sftable[fd]) || sfclose(sp) < 0)
 	{
+		int err=errno;
 		if(fdnotify)
 			(*fdnotify)(fd,SH_FDCLOSE);
-		r=close(fd);
+		while((r=close(fd)) < 0 && errno==EINTR)
+			errno = err;
 	}
 	if(fd>2)
 		shp->sftable[fd] = 0;
@@ -897,6 +899,30 @@ int	sh_pipe(register int pv[])
 	sh_subsavefd(pv[1]);
 	return(0);
 }
+
+#ifndef pipe
+   int	sh_rpipe(register int pv[])
+   {
+   	return sh_pipe(pv);
+   }
+#else
+#  undef pipe
+   /* create a real pipe when pipe() is socketpair */
+   int	sh_rpipe(register int pv[])
+   {
+	Shell_t *shp = sh_getinterp();
+	int fd[2];
+	if(pipe(fd)<0 || (pv[0]=fd[0])<0 || (pv[1]=fd[1])<0)
+		errormsg(SH_DICT,ERROR_system(1),e_pipe);
+	pv[0] = sh_iomovefd(pv[0]);
+	pv[1] = sh_iomovefd(pv[1]);
+	shp->fdstatus[pv[0]] = IONOSEEK|IOREAD;
+	shp->fdstatus[pv[1]] = IONOSEEK|IOWRITE;
+	sh_subsavefd(pv[0]);
+	sh_subsavefd(pv[1]);
+	return(0);
+   }
+#endif
 
 #if SHOPT_COSHELL
     int sh_coaccept(Shell_t *shp,int *pv,int out)
@@ -1486,6 +1512,8 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 							goto fail;
 						if(fn>=shp->gd->lim.open_max && !sh_iovalidfd(shp,fn))
 							goto fail;
+						if(flag!=2 || shp->subshell)
+							sh_iosave(shp,fn,indx|0x10000,tname?fname:(trunc?Empty:0));
 						shp->fdstatus[fn] = shp->fdstatus[fd];
 						sh_close(fd);
 						fd = fn;
@@ -1621,8 +1649,8 @@ static ssize_t tee_write(Sfio_t *iop,const void *buff,size_t n,Sfdisc_t *unused)
 void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 {
 	register int	savefd;
-	int flag = (oldtop&IOSUBSHELL);
-	oldtop &= ~IOSUBSHELL;
+	int flag = (oldtop&(IOSUBSHELL|IOPICKFD));
+	oldtop &= ~(IOSUBSHELL|IOPICKFD);
 	/* see if already saved, only save once */
 	for(savefd=shp->topfd; --savefd>=oldtop; )
 	{
@@ -1656,6 +1684,9 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 	}
 	else
 #endif /* SHOPT_DEVFD */
+	if(flag&IOPICKFD)
+		savefd = -1;
+	else
 	{
 		if((savefd = sh_fcntl(origfd, F_DUPFD, 10)) < 0 && errno!=EBADF)
 		{
@@ -1665,7 +1696,7 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 		}
 	}
 	filemap[shp->topfd].tname = name;
-	filemap[shp->topfd].subshell = flag;
+	filemap[shp->topfd].subshell = (flag&IOSUBSHELL);
 	filemap[shp->topfd].orig_fd = origfd;
 	filemap[shp->topfd++].save_fd = savefd;
 	if(savefd >=0)
@@ -2659,3 +2690,22 @@ int sh_isdevfd(register const char *fd)
 	}
 	return(1);
 }
+
+#undef fchdir
+int sh_fchdir(int fd)
+{
+	int r,err=errno;
+	while((r=fchdir(fd))<0 && errno==EINTR)
+		errno = err;
+	return(r);
+}
+
+#undef chdir
+int sh_chdir(const char* dir)
+{
+	int r,err=errno;
+	while((r=chdir(dir))<0 && errno==EINTR)
+		errno = err;
+	return(r);
+}
+

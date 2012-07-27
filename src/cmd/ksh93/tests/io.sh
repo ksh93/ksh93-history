@@ -295,7 +295,7 @@ $SHELL -c 'exec 3>; /dev/null'  2> /dev/null && err_exit '>; with exec should be
 $SHELL -c ': 3>; /dev/null'  2> /dev/null || err_exit '>; not working with at all'
 print hello > $tmp/1
 if	! $SHELL -c "false >; $tmp/1"  2> /dev/null
-then	[[ $(<$tmp/1) == hello ]] || err_exit '>; not preserving file on failure'
+then	let 1;[[ $(<$tmp/1) == hello ]] || err_exit '>; not preserving file on failure'
 fi
 if	! $SHELL -c "sed -e 's/hello/hello world/' $tmp/1" >; $tmp/1  2> /dev/null
 then	[[ $(<$tmp/1) == 'hello world' ]] || err_exit '>; not updating file on success'
@@ -487,5 +487,13 @@ ln -s $tmp/file3 $tmp/file2
 ln -s $tmp/file2 $tmp/file1
 print bar >; $tmp/file1
 [[ $(<$tmp/file3) == bar ]] || err_exit '>; not following symlinks'
+
+for i in 1
+do	:
+done	{n}< /dev/null
+[[ -r /dev/fd/$n ]] &&  err_exit "file descriptor n=$n left open after {n}<"
+
+n=$( exec {n}< /dev/null; print -r -- $n)
+[[ -r /dev/fd/$n ]] && err_exit "file descriptor n=$n left open after subshell"
 
 exit $((Errors<125?Errors:125))

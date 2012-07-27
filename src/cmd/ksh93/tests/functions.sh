@@ -1180,4 +1180,31 @@ then	function foo { getopts --man; }
 	[[ $(typeset -f foo) == 'function foo { getopts --man; }' ]] || err_exit 'typeset -f not work for function with getopts'
 fi
 
+function foo
+{
+	let 1
+	return $1
+}
+invals=(135 255 256 267 -1)
+outvals=(135 255 0 267 255)
+for ((i=0; i < ${#invals[@]}; i++))
+do	foo ${invals[i]}
+	[[ $? == "${outvals[i]}" ]] || err_exit "function exit ${invals[i]} should set \$? to ${outvals[i]}"
+done
+
+function foo
+{
+	typeset pid
+	sleep 2 & pid=$!
+	sleep 1
+	kill -TERM $pid
+	wait $pid
+	rc=$?
+	return $rc
+}
+foo  2> /dev/null
+rc=$?
+exp=$((256+$(kill -l TERM) ))
+[[  $rc == "$exp" ]] || err_exit "expected exitval $exp got $rc"
+
 exit $((Errors<125?Errors:125))

@@ -1182,11 +1182,13 @@ done:
  */
 Namval_t *sh_addbuiltin(const char *path, Shbltin_f bltin, void *extra)
 {
-	register const char	*name = path_basename(path);
+	register const char	*name;
 	char			*cp;
 	register Namval_t	*np, *nq=0;
 	int			offset=staktell();
-	if(name==path && bltin!=(Shbltin_f)SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
+	if(extra==(void*)1)
+		name = path;
+	else if((name = path_basename(path))==path && bltin!=(Shbltin_f)SYSTYPESET->nvalue.bfp && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
 		path = name = stakptr(offset);
 	else if(sh.bltin_dir && extra!=(void*)1)
 	{

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1997-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1997-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -24,6 +24,7 @@
  */
 
 #include <ast.h>
+#include <error.h>
 #include <dlldefs.h>
 
 /*
@@ -40,7 +41,9 @@ dlllook(void* dll, const char* name)
 	{
 		buf[0] = '_';
 		strcpy(buf + 1, name);
-		addr = dlsym(dll, buf);
+		name = (const char*)buf;
+		addr = dlsym(dll, name);
 	}
+	errorf("dll", NiL, -1, "dlllook: %s addr %p", name, addr);
 	return addr;
 }

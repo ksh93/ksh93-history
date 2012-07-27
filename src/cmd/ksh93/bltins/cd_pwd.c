@@ -112,24 +112,32 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	if(*dir=='.')
 	{
 		/* test for pathname . ./ .. or ../ */
-		if(*(dp=dir+1) == '.')
-			dp++;
-		if(*dp==0 || *dp=='/')
+		int	n=0;
+		char	*sp;
+		for(dp=dir; *dp=='.'; dp++)
 		{
-			if((dp-dir)==2)
-			{
-				char *sp;
-				sfputr(shp->strbuf,oldpwd,0);
-				if(*dp)
-					sfputr(shp->strbuf,dp+1,0);
-				sp = sfstruse(shp->strbuf);
-				*(dir=strrchr(sp,'/'))=0;
-				if(*dp)
-					strcpy(dir,dp);
-				dir = (char*)sp;
-			}
-			cdpath = 0;
+			if(*++dp=='.' && (*++dp=='/' || *dp==0))
+				n++;
+			else if(*dp && *dp!='/')
+				break;
+			if(*dp==0)
+				break;
 		}
+		if(n)	
+		{
+			cdpath = 0;
+			sp = oldpwd + strlen(oldpwd);
+		}
+		while(n--)
+		{
+			while(--sp > oldpwd && *sp!='/');
+			if(sp==oldpwd)
+				break;
+			
+		}
+		sfwrite(shp->strbuf,oldpwd,sp+1-oldpwd);
+		sfputr(shp->strbuf,dp,0);
+		dir = sfstruse(shp->strbuf);
 	}
 	rval = -1;
 	do

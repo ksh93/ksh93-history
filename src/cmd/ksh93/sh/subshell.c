@@ -40,6 +40,14 @@
 #   define PIPE_BUF	512
 #endif
 
+#ifndef O_SEARCH
+#   ifdef O_PATH
+#	define O_SEARCH	O_PATH
+#   else
+#	define O_SEARCH	0
+#   endif
+#endif
+
 /*
  * Note that the following structure must be the same
  * size as the Dtlink_t structure
@@ -76,6 +84,7 @@ static struct subshell
 	char		*pwd;	/* present working directory */
 	const char	*shpwd;	/* saved pointer to sh.pwd */
 	void		*jobs;	/* save job info */
+	int		pwdfd;	/* file descritor for pwd */
 	mode_t		mask;	/* saved umask */
 	short		tmpfd;	/* saved tmp file descriptor */
 	short		pipefd;	/* read fd if pipe is created */
@@ -92,6 +101,7 @@ static struct subshell
 	int		subdup;
 	char		subshare;
 	char		comsub;
+	char		pwdclose;
 #if SHOPT_COSHELL
 	void		*coshell;
 #endif /* SHOPT_COSHELL */
@@ -337,7 +347,7 @@ static void nv_restore(struct subshell *sp)
 		}
 		mp->nvflag = np->nvflag|(flags&NV_MINIMAL);
 		if(nv_cover(mp))
-			nv_putval(mp, nv_getval(np),np->nvflag|NV_NOFREE);
+			nv_putval(mp, nv_getval(np),np->nvflag|NV_NOFREE|NV_RDONLY);
 		else
 			mp->nvalue.cp = np->nvalue.cp;
 		if(nofree && np->nvfun && !np->nvfun->nofree)
@@ -508,6 +518,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		shp->pathinit = 0;
 	}
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
+	sp->pwdfd = -1;
 	if(!shp->pwd)
 		path_pwd(shp,0);
 	sp->bckpid = shp->bckpid;
@@ -522,7 +533,38 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		shp->comsub = comsub;
 	if(!comsub || !shp->subshare)
 	{
+		struct subshell *xp;
 		sp->shpwd = shp->pwd;
+#ifdef _lib_fchdir
+		for(xp=sp->prev; xp; xp=xp->prev) 
+		{
+			if(xp->pwdfd>0 && strcmp(xp->pwd,shp->pwd)==0)
+			{
+				sp->pwdfd = xp->pwdfd;
+				break;
+			}
+		}
+		if(sp->pwdfd<0)
+		{
+			int n = open(".",O_RDONLY);
+			if(O_SEARCH && errno==EACCES)
+				n =  open(".",O_RDONLY);
+			if(n>=0)
+			{
+				sp->pwdfd = n;
+				if(n<10)
+				{
+					sp->pwdfd =  fcntl(n,F_DUPFD,10);
+					close(n);
+				}
+				if(sp->pwdfd>0)
+				{
+					fcntl(sp->pwdfd,F_SETFD,FD_CLOEXEC);
+					sp->pwdclose = 1;
+				}
+			}
+		}
+#endif
 		sp->pwd = (shp->pwd?strdup(shp->pwd):0);
 		sp->mask = shp->mask;
 		sh_stats(STAT_SUBSHELL);
@@ -699,7 +741,14 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			Namval_t *pwdnod = sh_scoped(shp,PWDNOD);
 			if(shp->pwd)
 			{
-				chdir(shp->pwd=sp->pwd);
+				if(sp->pwdfd >=0)
+				{
+					if(fchdir(sp->pwdfd)<0)
+						chdir(sp->pwd);
+				}
+				else
+					chdir(sp->pwd);
+				shp->pwd=sp->pwd;
 				path_newdir(shp,shp->pathlist);
 			}
 			if(nv_isattr(pwdnod,NV_NOFREE))
@@ -713,6 +762,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		}
 		else
 			free((void*)sp->pwd);
+		if(sp->pwdclose)
+			close(sp->pwdfd);
 		if(sp->mask!=shp->mask)
 			umask(shp->mask=sp->mask);
 		if(shp->coutpipe!=sp->coutpipe)

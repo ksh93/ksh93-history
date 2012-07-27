@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -775,24 +775,7 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 }
 
 #if _pipe_socketpair && !_socketpair_devfd
-#   define sh_pipe	arg_pipe
-/*
- * create a real pipe (not a socket) and print message on failure
- */
-static int	arg_pipe(register int pv[])
-{
-	Shell_t *shp = sh_getinterp();
-	int fd[2];
-	if(pipe(fd)<0 || (pv[0]=fd[0])<0 || (pv[1]=fd[1])<0)
-		errormsg(SH_DICT,ERROR_system(1),e_pipe);
-	pv[0] = sh_iomovefd(pv[0]);
-	pv[1] = sh_iomovefd(pv[1]);
-	shp->fdstatus[pv[0]] = IONOSEEK|IOREAD;
-	shp->fdstatus[pv[1]] = IONOSEEK|IOWRITE;
-	sh_subsavefd(pv[0]);
-	sh_subsavefd(pv[1]);
-	return(0);
-}
+#   define sh_pipe(a)	sh_rpipe(a)
 #endif
 
 struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)

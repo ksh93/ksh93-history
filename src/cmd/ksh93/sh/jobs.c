@@ -658,9 +658,10 @@ void job_init(Shell_t *shp, int lflag)
 	if(possible = (setpgid(0,job.mypgid)>=0) || errno==EPERM)
 	{
 		/* wait until we are in the foreground */
+
 		while((job.mytgid=tcgetpgrp(JOBTTY)) != job.mypgid)
 		{
-			if(job.mytgid == -1)
+			if(job.mytgid <= 0)
 				return;
 			/* Stop this shell until continued */
 			signal(SIGTTIN,SIG_DFL);

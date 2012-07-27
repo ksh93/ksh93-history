@@ -499,7 +499,7 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 				{
 					if(tp->tre.tretyp!=TLST && !tp->com.comnamp && tp->com.comset && tp->com.comset->argval[0]==0 && tp->com.comset->argchn.ap)
 					{
-						if(prefix)
+						if(prefix || np)
 							cp = stakcopy(nv_name(np));
 						shp->prefix = cp;
 						if(tp->com.comset->argval[1]=='[')

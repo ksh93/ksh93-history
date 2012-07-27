@@ -1064,36 +1064,37 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 		sfputr(stkp,name,0);
 		errmsg = 0;
 		addr = 0;
-		for(n=(nlib?nlib:dlete); --n>=0;)
-		{
-#if SHOPT_DYNAMIC
-			if(!dlete && liblist && liblist[n].ino)
-				continue;
-			if(dlete || (addr = (Shbltin_f)dlllook(liblist[n].dll,stkptr(stkp,flag))))
-#else
-			if(dlete)
-#endif /* SHOPT_DYNAMIC */
+		if(dlete || liblist)
+			for(n=(nlib?nlib:dlete); --n>=0;)
 			{
-				if(np = sh_addbuiltin(arg, addr,pointerof(dlete)))
-				{
-					if(dlete || nv_isattr(np,BLT_SPC))
-						errmsg = "restricted name";
 #if SHOPT_DYNAMIC
-					else
-						nv_onattr(np,liblist[n].attr);
+				if(!dlete && !liblist[n].dll)
+					continue;
+				if(dlete || (addr = (Shbltin_f)dlllook(liblist[n].dll,stkptr(stkp,flag))))
+#else
+				if(dlete)
 #endif /* SHOPT_DYNAMIC */
+				{
+					if(np = sh_addbuiltin(arg, addr,pointerof(dlete)))
+					{
+						if(dlete || nv_isattr(np,BLT_SPC))
+							errmsg = "restricted name";
+#if SHOPT_DYNAMIC
+						else
+							nv_onattr(np,liblist[n].attr);
+#endif /* SHOPT_DYNAMIC */
+					}
+					break;
 				}
-				break;
 			}
-		}
-		if(!dlete && !addr)
+		if(!addr && (np = nv_search(arg,context->shp->bltin_tree,0)))
 		{
-			np = sh_addbuiltin(arg, 0 ,0);
-			if(np && nv_isattr(np,BLT_SPC))
+			if(nv_isattr(np,BLT_SPC))
 				errmsg = "restricted name";
-			else if(!np)
-				errmsg = "not found";
+			addr = (Shbltin_f)np->nvalue.bfp;
 		}
+		if(!dlete && !addr && !(np=sh_addbuiltin(arg,(Shbltin_f)0 ,0)))
+			errmsg = "not found";
 		if(errmsg)
 		{
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",*argv,errmsg);

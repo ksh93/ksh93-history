@@ -692,4 +692,6 @@ typeset -a arr=( 1 2 3 )
 typeset -n ref='arr[2]'
 [[ $(typeset -p ref) == *'arr[2]'* ]] || err_exit 'typeset -p ref when ref is a reference to an index array element is wrong'
 
+$SHELL  2> /dev/null -c 'function x { nameref lv=gg ; compound -A lv.c=( [4]=( x=1 )) ; } ; compound gg ; x' || err_exit 'compound array assignment with nameref in a function failed'
+
 exit $((Errors<125?Errors:125))

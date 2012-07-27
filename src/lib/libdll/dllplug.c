@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1997-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1997-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -90,7 +90,7 @@ dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel,
 						}
 					}
 #endif
-					errorf("dll", NiL, 1, "%s: dlopen failed: %s", dle->path, dllerror(1));
+					errorf("dll", NiL, 1, "dllplugin: %s dlopen failed: %s", dle->path, dllerror(1));
 					err = state.error;
 				}
 			}
