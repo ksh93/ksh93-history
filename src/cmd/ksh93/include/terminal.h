@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -191,5 +191,13 @@ extern int	tty_get(int,struct termios*);
 extern int	tty_raw(int,int);
 extern int	tty_check(int);
 extern int	tty_set(int, int, struct termios*);
+extern int	sh_ioctl(int,int,void*,int);
+#define ioctl(a,b,c)	sh_ioctl(a,b,c,sizeof(c))
+#ifdef _lib_tcgetattr
+    extern int	sh_tcgetattr(int,struct termios*);
+    extern int	sh_tcsetattr(int,int,struct termios*);
+#   define tcgetattr(a,b)	sh_tcgetattr(a,b)
+#   define tcsetattr(a,b,c)	sh_tcsetattr(a,b,c)
+#endif
 
 #endif /* _terminal_ */

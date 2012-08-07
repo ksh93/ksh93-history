@@ -337,7 +337,7 @@ int tty_raw(register int fd, int echomode)
 	nttyparm.c_iflag |= (BRKINT|IGNPAR);
 #   endif	/* u370 */
 	if(echo)
-		nttyparm.c_lflag &= ~(ICANON|ISIG);
+		nttyparm.c_lflag &= ~(ICANON);
 	else
 		nttyparm.c_lflag &= ~(ICANON|ISIG|ECHO|ECHOK);
 	nttyparm.c_cc[VTIME] = 0;
@@ -1822,3 +1822,49 @@ void	*ed_open(Shell_t *shp)
 	strcpy(ed->e_macro,"_??");
 	return((void*)ed);
 }
+
+#undef ioctl
+int	sh_ioctl(int fd, int cmd, void* val, int sz)
+{
+	int r,err=errno;
+	if(sz == sizeof(void*))
+	{
+		while((r=ioctl(fd,cmd,val)) < 0 && errno==EINTR)
+			errno = err;
+	}
+	else
+	{
+		Sflong_t l = (Sflong_t)val;
+		if(sizeof(val)==sizeof(long))
+		{
+			while((r=ioctl(fd,cmd,(unsigned long)l)) < 0 && errno==EINTR)
+				errno = err;
+		}
+		else if(sizeof(int)!=sizeof(long))
+		{
+			while((r=ioctl(fd,cmd,(unsigned int)l)) < 0 && errno==EINTR)
+				errno = err;
+		}
+	}
+	return(r);
+}
+
+#ifdef _lib_tcgetattr
+#   undef tcgetattr
+    sh_tcgetattr(int fd, struct termios *tty)
+    {
+	int r,err = errno;
+	while((r=tcgetattr(fd,tty)) < 0 && errno==EINTR)
+		errno = err;
+	return(r);
+    }
+
+#   undef tcsetattr
+    sh_tcsetattr(int fd, int cmd, struct termios *tty)
+    {
+	int r,err = errno;
+	while((r=tcsetattr(fd,cmd,tty)) < 0 && errno==EINTR)
+		errno = err;
+	return(r);
+    }
+#endif

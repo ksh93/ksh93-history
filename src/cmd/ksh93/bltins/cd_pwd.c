@@ -127,17 +127,17 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		{
 			cdpath = 0;
 			sp = oldpwd + strlen(oldpwd);
+			while(n--)
+			{
+				while(--sp > oldpwd && *sp!='/');
+				if(sp==oldpwd)
+					break;
+				
+			}
+			sfwrite(shp->strbuf,oldpwd,sp+1-oldpwd);
+			sfputr(shp->strbuf,dp,0);
+			dir = sfstruse(shp->strbuf);
 		}
-		while(n--)
-		{
-			while(--sp > oldpwd && *sp!='/');
-			if(sp==oldpwd)
-				break;
-			
-		}
-		sfwrite(shp->strbuf,oldpwd,sp+1-oldpwd);
-		sfputr(shp->strbuf,dp,0);
-		dir = sfstruse(shp->strbuf);
 	}
 	rval = -1;
 	do

@@ -1,6 +1,8 @@
-12-07-25  --- Release ksh93u+ ---
-12-07-25  Fix builtin/plugin lookup logic that skipped uwin dlls.
-12-07-24  Work around freebsd bug where tcgetpgrp() returns 0 for no process group.
+12-08-01  --- Release ksh93u+ ---
+12-08-01  A bug that ignored interrupts for some builtins (e.g. cmdtst::grep) 
+	  that read from stdin has been fixed.
+12-08-01  A bug that interpreted "cd .foo" as "cd foo" has been fixed.
+12-07-30  Added automatic restart for EINTR for ioctl, tcgetattr, and tcsetattr.
 12-07-23  A scoping error with namrefs to compound associative arrays has
 	  been fixed.
 12-07-20  A bug where builtin -d /path/foo deleted foo has been fixed.
