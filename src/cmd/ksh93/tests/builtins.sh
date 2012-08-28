@@ -639,4 +639,7 @@ read baz <<< 'foo\\\\bar'
 : ~root
 [[ $(builtin) == *.sh.tilde* ]] &&  err_exit 'builtin contains .sh.tilde'
 
+IFS=',' read -S a b c <<<'foo,"""title"" data",bar'
+[[ $b == '"title" data' ]] || err_exit '"" inside "" not handled correctly with read -S'
+
 exit $((Errors<125?Errors:125))

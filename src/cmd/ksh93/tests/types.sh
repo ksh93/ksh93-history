@@ -639,4 +639,43 @@ Bar_t bar
 bar.foo+=(bam)
 [[ ${bar.foo[0]} == bam ]] || err_exit 'appending to empty array variable in type does not create element 0'
 
+$SHELL 2> /dev/null -c 'typeset -T y_t=(compound extensions);y_t x;x.extensions=( integer i=1 )' || err_exit 'compound variable defined in type unable to be extended'
+
+typeset -T addme_t=(
+	compound c=(
+		compound ar
+	)
+)
+addme_t ad
+unset arr ref
+nameref ref=ad.c
+nameref arr=ref.ar
+arr+=( value=foo value2=bar )
+[[ ${ad.c.ar.value} == foo ]] || err_exit 'references to type elements not working'
+
+typeset -T fifo_t=(
+	typeset fifo_name
+	integer in_fd
+	integer out_fd
+	cinit()
+	{
+		_.fifo_name="$1"
+		> ${_.fifo_name}
+		redirect {_.out_fd}> ${_.fifo_name}
+		redirect {_.in_fd}< ${_.fifo_name}
+	}
+)
+compound c
+fifo_t -A c.ar
+c.ar[a].cinit fifo_a
+c.ar[b].cinit fifo_b
+[[ ${c.ar[a].fifo_name} == fifo_a ]] || err_exit 'fifo_name c.ar[a] not fifo_a'
+[[ ${c.ar[b].fifo_name} == fifo_b ]] || err_exit 'fifo_name c.ar[b] not fifo_b'
+[[ ${c.ar[a].in_fd} == "${c.ar[b].in_fd}" ]] && err_exit 'c.ar[a].in_fd and c.ar[b].in_fd are the same' 
+redirect  {c.ar[a].in_fd}<&-
+redirect  {c.ar[b].in_fd}<&-
+redirect  {c.ar[a].out_fd}>&-
+redirect  {c.ar[b].out_fd}>&-
+rm -f fifo_a fifo_b
+
 exit $((Errors<125?Errors:125))

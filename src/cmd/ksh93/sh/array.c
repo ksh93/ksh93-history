@@ -28,7 +28,6 @@
  */
 
 #include	"defs.h"
-#include	<stak.h>
 #include	"name.h"
 
 #define NUMSIZE	11
@@ -79,6 +78,7 @@ struct assoc_array
 
 static Namarr_t *array_scope(Namval_t *np, Namarr_t *ap, int flags)
 {
+	Shell_t	*shp = sh_ptr(np);
 	Namarr_t *aq;
 #if SHOPT_FIXEDARRAY
 	struct fixed_array *fp;
@@ -95,6 +95,7 @@ static Namarr_t *array_scope(Namval_t *np, Namarr_t *ap, int flags)
 	if(is_associative(aq))
 	{
 		aq->scope = (void*)dtopen(&_Nvdisc,Dtoset);
+		dtuserdata(aq->scope,shp,1);
 		dtview((Dt_t*)aq->scope,aq->table);
 		aq->table = (Dt_t*)aq->scope;
 		return(aq);
@@ -271,6 +272,7 @@ int nv_arrayisset(Namval_t *np, Namarr_t *arp)
  */
 static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 {
+	Shell_t *shp=sh_ptr(np);
 	register struct index_array *ap = (struct index_array*)arp;
 	register union Value	*up;
 	Namval_t		*mp;
@@ -373,9 +375,12 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 		{
 			char *cp;
 			if(!ap->header.table)
+			{
 				ap->header.table = dtopen(&_Nvdisc,Dtoset);
-			sfprintf(sh.strbuf,"%d",ap->cur);
-			cp = sfstruse(sh.strbuf);
+				dtuserdata(ap->header.table,shp,1);
+			}
+			sfprintf(shp->strbuf,"%d",ap->cur);
+			cp = sfstruse(shp->strbuf);
 			mp = nv_search(cp, ap->header.table, NV_ADD);
 			mp->nvenv = (char*)np;
 			nv_arraychild(np,mp,0);
@@ -399,18 +404,21 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 	return(np);
 }
 
-#if SHOPT_TYPEDEF
 int nv_arraysettype(Namval_t *np, Namval_t *tp, const char *sub, int flags)
 {
+	Shell_t		*shp = sh_ptr(np);
 	Namval_t	*nq;
 	char		*av[2];
 	int		rdonly = nv_isattr(np,NV_RDONLY);
-	int		xtrace = sh_isoption(SH_XTRACE);
+	int		xtrace = sh_isoption(shp,SH_XTRACE);
 	Namarr_t	*ap = nv_arrayptr(np);
 	av[1] = 0;
-	sh.last_table = 0;
+	shp->last_table = 0;
 	if(!ap->table)
+	{
 		ap->table = dtopen(&_Nvdisc,Dtoset);
+		dtuserdata(ap->table,shp,1);
+	}
 	if(nq = nv_search(sub, ap->table, NV_ADD))
 	{
 		if(!nq->nvfun && nq->nvalue.cp && *nq->nvalue.cp==0)
@@ -418,8 +426,8 @@ int nv_arraysettype(Namval_t *np, Namval_t *tp, const char *sub, int flags)
 		nv_arraychild(np,nq,0);
 		if(!nv_isattr(tp,NV_BINARY))
 		{
-			sfprintf(sh.strbuf,"%s=%s",nv_name(nq),nv_getval(np));
-			av[0] = strdup(sfstruse(sh.strbuf));
+			sfprintf(shp->strbuf,"%s=%s",nv_name(nq),nv_getval(np));
+			av[0] = strdup(sfstruse(shp->strbuf));
 		}
 		if(!nv_clone(tp,nq,flags|NV_NOFREE))
 			return(0);
@@ -429,20 +437,18 @@ int nv_arraysettype(Namval_t *np, Namval_t *tp, const char *sub, int flags)
 		if(!nv_isattr(tp,NV_BINARY))
 		{
 			if(xtrace)
-				sh_offoption(SH_XTRACE);
+				sh_offoption(shp,SH_XTRACE);
 			ap->nelem &= ~ARRAY_SCAN;
-			sh_eval(sh_sfeval(av),0);
+			sh_eval(shp,sh_sfeval(av),0);
 			ap->nelem |= ARRAY_SCAN;
 			free((void*)av[0]);
 			if(xtrace)
-				sh_onoption(SH_XTRACE);
+				sh_onoption(shp,SH_XTRACE);
 		}
 		return(1);
 	}
 	return(0);
 }
-#endif /* SHOPT_TYPEDEF */
-
 
 static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp)
 {
@@ -452,7 +458,7 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 	int			nelem, skipped=0;
 	Dt_t			*otable=ap->table;
 	struct index_array	*aq = (struct index_array*)ap, *ar;
-	Shell_t			*shp = sh_getinterp();
+	Shell_t			*shp = sh_ptr(np);
 	if(flags&NV_MOVE)
 	{
 		if((flags&NV_COMVAR) && nv_putsub(np,NIL(char*),ARRAY_SCAN))
@@ -479,12 +485,13 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 	{
 		ap->scope = 0;
 		ap->nelem = 0;
-		sh.prev_table = sh.last_table;
-		sh.prev_root = sh.last_root;
+		shp->prev_table = shp->last_table;
+		shp->prev_root = shp->last_root;
 	}
 	if(ap->table)
 	{
 		ap->table = dtopen(&_Nvdisc,Dtoset);
+		dtuserdata(ap->table,shp,1);
 		if(ap->scope && !(flags&NV_COMVAR))
 		{
 			ap->scope = ap->table;
@@ -633,10 +640,8 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 				nv_putval(mp, string, flags);
 			if(string)
 			{
-#if SHOPT_TYPEDEF
 				if(ap->hdr.type && ap->hdr.type!=nv_type(mp))
 					nv_arraysettype(np,ap->hdr.type,nv_getsub(np),0);
-#endif /* SHOPT_TYPEDEF */
 				continue;
 			}
 			ap->nelem |= scan;
@@ -719,10 +724,8 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 			else if(mp==np)
 				aq->val[aq->cur].cp = 0;
 		}
-#if SHOPT_TYPEDEF
 		if(string && ap->hdr.type && nv_isvtree(np))
 			nv_arraysettype(np,ap->hdr.type,nv_getsub(np),0);
-#endif /* SHOPT_TYPEDEF */
 	}
 	while(!string && nv_nextsub(np));
 	if(ap)
@@ -854,7 +857,9 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 			np->nvalue.cp=0;
 		if(nv_hasdisc(np,&array_disc) || (nv_type(np) && nv_isvtree(np)))
 		{
+			Shell_t *shp = sh_ptr(np);
 			ap->header.table = dtopen(&_Nvdisc,Dtoset);
+			dtuserdata(ap->header.table,shp,1);
 			mp = nv_search("0", ap->header.table,NV_ADD);
 			if(mp && nv_isnull(mp))
 			{
@@ -892,12 +897,13 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 
 int nv_atypeindex(Namval_t *np, const char *tname)
 {
+	Shell_t		*shp = sh_ptr(np);
 	Namval_t	*tp;
-	int		offset = staktell();
+	int		offset = stktell(shp->stk);
 	size_t		n = strlen(tname)-1;
 	sfprintf(stkstd,"%s.%.*s%c",NV_CLASS,n,tname,0);
-	tp = nv_open(stakptr(offset), sh.var_tree, NV_NOADD|NV_VARNAME);
-	stakseek(offset);
+	tp = nv_open(stkptr(shp->stk,offset), shp->var_tree, NV_NOADD|NV_VARNAME);
+	stkseek(shp->stk,offset);
 	if(tp)
 	{
 		struct index_array *ap = (struct index_array*)nv_arrayptr(np);
@@ -1003,7 +1009,7 @@ Namarr_t *nv_setarray(Namval_t *np, void *(*fun)(Namval_t*,const char*,int))
 		ap->nelem = nelem;
 		ap->fun = fun;
 		nv_onattr(np,NV_ARRAY);
-		if(fp || value)
+		if(fp || (value && value!=Empty))
 		{
 			nv_putsub(np, "0", ARRAY_ADD);
 			if(value)
@@ -1050,6 +1056,7 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 		ap->nelem &= ~ARRAY_NOCLONE;
 	}
 	nq->nvenv = (char*)np;
+	nq->nvshell = np->nvshell;
 	if((fp=nq->nvfun) && fp->disc && fp->disc->setdisc && (fp = nv_disc(nq,fp,NV_POP)))
 		free((void*)fp);
 	if(!ap->fun)
@@ -1146,7 +1153,12 @@ int nv_nextsub(Namval_t *np)
 				if((aq->header.nelem&ARRAY_NOCHILD) && nv_isvtree(mp) && !mp->nvfun->dsize)
 					continue;
 				if(nv_isarray(mp))
+				{
+					aq = nv_arrayptr(mp);
+					if(!aq || (aq->header.nelem&ARRAY_MASK)==0)
+						continue;
 					nv_putsub(mp,NIL(char*),ARRAY_SCAN);
+				}
 			}
 			return(1);
 		}
@@ -1169,6 +1181,7 @@ int nv_nextsub(Namval_t *np)
  */
 Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 {
+	Shell_t *shp = sh_ptr(np);
 	register struct index_array *ap = (struct index_array*)nv_arrayptr(np);
 	register int size = (mode&ARRAY_MASK);
 #if SHOPT_FIXEDARRAY
@@ -1178,9 +1191,9 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 	if(!ap || !ap->header.fun)
 #endif /* SHOPT_FIXEDARRAY */
 	{
-		if(sp)
+		if(sp && sp!=Empty)
 		{
-			Shell_t	*shp = sh_getinterp();
+			Shell_t	*shp = sh_ptr(np);
 			if(ap && ap->xp && !strmatch(sp,"+([0-9])"))
 			{
 				Namval_t *mp = nv_namptr(ap->xp,0);
@@ -1201,7 +1214,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 		{
 			if(size==0 && !(mode&ARRAY_FILL))
 				return(NIL(Namval_t*));
-			if(sh.subshell)
+			if(shp->subshell)
 				np = sh_assignok(np,1);
 			ap = array_grow(np, ap,size);
 		}
@@ -1251,16 +1264,19 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 			}
 			else if(!(sp=(char*)ap->val[size].cp) || sp==Empty)
 			{
-				if(sh.subshell)
+				if(shp->subshell)
 					np = sh_assignok(np,1);
 				if(ap->header.nelem&ARRAY_TREE)
 				{
 					char *cp;
 					Namval_t *mp;
 					if(!ap->header.table)
+					{
 						ap->header.table = dtopen(&_Nvdisc,Dtoset);
-					sfprintf(sh.strbuf,"%d",ap->cur);
-					cp = sfstruse(sh.strbuf);
+						dtuserdata(ap->header.table,shp,1);
+					}
+					sfprintf(shp->strbuf,"%d",ap->cur);
+					cp = sfstruse(shp->strbuf);
 					mp = nv_search(cp, ap->header.table, NV_ADD);
 					mp->nvenv = (char*)np;
 					nv_arraychild(np,mp,0);
@@ -1395,14 +1411,14 @@ static void array_fixed_setdata(Namval_t *np,Namarr_t* ap,struct fixed_array* fp
 
 static int array_fixed_init(Namval_t *np, char *sub, char *cp)
 {
-	Shell_t			*shp=sh_getinterp();
+	Shell_t			*shp=sh_ptr(np);
 	Namarr_t		*ap;
 	struct fixed_array	*fp;
 	int			n=1,sz;
 	char			*ep=cp;
 	while(*ep=='[')
 	{
-		ep = nv_endsubscript(np,ep,0);
+		ep = nv_endsubscript(np,ep,0,np->nvshell);
 		n++;
 	}
 	if(*ep)
@@ -1422,7 +1438,7 @@ static int array_fixed_init(Namval_t *np, char *sub, char *cp)
 	fp->max[0] = (int)sh_arith(shp,(char*)sub);
 	for(n=1,ep=cp;*ep=='['; ep=cp)
 	{
-		cp = nv_endsubscript(np,ep,0);
+		cp = nv_endsubscript(np,ep,0,np->nvshell);
 		cp[-1]=0;
 		fp->max[n++] = sz = (int)sh_arith(shp,(char*)ep+1);
 		if(sz<0)
@@ -1445,7 +1461,7 @@ static int array_fixed_init(Namval_t *np, char *sub, char *cp)
 
 static char *array_fixed(Namval_t *np, char *sub, char *cp,int mode)
 {
-	Shell_t			*shp=sh_getinterp();
+	Shell_t			*shp=sh_ptr(np);
 	Namarr_t		*ap = nv_arrayptr(np);
 	struct fixed_array	*fp = (struct fixed_array*)ap->fixed;
 	char			*ep;
@@ -1473,7 +1489,7 @@ static char *array_fixed(Namval_t *np, char *sub, char *cp,int mode)
 	{
 		if(n >= fp->ndim)
 			errormsg(SH_DICT,ERROR_exit(1),e_subscript, nv_name(np));
-		cp = nv_endsubscript(np,ep,0);
+		cp = nv_endsubscript(np,ep,0,np->nvshell);
 		cp[-1]=0;
 		size = (int)sh_arith(shp,(char*)ep+1);
 		if(size >= fp->max[n] || (size < 0))
@@ -1497,10 +1513,11 @@ skip:
  * process an array subscript for node <np> given the subscript <cp>
  * returns pointer to character after the subscript
  */
-char *nv_endsubscript(Namval_t *np, register char *cp, int mode)
+char *nv_endsubscript(Namval_t *np, register char *cp, int mode, void *context)
 {
 	register int count=1, quoted=0, c;
 	register char *sp = cp+1;
+	Shell_t		*shp= (Shell_t*)context;
 	/* first find matching ']' */
 	while(count>0 && (c= *++cp))
 	{
@@ -1518,9 +1535,9 @@ char *nv_endsubscript(Namval_t *np, register char *cp, int mode)
 	if(quoted)
 	{
 		/* strip escape characters */
-		count = staktell();
-		stakwrite(sp,1+cp-sp);
-		sh_trim(sp=stakptr(count));
+		count = stktell(shp->stk);
+		sfwrite(shp->stk,sp,1+cp-sp);
+		sh_trim(sp=stkptr(shp->stk,count));
 	}
 	if(mode && np)
 	{
@@ -1552,7 +1569,7 @@ char *nv_endsubscript(Namval_t *np, register char *cp, int mode)
 			ap->nelem |= scan;
 	}
 	if(quoted)
-		stakseek(count);
+		stkseek(shp->stk,count);
 	*cp++ = c;
 	return(cp);
 }
@@ -1666,6 +1683,7 @@ int nv_aimax(register Namval_t* np)
  */
 void *nv_associative(register Namval_t *np,const char *sp,int mode)
 {
+	Shell_t	*shp = sh_ptr(np);
 	register struct assoc_array *ap = (struct assoc_array*)nv_arrayptr(np);
 	register int type;
 	switch(mode)
@@ -1674,6 +1692,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 		if(ap = (struct assoc_array*)calloc(1,sizeof(struct assoc_array)))
 		{
 			ap->header.table = dtopen(&_Nvdisc,Dtoset);
+			dtuserdata(ap->header.table,shp,1);
 			ap->cur = 0;
 			ap->pos = 0;
 			ap->header.hdr.disc = &array_disc;
@@ -1742,7 +1761,6 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 	    case NV_ANAME:
 		if(ap->cur)
 		{
-			Shell_t *shp = sh_getinterp();
 			if(!shp->instance && nv_isnull(ap->cur))
 				return(NIL(void*));
 			return((void*)ap->cur->nvname);
@@ -1760,17 +1778,18 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				mode = NV_ADD|HASH_NOSCOPE;
 			else if(ap->header.nelem&ARRAY_NOSCOPE)
 				mode = HASH_NOSCOPE;
-			if(*sp==0 && sh_isoption(SH_XTRACE) && (mode&NV_ADD))
+			if(*sp==0 && sh_isoption(shp,SH_XTRACE) && (mode&NV_ADD))
 				errormsg(SH_DICT,ERROR_warn(0),"adding empty subscript"); 
-			if(sh.subshell && (mp=nv_search(sp,ap->header.table,0)) && nv_isnull(mp))
+			if(shp->subshell && (mp=nv_search(sp,ap->header.table,0)) && nv_isnull(mp))
 				ap->cur = mp;
 			if((mp || (mp=nv_search(sp,ap->header.table,mode))) && nv_isnull(mp) && (mode&NV_ADD))
 			{
+				mp->nvshell = np->nvshell;
 				nv_onattr(mp,type);
 				mp->nvenv = (char*)np;
 				if((mode&NV_ADD) && nv_type(np)) 
 					nv_arraychild(np,mp,0);
-				if(sh.subshell)
+				if(shp->subshell)
 					np = sh_assignok(np,1);
 				if(!ap->header.scope || !nv_search(sp,dtvnext(ap->header.table),0))
 					ap->header.nelem++;

@@ -40,14 +40,6 @@
 #   define PIPE_BUF	512
 #endif
 
-#ifndef O_SEARCH
-#   ifdef O_PATH
-#	define O_SEARCH	O_PATH
-#   else
-#	define O_SEARCH	0
-#   endif
-#endif
-
 /*
  * Note that the following structure must be the same
  * size as the Dtlink_t structure
@@ -84,7 +76,7 @@ static struct subshell
 	char		*pwd;	/* present working directory */
 	const char	*shpwd;	/* saved pointer to sh.pwd */
 	void		*jobs;	/* save job info */
-	int		pwdfd;	/* file descritor for pwd */
+	int		shpwdfd;/* fd for present working directory */
 	mode_t		mask;	/* saved umask */
 	short		tmpfd;	/* saved tmp file descriptor */
 	short		pipefd;	/* read fd if pipe is created */
@@ -101,7 +93,6 @@ static struct subshell
 	int		subdup;
 	char		subshare;
 	char		comsub;
-	char		pwdclose;
 #if SHOPT_COSHELL
 	void		*coshell;
 #endif /* SHOPT_COSHELL */
@@ -124,9 +115,11 @@ void	sh_subtmpfile(Shell_t *shp)
 		/* save file descriptor 1 if open */
 		if((sp->tmpfd = fd = fcntl(1,F_DUPFD,10)) >= 0)
 		{
+			int err=errno;
 			fcntl(fd,F_SETFD,FD_CLOEXEC);
 			shp->fdstatus[fd] = shp->fdstatus[1]|IOCLEX;
-			close(1);
+			while(close(1)<0 && errno==EINTR)
+				errno = err;
 		}
 		else if(errno!=EBADF)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
@@ -204,10 +197,10 @@ void sh_subfork(void)
 	{
 		/* this is the child part of the fork */
 		/* setting subpid to 1 causes subshell to exit when reached */
-		sh_onstate(SH_FORKED);
-		sh_onstate(SH_NOLOG);
-		sh_offoption(SH_MONITOR);
-		sh_offstate(SH_MONITOR);
+		sh_onstate(shp,SH_FORKED);
+		sh_onstate(shp,SH_NOLOG);
+		sh_offoption(shp,SH_MONITOR);
+		sh_offstate(shp,SH_MONITOR);
 		subshell_data = 0;
 		shp->subshell = 0;
 		shp->comsub = 0;
@@ -356,7 +349,7 @@ static void nv_restore(struct subshell *sp)
 		if(nv_isattr(mp,NV_EXPORT))
 		{
 			char *name = nv_name(mp);
-			sh_envput(sp->shp->env,mp);
+			sh_envput(sp->shp,mp);
 			if(*name=='_' && strcmp(name,"_AST_FEATURES")==0)
 				astconf(NiL, NiL, NiL);
 		}
@@ -379,16 +372,17 @@ static void nv_restore(struct subshell *sp)
  * return pointer to alias tree
  * create new one if in a subshell and one doesn't exist and create is non-zero
  */
-Dt_t *sh_subaliastree(int create)
+Dt_t *sh_subaliastree(Shell_t *shp,int create)
 {
 	register struct subshell *sp = subshell_data;
-	if(!sp || sp->shp->curenv==0)
-		return(sh.alias_tree);
+	if(!sp || shp->curenv==0)
+		return(shp->alias_tree);
 	if(!sp->salias && create)
 	{
 		sp->salias = dtopen(&_Nvdisc,Dtoset);
-		dtview(sp->salias,sp->shp->alias_tree);
-		sp->shp->alias_tree = sp->salias;
+		dtuserdata(sp->salias,shp,1);
+		dtview(sp->salias,shp->alias_tree);
+		shp->alias_tree = sp->salias;
 	}
 	return(sp->salias);
 }
@@ -397,16 +391,17 @@ Dt_t *sh_subaliastree(int create)
  * return pointer to function tree
  * create new one if in a subshell and one doesn't exist and create is non-zero
  */
-Dt_t *sh_subfuntree(int create)
+Dt_t *sh_subfuntree(Shell_t *shp,int create)
 {
 	register struct subshell *sp = subshell_data;
-	if(!sp || sp->shp->curenv==0)
-		return(sh.fun_tree);
+	if(!sp || shp->curenv==0)
+		return(shp->fun_tree);
 	if(!sp->sfun && create)
 	{
 		sp->sfun = dtopen(&_Nvdisc,Dtoset);
-		dtview(sp->sfun,sp->shp->fun_tree);
-		sp->shp->fun_tree = sp->sfun;
+		dtuserdata(sp->sfun,shp,1);
+		dtview(sp->sfun,shp->fun_tree);
+		shp->fun_tree = sp->sfun;
 	}
 	return(sp->shp->fun_tree);
 }
@@ -518,7 +513,6 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		shp->pathinit = 0;
 	}
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
-	sp->pwdfd = -1;
 	if(!shp->pwd)
 		path_pwd(shp,0);
 	sp->bckpid = shp->bckpid;
@@ -528,42 +522,19 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		job.curpgid = 0;
 	sp->subshare = shp->subshare;
 	sp->comsub = shp->comsub;
-	shp->subshare = comsub==2 ||  (comsub==1 && sh_isoption(SH_SUBSHARE));
+	shp->subshare = comsub==2 ||  (comsub==1 && sh_isoption(shp,SH_SUBSHARE));
 	if(comsub)
 		shp->comsub = comsub;
+	sp->shpwdfd=-1;
 	if(!comsub || !shp->subshare)
 	{
-		struct subshell *xp;
 		sp->shpwd = shp->pwd;
-#ifdef _lib_fchdir
-		for(xp=sp->prev; xp; xp=xp->prev) 
-		{
-			if(xp->pwdfd>0 && strcmp(xp->pwd,shp->pwd)==0)
-			{
-				sp->pwdfd = xp->pwdfd;
-				break;
-			}
-		}
-		if(sp->pwdfd<0)
-		{
-			int n = open(".",O_RDONLY);
-			if(O_SEARCH && errno==EACCES)
-				n =  open(".",O_RDONLY);
-			if(n>=0)
-			{
-				sp->pwdfd = n;
-				if(n<10)
-				{
-					sp->pwdfd =  fcntl(n,F_DUPFD,10);
-					close(n);
-				}
-				if(sp->pwdfd>0)
-				{
-					fcntl(sp->pwdfd,F_SETFD,FD_CLOEXEC);
-					sp->pwdclose = 1;
-				}
-			}
-		}
+		sp->shpwdfd=((shp->pwdfd >= 0))?sh_fcntl(shp->pwdfd, F_DUPFD, 10):-1;
+		if(sp->shpwdfd>=0)
+			sh_fcntl(sp->shpwdfd, F_SETFD, FD_CLOEXEC);
+#ifdef O_SEARCH
+		else
+			errormsg(SH_DICT,ERROR_exit(1), "Can't obtain directory fd.");
 #endif
 		sp->pwd = (shp->pwd?strdup(shp->pwd):0);
 		sp->mask = shp->mask;
@@ -582,7 +553,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		sp->coutpipe = shp->coutpipe;
 		sp->cpipe = shp->cpipe[1];
 		shp->cpid = 0;
-		sh_sigreset(0);
+		sh_sigreset(shp,0);
 	}
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval==0)
@@ -592,9 +563,9 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			/* disable job control */
 			shp->spid = 0;
 			sp->jobcontrol = job.jobcontrol;
-			sp->monitor = (sh_isstate(SH_MONITOR)!=0);
+			sp->monitor = (sh_isstate(shp,SH_MONITOR)!=0);
 			job.jobcontrol=0;
-			sh_offstate(SH_MONITOR);
+			sh_offstate(shp,SH_MONITOR);
 			sp->pipe = sp;
 			/* save sfstdout and status */
 			sp->saveout = sfswap(sfstdout,NIL(Sfio_t*));
@@ -611,7 +582,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			sfset(sfstdout,SF_READ,0);
 			shp->fdstatus[1] = IOWRITE;
 			if(!(sp->nofork = sh_state(SH_NOFORK)))
-				sh_onstate(SH_NOFORK);
+				sh_onstate(shp,SH_NOFORK);
 			flags |= sh_state(SH_NOFORK);
 		}
 		else if(sp->prev)
@@ -622,7 +593,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		if(shp->savesig < 0)
 		{
 			shp->savesig = 0;
-			sh_exec(t,flags);
+			sh_exec(shp,t,flags);
 		}
 	}
 	if(comsub!=2 && jmpval!=SH_JMPSUB && shp->st.trapcom[0] && shp->subshell)
@@ -631,7 +602,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		char *trap=shp->st.trapcom[0];
 		shp->st.trapcom[0] = 0;	/* prevent recursion */
 		shp->oldexit = shp->exitval;
-		sh_trap(trap,0);
+		sh_trap(shp,trap,0);
 		free(trap);
 	}
 	sh_popcontext(shp,&buff);
@@ -650,10 +621,10 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	{
 		/* re-enable job control */
 		if(!sp->nofork)
-			sh_offstate(SH_NOFORK);
+			sh_offstate(shp,SH_NOFORK);
 		job.jobcontrol = sp->jobcontrol;
 		if(sp->monitor)
-			sh_onstate(SH_MONITOR);
+			sh_onstate(shp,SH_MONITOR);
 		if(sp->pipefd>=0)
 		{
 			/* sftmp() file has been returned into pipe */
@@ -692,7 +663,9 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		/*  check if standard output was preserved */
 		if(sp->tmpfd>=0)
 		{
-			close(1);
+			int err=errno;
+			while(close(1)<0 && errno==EINTR)
+				errno = err;
 			if (fcntl(sp->tmpfd,F_DUPFD,1) != 1)
 				duped++;
 			sh_close(sp->tmpfd);
@@ -701,7 +674,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	}
 	path_delete((Pathcomp_t*)shp->pathlist);
 	shp->pathlist = (void*)sp->pathlist;
-	job_subrestore(sp->jobs);
+	job_subrestore(shp,sp->jobs);
 	shp->jobenv = savecurenv;
 	job.curpgid = savejobpgid;
 	job.exitval = saveexitval;
@@ -723,7 +696,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			dtclose(sp->sfun);
 		}
 		n = shp->st.trapmax-savst.trapmax;
-		sh_sigreset(1);
+		sh_sigreset(shp,1);
 		if(n>0)
 			memset(&shp->st.trapcom[savst.trapmax],0,n*sizeof(char*));
 		shp->st = savst;
@@ -741,14 +714,11 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			Namval_t *pwdnod = sh_scoped(shp,PWDNOD);
 			if(shp->pwd)
 			{
-				if(sp->pwdfd >=0)
-				{
-					if(fchdir(sp->pwdfd)<0)
-						chdir(sp->pwd);
-				}
-				else
-					chdir(sp->pwd);
-				shp->pwd=sp->pwd;
+                               shp->pwd=sp->pwd;
+#ifndef O_SEARCH
+                               if (sp->shpwdfd < 0)
+                                       chdir(shp->pwd);
+#endif
 				path_newdir(shp,shp->pathlist);
 			}
 			if(nv_isattr(pwdnod,NV_NOFREE))
@@ -762,8 +732,6 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		}
 		else
 			free((void*)sp->pwd);
-		if(sp->pwdclose)
-			close(sp->pwdfd);
 		if(sp->mask!=shp->mask)
 			umask(shp->mask=sp->mask);
 		if(shp->coutpipe!=sp->coutpipe)
@@ -775,6 +743,13 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		shp->cpipe[1] = sp->cpipe;
 		shp->coutpipe = sp->coutpipe;
 	}
+       if(sp->shpwdfd >=0)
+       {
+		if(shp->pwdfd >=0)
+			sh_close(shp->pwdfd);
+		shp->pwdfd=sp->shpwdfd;
+		fchdir(shp->pwdfd);
+       }
 	shp->subshare = sp->subshare;
 	shp->comsub = sp->comsub;
 	shp->subdup = sp->subdup;

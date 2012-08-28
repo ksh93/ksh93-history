@@ -15,32 +15,28 @@ SHCOMP := shcomp$(RELEASE)
  * override SHOPT_foo=1 can be placed one per line in the build dir Makeargs
  */
 
-SHOPT_2DMATCH == 1		/* two dimensional .sh.match for ${var//pat/str} */
 SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_AUDIT == 1		/* enable auditing per SHOPT_AUDITFILE */
 SHOPT_AUDITFILE == "/etc/ksh_audit"  		/* auditing file */
 SHOPT_BASH ==			/* bash compatibility code */
-SHOPT_BGX == 1			/* one SIGCHLD trap per completed job */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
 SHOPT_CMDLIB_HDR ==		/* -lcmd builtin list (<cmdlist.h>) */
 SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_HDR directory prefix (default "/opt/ast/bin") */
 SHOPT_COSHELL == 1		/* build with connection to coshell */
 SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
 SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */
-SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
 SHOPT_EDPREDICT == 1		/* predictive editing  */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
 SHOPT_FILESCAN == 1		/* fast file scan */
 SHOPT_FIXEDARRAY == 1		/* fixed dimension indexed array */
 SHOPT_FS_3D == 			/* 3d file system */
-SHOPT_HISTEXPAND == 1		/* csh-style history file expansions */
 SHOPT_KIA == 1			/* shell information database generation */
 SHOPT_MULTIBYTE == 1		/* multibyte character handling */
 SHOPT_NAMESPACE == 1		/* allow namespaces */
-SHOPT_OLDTERMIO ==		/* support both TCGETA and TCGETS */
 SHOPT_OPTIMIZE == 1		/* optimize loop invariants */
 SHOPT_PFSH == 1			/* solaris exec_attr(4) profile execution */
+SHOPT_POLL == 1			/* include the poll builtin */
 SHOPT_P_SUID ==			/* real uid's that require -p for set[ug]id */
 SHOPT_RAWONLY == 1		/* make viraw the only vi mode */
 SHOPT_REGRESS ==		/* enable __regress__ builtin and instrumented intercepts for testing */
@@ -51,7 +47,6 @@ SHOPT_STATS ==	1		/* add .sh.stats variable */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
 SHOPT_SYSRC ==			/* attempt . /etc/ksh.kshrc if interactive */
 SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */
-SHOPT_TYPEDEF == 1		/* enable typeset type definitions */
 SHOPT_VSH == 1			/* vi edit mode */
 
 if CC.HOSTTYPE == "linux.alpha"
@@ -81,7 +76,7 @@ else
 	LIBS_req = +lshell$(RELEASE)
 end
 
-:PACKAGE: ast$(libtype):20100309 coshell:order --clobber=!($(SH))
+:PACKAGE: ast$(libtype):20120806 coshell:order --clobber=!($(SH))
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
@@ -140,13 +135,12 @@ if SHOPT_VSH
 end
 if SHOPT_BASH
 	FILES_opt += bash.c bash_pre_rc.c
-	SHOPT_HISTEXPAND == 1
-end
-if SHOPT_HISTEXPAND
-	FILES_opt += hexpand.c
 end
 if SHOPT_DYNAMIC
 	FILES_opt += -ldll
+end
+if SHOPT_POLL
+	FILES_opt += poll.c
 end
 if SHOPT_X
 	LDFLAGS += -u _XtAppInitialize -L/usr/add-on/X11/lib
@@ -165,7 +159,7 @@ shell$(RELEASE) $(VERSION) id=shell :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cf
 	arith.c args.c array.c completion.c defs.c edit.c expand.c regress.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
-	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
+	trestore.c waitevent.c xec.c env.c hexpand.c $(DATAFILES) $(FILES_opt) \
 	$(SHOPT_COSHELL:+-lcoshell) -lcmd -last -lm
 
 "sol*.i386*"	:NOOPTIMIZE: main.c
@@ -179,7 +173,7 @@ end
 
 :READONLY: $(DATAFILES)
 
-$(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h history.h
+$(INCLUDEDIR) :INSTALLPROTO: nval.h nvapi.h shell.h shellapi.h history.h
 
 LIBCMD = $(.LIB.NAME. cmd:T=F)
 
@@ -205,20 +199,23 @@ bash_pre_rc.c : bash_pre_rc.sh
 end
 
 :: math.tab syscall.s mamexec mamstate.c $(DOCFILES) \
-	bash.c bash_pre_rc.sh hexpand.c mkservice.c \
+	bash.c bash_pre_rc.sh mkservice.c \
 	shopen.mk shopen.c
 
 :: shtests \
-	alias.sh append.sh arith.sh arrays.sh arrays2.sh \
-	attributes.sh basic.sh bracket.sh builtins.sh case.sh \
+	alias.sh append.sh arith.sh arrays.sh arrays2.sh attributes.sh \
+	basic.sh bracket.sh builtins.sh builtin_poll.sh case.sh \
 	comvar.sh comvario.sh coprocess.sh cubetype.sh enum.sh exit.sh \
-	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
-	leaks.sh locale.sh math.sh nameref.sh namespace.sh options.sh \
+	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh leaks.sh \
+	locale.sh math.sh nameref.sh sh_match.sh namespace.sh options.sh \
 	path.sh pointtype.sh pty.sh quoting.sh quoting2.sh readcsv.sh \
 	recttype.sh restricted.sh return.sh select.sh shtests \
 	sigchld.sh signal.sh statics.sh subshell.sh substring.sh \
 	tilde.sh timetype.sh treemove.sh types.sh variables.sh \
 	vartree1.sh vartree2.sh
+
+nvapi.h		:COPY:	FEATURE/nvapi
+shellapi.h	:COPY:	FEATURE/shellapi
 
 :: ksh-regress.rt ksh-regress.tst
 

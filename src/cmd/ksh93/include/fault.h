@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -112,13 +112,18 @@ struct checkpt
 				)
 #define sh_popcontext(shp,bp)	(shp->jmplist=(bp)->prev, errorpop(&((bp)->err)))
 
-extern void 	sh_fault(int);
+typedef void (*sh_sigfun_t)(int);
+#ifdef _lib_sigaction
+    extern  sh_sigfun_t sh_signal(int,sh_sigfun_t);
+    extern void 	sh_fault(int,siginfo_t*, void*);
+    extern void		sh_setsiginfo(siginfo_t*);
+#   define signal(a,b)	sh_signal(a,(sh_sigfun_t)(b))
+#else
+    extern void 	sh_fault(int);
+#endif
+
 extern void 	sh_done(void*,int);
-extern void 	sh_sigclear(int);
-extern void 	sh_sigdone(void);
 extern void	sh_siginit(void*);
-extern void 	sh_sigtrap(int);
-extern void 	sh_sigreset(int);
 extern void 	*sh_timeradd(unsigned long,int ,void (*)(void*),void*);
 extern void	timerdel(void*);
 

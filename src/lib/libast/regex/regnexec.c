@@ -1843,7 +1843,7 @@ list(Env_t* env, Rex_t* rex)
  */
 
 int
-regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t* match, regflags_t flags)
+regnexec_20120528(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t* match, regflags_t flags)
 {
 	register ssize_t	n;
 	register int		i;

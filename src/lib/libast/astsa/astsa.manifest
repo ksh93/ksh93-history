@@ -35,6 +35,7 @@ ast_common.h
 astsa.manifest
 astsa.mm
 astsa.omk
+astsastd
 ccode.h
 debug.h
 error.c

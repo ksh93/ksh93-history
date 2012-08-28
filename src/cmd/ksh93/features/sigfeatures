@@ -1,7 +1,10 @@
-lib	sigblock,sigrelse,sigsetmask,sigprocmask,sigvec
+lib	sigblock,sigrelse,sigsetmask,sigprocmask,sigvec,sigqueue,sigaction
 typ	sigset_t	ast.h signal.h
 mem	sigvec.sv_mask	signal.h
 cat{
+	#ifndef _lib_sigqueue
+	#   define sigqueue(sig,action,val)	kill(sig,action)
+	#endif
 	#ifndef _mem_sigvec_sv_mask
 	#   undef _lib_sigvec
 	#endif

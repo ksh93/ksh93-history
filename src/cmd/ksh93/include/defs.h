@@ -146,7 +146,6 @@ struct shared
 #define _SH_PRIVATE \
 	struct shared	*gd;		/* global data */ \
 	struct sh_scoped st;		/* scoped information */ \
-	Stk_t		*stk;		/* stack poiter */ \
 	Sfio_t		*heredocs;	/* current here-doc temp file */ \
 	Sfio_t		*funlog;	/* for logging function definitions */ \
 	int		**fdptrs;	/* pointer to file numbers */ \
@@ -206,6 +205,7 @@ struct shared
 	char		instance;	/* in set_instance */ \
 	char		decomma;	/* decimal_point=',' */ \
 	char		redir0;		/* redirect of 0 */ \
+	char		intrace;	/* set when trace expands PS4 */ \
 	char		*readscript;	/* set before reading a script */ \
 	int		subdup;		/* bitmask for dups of 1 */ \
 	int		*inpipe;	/* input pipe pointer */ \
@@ -235,6 +235,8 @@ struct shared
 	void		*cdpathlist; \
 	char		**argaddr; \
 	void		*optlist; \
+	void		*sigmsg; \
+	void		**siginfo; \
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
 	Shinit_f	userinit; \
@@ -278,7 +280,7 @@ struct shared
 
 #define new_of(type,x)	((type*)malloc((unsigned)sizeof(type)+(x)))
 
-#define exitset()	(sh.savexit=sh.exitval)
+#define exitset(shp)	(shp->savexit=shp->exitval)
 
 #ifndef SH_DICT
 #define SH_DICT		(void*)e_dict
@@ -330,9 +332,6 @@ struct shared
 #define SH_TYPE_RESTRICTED	040
 
 #if SHOPT_BASH
-#   ifndef SHOPT_HISTEXPAND
-#	define SHOPT_HISTEXPAND	1
-#   endif
 /*
  *  define for all the bash options
  */
@@ -362,13 +361,11 @@ struct shared
 #   define SH_XPG_ECHO		77
 #endif
 
-#if SHOPT_HISTEXPAND
-#   define SH_HISTAPPEND	60
-#   define SH_HISTEXPAND	43
-#   define SH_HISTORY2		44
-#   define SH_HISTREEDIT	61
-#   define SH_HISTVERIFY	62
-#endif
+#define SH_HISTAPPEND		60
+#define SH_HISTEXPAND		43
+#define SH_HISTORY2		44
+#define SH_HISTREEDIT		61
+#define SH_HISTVERIFY		62
 
 #ifndef PIPE_BUF
 #   define PIPE_BUF		512
@@ -384,7 +381,7 @@ struct shared
 #define SH_FUNEVAL		0x10000	/* for sh_eval for function load */
 
 extern struct shared	*shgd;
-extern Shell_t		*nv_shell(Namval_t*);
+extern void		sh_outname(Shell_t*,Sfio_t*,char*, int);
 extern void		sh_applyopts(Shell_t*,Shopt_t);
 extern char 		**sh_argbuild(Shell_t*,int*,const struct comnod*,int);
 extern struct dolnod	*sh_argfree(Shell_t *, struct dolnod*,int);
@@ -400,13 +397,14 @@ extern void		sh_deparse(Sfio_t*,const Shnode_t*,int);
 extern int		sh_debug(Shell_t *shp,const char*,const char*,const char*,char *const[],int);
 extern int 		sh_echolist(Shell_t*,Sfio_t*, int, char**);
 extern struct argnod	*sh_endword(Shell_t*,int);
-extern char 		**sh_envgen(void);
+extern char 		**sh_envgen(Shell_t*);
 #if SHOPT_ENV
-extern void 		sh_envput(Env_t*, Namval_t*);
+extern void 		sh_envput(Shell_t*, Namval_t*);
 #endif
 extern void 		sh_envnolocal(Namval_t*,void*);
 extern Sfdouble_t	sh_arith(Shell_t*,const char*);
 extern void		*sh_arithcomp(Shell_t *,char*);
+extern int		sh_exec(Shell_t*,const Shnode_t*,int);
 extern pid_t 		sh_fork(Shell_t*,int,int*);
 extern pid_t		_sh_fork(Shell_t*,pid_t, int ,int*);
 extern char 		*sh_mactrim(Shell_t*,char*,int);
@@ -419,18 +417,24 @@ extern Sfdouble_t	sh_mathfun(Shell_t*, void*, int, Sfdouble_t*);
 extern int		sh_outtype(Shell_t*, Sfio_t*);
 extern char 		*sh_mactry(Shell_t*,char*);
 extern int		sh_mathstd(const char*);
-extern void		sh_printopts(Shopt_t,int,Shopt_t*);
+extern void		sh_printopts(Shell_t*,Shopt_t,int,Shopt_t*);
 extern int 		sh_readline(Shell_t*,char**,volatile int,int,ssize_t,long);
 extern Sfio_t		*sh_sfeval(char*[]);
 extern void		sh_setmatch(Shell_t*,const char*,int,int,int[],int);
-extern Dt_t		*sh_subaliastree(int);
+extern Dt_t		*sh_subaliastree(Shell_t*,int);
 extern void             sh_scope(Shell_t*, struct argnod*, int);
 extern Namval_t		*sh_scoped(Shell_t*, Namval_t*);
-extern Dt_t		*sh_subfuntree(int);
+extern void		sh_setlist(Shell_t*,struct argnod*, int, Namval_t*);
+extern void 		sh_sigclear(Shell_t*,int);
+extern void		sh_sigdone(Shell_t*);
+extern void 		sh_sigreset(Shell_t*,int);
+extern void		sh_sigtrap(Shell_t*,int);
+extern void		sh_siglist(Shell_t*,Sfio_t*,int);
+extern Dt_t		*sh_subfuntree(Shell_t*,int);
 extern void		sh_subjobcheck(pid_t);
 extern int		sh_subsavefd(int);
 extern void		sh_subtmpfile(Shell_t*);
-extern char 		*sh_substitute(const char*,const char*,char*);
+extern char 		*sh_substitute(Shell_t*,const char*,const char*,char*);
 extern void		sh_timetraps(Shell_t*);
 extern const char	*_sh_translate(const char*);
 extern int		sh_trace(Shell_t*,char*[],int);
@@ -447,6 +451,7 @@ extern int 		sh_whence(char**,int);
 #if SHOPT_NAMESPACE
     extern Namval_t	*sh_fsearch(Shell_t*,const char *,int);
 #endif /* SHOPT_NAMESPACE */
+extern int		sh_diropenat(Shell_t*, int, const char*, int);
 
 #ifndef ERROR_dictionary
 #   define ERROR_dictionary(s)	(s)
@@ -459,19 +464,22 @@ extern int 		sh_whence(char**,int);
 #define is_option(s,x)	((s)->v[((x)&WMASK)/WBITS] & (1L << ((x) % WBITS)))
 #define on_option(s,x)	((s)->v[((x)&WMASK)/WBITS] |= (1L << ((x) % WBITS)))
 #define off_option(s,x)	((s)->v[((x)&WMASK)/WBITS] &= ~(1L << ((x) % WBITS)))
-#define sh_isoption(x)	is_option(&sh.options,x)
-#define sh_onoption(x)	on_option(&sh.options,x)
-#define sh_offoption(x)	off_option(&sh.options,x)
+#undef sh_isoption
+#undef sh_onoption
+#undef sh_offoption
+#define sh_isoption(shp,x)	is_option(&(shp)->options,x)
+#define sh_onoption(shp,x)	on_option(&(shp)->options,x)
+#define sh_offoption(shp,x)	off_option(&(shp)->options,x)
 
 
 #define sh_state(x)	( 1<<(x))
-#define	sh_isstate(x)	(sh.st.states&sh_state(x))
-#define	sh_onstate(x)	(sh.st.states |= sh_state(x))
-#define	sh_offstate(x)	(sh.st.states &= ~sh_state(x))
-#define	sh_getstate()	(sh.st.states)
-#define	sh_setstate(x)	(sh.st.states = (x))
+#define	sh_isstate(shp,x)	((shp)->st.states&sh_state(x))
+#define	sh_onstate(shp,x)	((shp)->st.states |= sh_state(x))
+#define	sh_offstate(shp,x)	((shp)->st.states &= ~sh_state(x))
+#define	sh_getstate(shp)	((shp)->st.states)
+#define	sh_setstate(shp,x)	((shp)->st.states = (x))
 
-#define sh_sigcheck(shp) do{if(shp->trapnote&SH_SIGSET)sh_exit(SH_EXITSIG);} while(0)
+#define sh_sigcheck(shp) do{if(shp->trapnote&SH_SIGSET)sh_exit((shp),SH_EXITSIG);} while(0)
 
 extern int32_t		sh_mailchk;
 extern const char	e_dict[];
@@ -505,6 +513,7 @@ extern const char	e_dict[];
 #else
 #   define sh_stats(x)
 #endif /* SHOPT_STATS */
+extern const Shtable_t shtab_siginfo[];
 
 
 #endif

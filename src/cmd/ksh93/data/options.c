@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -61,11 +61,7 @@ const Shtable_t shtab_options[] =
 	"gmacs",			SH_GMACS,
 	bashextra("hashall",		SH_TRACKALL)
 	bashopt("histappend",		SH_HISTAPPEND)
-#if SHOPT_HISTEXPAND
 	"histexpand",			SH_HISTEXPAND,
-#else
-	bashextra("histexpand",		SH_HISTEXPAND)
-#endif
 	bashextra("history",		SH_HISTORY2)
 	bashopt("histreedit",		SH_HISTREEDIT)
 	bashopt("histverify",		SH_HISTVERIFY)

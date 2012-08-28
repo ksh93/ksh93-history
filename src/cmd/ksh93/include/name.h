@@ -26,6 +26,7 @@
 #define _NV_PRIVATE	\
 	Namfun_t	*nvfun;		/* pointer to trap functions */ \
 	union Value	nvalue; 	/* value field */ \
+	void		*nvshell;	/* shell pointer */ \
 	char		*nvenv;		/* pointer to environment name */ 
 
 #include	<ast.h>
@@ -181,7 +182,7 @@ struct Ufunction
 #define array_assoc(ap)	((ap)->fun)
 
 extern int		array_maxindex(Namval_t*);
-extern char 		*nv_endsubscript(Namval_t*, char*, int);
+extern char 		*nv_endsubscript(Namval_t*, char*, int, void*);
 extern Namfun_t 	*nv_cover(Namval_t*);
 extern Namarr_t 	*nv_arrayptr(Namval_t*);
 extern int		nv_arrayisset(Namval_t*, Namarr_t*);
@@ -190,17 +191,15 @@ extern int		nv_aimax(Namval_t*);
 extern int		nv_atypeindex(Namval_t*, const char*);
 extern int		nv_setnotify(Namval_t*,char **);
 extern int		nv_unsetnotify(Namval_t*,char **);
-extern void		nv_setlist(struct argnod*, int, Namval_t*);
 extern struct argnod*	nv_onlist(struct argnod*, const char*);
 extern void 		nv_optimize(Namval_t*);
-extern void		nv_outname(Sfio_t*,char*, int);
 extern void 		nv_unref(Namval_t*);
 extern void		_nv_unset(Namval_t*,int);
 extern int		nv_hasget(Namval_t*);
 extern int		nv_clone(Namval_t*, Namval_t*, int);
 void			clone_all_disc(Namval_t*, Namval_t*, int);
 extern Namfun_t		*nv_clone_disc(Namfun_t*, int);
-extern void		*nv_diropen(Namval_t*, const char*);
+extern void		*nv_diropen(Namval_t*, const char*,void*);
 extern char		*nv_dirnext(void*);
 extern void		nv_dirclose(void*); 
 extern char		*nv_getvtree(Namval_t*, Namfun_t*);

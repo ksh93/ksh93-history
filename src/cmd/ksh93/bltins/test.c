@@ -84,7 +84,7 @@ static int e3(struct test*);
 
 static int test_strmatch(Shell_t *shp,const char *str, const char *pat)
 {
-	regoff_t match[2*(MATCH_MAX+1)],n;
+	int match[2*(MATCH_MAX+1)],n;
 	register int c, m=0;
 	register const char *cp=pat; 
 	while(c = *cp++)
@@ -100,7 +100,7 @@ static int test_strmatch(Shell_t *shp,const char *str, const char *pat)
 		match[0] = 0;
 	if(m >  elementsof(match)/2)
 		m = elementsof(match)/2;
-	n = strgrpmatch(str, pat, match, m, STR_GROUP|STR_MAXIMAL|STR_LEFT|STR_RIGHT);
+	n = strgrpmatch(str, pat, (ssize_t*)match, m, STR_GROUP|STR_MAXIMAL|STR_LEFT|STR_RIGHT|STR_INT);
 	if(m==0 && n==1)
 		match[1] = strlen(str);
 	if(n)
@@ -325,15 +325,14 @@ int test_unop(Shell_t *shp,register int op,register const char *arg)
 	    case 'V':
 #if SHOPT_FS_3D
 	    {
-		register int offset = staktell();
+		register int offset = stktell(shp->stk);
 		if(stat(arg,&statb)<0 || !S_ISREG(statb.st_mode))
 			return(0);
 		/* add trailing / */
-		stakputs(arg);
-		stakputc('/');
-		stakputc(0);
-		arg = (const char*)stakptr(offset);
-		stakseek(offset);
+		sfputr(shp->stk,arg,'/');
+		sfputc(shp->stk,0);
+		arg = (const char*)stkptr(shp->stk,offset);
+		stkseek(shp->stk,offset);
 		/* FALL THRU */
 	    }
 #else
@@ -375,14 +374,13 @@ int test_unop(Shell_t *shp,register int op,register const char *arg)
 	    case 'H':
 #ifdef S_ISCDF
 	    {
-		register int offset = staktell();
+		register int offset = stktell(shp->stk);
 		if(test_stat(arg,&statb)>=0 && S_ISCDF(statb.st_mode))
 			return(1);
-		stakputs(arg);
-		stakputc('+');
-		stakputc(0);
-		arg = (const char*)stakptr(offset);
-		stakseek(offset);
+		sfputr(shp->stk,arg,'+');
+		sfputc(shp->stk,0);
+		arg = (const char*)stkptr(shp->stk,offset);
+		stkseek(shp->stk,offset);
 		return(test_stat(arg,&statb)>=0 && S_ISCDF(statb.st_mode));
 	    }
 #else
@@ -420,7 +418,7 @@ int test_unop(Shell_t *shp,register int op,register const char *arg)
 		if(*arg=='?')
 			return(sh_lookopt(arg+1,&f)>0);
 		op = sh_lookopt(arg,&f);
-		return(op && (f==(sh_isoption(op)!=0)));
+		return(op && (f==(sh_isoption(shp,op)!=0)));
 	    case 't':
 	    {
 		char *last;
@@ -620,7 +618,7 @@ skip:
 					maxgroups=NGROUPS_MAX;
 				}
 			}
-			groups = (gid_t*)stakalloc((maxgroups+1)*sizeof(gid_t));
+			groups = (gid_t*)stkalloc(shp->stk,(maxgroups+1)*sizeof(gid_t));
 			n = getgroups(maxgroups,groups);
 			while(--n >= 0)
 			{

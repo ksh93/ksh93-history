@@ -33,7 +33,7 @@
  */
 
 int
-regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t* match, regflags_t flags, int sep, void* handle, regrecord_t record)
+regrexec_20120528(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t* match, regflags_t flags, int sep, void* handle, regrecord_t record)
 {
 	register unsigned char*	buf = (unsigned char*)s;
 	register unsigned char*	beg;

@@ -187,7 +187,8 @@ static int enum_create(int argc, char** argv, Shbltin_t *context)
 int b_enum(int argc, char** argv, Shbltin_t *context)
 #endif
 {
-	int			sz,i,n,iflag = 0;
+	int			i,n,iflag = 0;
+	ssize_t			sz;
 	Namval_t		*np, *tp;
 	Namarr_t		*ap;
 	char			*cp,*sp;
@@ -223,12 +224,12 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 	}
 	while(cp = *argv++)
 	{
-		if(!(np = nv_open(cp, (void*)0, NV_VARNAME|NV_NOADD))  || !(ap=nv_arrayptr(np)) || ap->fun || (sz=ap->nelem&(((1L<<ARRAY_BITS)-1))) < 2)
+		if(!(np = nv_open(cp, shp->var_tree, NV_VARNAME|NV_NOADD))  || !(ap=nv_arrayptr(np)) || ap->fun || (sz=ap->nelem&(((1L<<ARRAY_BITS)-1))) < 2)
 			error(ERROR_exit(1), "%s must name an array  containing at least two elements",cp);
-		n = staktell();
-		sfprintf(stkstd,"%s.%s%c",NV_CLASS,np->nvname,0);
-		tp = nv_open(stakptr(n), shp->var_tree, NV_VARNAME);
-		stakseek(n);
+		n = stktell(shp->stk);
+		sfprintf(shp->stk,"%s.%s%c",NV_CLASS,np->nvname,0);
+		tp = nv_open(stkptr(shp->stk,n), shp->var_tree, NV_VARNAME);
+		stkseek(shp->stk,n);
 		n = sz;
 		i = 0;
 		nv_onattr(tp, NV_UINT16);
@@ -277,7 +278,7 @@ void lib_init(int flag, void* context)
 	Namval_t	*mp,*bp;
 	if(flag)
 		return;
-	bp = sh_addbuiltin("Enum", enum_create, (void*)0); 
+	bp = sh_addbuiltin(shp,"Enum", enum_create, (void*)0); 
 	mp = nv_search("typeset",shp->bltin_tree,0);
 	nv_onattr(bp,nv_isattr(mp,NV_PUBLIC));
 }

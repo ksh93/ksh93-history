@@ -221,4 +221,10 @@ print -v cx > /dev/null
 print -v cx | read -C l 2> /dev/null || err_exit 'read -C fails from output of print -v'
 [[ ${cx%cx=} ==  "${l%l=}" ]] || err_exit 'print -v for compound variable with fixed 2d array not working'
 
+unset A
+typeset -A A
+typeset -A A[a]
+A[a][z]=1
+[[ ${!A[a][@]} == z ]] || err_exit 'A[a] should have only subscript z'
+
 exit $((Errors<125?Errors:125))

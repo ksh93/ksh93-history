@@ -226,7 +226,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 #if SHOPT_RAWONLY
 #   define viraw	1
 #else
-	int viraw = (sh_isoption(SH_VIRAW) || ed->sh->st.trap[SH_KEYTRAP]);
+	int viraw = (sh_isoption(ed->sh,SH_VIRAW) || ed->sh->st.trap[SH_KEYTRAP]);
 #   ifndef FIORDCHK
 	clock_t oldtime, newtime;
 	struct tms dummy;
@@ -595,7 +595,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	if(ed->e_nlist)
 	{
 		ed->e_nlist = 0;
-		stakset(ed->e_stkptr,ed->e_stkoff);
+		stkset(ed->sh->stk,ed->e_stkptr,ed->e_stkoff);
 	}
 	if( vp->addnl )
 	{
@@ -1402,7 +1402,7 @@ static void getline(register Vi_t* vp,register int mode)
 		switch( c )
 		{
 		case ESC:		/** enter control mode **/
-			if(!sh_isoption(SH_VI))
+			if(!sh_isoption(vp->ed->sh,SH_VI))
 			{
 				append(vp,c, mode);
 				break;
@@ -1890,7 +1890,7 @@ static void refresh(register Vi_t* vp, int mode)
 	}
 	v = cur_virt;
 #if SHOPT_EDPREDICT
-	if(mode==INPUT && v>0 && virtual[0]=='#' && v==last_virt && virtual[v]!='*' && sh_isoption(SH_VI))
+	if(mode==INPUT && v>0 && virtual[0]=='#' && v==last_virt && virtual[v]!='*' && sh_isoption(vp->ed->sh,SH_VI))
 	{
 		int		n;
 		virtual[last_virt+1] = 0;

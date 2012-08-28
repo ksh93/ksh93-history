@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -107,9 +107,7 @@ struct jobs
 	unsigned int	in_critical;	/* >0 => in critical region */
 	int		savesig;	/* active signal */
 	int		numpost;	/* number of posted jobs */
-#ifdef SHOPT_BGX
 	int		numbjob;	/* number of background jobs */
-#endif /* SHOPT_BGX */
 	short		fd;		/* tty descriptor number */
 #ifdef JOBS
 	int		suspend;	/* suspend character */
@@ -130,6 +128,7 @@ struct jobs
 #define JOB_NFLAG	2
 #define JOB_PFLAG	4
 #define JOB_NLFLAG	8
+#define JOB_QFLAG	0x100
 
 extern struct jobs job;
 
@@ -187,17 +186,17 @@ extern const char	e_signo[];
  * The following are defined in jobs.c
  */
 
-extern void	job_clear(void);
+extern void	job_clear(Shell_t*);
 extern void	job_bwait(char**);
-extern int	job_walk(Sfio_t*,int(*)(struct process*,int),int,char*[]);
+#if 1
+extern int	job_walk(Shell_t*,Sfio_t*,int(*)(struct process*,int),int,char*[]);
+#endif
 extern int	job_kill(struct process*,int);
 extern int	job_wait(pid_t);
 extern int	job_post(Shell_t*,pid_t,pid_t);
 extern void	*job_subsave(void);
-extern void	job_subrestore(void*);
-#ifdef SHOPT_BGX
+extern void	job_subrestore(Shell_t*,void*);
 extern void	job_chldtrap(Shell_t*, const char*,int);
-#endif /* SHOPT_BGX */
 #ifdef JOBS
 	extern void	job_init(Shell_t*,int);
 	extern int	job_close(Shell_t*);

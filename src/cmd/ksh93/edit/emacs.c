@@ -525,7 +525,7 @@ update:
 			i -= count;
 			goto update;
 		case cntl('T') :
-			if ((sh_isoption(SH_EMACS))&& (eol!=i))
+			if ((sh_isoption(ep->ed->sh,SH_EMACS))&& (eol!=i))
 				i++;
 			if (i >= 2)
 			{
@@ -535,7 +535,7 @@ update:
 			}
 			else
 			{
-				if(sh_isoption(SH_EMACS))
+				if(sh_isoption(ep->ed->sh,SH_EMACS))
 					i--;
 				beep();
 				continue;
@@ -1059,7 +1059,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 
 #ifdef _cmd_tput
 		case cntl('L'): /* clear screen */
-			sh_trap("tput clear", 0);
+			sh_trap(ep->ed->sh,"tput clear", 0);
 			draw(ep,REFRESH);
 			return(-1);
 #endif

@@ -56,9 +56,9 @@
 
 #define pow2size(x)		((x)<=2?2:(x)<=4?4:(x)<=8?8:(x)<=16?16:(x)<=32?32:64)
 #define round(x,size)		(((x)+(size)-1)&~((size)-1))
-#define stakpush(v,val,type)	((((v)->offset=round(staktell(),pow2size(sizeof(type)))),\
-				stakseek((v)->offset+sizeof(type)), \
-				*((type*)stakptr((v)->offset)) = (val)),(v)->offset)
+#define stkpush(stk,v,val,type)	((((v)->offset=round(stktell(stk),pow2size(sizeof(type)))),\
+				stkseek(stk,(v)->offset+sizeof(type)), \
+				*((type*)stkptr(stk,(v)->offset)) = (val)),(v)->offset)
 #define roundptr(ep,cp,type)	(((unsigned char*)(ep))+round(cp-((unsigned char*)(ep)),pow2size(sizeof(type))))
 
 static int level;
@@ -181,7 +181,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 	if(ep->staksize < SMALL_STACK)
 		sp = small_stack;
 	else
-		sp = (Sfdouble_t*)stakalloc(ep->staksize*(sizeof(Sfdouble_t)+1));
+		sp = (Sfdouble_t*)stkalloc(shp->stk,ep->staksize*(sizeof(Sfdouble_t)+1));
 	tp = (char*)(sp+ep->staksize);
 	tp--,sp--;
 	while(c = *cp++)
@@ -576,11 +576,12 @@ static int expr(register struct vars *vp,register int precedence)
 	struct lval	lvalue,assignop;
 	const char	*pos;
 	Sfdouble_t	d;
+	Shell_t		*shp = vp->shp;
 
 	lvalue.value = 0;
 	lvalue.nargs = 0;
 	lvalue.fun = 0;
-	lvalue.shp =  vp->shp;
+	lvalue.shp =  shp;
 again:
 	op = gettok(vp);
 	c = 2*MAXPREC+1;
@@ -610,7 +611,7 @@ again:
 	    common:
 		if(!expr(vp,c))
 			return(0);
-		stakputc(op);
+		sfputc(shp->stk,op);
 		break;
 	    default:
 		vp->nextchr = vp->errchr;
@@ -653,12 +654,12 @@ again:
 			if(vp->staksize++>=vp->stakmaxsize)
 				vp->stakmaxsize = vp->staksize;
 			if(op==A_EQ || op==A_NEQ)
-				stakputc(A_ENUM);
+				sfputc(shp->stk,A_ENUM);
 			stakputc(assignop.value?A_ASSIGNOP1:A_PUSHV);
-			stakpush(vp,lvalue.value,char*);
+			stkpush(shp->stk,vp,lvalue.value,char*);
 			if(lvalue.flag<0)
 				lvalue.flag = 0;
-			stakpush(vp,lvalue.flag,short);
+			stkpush(shp->stk,vp,lvalue.flag,short);
 			if(vp->nextchr==0)
 				ERROR(vp,e_badnum);
 			if(!(strval_precedence[op]&SEQPOINT))
@@ -694,12 +695,12 @@ again:
 				vp->infun++;
 			else
 			{
-				stakputc(A_POP);
+				sfputc(shp->stk,A_POP);
 				vp->staksize--;
 			}
 			if(!expr(vp,c))
 			{
-				stakseek(staktell()-1);
+				stkseek(shp->stk,stktell(shp->stk)-1);
 				return(0);
 			}
 			lvalue.value = 0;
@@ -724,9 +725,9 @@ again:
 					userfun = T_BINARY;
 				else if((int)lvalue.nargs&040)
 					userfun = T_NOFLOAT;
-				stakputc(A_PUSHF);
-				stakpush(vp,fun,Math_f);
-				stakputc(1);
+				sfputc(shp->stk,A_PUSHF);
+				stkpush(shp->stk,vp,fun,Math_f);
+				sfputc(shp->stk,1);
 			}
 			else
 				vp->infun = 0;
@@ -744,7 +745,7 @@ again:
 					ERROR(vp,e_argcount);
 				if((vp->staksize+=nargs)>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize+nargs;
-				stakputc(A_CALL1F+userfun+nargs+x);
+				sfputc(shp->stk,A_CALL1F+userfun+nargs+x);
 				vp->staksize -= nargs;
 			}
 			vp->infun = infun;
@@ -763,33 +764,33 @@ again:
 				ERROR(vp,e_notlvalue);
 			if(op==A_ASSIGN)
 			{
-				stakputc(A_STORE);
-				stakpush(vp,lvalue.value,char*);
-				stakpush(vp,lvalue.flag,short);
+				sfputc(shp->stk,A_STORE);
+				stkpush(shp->stk,vp,lvalue.value,char*);
+				stkpush(shp->stk,vp,lvalue.flag,short);
 				vp->staksize--;
 			}
 			else
-				stakputc(op);
+				sfputc(shp->stk,op);
 			lvalue.value = 0;
 			break;
 
 		case A_QUEST:
 		{
 			int offset1,offset2;
-			stakputc(A_JMPZ);
-			offset1 = stakpush(vp,0,short);
-			stakputc(A_POP);
+			sfputc(shp->stk,A_JMPZ);
+			offset1 = stkpush(shp->stk,vp,0,short);
+			sfputc(shp->stk,A_POP);
 			if(!expr(vp,1))
 				return(0);
 			if(gettok(vp)!=A_COLON)
 				ERROR(vp,e_questcolon);
-			stakputc(A_JMP);
-			offset2 = stakpush(vp,0,short);
-			*((short*)stakptr(offset1)) = staktell();
-			stakputc(A_POP);
+			sfputc(shp->stk,A_JMP);
+			offset2 = stkpush(shp->stk,vp,0,short);
+			*((short*)stkptr(shp->stk,offset1)) = stktell(shp->stk);
+			sfputc(shp->stk,A_POP);
 			if(!expr(vp,3))
 				return(0);
-			*((short*)stakptr(offset2)) = staktell();
+			*((short*)stkptr(shp->stk,offset2)) = stktell(shp->stk);
 			lvalue.value = 0;
 			wasop = 0;
 			break;
@@ -808,14 +809,14 @@ again:
 				op = A_JMPZ;
 			else
 				op = A_JMPNZ;
-			stakputc(op);
-			offset = stakpush(vp,0,short);
-			stakputc(A_POP);
+			sfputc(shp->stk,op);
+			offset = stkpush(shp->stk,vp,0,short);
+			sfputc(shp->stk,A_POP);
 			if(!expr(vp,c))
 				return(0);
-			*((short*)stakptr(offset)) = staktell();
+			*((short*)stkptr(shp->stk,offset)) = stktell(shp->stk);
 			if(op!=A_QCOLON)
-				stakputc(A_NOTNOT);
+				sfputc(shp->stk,A_NOTNOT);
 			lvalue.value = 0;
 			wasop=0;
 			break;
@@ -827,7 +828,7 @@ again:
 		case A_PLUS:	case A_MINUS:	case A_TIMES:	case A_DIV:
 		case A_EQ:	case A_NEQ:	case A_LT:	case A_LE:
 		case A_GT:	case A_GE:	case A_POW:
-			stakputc(op|T_BINARY);
+			sfputc(shp->stk,op|T_BINARY);
 			vp->staksize--;
 			break;
 		case A_NOT: case A_TILDE:
@@ -868,11 +869,11 @@ again:
 			}
 			if(op==A_DIG || op==A_LIT)
 			{
-				stakputc(A_PUSHN);
+				sfputc(shp->stk,A_PUSHN);
 				if(vp->staksize++>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize;
-				stakpush(vp,d,Sfdouble_t);
-				stakputc(lvalue.isfloat);
+				stkpush(shp->stk,vp,d,Sfdouble_t);
+				sfputc(shp->stk,lvalue.isfloat);
 			}
 	
 			/* check for function call */
@@ -887,9 +888,9 @@ again:
 				vp->stakmaxsize = vp->staksize;
 			if(assignop.flag<0)
 				assignop.flag = 0;
-			stakputc(c&1?A_ASSIGNOP:A_STORE);
-			stakpush(vp,assignop.value,char*);
-			stakpush(vp,assignop.flag,short);
+			sfputc(shp->stk,c&1?A_ASSIGNOP:A_STORE);
+			stkpush(shp->stk,vp,assignop.value,char*);
+			stkpush(shp->stk,vp,assignop.flag,short);
 		}
 	}
  done:
@@ -909,25 +910,25 @@ Arith_t *arith_compile(Shell_t *shp,const char *string,char **last,Sfdouble_t(*f
 	cur.emode = emode;
 	cur.errmsg.value = 0;
 	cur.errmsg.emode = emode;
-	stakseek(sizeof(Arith_t));
+	stkseek(shp->stk,sizeof(Arith_t));
 	if(!expr(&cur,0) && cur.errmsg.value)
         {
 		if(cur.errstr)
 			string = cur.errstr;
 		if((*fun)( &string , &cur.errmsg, MESSAGE, 0) < 0)
 		{
-			stakseek(0);
+			stkseek(shp->stk,0);
 			*last = (char*)Empty;
 			return(0);
 		}
 		cur.nextchr = cur.errchr;
 	}
-	stakputc(0);
-	offset = staktell();
-	ep = (Arith_t*)stakfreeze(0);
+	sfputc(shp->stk,0);
+	offset = stktell(shp->stk);
+	ep = (Arith_t*)stkfreeze(shp->stk,0);
 	ep->shp = shp;
 	ep->expr = string;
-	ep->elen = strlen(string);
+	ep->elen = (short)strlen(string);
 	ep->code = (unsigned char*)(ep+1);
 	ep->fun = fun;
 	ep->emode = emode;
@@ -957,12 +958,12 @@ Sfdouble_t strval(Shell_t *shp,const char *s,char **end,Sfdouble_t(*conv)(const 
 	Sfdouble_t d;
 	char *sp=0;
 	int offset;
-	if(offset=staktell())
-		sp = stakfreeze(1);
+	if(offset=stktell(shp->stk))
+		sp = stkfreeze(shp->stk,1);
 	ep = arith_compile(shp,s,end,conv,emode);
 	ep->emode = emode;
 	d = arith_exec(ep);
-	stakset(sp?sp:(char*)ep,offset);
+	stkset(shp->stk,sp?sp:(char*)ep,offset);
 	return(d);
 }
 

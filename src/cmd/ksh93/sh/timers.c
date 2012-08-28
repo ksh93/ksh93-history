@@ -84,11 +84,25 @@ static double setalarm(register double t)
 }
 
 /* signal handler for alarm call */
+#ifdef _lib_sigaction
+static void sigalrm(int sig, siginfo_t* info, void *context)
+#else
 static void sigalrm(int sig)
+#endif
 {
 	register Timer_t *tp, *tplast, *tpold, *tpnext;
 	double now;
 	static double left;
+#ifdef _lib_sigaction
+	Shell_t	*shp = sh_getinterp();
+	if(shp->st.trapcom[SIGALRM] && *shp->st.trapcom[SIGALRM])
+	{
+		if(!shp->siginfo)
+			shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
+		shp->siginfo[SIGALRM] = malloc(sizeof(siginfo_t));
+		memcpy(shp->siginfo[SIGALRM],context,sizeof(siginfo_t));
+	}
+#endif
 	NOT_USED(sig);
 	left = 0;
 	if(time_state&SIGALRM_CALL)
@@ -166,7 +180,7 @@ static void sigalrm(int sig)
 			break;
 	}
 	if(!tpmin)
-		signal(SIGALRM,(sh.sigflag[SIGALRM]&SH_SIGFAULT)?sh_fault:SIG_DFL);
+		signal(SIGALRM,(sh.sigflag[SIGALRM]&SH_SIGFAULT)?(sh_sigfun_t)sh_fault:SIG_DFL);
 	time_state &= ~IN_SIGALRM;
 	errno = EINTR;
 }
@@ -218,7 +232,7 @@ void *sh_timeradd(unsigned long msec,int flags,void (*action)(void*),void *handl
 	if(time_state&DEFER_SIGALRM)
 	{
 		time_state=SIGALRM_CALL;
-		sigalrm(SIGALRM);
+		kill(getpid(),SIGALRM);
 		if(tp!=tptop)
 			tp=0;
 	}
@@ -242,7 +256,7 @@ void	timerdel(void *handle)
 			tpmin = 0;
 			setalarm((double)0);
 		}
-		signal(SIGALRM,(sh.sigflag[SIGALRM]&SH_SIGFAULT)?sh_fault:SIG_DFL);
+		signal(SIGALRM,(sh.sigflag[SIGALRM]&SH_SIGFAULT)?(sh_sigfun_t)sh_fault:SIG_DFL);
 	}
 }
 

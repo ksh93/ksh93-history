@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -164,6 +164,7 @@ struct _dtstat_s
 	ssize_t		msize;	/* max #defined elts in below arrays	*/
 	ssize_t		lsize[DT_MAXSIZE]; /* #objects by level		*/
 	ssize_t		tsize[DT_MAXSIZE]; /* #tables by level		*/
+	char		mesg[256]; /* digest of top level statistics	*/
 };
 
 /* supported storage methods */
@@ -199,7 +200,8 @@ struct _dtstat_s
 #define DT_ATLEAST	0000040000 /* find the least elt >= object	*/
 #define DT_ATMOST	0000100000 /* find the biggest elt <= object	*/
 #define DT_REMOVE	0002000000 /* remove a specific object		*/
-#define DT_TOANNOUNCE	(DT_INSERT|DT_DELETE|DT_SEARCH|DT_NEXT|DT_PREV|DT_FIRST|DT_LAST|DT_MATCH|DT_ATTACH|DT_DETACH|DT_APPEND|DT_ATLEAST|DT_ATMOST|DT_REMOVE)
+#define DT_INSTALL      0004000000 /* install a new object		*/
+#define DT_TOANNOUNCE	(DT_INSERT|DT_DELETE|DT_SEARCH|DT_NEXT|DT_PREV|DT_FIRST|DT_LAST|DT_MATCH|DT_ATTACH|DT_DETACH|DT_APPEND|DT_ATLEAST|DT_ATMOST|DT_REMOVE|DT_INSTALL)
 
 #define DT_RELINK	0000002000 /* re-inserting (dtdisc,dtmethod...)	*/
 #define DT_FLATTEN	0000000040 /* flatten objects into a list	*/
@@ -216,6 +218,7 @@ struct _dtstat_s
 				   /* the actual event will be this bit */
 				   /* combined with the operation bit	*/
 #define DT_OPTIMIZE	0100000000 /* optimizing data structure		*/
+#define DT_USER		0200000000 /* an announcement on user's behalf	*/
 
 /* events for discipline and method event-handling functions */
 #define DT_OPEN		1	/* a dictionary is being opened		*/
@@ -277,7 +280,8 @@ extern int		dtwalk _ARG_((Dt_t*, int(*)(Dt_t*,Void_t*,Void_t*), Void_t*));
 extern int		dtcustomize _ARG_((Dt_t*, int, int));
 extern unsigned int	dtstrhash _ARG_((unsigned int, Void_t*, ssize_t));
 extern int		dtuserlock _ARG_((Dt_t*, unsigned int, int));
-extern Void_t*		dtuserdata _ARG_((Dt_t*, Void_t*, unsigned int));
+extern Void_t*		dtuserdata _ARG_((Dt_t*, Void_t*, int));
+extern int		dtuserevent _ARG_((Dt_t*, int, Void_t*));
 
 /* deal with upward binary compatibility (operation bit translation, etc.) */
 extern Dt_t*		_dtopen _ARG_((Dtdisc_t*, Dtmethod_t*, unsigned long));
@@ -334,6 +338,7 @@ _END_EXTERNS_
 #define dtsearch(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_SEARCH)
 #define dtmatch(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_MATCH)
 #define dtinsert(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_INSERT)
+#define dtinstall(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_INSTALL)
 #define dtappend(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_APPEND)
 #define dtdelete(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_DELETE)
 #define dtremove(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_REMOVE)
@@ -345,7 +350,6 @@ _END_EXTERNS_
 #define dtextract(d)	(Dtlink_t*)(*(_DT(d)->searchf))((d),(Void_t*)(0),DT_EXTRACT)
 #define dtrestore(d,l)	(Dtlink_t*)(*(_DT(d)->searchf))((d),(Void_t*)(l),DT_RESTORE)
 
-#define dtstat(d,s)	(ssize_t)(*(_DT(d)->searchf))((d),(Void_t*)(s),DT_STAT)
 #define dtsize(d)	(ssize_t)(*(_DT(d)->searchf))((d),(Void_t*)(0),DT_STAT)
 
 #define DT_PRIME	17109811 /* 2#00000001 00000101 00010011 00110011 */

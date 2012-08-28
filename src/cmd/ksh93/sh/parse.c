@@ -54,7 +54,7 @@
 
 static Shnode_t	*makeparent(Lex_t*, int, Shnode_t*);
 static Shnode_t	*makelist(Lex_t*, int, Shnode_t*, Shnode_t*);
-static struct argnod	*qscan(struct comnod*, int);
+static struct argnod	*qscan(Lex_t*,struct comnod*, int);
 static struct ionod	*inout(Lex_t*,struct ionod*, int);
 static Shnode_t	*sh_cmd(Lex_t*,int,int);
 static Shnode_t	*term(Lex_t*,int);
@@ -101,7 +101,8 @@ static unsigned long writedefs(Lex_t *lexp,struct argnod *arglist, int line, int
 {
 	register struct argnod *argp = arglist;
 	register char *cp;
-	register int n,eline;
+	register int eline;
+	size_t n;
 	int width=0;
 	unsigned long r=0;
 	static char atbuff[20];
@@ -189,7 +190,7 @@ static void typeset_order(const char *str,int line)
 /*
  * add type definitions when compiling with -n
  */
-static void check_typedef(struct comnod *tp)
+static void check_typedef(Lex_t *lp,struct comnod *tp)
 {
 	char	*cp=0;
 	if(tp->comtyp&COMSCAN)
@@ -199,7 +200,7 @@ static void check_typedef(struct comnod *tp)
 		{
 			if(!(ap->argflag&ARG_RAW) || memcmp(ap->argval,"--",2))
 				break;
-			if(sh_isoption(SH_NOEXEC))
+			if(sh_isoption(lp->sh,SH_NOEXEC))
 				typeset_order(ap->argval,tp->comline);
 			if(memcmp(ap->argval,"-T",2)==0)
 			{
@@ -218,7 +219,7 @@ static void check_typedef(struct comnod *tp)
 		char **argv = dp->dolval + dp->dolbot+1;
 		while((cp= *argv++) && memcmp(cp,"--",2))
 		{
-			if(sh_isoption(SH_NOEXEC))
+			if(sh_isoption(lp->sh,SH_NOEXEC))
 				typeset_order(cp,tp->comline);
 			if(memcmp(cp,"-T",2)==0)
 			{
@@ -233,7 +234,7 @@ static void check_typedef(struct comnod *tp)
 	if(cp)
 	{
 		Namval_t	*mp=(Namval_t*)tp->comnamp ,*bp;
-		bp = sh_addbuiltin(cp, (Shbltin_f)mp->nvalue.bfp, (void*)0);
+		bp = sh_addbuiltin(lp->sh,cp, (Shbltin_f)mp->nvalue.bfp, (void*)0);
 		nv_onattr(bp,nv_isattr(mp,NV_PUBLIC));
 	}
 }
@@ -289,7 +290,7 @@ static Shnode_t *getanode(Lex_t *lp, struct argnod *ap)
 		t->ar.arcomp = sh_arithcomp(lp->sh,ap->argval);
 	else
 	{
-		if(sh_isoption(SH_NOEXEC) && (ap->argflag&ARG_MAC) && paramsub(ap->argval))
+		if(sh_isoption(lp->sh,SH_NOEXEC) && (ap->argflag&ARG_MAC) && paramsub(ap->argval))
 			errormsg(SH_DICT,ERROR_warn(0),e_lexwarnvar,lp->sh->inlineno);
 		t->ar.arcomp = 0;
 	}
@@ -340,10 +341,10 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 	shp->nextprompt = 1;
 	loop_level = 0;
 	label_list = label_last = 0;
-	if(sh_isoption(SH_INTERACTIVE))
-		sh_onstate(SH_INTERACTIVE);
-	if(sh_isoption(SH_VERBOSE))
-		sh_onstate(SH_VERBOSE);
+	if(sh_isoption(shp,SH_INTERACTIVE))
+		sh_onstate(shp,SH_INTERACTIVE);
+	if(sh_isoption(shp,SH_VERBOSE))
+		sh_onstate(shp,SH_VERBOSE);
 	sh_lexopen(lexp,shp,0);
 	if(fcfopen(iop) < 0)
 		return(NIL(void*));
@@ -775,7 +776,7 @@ static Shnode_t *funct(Lex_t *lexp)
 	{
 		if(fcfill() >= 0)
 			fcseek(-1);
-		if(sh_isstate(SH_HISTORY) && shp->gd->hist_ptr)
+		if(sh_isstate(shp,SH_HISTORY) && shp->gd->hist_ptr)
 			t->funct.functloc = sfseek(shp->gd->hist_ptr->histfp,(off_t)0,SEEK_CUR);
 		else
 		{
@@ -1220,7 +1221,7 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 				if(lexp->token != NL && lexp->token !=';')
 					sh_syntax(lexp);
 				/* some Linux scripts assume this */
-				if(sh_isoption(SH_NOEXEC))
+				if(sh_isoption(lexp->sh,SH_NOEXEC))
 					errormsg(SH_DICT,ERROR_warn(0),e_lexemptyfor,lexp->sh->inlineno-(lexp->token=='\n'));
 				t->for_.forlst = (struct comnod*)getnode(comnod);
 				(t->for_.forlst)->comarg = 0;
@@ -1299,7 +1300,7 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 		if(!(t = item(lexp,SH_NL)))
 			sh_syntax(lexp);
 		tok = (t->tre.tretyp&(COMSCAN|COMSCAN-1));
-		if(sh_isoption(SH_NOEXEC) && tok!=TWH && tok!=TUN && tok!=TFOR && tok!=TSELECT)
+		if(sh_isoption(lexp->sh,SH_NOEXEC) && tok!=TWH && tok!=TUN && tok!=TFOR && tok!=TSELECT)
 			errormsg(SH_DICT,ERROR_warn(0),e_lexlabignore,label_list->argchn.len,label_list->argval);
 		return(t);
 	    }
@@ -1353,7 +1354,7 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 	    case 0:
 		t = (Shnode_t*)simple(lexp,flag,io);
 		if(t->com.comarg && lexp->intypeset)
-			check_typedef(&t->com);
+			check_typedef(lexp,&t->com);
 		lexp->intypeset = 0;
 		lexp->inexec = 0;
 		t->tre.tretyp |= showme;
@@ -1401,8 +1402,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 	int	cmdarg=0;
 	int	argno = 0;
 	int	assignment = 0;
-	int	key_on = (!(flag&SH_NOIO) && sh_isoption(SH_KEYWORD));
-	int	associative=0;
+	int	key_on = (!(flag&SH_NOIO) && sh_isoption(lexp->sh,SH_KEYWORD));
+	int	procsub=0,associative=0;
 	if((argp=lexp->arg) && (argp->argflag&ARG_ASSIGN) && argp->argval[0]=='[')
 	{
 		flag |= SH_ARRAY;
@@ -1488,12 +1489,15 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 				sh_syntax(lexp);
 			*argtail = argp;
 			argtail = &(argp->argnxt.ap);
-			if(!(lexp->assignok=key_on)  && !(flag&SH_NOIO) && sh_isoption(SH_NOEXEC))
+			if(!(lexp->assignok=key_on)  && !(flag&SH_NOIO) && sh_isoption(lexp->sh,SH_NOEXEC))
 				lexp->assignok = SH_COMPASSIGN;
 			lexp->aliasok = 0;
 		}
 	retry:
 		tok = sh_lex(lexp);
+		if(tok==0 && procsub && (lexp->arg->argflag&ARG_ASSIGN))
+			lexp->arg->argflag &= ~ARG_ASSIGN;
+		procsub = 0;
 		if(tok==LABLSYM && (flag&SH_ASSIGN))
 			lexp->token = tok = 0;
 		if((tok==IPROCSYM || tok==OPROCSYM))
@@ -1502,6 +1506,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			argno = -1;
 			*argtail = argp;
 			argtail = &(argp->argnxt.ap);
+			procsub = 1;
 			goto retry;
 		}
 		if(tok==LPAREN)
@@ -1629,16 +1634,16 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 				}
 				break;
 			}
-			if(sh_isoption(SH_NOEXEC) && tok==0)
+			if(sh_isoption(lexp->sh,SH_NOEXEC) && tok==0)
 				errormsg(SH_DICT,ERROR_warn(0),e_lexlabunknown,lexp->sh->inlineno-(lexp->token=='\n'),cp);
 		}
-		else if(sh_isoption(SH_NOEXEC) && np==SYSSET && ((tok= *argp->argval)=='-'||tok=='+') &&
+		else if(sh_isoption(lexp->sh,SH_NOEXEC) && np==SYSSET && ((tok= *argp->argval)=='-'||tok=='+') &&
 			(argp->argval[1]==0||strchr(argp->argval,'k')))
 			errormsg(SH_DICT,ERROR_warn(0),e_lexobsolete5,lexp->sh->inlineno-(lexp->token=='\n'),argp->argval);
 	}
 	/* expand argument list if possible */
 	if(argno>0 && !(flag&(SH_ARRAY|NV_APPEND)))
-		t->comarg = qscan(t,argno);
+		t->comarg = qscan(lexp,t,argno);
 	else if(t->comarg)
 		t->comtyp |= COMSCAN;
 	lexp->aliasok = 0;
@@ -1816,7 +1821,7 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
  * convert argument chain to argument list when no special arguments
  */
 
-static struct argnod *qscan(struct comnod *ac,int argn)
+static struct argnod *qscan(Lex_t *lp,struct comnod *ac,int argn)
 {
 	register char **cp;
 	register struct argnod *ap;
@@ -1848,7 +1853,7 @@ static struct argnod *qscan(struct comnod *ac,int argn)
 			message = "line %d: -t requires argument";
 			argn++;
 		}
-		if(sh_isoption(SH_NOEXEC))
+		if(sh_isoption(lp->sh,SH_NOEXEC))
 			errormsg(SH_DICT,ERROR_warn(0),message,ac->comline);
 	}
 	/* leave space for an extra argument at the front */

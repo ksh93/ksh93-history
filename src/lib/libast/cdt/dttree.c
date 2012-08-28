@@ -545,7 +545,14 @@ int		type;
 			}
 			else	goto no_root;
 		}
-		else if(type&DT_REMOVE) /* remove a particular element in the tree */
+		else if(type&(DT_DELETE|DT_DETACH))
+		{ dt_delete: /* remove an object from the dictionary */
+			obj = _DTOBJ(disc,root);
+			_dtfree(dt, root, type);
+			dt->data->size -= 1;
+			goto no_root;
+		}
+		else if(type&DT_REMOVE) /* remove a particular object */
 		{	if(_DTOBJ(disc,root) == obj)
 				goto dt_delete;
 			else
@@ -555,28 +562,32 @@ int		type;
 				DTRETURN(obj, NIL(Void_t*));
 			}
 		}
-		else if(type&(DT_DELETE|DT_DETACH))
-		{ dt_delete: /* remove an object from the dictionary */
-			obj = _DTOBJ(disc,root);
-			_dtfree(dt, root, type);
-			dt->data->size -= 1;
-			goto no_root;
-		}
 		else if(type&(DT_INSERT|DT_APPEND|DT_ATTACH))
 		{	if(dt->meth->type&DT_OSET)
-			{	type |= DT_SEARCH; /* for announcement */
+			{	type |= DT_MATCH; /* for announcement */
 				goto has_root;
 			}
-			else
+			else /* if(dt->meth->type&DT_OBAG) */
 			{	root->_left = NIL(Dtlink_t*);
 				root->_rght = link._left;
 				link._left = root;
 				goto dt_insert;
 			}
 		}
+		else if(type&DT_INSTALL)
+		{	/* remove old object before insert new one */
+			o = _DTOBJ(disc, root);
+			_dtfree(dt, root, DT_DELETE);
+			DTANNOUNCE(dt, o, DT_DELETE);
+			goto dt_insert;
+		}
 		else if(type&DT_RELINK) /* a duplicate */
 		{	if(dt->meth->type&DT_OSET)
+			{	/* remove object */
+				o = _DTOBJ(disc, me);
 				_dtfree(dt, me, DT_DELETE);
+				DTANNOUNCE(dt, o, DT_DELETE);
+			}
 			else
 			{	me->_left = NIL(Dtlink_t*);
 				me->_rght = link._left;
@@ -612,7 +623,7 @@ int		type;
 		{	obj = NIL(Void_t*);
 			goto no_root;
 		}
-		else if(type&(DT_INSERT|DT_APPEND|DT_ATTACH))
+		else if(type&(DT_INSERT|DT_APPEND|DT_ATTACH|DT_INSTALL))
 		{ dt_insert:
 			if(!(root = _dtmake(dt, obj, type)) )
 			{	obj = NIL(Void_t*);

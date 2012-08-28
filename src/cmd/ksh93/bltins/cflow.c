@@ -68,9 +68,9 @@ done:
 	if(n<0 || n==256 || n > SH_EXITMASK+shp->gd->sigmax+1)
 			n &= ((unsigned int)n)&SH_EXITMASK;
 	/* return outside of function, dotscript and profile is exit */
-	if(shp->fn_depth==0 && shp->dot_depth==0 && !sh_isstate(SH_PROFILE))
+	if(shp->fn_depth==0 && shp->dot_depth==0 && !sh_isstate(shp,SH_PROFILE))
 		pp->mode = SH_JMPEXIT;
-	sh_exit(shp->savexit=n);
+	sh_exit(shp,shp->savexit=n);
 	return(1);
 }
 

@@ -1,29 +1,62 @@
-12-08-01  --- Release ksh93u+ ---
-12-08-01  A bug that ignored interrupts for some builtins (e.g. cmdtst::grep) 
-	  that read from stdin has been fixed.
-12-08-01  A bug that interpreted "cd .foo" as "cd foo" has been fixed.
-12-07-30  Added automatic restart for EINTR for ioctl, tcgetattr, and tcsetattr.
-12-07-23  A scoping error with namrefs to compound associative arrays has
+12-08-24  --- Release ksh93v- ---
+12-08-24  A bug in which unsetting instance variables in a type could effect
+	  the value of that instance in other type instances has been fixed.
+12-08-23  A bug in which name references to compound variable array elements
+	  did not work correctly has been fixed.
+12-08-22  .sh.match now handles subpatterns that had no matches with
+	  ${var//pattern} correctly.
+12-08-21  A bug in setting .sh.match after ${var//pattern/string} when string
+	  is empty has been fixed.
+12-08-21  A bug in setting .sh.match after [[ string == pattern ]] has been
+	  fixed.
+12-08-21  The poll builtin from Roland Mainz has been added with the option
+	  SHOPT_POLL.
+12-08-21  A bug in which read -S did not handle "" inside double quotes has
 	  been fixed.
-12-07-20  A bug where builtin -d /path/foo deleted foo has been fixed.
-12-07-18  A bug in which /dev/stdout did not work in command substitution on
-	  some systems has been fixed.
+12-08-21  A bug in which a compound variable defined in a type could not
+	  have elements added to it has been fixed.
+12-08-20  A bug in which creating a two dimemsional associatve array could
+	  add an extra 0 element to the second subscript has been fixed.
+12-08-20  typeset -H foo no longer unsets foo when foo has been exported to
+	  the shell.
+12-08-20  A file descriptor for the current directory is now made available
+	  to built-ins in the context pointer.
+12-08-10  Rewrote .sh.match expansions fixing several bugs and improving
+	  performance.
+12-08-09  A bug in which assignments following a process substitution argument
+	  were treated as assignments rather than arguments has been fixed.
+12-08-07  Fixed a bug in which discipline functions define in a type from
+	  within a namespace where not being run in the namespace.
+12-08-07  .sh.match no longer gets set for patterns in PS4 during set -x.
+12-07-25  Each shell variable now contains a pointer to the shell pointer.
+12-07-20  <shell.h> interface updated to pass the shell interpreter pointer
+	  to most functions.
 12-07-17  A bug in which the restricted option set in a subshell prevented
-	  some variables from getting restored when the subshell completed
-	  has been fixed.
-12-07-09  A bug in which the directory is not restored after a subshell changes
-	  the name of the directory for subshells executed in the same process
-	  has been fixed.
+          some variables from getting restored when the subshell completed
+          has been fixed.
+12-07-16  The code was modified to do automatic retry for several system calls
+	  the fail with errno set to EINTR.
+12-07-12 +Added -q option was added to kill to send queued signals on systems
+	  that support sigqueue().
+12-07-12 +Added -p option to builtin to output builtins in a format that can
+	  be used to reinput.
 12-07-09  A bug in which file descriptors created with {n}< file were not being
 	  closed has been fixed.
 12-07-09  The 12-04-04 fix for cd .. was not correct causing cd /etc;cd .. to
 	  remain in /etc.  This has been fixed.
+12-07-05  Eliminated compile options and code for ECHOPRINT and OLDTERMIO.
+12-07-05  Eliminated compile options BGX, ESH, HISTEXPAND, TYPEDEF and VSH.
+	  They are the default.
 12-07-02  A bug in which builtin name did now work for builtins found in a
 	  library added by builtin -f lib has been fixed.
+12-07-02 +The -a option was added to trap to cause the current setting to be
+	  appended to the new trap setting rather than replacing it.
 12-07-02  A bug in the edit modes which <tab> after a directory did not refresh
-          the input line has been fixed.
+	  the input line has been fixed.
 12-07-02  A bug in which an exit status > 256 corresponding to a signal was
-          not returned by a function to indicate a signal exit has been fixed.
+	  not by a function to indicate a signal exit has been fixed.
+
+12-06-28  --- Release ksh93u+ ---
 12-06-28  Fix ulimit -a to list (Kibytes) instead of (kbytes).
 12-06-27  Fix unitialized data reference for <CR> as first char in --vi mode.
 12-06-26  The formatting of printf "%q" for multibyte locales has changed to

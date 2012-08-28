@@ -667,4 +667,11 @@ typeset -A Foo
 Foo=( [a]=AA;[b]=BB)
 [[ ${Foo[a]} == AA ]] || err_exit 'Fooa[a] is {Foo[a]} not AA' 
 
+$SHELL 2> /dev/null  <<- \+++ || err_exit '${ar[${a}..${b}]} not working'
+	typeset -a ar=([0]=a [1]=b [2]=c)
+	integer a=1 b=2 
+	[[ ${ar[${a}..${b}]} == 'b c' ]]
++++
+
+
 exit $((Errors<125?Errors:125))

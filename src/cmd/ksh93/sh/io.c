@@ -70,6 +70,7 @@
 #endif
 #endif
 
+
 #define RW_ALL	(S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH)
 
 static void	*timeout;
@@ -299,7 +300,7 @@ inetopen(const char* path, int flags, Inetintr_f onintr, void* handle)
 		{
 			if (server && !bind(fd, p->ai_addr, p->ai_addrlen) && !listen(fd, 5) || !server && !connect(fd, p->ai_addr, p->ai_addrlen))
 				goto done;
-			close(fd);
+			sh_close(fd);
 			fd = -1;
 			if (errno != EINTR || !onintr)
 				break;
@@ -419,21 +420,24 @@ int  sh_iovalidfd(Shell_t *shp, int fd)
 		return(0);
 	}
 	n = (fd+16)&~0xf;
-	if(n > max)
-		n = max;
+	if(n++ > max)
+		n = max+1;
 	max = shp->gd->lim.open_max;
 	shp->sftable = (Sfio_t**)calloc((n+1)*(sizeof(int*)+sizeof(Sfio_t*)+1),1);
 	if(max)
-		memcpy(shp->sftable,sftable,max*sizeof(Sfio_t*));
+		memcpy(shp->sftable,--sftable,++max*sizeof(Sfio_t*));
 	shp->fdptrs = (int**)(&shp->sftable[n]);
 	if(max)
-		memcpy(shp->fdptrs,fdptrs,max*sizeof(int*));
+		memcpy(shp->fdptrs,--fdptrs,max*sizeof(int*));
 	shp->fdstatus = (unsigned char*)(&shp->fdptrs[n]);
 	if(max)
-		memcpy(shp->fdstatus,fdstatus,max);
+		memcpy(shp->fdstatus,--fdstatus,max);
 	if(sftable)
 		free((void*)sftable);
-	shp->gd->lim.open_max = n;
+	shp->sftable++;
+	shp->fdptrs++;
+	shp->fdstatus++;
+	shp->gd->lim.open_max = n-1;
 	return(1);
 }
 
@@ -500,7 +504,7 @@ static int outexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 				errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
 				active = 0;
 				((struct checkpt*)shp->jmplist)->mode = mode;
-				sh_exit(1);
+				sh_exit(shp,1);
 			}
 			return(-1);
 		}
@@ -680,18 +684,22 @@ int sh_iorenumber(Shell_t *shp, register int f1,register int f2)
 /*
  * close a file descriptor and update stream table and attributes 
  */
+#undef close
 int sh_close(register int fd)
 {
 	Shell_t *shp = sh_getinterp();
 	register Sfio_t *sp;
 	register int r = 0;
 	if(fd<0)
+	{
+		errno = EBADF;
 		return(-1);
+	}
 	if(fd >= shp->gd->lim.open_max)
 		sh_iovalidfd(shp,fd);
 	if(!(sp=shp->sftable[fd]) || sfclose(sp) < 0)
 	{
-		int err=errno;
+		int err = errno;
 		if(fdnotify)
 			(*fdnotify)(fd,SH_FDCLOSE);
 		while((r=close(fd)) < 0 && errno==EINTR)
@@ -713,27 +721,33 @@ int sh_close(register int fd)
 static int
 onintr(struct addrinfo* addr, void* handle)
 {
-	Shell_t*	sh = (Shell_t*)handle;
+	Shell_t*	shp = (Shell_t*)handle;
 
-	if (sh->trapnote&SH_SIGSET)
+	if (shp->trapnote&SH_SIGSET)
 	{
 		freeaddrinfo(addr);
-		sh_exit(SH_EXITSIG);
+		sh_exit(shp,SH_EXITSIG);
 		return -1;
 	}
-	if (sh->trapnote)
-		sh_chktrap(sh);
+	if (shp->trapnote)
+		sh_chktrap(shp);
 	return 0;
 }
 
 #endif
 
+#ifdef open64
+#   undef open64
+#else
+#   undef open
+#endif
 /*
  * Mimic open(2) with checks for pseudo /dev/ files.
  */
 int sh_open(register const char *path, int flags, ...)
 {
 	Shell_t			*shp = sh_getinterp();
+	Sfio_t			*sp;
 	register int		fd = -1;
 	mode_t			mode;
 	char			*e;
@@ -800,15 +814,21 @@ int sh_open(register const char *path, int flags, ...)
 	}
 	if (fd >= 0)
 	{
-		int nfd= -1;
+		int nfd= -1, err=errno;
 		if (flags & O_CREAT)
 		{
 			struct stat st;
 			if (stat(path,&st) >=0)
-				nfd = open(path,flags,st.st_mode);
+			{
+				while((nfd = open(path,flags,st.st_mode))<0 && errno==EINTR)
+					errno = err;
+			}
 		}
 		else
-			nfd = open(path,flags);
+		{
+			while((nfd = open(path,flags))<0 && errno==EINTR)
+				errno = err;
+		}
 		if(nfd>=0)
 		{
 			fd = nfd;
@@ -848,6 +868,16 @@ int sh_open(register const char *path, int flags, ...)
 		mode = IOREAD;
 	if(fd >= shp->gd->lim.open_max)
 		sh_iovalidfd(shp,fd);
+	if((sp=shp->sftable[fd]) && (sfset(sp,0,0)&SF_STRING))
+	{
+		int n,err=errno;
+		if((n=sh_fcntl(fd,F_DUPFD,10)) >=10)
+		{
+			while(close(fd)<0 && errno==EINTR)
+				errno = err;
+			fd = n;
+		}
+	}
 	shp->fdstatus[fd] = mode;
 	return(fd);
 }
@@ -867,17 +897,16 @@ int sh_chkopen(register const char *name)
 /*
  * move open file descriptor to a number > 2
  */
-int sh_iomovefd(register int fdold)
+int sh_iomovefd(Shell_t *shp,register int fdold)
 {
-	Shell_t *shp = sh_getinterp();
 	register int fdnew;
 	if(fdold >= shp->gd->lim.open_max)
 		sh_iovalidfd(shp,fdold);
 	if(fdold<0 || fdold>2)
 		return(fdold);
-	fdnew = sh_iomovefd(dup(fdold));
+	fdnew = sh_iomovefd(shp,dup(fdold));
 	shp->fdstatus[fdnew] = (shp->fdstatus[fdold]&~IOCLEX);
-	close(fdold);
+	sh_close(fdold);
 	shp->fdstatus[fdold] = IOCLOSE;
 	return(fdnew);
 }
@@ -891,8 +920,8 @@ int	sh_pipe(register int pv[])
 	int fd[2];
 	if(pipe(fd)<0 || (pv[0]=fd[0])<0 || (pv[1]=fd[1])<0)
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
-	pv[0] = sh_iomovefd(pv[0]);
-	pv[1] = sh_iomovefd(pv[1]);
+	pv[0] = sh_iomovefd(shp,pv[0]);
+	pv[1] = sh_iomovefd(shp,pv[1]);
 	shp->fdstatus[pv[0]] = IONOSEEK|IOREAD;
 	shp->fdstatus[pv[1]] = IONOSEEK|IOWRITE;
 	sh_subsavefd(pv[0]);
@@ -900,29 +929,22 @@ int	sh_pipe(register int pv[])
 	return(0);
 }
 
-#ifndef pipe
-   int	sh_rpipe(register int pv[])
-   {
-   	return sh_pipe(pv);
-   }
-#else
-#  undef pipe
-   /* create a real pipe when pipe() is socketpair */
-   int	sh_rpipe(register int pv[])
-   {
+#undef pipe
+/* create a real pipe when pipe() is socketpair */
+int	sh_rpipe(register int pv[])
+{
 	Shell_t *shp = sh_getinterp();
 	int fd[2];
 	if(pipe(fd)<0 || (pv[0]=fd[0])<0 || (pv[1]=fd[1])<0)
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
-	pv[0] = sh_iomovefd(pv[0]);
-	pv[1] = sh_iomovefd(pv[1]);
+	pv[0] = sh_iomovefd(shp,pv[0]);
+	pv[1] = sh_iomovefd(shp,pv[1]);
 	shp->fdstatus[pv[0]] = IONOSEEK|IOREAD;
 	shp->fdstatus[pv[1]] = IONOSEEK|IOWRITE;
 	sh_subsavefd(pv[0]);
 	sh_subsavefd(pv[1]);
 	return(0);
-   }
-#endif
+}
 
 #if SHOPT_COSHELL
     int sh_coaccept(Shell_t *shp,int *pv,int out)
@@ -935,7 +957,7 @@ int	sh_pipe(register int pv[])
 	if((pv[out]=sh_fcntl(fd,F_DUPFD,10)) >=10)
 		sh_close(fd);
 	else
-		pv[out] = sh_iomovefd(fd);
+		pv[out] = sh_iomovefd(shp,fd);
 	if(fcntl(pv[out],F_SETFD,FD_CLOEXEC) >=0)
 		shp->fdstatus[pv[out]] |= IOCLEX;
 	shp->fdstatus[pv[out]] = (out?IOWRITE:IOREAD);
@@ -964,7 +986,7 @@ int	sh_pipe(register int pv[])
 	while ((r=bind (pv[out], (struct sockaddr *) &sin, slen)) == -1 && errno==EADDRINUSE);
 	if(r<0 ||  listen(pv[out],5) <0)
 	{
-		close(pv[out]);
+		sh_close(pv[out]);
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
 	}
 	fcntl(pv[out],F_SETFD,FD_CLOEXEC);
@@ -1049,7 +1071,7 @@ static Sfoff_t	file_offset(Shell_t *shp, int fn, char *fname)
 		nv_stack(pp, &endf.hdr);
 	if(sp)
 		sfsync(sp);
-	off = sh_strnum(fname, &cp, 0);
+	off = sh_strnum(shp,fname, &cp, 0);
 	if(mp)
 		nv_stack(mp, NiL);
 	if(pp)
@@ -1069,17 +1091,18 @@ void sh_pclose(register int pv[])
 	pv[0] = pv[1] = -1;
 }
 
-static char *io_usename(char *name, int *perm, int fno, int mode)
+static char *io_usename(Shell_t *shp,char *name, int *perm, int fno, int mode)
 {
 	struct stat	statb;
 	char		*tname, *sp, *ep, path[PATH_MAX+1];
 	int		fd,r;
+	size_t		n;
 	if(mode==0)
 	{
 		if((fd = sh_open(name,O_RDONLY,0)) >= 0)
 		{
 			r = fstat(fd,&statb);
-			close(fd);
+			sh_close(fd);
 			if(r)
 				return(0);
 			if(!S_ISREG(statb.st_mode))
@@ -1094,24 +1117,24 @@ static char *io_usename(char *name, int *perm, int fno, int mode)
 		name=path;
 		name[fd] = 0;
 	}
-	stakseek(1);
-	stakputs(name);
-	stakputc(0);
-	pathcanon(stakptr(1),PATH_PHYSICAL);
-	sp = ep = stakptr(1);
+	stkseek(shp->stk,1);
+	sfputr(shp->stk,name,0);
+	n = stktell(shp->stk);
+	pathcanon(stkptr(shp->stk,1),n-1,PATH_PHYSICAL);
+	sp = ep = stkptr(shp->stk,1);
 	if(ep = strrchr(sp,'/'))
 	{
-		memmove(stakptr(0),sp,++ep-sp);
-		stakseek(ep-sp);
+		memmove(stkptr(shp->stk,0),sp,++ep-sp);
+		stkseek(shp->stk,ep-sp);
 	}
 	else
 	{
 		ep = sp;
-		stakseek(0);
+		stkseek(shp->stk,0);
 	}
-	stakputc('.');
+	sfputc(shp->stk,'.');
 	sfprintf(stkstd,"%<#d_%d{;.tmp",getpid(),fno);
-	tname = stakfreeze(1);
+	tname = stkfreeze(shp->stk,1);
 	switch(mode)
 	{
 	    case 1:
@@ -1130,6 +1153,7 @@ static char *io_usename(char *name, int *perm, int fno, int mode)
  * flag = 2 if files are to be closed on exec
  * flag = 3 when called from $( < ...), just open file and return
  * flag = SH_SHOWME for trace only
+ * if (flag&IOHERESTRING), here documents can be string files
  */
 int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 {
@@ -1144,6 +1168,8 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	char *tname=0, *after="", *trace = shp->st.trap[SH_DEBUGTRAP];
 	Namval_t *np=0;
 	int isstring = shp->subshell?(sfset(sfstdout,0,0)&SF_STRING):0;
+	int herestring = (flag&IOHERESTRING);
+	flag &= ~IOHERESTRING;
 
 	if(flag==2)
 		clexec = 1;
@@ -1176,7 +1202,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 		{
 			if(iof&IOLSEEK)
 			{
-				struct argnod *ap = (struct argnod*)stakalloc(ARGVAL+strlen(iop->ioname));
+				struct argnod *ap = (struct argnod*)stkalloc(shp->stk,ARGVAL+strlen(iop->ioname));
 				memset(ap, 0, ARGVAL);
 				ap->argflag = ARG_MAC;
 				strcpy(ap->argval,iop->ioname);
@@ -1184,7 +1210,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			}
 			else if(iof&IOPROCSUB)
 			{
-				struct argnod *ap = (struct argnod*)stakalloc(ARGVAL+strlen(iop->ioname));
+				struct argnod *ap = (struct argnod*)stkalloc(shp->stk,ARGVAL+strlen(iop->ioname));
 				memset(ap, 0, ARGVAL);
 				if(iof&IOPUT)
 					ap->argflag = ARG_RAW;
@@ -1195,7 +1221,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				fname = ap->argval;
 			}
 			else
-				fname=sh_mactrim(shp,fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);
+				fname=sh_mactrim(shp,fname,(!sh_isoption(shp,SH_NOGLOB)&&sh_isoption(shp,SH_INTERACTIVE))?2:0);
 		}
 		errno=0;
 		np = 0;
@@ -1236,13 +1262,14 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			{
 				if(traceon)
 					sfputr(sfstderr,io_op,'<');
-				fd = io_heredoc(shp,iop,fname,traceon);
+				fd = io_heredoc(shp,iop,fname,traceon|herestring);
 				if(traceon && (flag==SH_SHOWME))
 					sh_close(fd);
 				fname = 0;
 			}
 			else if(iof&IOMOV)
 			{
+				Sfio_t *sp;
 				int dupfd,toclose= -1;
 				io_op[2] = '&';
 				if((fd=fname[0])>='0' && fd<='9')
@@ -1293,7 +1320,20 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				}
 				if(flag==SH_SHOWME)
 					goto traceit;
-				if((fd=sh_fcntl(dupfd,F_DUPFD,3))<0)
+				if((sp=shp->sftable[dupfd]) && sfset(sp,0,0)&SF_STRING)
+				{
+					char *cp;
+					Sfoff_t	off = sftell(sp);
+					sfset(sp,SF_MALLOC,0);
+					cp = sfsetbuf(sp,(char*)sp,0);
+					sfset(sp,SF_MALLOC,1);
+					r = (int)(sfseek(sp,(Sfoff_t)0,SEEK_END)-off);
+					sfseek(sp,off,SEEK_SET);
+					fd = shp->gd->lim.open_max-1;
+					shp->sftable[fd] = sfnew(NIL(Sfio_t*),cp,r,-1,SF_READ|SF_STRING);
+					shp->fdstatus[fd] = shp->fdstatus[dupfd];
+				}
+				else if((fd=sh_fcntl(dupfd,F_DUPFD,3))<0)
 					goto fail;
 				if(fd>= shp->gd->lim.open_max)
 					sh_iovalidfd(shp,fd);
@@ -1312,7 +1352,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			}
 			else if(iof&IORDW)
 			{
-				if(sh_isoption(SH_RESTRICTED))
+				if(sh_isoption(shp,SH_RESTRICTED))
 					errormsg(SH_DICT,ERROR_exit(1),e_restricted,fname);
 				io_op[2] = '>';
 				o_mode = O_RDWR|O_CREAT;
@@ -1326,7 +1366,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					goto traceit;
 				fd=sh_chkopen(fname);
 			}
-			else if(sh_isoption(SH_RESTRICTED))
+			else if(sh_isoption(shp,SH_RESTRICTED))
 				errormsg(SH_DICT,ERROR_exit(1),e_restricted,fname);
 			else
 			{
@@ -1339,7 +1379,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				{
 					io_op[2] = ';';
 					o_mode |= O_TRUNC;
-					if(tname = io_usename(fname,&perm,fn,0))
+					if(tname = io_usename(shp,fname,&perm,fn,0))
 						o_mode |= O_EXCL;
 				}
 				else
@@ -1347,7 +1387,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					o_mode |= O_TRUNC;
 					if(iof&IOCLOB)
 						io_op[2] = '|';
-					else if(sh_isoption(SH_NOCLOBBER))
+					else if(sh_isoption(shp,SH_NOCLOBBER))
 					{
 						struct stat sb;
 						if(stat(fname,&sb)>=0)
@@ -1526,10 +1566,27 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				}
 				else
 				{
-					fd = sh_iorenumber(shp,sh_iomovefd(fd),fn);
+					fd = sh_iorenumber(shp,sh_iomovefd(shp,fd),fn);
 					if(fn>2 && fn<10)
 						shp->inuse_bits |= (1<<fn);
 				}
+			}
+			else if(iof&IODOC)
+			{
+				Sfio_t *sp = &_Sfstderr;
+				if(fn==1)
+					sp = &_Sfstdout;
+				else if(fn==0)
+					sp = &_Sfstdin;
+				shp->sftable[fn] = shp->sftable[-1];
+				shp->fdstatus[fn] = shp->fdstatus[-1];
+				if(fn <=2)
+				{
+					sfswap(shp->sftable[fn],sp);
+					shp->sftable[fn] = sp;
+				}
+				shp->fdptrs[fn] = 0;
+				shp->sftable[-1] = 0;
 			}
 			if(fd >2 && clexec)
 			{
@@ -1557,8 +1614,9 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 	if(!(iop->iofile&IOSTRG) && (!shp->heredocs || iop->iosize==0))
 		return(sh_open(e_devnull,O_RDONLY));
 	/* create an unnamed temporary file */
-	if(!(outfile=sftmp(0)))
+	if(!(outfile=sftmp((traceon&IOHERESTRING)?PIPE_BUF:0)))
 		errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
+	traceon &= ~IOHERESTRING;
 	if(iop->iofile&IOSTRG)
 	{
 		if(traceon)
@@ -1618,12 +1676,21 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 				sfclose(infile);
 		}
 	}
+	if(traceon && !(iop->iofile&IOSTRG))
+		sfputr(sfstderr,iop->ioname,'\n');
 	/* close stream outfile, but save file descriptor */
+	if(sfset(outfile,0,0)&SF_STRING)
+	{
+		sfseek(outfile,(Sfoff_t)0,SEEK_SET);
+		sfset(outfile,SF_READ|SF_WRITE,SF_READ);
+		shp->sftable[-1] = outfile;
+		shp->fdstatus[-1] = IOREAD|IOSEEK;
+		shp->fdptrs[-1] = 0;
+		return(-1);
+	}
 	fd = sffileno(outfile);
 	sfsetfd(outfile,-1);
 	sfclose(outfile);
-	if(traceon && !(iop->iofile&IOSTRG))
-		sfputr(sfstderr,iop->ioname,'\n');
 	lseek(fd,(off_t)0,SEEK_SET);
 	shp->fdstatus[fd] = IOREAD;
 	return(fd);
@@ -1649,7 +1716,9 @@ static ssize_t tee_write(Sfio_t *iop,const void *buff,size_t n,Sfdisc_t *unused)
 void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 {
 	register int	savefd;
-	int flag = (oldtop&(IOSUBSHELL|IOPICKFD));
+	register Sfio_t	*sp;
+	register int fd,flag = (oldtop&(IOSUBSHELL|IOPICKFD));
+	int savestr=0;
 	oldtop &= ~(IOSUBSHELL|IOPICKFD);
 	/* see if already saved, only save once */
 	for(savefd=shp->topfd; --savefd>=oldtop; )
@@ -1694,14 +1763,27 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 			((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
 		}
+		if(savefd <0 && (sp=shp->sftable[origfd]) && (sfset(sp,0,0)&SF_STRING)) 
+		{
+			savestr = 1;
+			if((fd = open("/dev/null",O_RDONLY)) < 10)
+			{
+				savefd = sh_fcntl(fd, F_DUPFD, 10);
+				close(fd);
+			}
+		}
 	}
+skip:
 	filemap[shp->topfd].tname = name;
 	filemap[shp->topfd].subshell = (flag&IOSUBSHELL);
 	filemap[shp->topfd].orig_fd = origfd;
-	filemap[shp->topfd++].save_fd = savefd;
+	filemap[shp->topfd].save_fd = savefd;
+	if(savestr)
+		filemap[shp->topfd].save_fd  |= IOSAVESTRING;
+	shp->topfd++;
 	if(savefd >=0)
 	{
-		register Sfio_t* sp = shp->sftable[origfd];
+		sp = shp->sftable[origfd];
 		/* make saved file close-on-exec */
 		sh_fcntl(savefd,F_SETFD,FD_CLOEXEC);
 		if(origfd==job.fd)
@@ -1710,7 +1792,8 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 		shp->fdptrs[savefd] = &filemap[shp->topfd-1].save_fd;
 		if(!(shp->sftable[savefd]=sp))
 			return;
-		sfsync(sp);
+		if(!savestr);
+			sfsync(sp);
 		if(origfd <=2)
 		{
 			/* copy standard stream to new stream */
@@ -1747,12 +1830,14 @@ void	sh_iounsave(Shell_t* shp)
 void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 {
 	register int 	origfd, savefd, fd;
-	int flag = (last&IOSUBSHELL);
+	int savestr, flag = (last&IOSUBSHELL);
 	last &= ~IOSUBSHELL;
 	for (fd = shp->topfd - 1; fd >= last; fd--)
 	{
 		if(!flag && filemap[fd].subshell)
 			continue;
+		savestr = filemap[fd].save_fd&IOSAVESTRING;
+		filemap[fd].save_fd &= ~IOSAVESTRING;
 		if(jmpval==SH_JMPSCRIPT)
 		{
 			if ((savefd = filemap[fd].save_fd) >= 0)
@@ -1774,11 +1859,12 @@ void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 		if(filemap[fd].tname == Empty && shp->exitval==0)
 			ftruncate(origfd,lseek(origfd,0,SEEK_CUR));
 		else if(filemap[fd].tname)
-			io_usename(filemap[fd].tname,(int*)0,origfd,shp->exitval?2:1);
+			io_usename(shp,filemap[fd].tname,(int*)0,origfd,shp->exitval?2:1);
 		sh_close(origfd);
 		if ((savefd = filemap[fd].save_fd) >= 0)
 		{
-			sh_fcntl(savefd, F_DUPFD, origfd);
+			if(!savestr)
+				sh_fcntl(savefd, F_DUPFD, origfd);
 			if(savefd==job.fd)
 				job.fd=origfd;
 			shp->fdstatus[origfd] = shp->fdstatus[savefd];
@@ -1881,7 +1967,7 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 		else if(shp->bltinfun && (shp->trapnote&SH_SIGTRAP) && shp->lastsig)
 			return(-1);
 		n=1;
-		sh_onstate(SH_TTYWAIT);
+		sh_onstate(shp,SH_TTYWAIT);
 	}
 	else
 		n = 0;
@@ -1892,7 +1978,7 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 	{
 		if(isatty(fno))
 			sfputc(sfstderr,'\n');
-		sh_exit(SH_EXITSIG);
+		sh_exit(shp,SH_EXITSIG);
 	}
 	if(shp->trapnote&SH_SIGTRAP)
 		sh_chktrap(shp);
@@ -1906,10 +1992,10 @@ static void time_grace(void *handle)
 {
 	Shell_t *shp = (Shell_t*)handle;
 	timeout = 0;
-	if(sh_isstate(SH_GRACE))
+	if(sh_isstate(shp,SH_GRACE))
 	{
-		sh_offstate(SH_GRACE);
-		if(!sh_isstate(SH_INTERACTIVE))
+		sh_offstate(shp,SH_GRACE);
+		if(!sh_isstate(shp,SH_INTERACTIVE))
 			return;
 		((struct checkpt*)shp->jmplist)->mode = SH_JMPEXIT;
 		errormsg(SH_DICT,2,e_timeout);
@@ -1917,7 +2003,7 @@ static void time_grace(void *handle)
 		return;
 	}
 	errormsg(SH_DICT,0,e_timewarn);
-	sh_onstate(SH_GRACE);
+	sh_onstate(shp,SH_GRACE);
 	sigrelease(SIGALRM);
 	shp->trapnote |= SH_SIGTRAP;
 }
@@ -1936,14 +2022,14 @@ static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 		errno = EINTR;
 		return(-1);
 	}
-	if(sh_isstate(SH_INTERACTIVE) && sffileno(iop)==0 && io_prompt(shp,iop,shp->nextprompt)<0 && errno==EIO)
+	if(sh_isstate(shp,SH_INTERACTIVE) && sffileno(iop)==0 && io_prompt(shp,iop,shp->nextprompt)<0 && errno==EIO)
 		return(0);
-	sh_onstate(SH_TTYWAIT);
+	sh_onstate(shp,SH_TTYWAIT);
 	if(!(shp->fdstatus[fd]&IOCLEX) && (sfset(iop,0,0)&SF_SHARE))
 		size = ed_read(shgd->ed_context, fd, (char*)buff, size,0);
 	else
 		size = sfrd(iop,buff,size,handle);
-	sh_offstate(SH_TTYWAIT);
+	sh_offstate(shp,SH_TTYWAIT);
 	return(size);
 }
 /*
@@ -1954,24 +2040,19 @@ static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 {
 	Shell_t *shp = ((struct Iodisc*)handle)->sh;
 	int	(*readf)(void*, int, char*, int, int);
-	int	reedit=0, rsize;
-#if SHOPT_HISTEXPAND
+	int	reedit=0;
+	size_t	rsize;
 	char    *xp=0;
-#endif
-#   if SHOPT_ESH
-	if(sh_isoption(SH_EMACS) || sh_isoption(SH_GMACS))
+	if(sh_isoption(shp,SH_EMACS) || sh_isoption(shp,SH_GMACS))
 		readf = ed_emacsread;
 	else
-#   endif	/* SHOPT_ESH */
-#   if SHOPT_VSH
-#	if SHOPT_RAWONLY
-	    if(sh_isoption(SH_VI) || ((SHOPT_RAWONLY-0) && mbwide()))
-#	else
-	    if(sh_isoption(SH_VI))
-#	endif
+#   if SHOPT_RAWONLY
+	    if(sh_isoption(shp,SH_VI) || ((SHOPT_RAWONLY-0) && mbwide()))
+#   else
+	    if(sh_isoption(shp,SH_VI))
+#   endif
 		readf = ed_viread;
 	else
-#   endif	/* SHOPT_VSH */
 		readf = ed_read;
 	if(shp->trapnote)
 	{
@@ -1983,13 +2064,12 @@ static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 		if(io_prompt(shp,iop,shp->nextprompt)<0 && errno==EIO)
 			return(0);
 		if(shp->timeout)
-			timeout = (void*)sh_timeradd(sh_isstate(SH_GRACE)?1000L*TGRACE:1000L*shp->timeout,0,time_grace,shp);
+			timeout = (void*)sh_timeradd(sh_isstate(shp,SH_GRACE)?1000L*TGRACE:1000L*shp->timeout,0,time_grace,shp);
 		rsize = (*readf)(shgd->ed_context, sffileno(iop), (char*)buff, size, reedit);
 		if(timeout)
 			timerdel(timeout);
 		timeout=0;
-#if SHOPT_HISTEXPAND
-		if(rsize && *(char*)buff != '\n' && shp->nextprompt==1 && sh_isoption(SH_HISTEXPAND))
+		if(rsize && *(char*)buff != '\n' && shp->nextprompt==1 && sh_isoption(shp,SH_HISTEXPAND))
 		{
 			int r;
 			((char*)buff)[rsize] = '\0';
@@ -1998,12 +2078,12 @@ static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 				free(xp);
 				xp = 0;
 			}
-			r = hist_expand(buff, &xp);
+			r = hist_expand(shp,buff, &xp);
 			if((r & (HIST_EVENT|HIST_PRINT)) && !(r & HIST_ERROR) && xp)
 			{
 				strlcpy(buff, xp, size);
 				rsize = strlen(buff);
-				if(!sh_isoption(SH_HISTVERIFY) || readf==ed_read)
+				if(!sh_isoption(shp,SH_HISTVERIFY) || readf==ed_read)
 				{
 					sfputr(sfstderr, xp, -1);
 					break;
@@ -2011,7 +2091,7 @@ static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 				reedit = rsize - 1;
 				continue;
 			}
-			if((r & HIST_ERROR) && sh_isoption(SH_HISTREEDIT))
+			if((r & HIST_ERROR) && sh_isoption(shp,SH_HISTREEDIT))
 			{
 				reedit  = rsize - 1;
 				continue;
@@ -2022,7 +2102,6 @@ static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 				rsize = 1;
 			}
 		}
-#endif
 		break;
 	}
 	return(rsize);
@@ -2116,7 +2195,7 @@ static int	io_prompt(Shell_t *shp,Sfio_t *iop,register int flag)
 	char *endprompt;
 	static short cmdno;
 	int sfflags;
-	if(flag<3 && !sh_isstate(SH_INTERACTIVE))
+	if(flag<3 && !sh_isstate(shp,SH_INTERACTIVE))
 		flag = 0;
 	if(flag==2 && sfpkrd(sffileno(iop),buff,1,'\n',0,1) >= 0)
 		flag = 0;
@@ -2131,7 +2210,7 @@ static int	io_prompt(Shell_t *shp,Sfio_t *iop,register int flag)
 		{
 			register int c;
 #if defined(TIOCLBIC) && defined(LFLUSHO)
-			if(!sh_isoption(SH_VI) && !sh_isoption(SH_EMACS) && !sh_isoption(SH_GMACS))
+			if(!sh_isoption(shp,SH_VI) && !sh_isoption(shp,SH_EMACS) && !sh_isoption(shp,SH_GMACS))
 			{
 				/*
 				 * re-enable output in case the user has
@@ -2228,7 +2307,7 @@ static void	sftrack(Sfio_t* sp, int flag, void* data)
 #endif
 	if(fd<0 || fd==PSEUDOFD || (fd>=shp->gd->lim.open_max && !sh_iovalidfd(shp,fd)))
 		return;
-	if(sh_isstate(SH_NOTRACK))
+	if(sh_isstate(shp,SH_NOTRACK))
 		return;
 	mode = sfset(sp,0,0);
 	if(sp==shp->heredocs && fd < 10 && flag==SF_SETFD)
@@ -2288,7 +2367,7 @@ struct eval
 {
 	Sfdisc_t	disc;
 	char		**argv;
-	short		slen;
+	size_t		slen;
 	char		addspace;
 };
 
@@ -2327,7 +2406,7 @@ static int eval_exceptf(Sfio_t *iop,int type, void *data, Sfdisc_t *handle)
 {
 	register struct eval *ep = (struct eval*)handle;
 	register char	*cp;
-	register int	len;
+	register size_t	len;
 
 	/* no more to do */
 	if(type!=SF_READ || !(cp = ep->argv[0]))
@@ -2433,9 +2512,8 @@ static int subexcept(Sfio_t* sp,register int mode, void *data, Sfdisc_t* handle)
 /* 
  * print a list of arguments in columns
  */
-void	sh_menu(Sfio_t *outfile,int argn,char *argv[])
+void	sh_menu_20120720(Shell_t *shp,Sfio_t *outfile,int argn,char *argv[])
 {
-	Shell_t *shp = sh_getinterp();
 	register int i,j;
 	register char **arg;
 	int nrow, ncol=1, ndigits=1;
@@ -2486,6 +2564,11 @@ skip:
 		sfputc(outfile,'\n');
 	}
 }
+#undef sh_menu
+void	sh_menu(Sfio_t *outfile,int argn,char *argv[])
+{
+	sh_menu_20120720(sh_getinterp(),outfile,argn,argv);
+}
 
 #undef read
 /*
@@ -2493,12 +2576,14 @@ skip:
  */
 ssize_t sh_read(register int fd, void* buff, size_t n) 
 {
+	int r,err=errno;
 	Shell_t *shp = sh_getinterp();
 	register Sfio_t *sp;
 	if(sp=shp->sftable[fd])
 		return(sfread(sp,buff,n));
-	else
-		return(read(fd,buff,n));
+	while ((r=read(fd,buff,n))<0 && errno==EINTR)
+		errno = err;
+	return(r);
 }
 
 #undef write
@@ -2507,12 +2592,14 @@ ssize_t sh_read(register int fd, void* buff, size_t n)
  */
 ssize_t sh_write(register int fd, const void* buff, size_t n) 
 {
+	int r,err=errno;
 	Shell_t *shp = sh_getinterp();
 	register Sfio_t *sp;
 	if(sp=shp->sftable[fd])
 		return(sfwrite(sp,buff,n));
-	else
-		return(write(fd,buff,n));
+	while ((r=write(fd,buff,n))<0 && errno==EINTR)
+		errno = err;
+	return(r);
 }
 
 #undef lseek
@@ -2645,9 +2732,8 @@ Notify_f    sh_fdnotify(Notify_f notify)
         return(old);
 }
 
-Sfio_t	*sh_fd2sfio(int fd)
+Sfio_t	*sh_fd2sfio_20120720(Shell_t *shp,int fd)
 {
-	Shell_t	*shp = sh_getinterp();
 	register int status;
 	Sfio_t *sp = shp->sftable[fd];
 	if(!sp  && (status = sh_iocheckfd(shp,fd))!=IOCLOSE)
@@ -2662,10 +2748,14 @@ Sfio_t	*sh_fd2sfio(int fd)
 	}
 	return(sp);
 }
-
-Sfio_t *sh_pathopen(const char *cp)
+#undef sh_fd2sfio
+Sfio_t	*sh_fd2sfio(int fd)
 {
-	Shell_t *shp = sh_getinterp();
+	return(sh_fd2sfio_20120720(sh_getinterp(),fd));
+}
+
+Sfio_t *sh_pathopen(Shell_t *shp,const char *cp)
+{
 	int n;
 #ifdef PATH_BFPATH
 	if((n=path_open(shp,cp,path_get(shp,cp))) < 0)
@@ -2677,6 +2767,12 @@ Sfio_t *sh_pathopen(const char *cp)
 	if(n < 0)
 		errormsg(SH_DICT,ERROR_system(1),e_open,cp);
 	return(sh_iostream(shp,n));
+}
+
+#undef sh_pathopen
+Sfio_t *sh_pathopen(const char *cp)
+{
+	return(sh_pathopen_20120720(sh_getinterp(),cp));
 }
 
 int sh_isdevfd(register const char *fd)
@@ -2709,3 +2805,15 @@ int sh_chdir(const char* dir)
 	return(r);
 }
 
+#ifdef stat64
+#   undef stat64
+#else
+#   undef stat
+#endif
+int sh_stat(const char* path,struct stat *statb)
+{
+	int r,err=errno;
+	while((r=stat(path,statb))<0 && errno==EINTR)
+		errno = err;
+	return(r);
+}

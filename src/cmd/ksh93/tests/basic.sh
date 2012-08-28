@@ -514,4 +514,8 @@ $SHELL -xc '$(LD_LIBRARY_PATH=$LD_LIBRARY_PATH exec $SHELL -c :)' > /dev/null 2>
 
 $SHELL 2> /dev/null -c $'for i;\ndo :;done' || err_exit 'for i ; <newline> not vaid'
 
+exp='/dev/fd/+(\d) v=bam /dev/fd/+(\d)'
+got=$( print <(print foo) v=bam <(print bar))
+[[ $got == $exp ]] ||  err_exit 'assignments after command substitution not treated as arguments'
+
 exit $((Errors<125?Errors:125))

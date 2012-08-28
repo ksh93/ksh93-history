@@ -131,6 +131,7 @@ struct Namval
 #else
 	Namfun_t	*nvfun;
 	char		*nvalue;
+	void		*nvshell;
 	char		*nvprivate;
 #endif /* _NV_PRIVATE */
 };
@@ -274,6 +275,7 @@ extern Namfun_t		*nv_hasdisc(Namval_t*, const Namdisc_t*);
 extern int		nv_isnull(Namval_t*);
 extern Namfun_t		*nv_isvtree(Namval_t*);
 extern Namval_t		*nv_lastdict(void);
+extern Namval_t		*nv_lastdict_20120720(void*);
 extern Namval_t		*nv_mkinttype(char*, size_t, int, const char*, Namdisc_t*);
 extern void 		nv_newattr(Namval_t*,unsigned,int);
 extern void 		nv_newtype(Namval_t*);
@@ -318,5 +320,7 @@ extern const Namdisc_t	*nv_discfun(int);
 #   define nv_search(np,a,b)	nv_open(np,a,((b)?0:NV_NOADD))
 #   define settype	setdisc
 #endif
+
+#include	<nvapi.h>
 
 #endif /* NV_DEFAULT */

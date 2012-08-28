@@ -65,6 +65,8 @@ admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
 admin_list='PACKAGE.$type.lst'
 admin_ping="ping -c 1 -w 5"
 
+pid=$$
+
 default_url=default.url
 MAKESKIP=${MAKESKIP:-"*[-.]*"}
 RATZ=ratz
@@ -79,7 +81,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-06-28 $
+@(#)$Id: package (AT&T Research) 2012-08-07 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -1762,7 +1764,7 @@ hostinfo() # attribute ...
 		case $cpu in
 		0|1)	cpu=`(
 			cd ${TMPDIR:-/tmp}
-			tmp=hi$$
+			tmp=hi$pid
 			trap 'rm -f $tmp.*' 0 1 2
 			cat > $tmp.c <<!
 #include <stdio.h>
@@ -1800,7 +1802,7 @@ int main()
 		case $rating in
 		[0123456789]*)	;;
 		*)	cd ${TMPDIR:-/tmp}
-			tmp=hi$$
+			tmp=hi$pid
 			trap 'rm -f $tmp.*' 0 1 2
 			cat > $tmp.c <<!
 #include <stdio.h>
@@ -2413,7 +2415,7 @@ int main()
 				;;
 			*)	pwd=`pwd`
 				cd ${TMPDIR:-/tmp}
-				tmp=hi$$
+				tmp=hi$pid
 				trap 'rm -f $tmp.*' 0 1 2
 				cat > $tmp.a.c <<!
 extern int b();
@@ -2471,7 +2473,7 @@ int b() { return 0; }
 				*universal*64*)
 					pwd=`pwd`
 					cd ${TMPDIR:-/tmp}
-					tmp=hi$$
+					tmp=hi$pid
 					trap 'rm -f $tmp.*' 0 1 2
 					cat > $tmp.a.c <<!
 int main() { return 0; }
@@ -2824,20 +2826,20 @@ cat $INITROOT/$i.sh
 
 			(
 				cd /tmp || exit 3
-				cp $INITROOT/hello.c pkg$$.c || exit 3
-				$cc -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
-					if $cc -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
+				cp $INITROOT/hello.c pkg$pid.c || exit 3
+				$cc -o pkg$pid.exe pkg$pid.c > pkg$pid.e 2>&1 || {
+					if $cc -Dnew=old -o pkg$pid.exe pkg$pid.c > /dev/null 2>&1
 					then	echo "$command: ${warn}$CC: must be a C compiler (not C++)" >&2
-					else	cat pkg$$.e
+					else	cat pkg$pid.e
 						echo "$command: ${warn}$CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
 					fi
 					exit 2
 				}
-				if ./pkg$$.exe >/dev/null 2>&1
+				if ./pkg$pid.exe >/dev/null 2>&1
 				then	code=0
 				else	code=1
 				fi
-				rm -f pkg$$.*
+				rm -f pkg$pid.*
 				exit $code
 			)
 			code=$?
@@ -3193,7 +3195,7 @@ cygwin.*)
 		lose=ntsec
 		;;
 	*ntsec*);;
-	*)	exe=/tmp/pkg$$.exe
+	*)	exe=/tmp/pkg$pid.exe
 		rm -f $exe
 		: > $exe
 		if	test -x $exe
@@ -4428,9 +4430,9 @@ admin)	while	test ! -f $admin_db
 			esac
 			: type=$type host=$host root=$root date=$date time=$time make=$make test=$test write=$write :
 			name=$host
-			host=`echo $name | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789],__,g'`
-			eval x='$'${host}_index
-			eval ${host}_index=1
+			hash=`echo $name | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789],__,g'`
+			eval x='$'${hash}_index
+			eval ${hash}_index=1
 			case $x in
 			1)	i=0
 				while	:
@@ -4440,9 +4442,9 @@ admin)	while	test ! -f $admin_db
 						;;
 					esac
 					i=`expr $i + 1`
-					eval h='$'${admin_host}${i}_name
+					eval h='$'${admin_host}${i}_hash
 					case $h in
-					$host)	host=${admin_host}${i}
+					$hash)	host=${admin_host}${i}
 						eval user='$'${host}_user root='$'${host}_rsh:$host:'$'${host}_root
 						break
 						;;
@@ -4565,7 +4567,7 @@ admin)	while	test ! -f $admin_db
 			'')	local_hosts="$local_hosts $host"
 				;;
 			esac
-			eval ${host}_name='$'name ${host}_type='$'type ${host}_user='$'user ${host}_sync='$'sync ${host}_snarf='$'sync ${host}_rsh='$'rsh ${host}_root='$'root ${host}_keep='$'keep ${host}_log='$'log
+			eval ${host}_name='$'name ${host}_hash='$'hash ${host}_type='$'type ${host}_user='$'user ${host}_sync='$'sync ${host}_snarf='$'sync ${host}_rsh='$'rsh ${host}_root='$'root ${host}_keep='$'keep ${host}_log='$'log
 			;;
 		esac
 	done
@@ -5528,7 +5530,7 @@ make|view)
 				$b*)	cc=$b
 					;;
 				$s*)	cd $INSTALLROOT/lib/package/gen
-					tmp=pkg$$
+					tmp=pkg$pid
 					eval '$'exec echo "'int main(){return 0;}' > $tmp.c"
 					if	$exec $s -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
 						test -x $tmp.exe
@@ -5609,7 +5611,7 @@ make|view)
 	esac
 	case $exec in
 	'')	cd $INSTALLROOT/lib/package/gen
-		tmp=pkg$$
+		tmp=pkg$pid
 		echo 'int main(){return 0;}' > $tmp.c
 		if	$CC -o $tmp.exe $tmp.c > /dev/null 2> $tmp.err &&
 			test -x $tmp.exe

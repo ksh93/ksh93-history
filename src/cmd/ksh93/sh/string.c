@@ -26,7 +26,6 @@
 #include	<ast.h>
 #include	<ast_wchar.h>
 #include	"defs.h"
-#include	<stak.h>
 #include	<ccode.h>
 #include	"shtable.h"
 #include	"lexstates.h"
@@ -172,7 +171,7 @@ int sh_lookopt(register const char *sp, int *invert)
  * look for the substring <oldsp> in <string> and replace with <newsp>
  * The new string is put on top of the stack
  */
-char *sh_substitute(const char *string,const char *oldsp,char *newsp)
+char *sh_substitute(Shell_t *shp,const char *string,const char *oldsp,char *newsp)
 /*@
 	assume string!=NULL && oldsp!=NULL && newsp!=NULL;
 	return x satisfying x==NULL ||
@@ -182,7 +181,7 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 	register const char *sp = string;
 	register const char *cp;
 	const char *savesp = 0;
-	stakseek(0);
+	stkseek(shp->stk,0);
 	if(*sp==0)
 		return((char*)0);
 	if(*(cp=oldsp) == 0)
@@ -202,7 +201,7 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 				sp++;
 			while(c-- > 0)
 #endif /* SHOPT_MULTIBYTE */
-			stakputc(*sp++);
+			sfputc(shp->stk,*sp++);
 		}
 		if(*sp == 0)
 			return((char*)0);
@@ -223,10 +222,10 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 
 found:
 	/* copy new */
-	stakputs(newsp);
+	sfputr(shp->stk,newsp,-1);
 	/* copy rest of string */
-	stakputs(sp);
-	return(stakfreeze(1));
+	sfputr(shp->stk,sp,-1);
+	return(stkfreeze(shp->stk,1));
 }
 
 /*

@@ -5646,7 +5646,7 @@ is specified, then break
 .I n\^
 levels.
 .TP
-\f3builtin\fP \*(OK \f3\-ds\fP \*(CK \*(OK \f3\-f\fP \f2file\^\fP \*(CK \*(OK \f2name\^\fP .\|.\|. \*(CK
+\f3builtin\fP \*(OK \f3\-dsp\fP \*(CK \*(OK \f3\-f\fP \f2file\^\fP \*(CK \*(OK \f2name\^\fP .\|.\|. \*(CK
 If
 .I name\^
 is not specified,
@@ -5670,7 +5670,7 @@ via the
 file will be associate with the pathname of the directory containing the
 .B .paths
 file.
-.P
+.sp .5
 The ISO C/C++ prototype is
 \f3b_\fP\f2mycommand\fP\f3(int\fP \f2argc\fP, \f3char *\fP\f2argv\fP\f3[]\fP, \f3void *\fP\f2context\fP\f3)\fP
 for the builtin command
@@ -5706,6 +5706,13 @@ whose name is
 .B lib_init()
 and invokes this function with an argument of
 .BR 0 .
+.sp .5
+The
+.B \-p
+causes the output to be in a form of
+.B builtin
+commands that can be used as input to the shell to recreate the current
+set of builtins.
 .TP
 .PD 0
 \f3cd\fP \*(OK \f3\-LP\fP \*(CK \*(OK \f2arg\^\fP \*(CK
@@ -6220,12 +6227,12 @@ for a description of the format of
 .IR job .
 .TP
 .PD 0
-\f3kill\fP \*(OK \f3\-s\fP \f2signame\^\fP \*(CK \f2job\^\fP .\|.\|.
+\f3kill\fP \*(OK \f3\-s\fP \f2signame\^\fP  \*(CK \*(OK \f3\-q\fP \f2n\^\fP \ \*(CK \f2job\^\fP .\|.\|.
 .TP
 .PD 0
-\f3kill\fP \*(OK \f3\-n\fP \f2signum\^\fP \*(CK \f2job\^\fP .\|.\|.
+\f3kill\fP \*(OK \f3\-n\fP \f2signum\^\fP \*(CK \*(OK \f3\-q\fP \f2n\^\fP \ \*(CK \f2job\^\fP .\|.\|.
 .TP
-\f3kill\fP \f3\-Ll\fP \*(OK \f2sig\^\fP .\|.\|. \*(CK
+\f3kill\fP \f3\-Ll\fP  \*(OK \f2sig\^\fP .\|.\|. \*(CK
 .PD
 Sends either the TERM (terminate) signal or the
 specified signal to the specified jobs or processes.
@@ -6278,6 +6285,21 @@ that is a number, the signal name corresponding to the
 least significant 8 bits of
 .I sig\^
 is listed.
+.sp .5
+On systems that support
+.IR sigqueue (2)
+the
+.B \-q
+option can be used to send a queued signal with message number
+.IR n .
+The specified
+.IR job s
+must be a positive number.  On systems that do not support
+.IR sigqueue (2),
+a signal is sent without the message number
+.I n\^
+and will not be queued.
+
 .TP
 \f3let\fP \f2arg\^\fP .\|.\|.
 Each
@@ -7106,7 +7128,7 @@ Suspends execution for the number of decimal seconds or fractions of a
 second given by
 .IR seconds .
 .TP
-\(dg \f3trap\fP \*(OK \f3\-p\fP \*(CK \*(OK \f2action\^\fP \*(CK \*(OK \f2sig\^\fP \*(CK .\|.\|.
+\(dg \f3trap\fP \*(OK \f3\-ap\fP \*(CK \*(OK \f2action\^\fP \*(CK \*(OK \f2sig\^\fP \*(CK .\|.\|.
 The
 .B \-p
 option causes the trap
@@ -7119,6 +7141,11 @@ will be processed as if it were an argument to
 when the shell
 receives signal(s)
 .IR sig .
+.sp .5
+The
+.B \-a
+option causes the current trap setting to be appended to
+.IR action .
 Each
 .I sig\^
 can be given as a number or as the name of the signal.
@@ -7143,6 +7170,7 @@ If
 is the null
 string then this signal is ignored by the shell and by the commands
 it invokes.
+.sp .5
 If
 .I sig\^
 is
@@ -7151,6 +7179,7 @@ is
 then
 .I action\^
 will be executed whenever a command has a non-zero exit status.
+.sp .5
 If
 .I sig\^
 is
@@ -7172,6 +7201,7 @@ If the exit status of the trap is
 .B 255
 and inside a function or a dot script,
 the function or dot script will return.
+.sp .5
 If
 .I sig\^
 is
@@ -7189,20 +7219,14 @@ then the command
 .I action\^
 is executed
 after the function completes.
-If
-.I sig\^
-is
-.B 0
-or
-.SM
-.B EXIT
-for a
+For a
 .B trap
 set outside any function
 then the command
 .I action\^
 is executed
 on exit from the shell.
+.sp .5
 If
 .I sig\^
 is
@@ -7222,7 +7246,7 @@ The
 command
 with no arguments prints a list
 of commands associated with each signal number.
-.PP
+.sp .5
 An
 .B exit
 or
@@ -7839,11 +7863,9 @@ then the shell is assumed to be a
 shell and
 commands are read from
 .B /etc/profile
-and then from either
-.B .profile
-in the current directory or
+and then from
 .BR \s-1$HOME\s+1/.profile ,
-if either file exists.
+if it exists.
 Next, for interactive shells, commands are read from
 the file named by
 performing parameter expansion, command substitution,

@@ -1,3 +1,6 @@
+12-07-31 cdt: sync with kpv
+12-07-31 error.h: add { Error_write_f, void* handle } for sh_exit()
+12-07-30 astsa: update to handle installation that already have { aso cdt sfio vmalloc }
 12-07-25 pathprobe.c: fix read() loop to handle EINTR
 12-06-28 vmalloc/malloc.c: use sbrk() unless VMALLOC_OPTIONS=mmap or asoinit(0,0,0)!=0 (workaround until next malloc update)
 12-06-28 aso/aso.c: asoinit(0,0,0): 0: no specific init, 1: app initialized

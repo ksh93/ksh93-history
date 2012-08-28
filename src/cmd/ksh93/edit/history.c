@@ -153,7 +153,7 @@ static History_t *hist_ptr;
 		int n;
 		if((n = fcntl(acctfd, F_DUPFD, 10)) >= 0)
 		{
-			close(acctfd);
+			sh_close(acctfd);
 			acctfd = n;
 		}
 	}
@@ -203,7 +203,7 @@ static int sh_checkaudit(History_t *hp, const char *name, char *logbuf, size_t l
 	}
 	while(*cp==';' ||  *cp==' ');
 done:
-	close(fd);
+	sh_close(fd);
 	return(r);
 	
 }
@@ -239,13 +239,12 @@ int  sh_histinit(void *sh_context)
 		return(1);
 	if(!(histname = nv_getval(HISTFILE)))
 	{
-		int offset = staktell();
+		int offset = stktell(shp->stk);
 		if(cp=nv_getval(HOME))
-			stakputs(cp);
-		stakputs(hist_fname);
-		stakputc(0);
-		stakseek(offset);
-		histname = stakptr(offset);
+			sfputr(shp->stk,cp,-1);
+		sfputr(shp->stk,hist_fname,0);
+		stkseek(shp->stk,offset);
+		histname = stkptr(shp->stk,offset);
 	}
 #ifdef future
 	if(hp=wasopen)
@@ -272,14 +271,14 @@ retry:
 		int n;
 		if((n=fcntl(fd,F_DUPFD,10))>=0)
 		{
-			close(fd);
+			sh_close(fd);
 			fd=n;
 		}
 	}
 	/* make sure that file has history file format */
 	if(hsize && hist_check(fd))
 	{
-		close(fd);
+		sh_close(fd);
 		hsize = 0;
 		if(unlink(cp)>=0)
 			goto retry;
@@ -308,7 +307,7 @@ retry:
 	for(histmask=16;histmask <= maxlines; histmask <<=1 );
 	if(!(hp=new_of(History_t,(--histmask)*sizeof(off_t))))
 	{
-		close(fd);
+		sh_close(fd);
 		return(0);
 	}
 	shgd->hist_ptr = hist_ptr = hp;
@@ -374,14 +373,14 @@ retry:
 #endif /* KSHELL */
 	sh_timeradd(1000L*(HIST_RECENT-30), 1, hist_touch, (void*)hp->histname);
 #if SHOPT_ACCTFILE
-	if(sh_isstate(SH_INTERACTIVE))
+	if(sh_isstate(shp,SH_INTERACTIVE))
 		acctinit(hp);
 #endif /* SHOPT_ACCTFILE */
 #if SHOPT_AUDIT
 	{
 		char buff[SF_BUFSIZE];
 		hp->auditfp = 0;
-		if(sh_isstate(SH_INTERACTIVE) && (hp->auditmask=sh_checkaudit(hp,SHOPT_AUDITFILE, buff, sizeof(buff))))
+		if(sh_isstate(shp,SH_INTERACTIVE) && (hp->auditmask=sh_checkaudit(hp,SHOPT_AUDITFILE, buff, sizeof(buff))))
 		{
 			if((fd=sh_open(buff,O_BINARY|O_WRONLY|O_APPEND|O_CREAT,S_IRUSR|S_IWUSR))>=0 && fd < 10)
 			{
@@ -425,7 +424,7 @@ void hist_close(register History_t *hp)
 #if SHOPT_ACCTFILE
 	if(acctfd)
 	{
-		close(acctfd);
+		sh_close(acctfd);
 		acctfd = 0;
 	}
 #endif /* SHOPT_ACCTFILE */
@@ -470,7 +469,7 @@ static History_t* hist_trim(History_t *hp, int n)
 		/* The unlink can fail on windows 95 */
 		int fd;
 		char *last, *name=hist_old->histname;
-		close(sffileno(hist_old->histfp));
+		sh_close(sffileno(hist_old->histfp));
 		tmpname = (char*)malloc(strlen(name)+14);
 		if(last = strrchr(name,'/'))
 		{
@@ -736,7 +735,7 @@ again:
 				hist_marker(buff,hp->histind);
 				write(fd,(char*)hist_stamp,2);
 				write(fd,buff,HIST_MARKSZ);
-				close(fd);
+				sh_close(fd);
 			}
 		}
 		last = 0;
@@ -781,7 +780,7 @@ void hist_flush(register History_t *hp)
 		{
 			hist_close(hp);
 			if(!sh_histinit(hp->histshell))
-				sh_offoption(SH_HISTORY);
+				sh_offoption((Shell_t*)hp->histshell,SH_HISTORY);
 		}
 		hp->histflush = 0;
 	}
@@ -803,6 +802,7 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 	register char *bufptr = ((char*)buff)+insize;
 	register int c,size = insize;
 	register off_t cur;
+	Shell_t *shp = hp->histshell;
 	int saved=0;
 	char saveptr[HIST_MARKSZ];
 	if(!hp->histflush)
@@ -834,7 +834,7 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 	if(hp->auditfp)
 	{
 		time_t	t=time((time_t*)0);
-		sfprintf(hp->auditfp,"%u;%u;%s;%*s%c",sh_isoption(SH_PRIVILEGED)?shgd->euserid:shgd->userid,t,hp->tty,size,buff,0);
+		sfprintf(hp->auditfp,"%u;%u;%s;%*s%c",sh_isoption(shp,SH_PRIVILEGED)?shgd->euserid:shgd->userid,t,hp->tty,size,buff,0);
 		sfsync(hp->auditfp);
 	}
 #endif	/* SHOPT_AUDIT */
@@ -842,13 +842,13 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 	if(acctfd)
 	{
 		int timechars, offset;
-		offset = staktell();
-		stakputs(buff);
-		stakseek(staktell() - 1);
-		timechars = sfprintf(staksp, "\t%s\t%x\n",logname,time(NIL(long *)));
+		offset = stktell(shp->stk);
+		sfputr(shp->stk,buff,-1);
+		stkseek(shp->stk,stktell(shp->stk) - 1);
+		timechars = sfprintf(shp->stk, "\t%s\t%x\n",logname,time(NIL(long *)));
 		lseek(acctfd, (off_t)0, SEEK_END);
-		write(acctfd, stakptr(offset), size - 2 + timechars);
-		stakseek(offset);
+		write(acctfd, stkptr(shp->stk,offset), size - 2 + timechars);
+		stkseek(shp->stk,offset);
 
 	}
 #endif /* SHOPT_ACCTFILE */
@@ -1020,7 +1020,7 @@ int hist_match(register History_t *hp,off_t offset,char *string,int *coffset)
 	if(!(cp = first = (unsigned char*)sfgetr(hp->histfp,0,0)))
 		return(-1);
 	m = sfvalue(hp->histfp);
-	n = strlen(string);
+	n = (int)strlen(string);
 	while(m > n)
 	{
 		if(*cp==*string && memcmp(cp,string,n)==0)
@@ -1044,7 +1044,6 @@ int hist_match(register History_t *hp,off_t offset,char *string,int *coffset)
 }
 
 
-#if SHOPT_ESH || SHOPT_VSH
 /*
  * copy command <command> from history file to s1
  * at most <size> characters copied
@@ -1128,9 +1127,7 @@ char *hist_word(char *string,int size,int word)
 	return(string);
 }
 
-#endif	/* SHOPT_ESH */
 
-#if SHOPT_ESH
 /*
  * given the current command and line number,
  * and number of lines back or foward,
@@ -1176,7 +1173,6 @@ done:
 	next.hist_command = command;
 	return(next);
 }
-#endif	/* SHOPT_ESH */
 
 
 /*
@@ -1195,7 +1191,7 @@ static int hist_exceptf(Sfio_t* fp, int type, Sfdisc_t *handle)
 		if(errno==ENOSPC || hp->histwfail++ >= 10)
 			return(0);
 		/* write failure could be NFS problem, try to re-open */
-		close(oldfd=sffileno(fp));
+		sh_close(oldfd=sffileno(fp));
 		if((newfd=open(hp->histname,O_BINARY|O_APPEND|O_CREAT|O_RDWR,S_IRUSR|S_IWUSR)) >= 0)
 		{
 			if(fcntl(newfd, F_DUPFD, oldfd) !=oldfd)

@@ -30,7 +30,12 @@
 #include <ast_sa.h>
 #include <ast_common.h>
 
+#if _PACKAGE_sfio
+#include <sfio.h>
+#else
 #include <stdio.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -115,6 +120,8 @@ typedef struct
 #define strton(s,t,b,f)		strtol(s,t,0)
 #define strtonll(s,t,b,f)	strtoll(s,t,0)
 
+#if !_PACKAGE_sfio
+
 #define Sfio_t		FILE
 
 #define sfstdin		stdin
@@ -142,13 +149,16 @@ typedef struct
 
 #include <sfstr.h>
 
+extern char*		sfgetr(Sfio_t*, int, int);
+
+#endif
+
 extern _Ast_info_t	ast;
 
 extern int		astwinsize(int, int*, int*);
 extern int		chresc(const char*, char**);
 extern char*		fmtbuf(size_t);
 extern char*		fmtip4(uint32_t, int);
-extern char*		sfgetr(Sfio_t*, int, int);
 extern char*		strcopy(char*, const char*);
 extern int		strmatch(const char*, const char*);
 extern int		strtoip4(const char*, char**, uint32_t*, unsigned char*);

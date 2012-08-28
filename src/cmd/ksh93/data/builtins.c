@@ -91,11 +91,7 @@ const struct shtable3 shtab_builtins[] =
 	"unalias",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(unalias),
 	"unset",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(unset),
 	"builtin",	NV_BLTIN,			bltin(builtin),
-#if SHOPT_ECHOPRINT
-	"echo",		NV_BLTIN|BLT_ENV,		bltin(print),
-#else
 	"echo",		NV_BLTIN|BLT_ENV,		Bltin(echo),
-#endif /* SHOPT_ECHOPRINT */
 #ifdef JOBS
 #   ifdef SIGTSTP
 	"bg",		NV_BLTIN|BLT_ENV,		bltin(bg),
@@ -109,6 +105,13 @@ const struct shtable3 shtab_builtins[] =
 #endif	/* JOBS */
 	"false",	NV_BLTIN|BLT_ENV,		bltin(false),
 	"getopts",	NV_BLTIN|BLT_ENV,		bltin(getopts),
+#if 0
+	"mkservice",	NV_BLTIN|BLT_ENV,		bltin(mkservice),
+	"eloop",	NV_BLTIN|BLT_ENV,		bltin(eloop),
+#endif
+#if SHOPT_POLL
+	"poll",		NV_BLTIN|BLT_ENV,		bltin(poll),
+#endif
 	"print",	NV_BLTIN|BLT_ENV,		bltin(print),
 	"printf",	NV_BLTIN|BLT_ENV,		bltin(printf),
 	"pwd",		NV_BLTIN,			bltin(pwd),
@@ -226,9 +229,7 @@ const char sh_set[] =
 		"compatibility mode only. On by default in interactive "
 		"shells.]"
 #endif
-#if SHOPT_HISTEXPAND
 		"[+histexpand?Equivalent to \b-H\b.]"
-#endif
 		"[+ignoreeof?Prevents an interactive shell from exiting on "
 			"reading an end-of-file.]"
 		"[+keyword?Equivalent to \b-k\b.]"
@@ -299,9 +300,7 @@ const char sh_set[] =
 	"\bnoclobber\b option.]"
 "[G?Causes \b**\b by itself to also match all sub-directories during pathname "
 	"expansion.]"
-#if SHOPT_HISTEXPAND
    "[H?Enable \b!\b-style history expansion similar to \bcsh\b.]"
-#endif
 ;
 
 const char sh_optbreak[] =
@@ -384,7 +383,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optbuiltin[] =
-"[-1c?\n@(#)$Id: builtin (AT&T Research) 2010-08-04 $\n]"
+"[-1c?\n@(#)$Id: builtin (AT&T Research) 2012-07-12 $\n]"
 USAGE_LICENSE
 "[+NAME?builtin - add, delete, or display shell built-ins]"
 "[+DESCRIPTION?\bbuiltin\b can be used to add, delete, or display "
@@ -427,6 +426,9 @@ USAGE_LICENSE
     "searched in the reverse order in which they are specified.]"
 "[l?List the library base name, plugin YYYYMMDD version stamp, and full "
     "path for \b-f\b\alib\a on one line on the standard output.]"
+"[p?Causes the output to be in a form of \bbuiltin\b commands that can be "
+	"used as input to the shell to recreate the current set of "
+	"builtins.]"
 "[s?Display only the special built-ins.]"
 "\n"
 "\n[pathname ...]\n"
@@ -440,7 +442,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optcd[] =
-"[-1c?\n@(#)$Id: cd (AT&T Research) 1999-06-05 $\n]"
+"[-1c?\n@(#)$Id: cd (AT&T Research) 2012-07-10 $\n]"
 USAGE_LICENSE
 "[+NAME?cd - change working directory ]"
 "[+DESCRIPTION?\bcd\b changes the current working directory of the "
@@ -481,6 +483,10 @@ USAGE_LICENSE
 "[P?The present working directory is first converted to an absolute pathname "
 	"that does not contain symbolic link components and symbolic name "
 	"components are expanded in the resulting directory name.]"
+#ifdef O_XATTR
+"[@?Change into the hidden attribute directory of a file or directory.  The "
+       "\bCDPATH\b environment variable is being ignored.]"
+#endif
 "\n"
 "\n[directory]\n"
 "old new\n"
@@ -560,9 +566,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bcommand\b(1), \bksh\b(1)]"
 ;
 
-#ifndef ECHOPRINT
-    const char sh_optecho[]	= " [-n] [arg...]";
-#endif /* !ECHOPRINT */
+const char sh_optecho[]	= " [-n] [arg...]";
 
 const char sh_opteval[] =
 "[-1c?\n@(#)$Id: eval (AT&T Research) 1999-07-07 $\n]"
@@ -977,10 +981,8 @@ USAGE_LICENSE
 "[l?List the commands rather than editing and reexecuting them.]"
 "[N]#[num?Start at \anum\a commands back.]" 
 "[n?Suppress the command numbers when the commands are listed.]"
-#if SHOPT_HISTEXPAND
 "[p?Writes the result of history expansion for each operand to standard "
 	"output.  All other options are ignored.]"
-#endif
 "[r?Reverse the order of the commands.]"
 "[s?Reexecute the command without invoking an editor.  In this case "
 	"an operand of the form \aold\a\b=\b\anew\a can be specified "
@@ -1001,7 +1003,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optkill[]	 = 
-"[-1c?\n@(#)$Id: kill (AT&T Research) 2012-04-13 $\n]"
+"[-1c?\n@(#)$Id: kill (AT&T Research) 2012-07-05 $\n]"
 USAGE_LICENSE
 "[+NAME?kill - terminate or signal process]"
 "[+DESCRIPTION?With the first form in which \b-l\b is not specified, "
@@ -1021,6 +1023,10 @@ _JOB_
 "[l?List signal names or signal numbers rather than sending signals as "
 	"described above.  "
 	"The \b-n\b and \b-s\b options cannot be specified.]"
+"[q]#[n?On systems that support \asigqueue\a(2), send a queued signal with "
+	"message number \an\a.  The specified \ajob\as must be a positive "
+	"number.  On systems that do not support \asigqueue\a(2), a signal "
+	"is sent without the message number \an\a and will not be queued.]"
 "[L?Same as \b-l\b except that of no argument is specified the signals will "
 	"be listed in menu format as with select compound command.]"
 "[n]#[signum?Specify a signal number to send.  Signal numbers are not "
@@ -1548,7 +1554,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttrap[] =
-"[-1c?\n@(#)$Id: trap (AT&T Research) 1999-07-17 $\n]"
+"[-1c?\n@(#)$Id: trap (AT&T Research) 2012-07-05 $\n]"
 USAGE_LICENSE
 "[+NAME?trap - trap signals and conditions]"
 "[+DESCRIPTION?\btrap\b is a special built-in that defines actions to be "
@@ -1587,6 +1593,7 @@ USAGE_LICENSE
 	"non-zero exit status, but does not terminate the invoking shell.]"
 "[+?If no \aaction\a or \acondition\as are specified then all the current "
 	"trap settings are written to standard output.]" 
+"[a?append the current trap setting to the specified \aaction\a.]"
 "[p?Causes the current traps to be output in a format that can be processed "
 	"as input to the shell to recreate the current traps.]"
 "\n"
@@ -1702,7 +1709,6 @@ USAGE_LICENSE
 	"notation.  \an\a specifies the number of significant figures when the "
 	"value is expanded.]"
 
-#ifdef SHOPT_TYPEDEF
 "[h]:[string?Used within a type definition to provide a help string  "
 	"for variable \aname\a.  Otherwise, it is ignored.]"
 "[S?Used with a type definition to indicate that the variable is shared by "
@@ -1710,7 +1716,6 @@ USAGE_LICENSE
 	"with the \bfunction\b reserved word, the specified variables "
 	"will have function static scope.  Otherwise, the variable is "
 	"unset prior to processing the assignment list.]"
-#endif
 "[T]:?[tname?\atname\a is the name of a type name given to each \aname\a.]"
 "[Z]#?[n?Zero fill.  If \an\a is given it represents the field width.]"
 "\n"

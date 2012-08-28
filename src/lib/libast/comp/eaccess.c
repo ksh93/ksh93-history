@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -43,6 +43,9 @@ NoN(eaccess)
 extern int
 eaccess(const char* path, register int flags)
 {
+#if defined(AT_FDCWD) && defined(AT_EACCESS)
+	return faccessat(AT_FDCWD, path, flags, AT_EACCESS);
+#else
 #ifdef EFF_ONLY_OK
 	return access(path, flags|EFF_ONLY_OK);
 #else
@@ -132,6 +135,7 @@ eaccess(const char* path, register int flags)
  nope:
 	errno = EACCES;
 	return -1;
+#endif
 #endif
 #endif
 }

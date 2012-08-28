@@ -10,7 +10,7 @@ valgrindflags='--xml=yes --log-file=/dev/null --track-origins=yes --read-var-inf
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2012-05-29 $
+@(#)$Id: shtests (AT&T Research) 2012-08-24 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -242,21 +242,25 @@ fi
 export PATH PWD SHCOMP SHELL VMALLOC_OPTIONS
 PWD=$(pwd)
 SHELL=${SHELL-ksh}
-case $0 in
-/*)	d=$(dirname $0);;
-*/*)	d=$PWD/$(dirname $0);;
-*)	d=$PWD;;
+case ${0%/*} in
+*/bin)	case $0 in
+	/*)	bin=$(dirname $0);;
+	*)	bin=$PWD/$(dirname $0);;
+	esac
+	;;
+*)	bin=$PWD
+	;;
 esac
 case $SHELL in
 /*)	;;
-*/*)	SHELL=$d/$SHELL;;
+*/*)	SHELL=$bin/$SHELL;;
 *)	SHELL=$(whence $SHELL);;
 esac
 PATH=/bin:/usr/bin
 if	[[ -d /usr/ucb ]]
 then	PATH=$PATH:/usr/ucb
 fi
-PATH=$PATH:$d
+PATH=$PATH:$bin
 if	[[ $INSTALLROOT && -r $INSTALLROOT/bin/.paths ]]
 then	PATH=$INSTALLROOT/bin:$PATH
 fi

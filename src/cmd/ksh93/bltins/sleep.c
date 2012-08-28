@@ -51,7 +51,7 @@ int	b_sleep(register int argc,char *argv[],Shbltin_t *context)
 	time_t tloc = 0;
 	char *last;
 	if(!(shp->sigflag[SIGALRM]&(SH_SIGFAULT|SH_SIGOFF)))
-		sh_sigtrap(SIGALRM);
+		sh_sigtrap(shp,SIGALRM);
 	while((argc = optget(argv,sh_optsleep))) switch(argc)
 	{
 		case 's':
@@ -86,10 +86,27 @@ int	b_sleep(register int argc,char *argv[],Shbltin_t *context)
 			}
 			else if(*last!='.' && *last!=',')
 			{
-				if(pp = sfprints("exact %s", cp))
-					ns = tmxdate(pp, &last, now);
-				if(*last && (pp = sfprints("p%s", cp)))
-					ns = tmxdate(pp, &last, now);
+				if(*last && last>cp && last[1]==0)
+				{
+					switch(*last)
+					{
+					    case 'd':
+						d *=24;
+					    case 'h':
+						d *=60;
+					    case 'm':
+						d *=60;
+					    case 's':
+						goto skip;
+					}
+				}
+				else
+				{
+					if(pp = sfprints("exact %s", cp))
+						ns = tmxdate(pp, &last, now);
+					if(*last && (pp = sfprints("p%s", cp)))
+						ns = tmxdate(pp, &last, now);
+				}
 			}
 			if(*last)
 				errormsg(SH_DICT,ERROR_exit(1),e_number,*argv);

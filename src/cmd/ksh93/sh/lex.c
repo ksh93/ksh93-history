@@ -190,10 +190,10 @@ static void lex_advance(Sfio_t *iop, const char *buff, register int size, void *
 	/* write to history file and to stderr if necessary */
 	if(iop && !sfstacked(iop))
 	{
-		if(sh_isstate(SH_HISTORY) && shp->gd->hist_ptr)
+		if(sh_isstate(shp,SH_HISTORY) && shp->gd->hist_ptr)
 			log = shp->gd->hist_ptr->histfp;
 		sfwrite(log, (void*)buff, size);
-		if(sh_isstate(SH_VERBOSE))
+		if(sh_isstate(shp,SH_VERBOSE))
 			sfwrite(sfstderr, buff, size);
 	}
 #endif
@@ -262,18 +262,18 @@ static int lexfill(Lex_t *lp)
 /*
  * mode=1 for reinitialization  
  */
-Lex_t *sh_lexopen(Lex_t *lp, Shell_t *sp, int mode)
+Lex_t *sh_lexopen(Lex_t *lp, Shell_t *shp, int mode)
 {
 	if(!lp)
 	{
 		lp = (Lex_t*)newof(0,Lex_t,1,0);
-		lp->sh = sp;
+		lp->sh = shp;
 	}
 	fcnotify(lex_advance,lp);
 	lp->lex.intest = lp->lex.incase = lp->lex.skipword = lp->lexd.warn = 0;
 	lp->comp_assign = 0;
 	lp->lex.reservok = 1;
-	if(!sh_isoption(SH_DICTIONARY) && sh_isoption(SH_NOEXEC))
+	if(!sh_isoption(shp,SH_DICTIONARY) && sh_isoption(shp,SH_NOEXEC))
 		lp->lexd.warn=1;
 	if(!mode)
 	{
@@ -570,9 +570,9 @@ int sh_lex(Lex_t* lp)
 						return(lp->token=c);
 					else if(c=='&')
 					{
-						if(!sh_isoption(SH_POSIX) && n=='>' && (sh_isoption(SH_BASH) || sh_isstate(SH_PROFILE)))
+						if(!sh_isoption(lp->sh,SH_POSIX) && n=='>' && (sh_isoption(lp->sh,SH_BASH) || sh_isstate(lp->sh,SH_PROFILE)))
 						{
-							if(!sh_isoption(SH_BASH) && !lp->nonstandard)
+							if(!sh_isoption(lp->sh,SH_BASH) && !lp->nonstandard)
 							{
 								lp->nonstandard = 1;
 								errormsg(SH_DICT,ERROR_warn(0),e_lexnonstandard,shp->inlineno);
@@ -942,9 +942,7 @@ int sh_lex(Lex_t* lp)
 							poplevel(lp);
 						}
 						break;
-#if SHOPT_TYPEDEF
 					case '@':
-#endif /* SHOPT_TYPEDEF */
 					case '!':
 						if(n!=S_ALP)
 							goto dolerr;
@@ -1263,7 +1261,7 @@ int sh_lex(Lex_t* lp)
 				/* check for reserved word { or } */
 				if(lp->lex.reservok && state[n]==S_BREAK && isfirst)
 					break;
-				if(sh_isoption(SH_BRACEEXPAND) && c==LBRACE && !assignment && state[n]!=S_BREAK
+				if(sh_isoption(lp->sh,SH_BRACEEXPAND) && c==LBRACE && !assignment && state[n]!=S_BREAK
 					&& !lp->lex.incase && !lp->lex.intest
 					&& !lp->lex.skipword)
 				{
@@ -1358,7 +1356,7 @@ breakloop:
 			c = (wordflags&ARG_EXP);
 		n = 1;
 	}
-	else if(n>2 && state[0]=='{' && state[n-1]=='}' && !lp->lex.intest && !lp->lex.incase && (c=='<' || c== '>') && sh_isoption(SH_BRACEEXPAND))
+	else if(n>2 && state[0]=='{' && state[n-1]=='}' && !lp->lex.intest && !lp->lex.incase && (c=='<' || c== '>') && sh_isoption(lp->sh,SH_BRACEEXPAND))
 	{
 		if(!strchr(state,','))
 		{
@@ -1388,7 +1386,7 @@ breakloop:
 	}
 	if(c&ARG_MESSAGE)
 	{
-		if(sh_isoption(SH_DICTIONARY))
+		if(sh_isoption(lp->sh,SH_DICTIONARY))
 			lp->arg = sh_endword(shp,2);
 		c |= ARG_MAC;
 	}
@@ -1533,7 +1531,7 @@ breakloop:
 				&& !nv_isattr(np,NV_NOEXPAND)
 #if KSHELL
 				&& (lp->aliasok!=2 || nv_isattr(np,BLT_DCL))
-				&& (!sh_isstate(SH_NOALIAS) || nv_isattr(np,NV_NOFREE))
+				&& (!sh_isstate(lp->sh,SH_NOALIAS) || nv_isattr(np,NV_NOFREE))
 #endif /* KSHELL */
 				&& (state=nv_getval(np)))
 			{
@@ -2136,7 +2134,7 @@ void	sh_syntax(Lex_t *lp)
 	shp->inlineno = lp->inlineno;
 	shp->st.firstline = lp->firstline;
 #if KSHELL
-	if(!sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_PROFILE))
+	if(!sh_isstate(shp,SH_INTERACTIVE) && !sh_isstate(shp,SH_PROFILE))
 #else
 	if(shp->inlineno!=1)
 #endif
@@ -2171,7 +2169,7 @@ static char *stack_shift(Stk_t *stkp, register char *sp,char *dp)
 struct argnod *sh_endword(Shell_t *shp,int mode)
 {
 	register const char *state = sh_lexstates[ST_NESTED];
-	register int n;
+	register size_t n;
 	register char *sp,*dp;
 	register int inquote=0, inlit=0; /* set within quoted strings */
 	struct argnod* argp=0;

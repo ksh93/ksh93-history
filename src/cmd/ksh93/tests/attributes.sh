@@ -469,4 +469,10 @@ typeset -Z2 foo=3
 export foo
 [[ $(typeset -p foo) == 'typeset -x -Z 2 -R 2 foo=03' ]] || err_exit '-Z2  not working after export'
 
+unset foo
+export foo=/C/TEMP
+typeset -H bar=$foo
+got=$( $SHELL -c 'typeset -H foo;print -r -- "$foo')
+[[ $got == "$bar" ]] || err_exit 'typeset -H not working for export variables'
+
 exit $((Errors<125?Errors:125))

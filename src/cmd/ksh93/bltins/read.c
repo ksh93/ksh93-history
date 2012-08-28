@@ -96,7 +96,7 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		flags |= C_FLAG;
 		break;
 	    case 't':
-		sec = sh_strnum(opt_info.arg, (char**)0,1);
+		sec = sh_strnum(shp,opt_info.arg, (char**)0,1);
 		timeout = sec ? 1000*sec : 1;
 		break;
 	    case 'd':
@@ -184,13 +184,20 @@ bypass:
 	return(r);
 }
 
+struct timeout
+{
+	Shell_t	*shp;
+	Sfio_t	*iop;
+};
+
 /*
  * here for read timeout
  */
 static void timedout(void *handle)
 {
-	sfclrlock((Sfio_t*)handle);
-	sh_exit(1);
+	struct timeout *tp = (struct timeout*)handle;
+	sfclrlock(tp->iop);
+	sh_exit(tp->shp,1);
 }
 
 /*
@@ -200,7 +207,6 @@ static void timedout(void *handle)
  *  <flags> is union of -A, -r, -s, and contains delimiter if not '\n'
  *  <timeout> is number of milli-seconds until timeout
  */
-
 int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,ssize_t size,long timeout)
 {
 	register ssize_t	c;
@@ -338,7 +344,12 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		if(jmpval)
 			goto done;
 		if(timeout)
-	                timeslot = (void*)sh_timeradd(timeout,0,timedout,(void*)iop);
+		{
+			struct timeout tmout;
+			tmout.shp = shp;
+			tmout.iop = iop;
+	                timeslot = (void*)sh_timeradd(timeout,0,timedout,(void*)&tmout);
+		}
 	}
 	if(flags&(N_FLAG|NN_FLAG))
 	{
@@ -347,7 +358,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		if((c=size)>=sizeof(buf))
 		{
 			if(!(var = (char*)malloc(c+1)))
-				sh_exit(1);
+				sh_exit(shp,1);
 			end = var + c;
 		}
 		else
@@ -539,7 +550,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 	else
 		c = S_NL;
 	shp->nextprompt = 2;
-	rel= staktell();
+	rel= stktell(shp->stk);
 	/* val==0 at the start of a field */
 	val = 0;
 	del = 0;
@@ -566,12 +577,20 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 #endif /*SHOPT_MULTIBYTE */
 		    case S_QUOTE:
 			c = shp->ifstable[*cp++];
-			inquote = !inquote;
+			if(inquote && c==S_QUOTE)
+				c = -1;
+			else
+				inquote = !inquote;
 			if(val)
 			{
-				stakputs(val);
+				sfputr(shp->stk,val,-1);
 				use_stak = 1;
 				*val = 0;
+			}
+			if(c== -1)
+			{
+				sfputc(shp->stk,'"');
+				c = shp->ifstable[*cp++];
 			}
 			continue;
 		    case S_ESC:
@@ -582,7 +601,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 				c = 0;
 			if(val)
 			{
-				stakputs(val);
+				sfputr(shp->stk,val,-1);
 				use_stak = 1;
 				was_escape = 1;
 				*val = 0;
@@ -595,7 +614,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			/* check for end of buffer */
 			if(val && *val)
 			{
-				stakputs(val);
+				sfputr(shp->stk,val,-1);
 				use_stak = 1;
 			}
 			val = 0;
@@ -686,7 +705,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 						{
 							if(val)
 							{
-								stakwrite(val,cp-(unsigned char*)val);
+								sfwrite(shp->stk,val,cp-(unsigned char*)val);
 								use_stak = 1;
 							}
 							val = (char*)++cp;
@@ -700,7 +719,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 						{
 							if(val)
 							{
-								stakwrite(val,cp-(unsigned char*)val);
+								sfwrite(shp->stk,val,cp-(unsigned char*)val);
 								use_stak=1;
 							}
 							if(cp = (unsigned char*)sfgetr(iop,delim,0))
@@ -730,9 +749,8 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			val = "";
 		if(use_stak)
 		{
-			stakputs(val);
-			stakputc(0);
-			val = stakptr(rel);
+			sfputr(shp->stk,val,0);
+			val = stkptr(shp->stk,rel);
 		}
 		if(!name && *val)
 		{
@@ -759,7 +777,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		del = 0;
 		if(use_stak)
 		{
-			stakseek(rel);
+			stkseek(shp->stk,rel);
 			use_stak = 0;
 		}
 		if(array_index)
@@ -771,10 +789,10 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		}
 		while(1)
 		{
-			if(sh_isoption(SH_ALLEXPORT)&&!strchr(nv_name(np),'.') && !nv_isattr(np,NV_EXPORT))
+			if(sh_isoption(shp,SH_ALLEXPORT)&&!strchr(nv_name(np),'.') && !nv_isattr(np,NV_EXPORT))
 			{
 				nv_onattr(np,NV_EXPORT);
-				sh_envput(shp->env,np);
+				sh_envput(shp,np);
 			}
 			if(name)
 			{

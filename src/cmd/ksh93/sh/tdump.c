@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -156,7 +156,7 @@ static int p_tree(register const Shnode_t *t)
 
 static int p_arg(register const struct argnod *arg)
 {
-	register int n;
+	register ssize_t n;
 	struct fornod *fp;
 	while(arg)
 	{

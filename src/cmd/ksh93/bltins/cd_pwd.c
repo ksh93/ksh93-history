@@ -19,8 +19,8 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * cd [-LP]  [dirname]
- * cd [-LP]  [old] [new]
+ * cd [-LP@]  [dirname]
+ * cd [-LP@]  [old] [new]
  * pwd [-LP]
  *
  *   David Korn
@@ -38,6 +38,10 @@
 #include	"builtins.h"
 #include	<ls.h>
 
+#ifndef EINTR_REPEAT
+#   define EINTR_REPEAT(expr) while((expr) && (errno == EINTR)) errno=0;
+#endif
+
 /*
  * Invalidate path name bindings to relative paths
  */
@@ -49,6 +53,101 @@ static void rehash(register Namval_t *np,void *data)
 		_nv_unset(np,0);
 }
 
+/*
+ * Obtain a file handle to the directory "path" relative to directory
+ * "dir", or open a NFSv4 xattr directory handle for file dir/path.
+ */
+int sh_diropenat(Shell_t *shp, int dir, const char *path, int xattr)
+{
+	int fd,apfd,shfd;
+	int savederrno=errno;
+#ifndef AT_FDCWD
+	NOT_USED(dir);
+#endif
+#ifndef O_XATTR
+	NOT_USED(xattr);
+#endif
+
+#ifdef O_XATTR
+	if(xattr)
+	{
+		int apfd; /* attribute parent fd */
+		/* open parent node... */
+		EINTR_REPEAT((apfd = openat(dir, path, O_RDONLY|O_NONBLOCK|O_cloexec)) < 0);
+		if(apfd < 0)
+			return -1;
+
+		/* ... and then open a fd to the attribute directory */
+		 EINTR_REPEAT((fd = openat(apfd, e_dot, O_XATTR|O_cloexec)) < 0);
+
+		savederrno = errno;
+		EINTR_REPEAT(close(apfd) < 0);
+		errno = savederrno;
+	}
+	else
+#endif
+	{
+#ifdef AT_FDCWD
+		/*
+		 * Open directory. First we try without |O_SEARCH| and
+		 * if this fails with EACCESS we try with |O_SEARCH|
+		 * again.
+		 * This is required ...
+		 * - ... because some platforms may require that it can
+		 * only be used for directories while some filesystems
+		 * (e.g. Reiser4 or HSM systems) allow a |fchdir()| into
+		 * files, too)
+		 * - ... to preserve the semantics of "cd", e.g.
+		 * otherwise "cd" would return [No access] instead of
+		 * [Not a directory] for files on filesystems which do
+		 * not allow a "cd" into files.
+		 * - ... to allow that a
+		 * $ redirect {n}</etc ; cd /dev/fd/$n # works on most
+		 * platforms.
+		 */
+		EINTR_REPEAT((fd = openat(dir, path, O_RDONLY|O_NONBLOCK|O_cloexec)) < 0);
+#   ifdef O_SEARCH
+		if((fd < 0) && (errno == EACCES))
+		{
+			EINTR_REPEAT((fd = openat(dir, path, O_SEARCH|O_cloexec)) < 0)
+		}
+#   endif
+#else
+		/*
+		 * Version of openat() call above for systems without
+		 * openat API. This only works because we basically
+		 * gurantee that |dir| is always the same place as
+		 * |cwd| on such machines (but this won't be the case
+		 * in the future).
+		 */
+		/*
+		 * This |fchdir()| call is not needed (yet) since
+		 * all consumers do not use |dir| when |AT_FDCWD|
+		 * is not available.
+		 *
+		 * fchdir(dir);
+		 */
+		EINTR_REPEAT((fd = open(path, O_cloexec)) < 0);
+#endif
+	}
+
+	if(fd < 0)
+		return fd;
+
+	/* Move fd to a number > 10 and *register* the fd number with the shell */
+	shfd = sh_fcntl(fd, F_DUPFD, 10);
+	savederrno=errno;
+	sh_close(fd);
+	/*
+	 * FIXME: |sh_fcntl()| should implement F_DUPFD_CLOEXEC
+	 * and F_DUP2FD_CLOEXEC to reduce the number of system calls
+	 */
+	if(shfd >=0)
+		sh_fcntl(shfd, F_SETFD, FD_CLOEXEC);
+	errno=savederrno;
+	return shfd;
+}
+
 int	b_cd(int argc, char *argv[],Shbltin_t *context)
 {
 	register char *dir;
@@ -56,10 +155,11 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	register const char *dp;
 	register Shell_t *shp = context->shp;
 	int saverrno=0;
-	int rval,flag=0;
+	int rval,flag=0,xattr=0;
 	char *oldpwd;
+	int newdirfd;
 	Namval_t *opwdnod, *pwdnod;
-	if(sh_isoption(SH_RESTRICTED))
+	if(sh_isoption(shp,SH_RESTRICTED))
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted+4);
 	while((rval = optget(argv,sh_optcd))) switch(rval)
 	{
@@ -69,6 +169,11 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		case 'P':
 			flag = 1;
 			break;
+#ifdef O_XATTR
+		case '@':
+			xattr = 1;
+			break;
+#endif
 		case ':':
 			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
@@ -85,7 +190,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	opwdnod = (shp->subshell?sh_assignok(OLDPWDNOD,1):OLDPWDNOD); 
 	pwdnod = (shp->subshell?sh_assignok(PWDNOD,1):PWDNOD); 
 	if(argc==2)
-		dir = sh_substitute(oldpwd,dir,argv[1]);
+		dir = sh_substitute(shp,oldpwd,dir,argv[1]);
 	else if(!dir)
 		dir = nv_getval(HOME);
 	else if(*dir == '-' && dir[1]==0)
@@ -139,6 +244,15 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 			dir = sfstruse(shp->strbuf);
 		}
 	}
+#ifdef O_XATTR
+	if (xattr)
+#   ifdef PATH_BFPATH
+		cdpath = NULL;
+#   else
+		cdpath = "";
+#   endif
+#endif
+
 	rval = -1;
 	do
 	{
@@ -168,25 +282,79 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 			register char *cp;
 			stakseek(PATH_MAX+PATH_OFFSET);
 #if SHOPT_FS_3D
-			if(!(cp = pathcanon(stakptr(PATH_OFFSET),PATH_DOTDOT)))
+			if(!(cp = pathcanon(stakptr(PATH_OFFSET),PATH_MAX,PATH_DOTDOT)))
 				continue;
 			/* eliminate trailing '/' */
 			while(*--cp == '/' && cp>stakptr(PATH_OFFSET))
 				*cp = 0;
 #else
 			if(*(cp=stakptr(PATH_OFFSET))=='/')
-				if(!pathcanon(cp,PATH_DOTDOT))
+				if(!pathcanon(cp,PATH_MAX,PATH_DOTDOT))
 					continue;
 #endif /* SHOPT_FS_3D */
 		}
-		if((rval=chdir(path_relative(shp,stakptr(PATH_OFFSET)))) >= 0)
-			goto success;
-		if(errno!=ENOENT && saverrno==0)
-			saverrno=errno;
+		rval = newdirfd = sh_diropenat(shp,
+			((shp->pwdfd >= 0)?shp->pwdfd:AT_FDCWD),
+			path_relative(shp,stakptr(PATH_OFFSET)), xattr);
+		if(newdirfd >=0)
+		{
+			/* chdir for directories on HSM/tapeworms may take minutes */
+			if(fchdir(newdirfd) >= 0)
+			{
+				if(shp->pwdfd >= 0)
+					sh_close(shp->pwdfd);
+				shp->pwdfd=newdirfd;
+				goto success;
+			}
+		}
+#ifndef O_SEARCH
+		else
+		{
+			if((rval=chdir(path_relative(shp,stakptr(PATH_OFFSET)))) >= 0)
+			{
+				if(shp->pwdfd >= 0)
+				{
+					sh_close(shp->pwdfd);
+					shp->pwdfd = -1;
+				}
+			}
+		}
+#endif
+		if(saverrno==0)
+                        saverrno=errno;
+		if(newdirfd >=0)
+			sh_close(newdirfd);
 	}
 	while(cdpath);
 	if(rval<0 && *dir=='/' && *(path_relative(shp,stakptr(PATH_OFFSET)))!='/')
-		rval = chdir(dir);
+	{
+		rval = newdirfd = sh_diropenat(shp,
+			((shp->pwdfd >= 0)?shp->pwdfd:AT_FDCWD), dir, xattr);
+		if(newdirfd >=0)
+		{
+			/* chdir for directories on HSM/tapeworms may take minutes */
+			if(fchdir(newdirfd) >= 0)
+			{
+				if(shp->pwdfd >= 0)
+					sh_close(shp->pwdfd);
+				shp->pwdfd=newdirfd;
+				goto success;
+			}
+		}
+#ifndef O_SEARCH
+		else
+		{
+			if(chdir(dir) >=0)
+			{
+				if(shp->pwdfd >= 0)
+				{
+					sh_close(shp->pwdfd);
+					shp->pwdfd=-1;
+				}
+			}
+		}
+#endif
+	}
 	/* use absolute chdir() if relative chdir() fails */
 	if(rval<0)
 	{
@@ -200,7 +368,7 @@ success:
 	if(flag)
 	{
 		dir = stakptr(PATH_OFFSET);
-		if (!(dir=pathcanon(dir,PATH_PHYSICAL)))
+		if (!(dir=pathcanon(dir,PATH_MAX,PATH_PHYSICAL)))
 		{
 			dir = stakptr(PATH_OFFSET);
 			errormsg(SH_DICT,ERROR_system(1),"%s:",dir);
@@ -213,7 +381,7 @@ success:
 	if(*dir != '/')
 		return(0);
 	nv_putval(opwdnod,oldpwd,NV_RDONLY);
-	flag = strlen(dir);
+	flag = (int)strlen(dir);
 	/* delete trailing '/' */
 	while(--flag>0 && dir[flag]=='/')
 		dir[flag] = 0;
@@ -264,7 +432,7 @@ int	b_pwd(int argc, char *argv[],Shbltin_t *context)
 		else
 #endif /* SHOPT_FS_3D */
 			cp = strcpy(stakseek(strlen(cp)+PATH_MAX),cp);
-		pathcanon(cp,PATH_PHYSICAL);
+		pathcanon(cp,PATH_MAX,PATH_PHYSICAL);
 	}
 	sfputr(sfstdout,cp,'\n');
 	return(0);

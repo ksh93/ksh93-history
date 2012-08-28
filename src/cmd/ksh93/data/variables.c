@@ -99,6 +99,8 @@ const struct shtable2 shtab_variables[] =
 	".sh.stats",	0,				(char*)0,
 	".sh.math",	0,				(char*)0,
 	".sh.pool",	0,				(char*)0,
+	".sh.pgrp",	0,				(char*)0,
+	".sh.sig",	0,				(char*)0,
 	"SHLVL",	NV_INTEGER|NV_NOFREE|NV_EXPORT,	(char*)0,
 #if SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,
@@ -106,31 +108,44 @@ const struct shtable2 shtab_variables[] =
 #if SHOPT_MULTIBYTE
 	"CSWIDTH",	0,				(char*)0,
 #endif /* SHOPT_MULTIBYTE */
-#ifdef apollo
-	"SYSTYPE",	0,				(char*)0,
-#endif /* apollo */
 	"",	0,					(char*)0
 };
 
 const char *nv_discnames[] = { "get", "set", "append", "unset", "getn", 0 };
 
+const Shtable_t	shtab_siginfo[] =
+{
+	"signo",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"name",		NV_RDONLY|NV_MINIMAL|NV_NOFREE,
+	"pid",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"uid",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"value",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER|NV_LONG,
+	"code",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"status",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"errno",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"addr",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER|NV_LONG,
+	"band",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER|NV_LONG,
+	"",			0
+};
+
 #ifdef SHOPT_STATS
 const Shtable_t shtab_stats[] =
 {
-	"arg_cachehits",	STAT_ARGHITS,
-	"arg_expands",		STAT_ARGEXPAND,
-	"comsubs",		STAT_COMSUB,
-	"forks",		STAT_FORKS,
-	"funcalls",		STAT_FUNCT,
-	"globs",		STAT_GLOBS,
-	"linesread",		STAT_READS,
-	"nv_cachehit",		STAT_NVHITS,
-	"nv_opens",		STAT_NVOPEN,
-	"pathsearch",		STAT_PATHS,
-	"posixfuncall",		STAT_SVFUNCT,
-	"simplecmds",		STAT_SCMDS,
-	"spawns",		STAT_SPAWN,
-	"subshell",		STAT_SUBSHELL
+	"arg_cachehits",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"arg_expands",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"comsubs",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"forks",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"funcalls",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"globs",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"linesread",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"nv_cachehit",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"nv_opens",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"pathsearch",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"posixfuncall",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"simplecmds",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"spawns",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"subshell",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
+	"",			0
 };
 #endif /* SHOPT_STATS */
 

@@ -54,6 +54,7 @@
 #define IOSUBSHELL	0x8000	/* must be larger than any file descriptor */
 #define IOPICKFD	0x10000 /* file descriptor number was selected automatically */
 #define IOHERESTRING	0x20000 /* allow here documents to be string streams */
+#define IOSAVESTRING	0x40000 /* string file was saved */
 
 /*
  * The remainder of this file is only used when compiled with shell
@@ -67,10 +68,10 @@
 
 extern int	sh_iocheckfd(Shell_t*,int);
 extern void 	sh_ioinit(Shell_t*);
-extern int 	sh_iomovefd(int);
+extern int 	sh_iomovefd(Shell_t*,int);
 extern int	sh_iorenumber(Shell_t*,int,int);
 extern void 	sh_pclose(int[]);
-extern int	sh_rpipe(int[]);
+extern int 	sh_rpipe(int[]);
 extern void 	sh_iorestore(Shell_t*,int,int);
 #if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
    __EXPORT__

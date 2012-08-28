@@ -143,8 +143,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	regdecomp.c regerror.c regexec.c regfatal.c reginit.c regnexec.c \
 	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c regstat.c \
 	/* cdt */ \
-	dthdr.h dtclose.c dtdisc.c dthash.c dtlist.c dtmethod.c \
-	dtopen.c dtstrhash.c dttree.c dtview.c dtwalk.c \
+	dthdr.h dtclose.c dtdisc.c dthash.c dtlist.c dtmethod.c dtopen.c \
+	dtstat.c dtstrhash.c dttree.c dtuser.c dtview.c dtwalk.c \
 	dtnew.c dtcomp.c \
 	/* sfio */ \
 	sfhdr.h sfdchdr.h \

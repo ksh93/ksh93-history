@@ -660,5 +660,15 @@ d="${v/~(E)b{2,4}/dummy}"
 [[ ${.sh.match} == bbb ]] || err_exit '.sh.match wrong after ${s/~(E)b{2,4}/dummy}'
 [[ $d == adummyc ]] || err_exit '${s/~(E)b{2,4}/dummy} not working'
 
+x=1234
+: "${x//~(X)([012])|([345])/}"
+x=$(print -v .sh.match)
+compound co
+typeset -m co.array=.sh.match
+[[ $x == "$(print -v co.array)" ]] || err_exit 'typeset -m for .sh.match to compound variable not working'
+: "${x//~(X)([012])|([345])/}"
+set +x
+
+[[ ${.sh.match[1][600..602]} ]] && err_exit '${.sh.match[0][600:602]} is not the emptry string'
 
 exit $((Errors<125?Errors:125))

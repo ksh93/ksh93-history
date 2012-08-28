@@ -52,11 +52,13 @@ static int htable(Dt_t* dt)
 	if((n = hash->tblz) > 0 && (hash->type&H_FIXED) )
 		return 0; /* fixed size table */
 
-	if(n == 0 && disc && disc->eventf) /* let user have input */
+	if(disc && disc->eventf) /* let user have input */
 	{	if((*disc->eventf)(dt, DT_HASHSIZE, &n, disc) > 0 )
 		{	if(n < 0) /* fix table size */
 			{	hash->type |= H_FIXED;
-				n = -n;
+				n = -n; /* desired table size */
+				if(hash->tblz >= n ) /* table size is fixed now */
+					return 0;
 			}
 		}
 	}
@@ -234,12 +236,13 @@ static Void_t* hstat(Dt_t* dt, Dtstat_t* st)
 
 		for(endt = (t = hash->htbl) + hash->tblz; t < endt; ++t)
 		{	for(n = 0, l = *t; l; l = l->_rght)
+			{	if(n < DT_MAXSIZE)
+					st->lsize[n] += 1;
 				n += 1;
+			}
 			st->mlev = n > st->mlev ? n : st->mlev;
 			if(n < DT_MAXSIZE) /* if chain length is small */
-			{	st->msize = n > st->msize ? n : st->msize;
-				st->lsize[n] += n;
-			}
+				st->msize = n > st->msize ? n : st->msize;
 		}
 	}
 
@@ -310,7 +313,7 @@ int	type;
 	hsh = _DTHSH(dt,key,disc);
 
 	tbl = hash->htbl + (hsh & (hash->tblz-1));
-	pp = ll = NIL(Dtlink_t*);
+	pp = ll = NIL(Dtlink_t*); /* pp is the before, ll is the here */
 	for(p = NIL(Dtlink_t*), l = *tbl; l; p = l, l = l->_rght)
 	{	if(hsh == l->_hash)
 		{	o = _DTOBJ(disc,l); k = _DTKEY(disc,o);
@@ -342,20 +345,41 @@ int	type;
 			_dtfree(dt, ll, type);
 			DTRETURN(obj, _DTOBJ(disc,ll));
 		}
+		else if(type & DT_INSTALL )
+		{	if(dt->meth->type&DT_BAG)
+				goto do_insert;
+			else if(!(lnk = _dtmake(dt, obj, type)) )
+				DTRETURN(obj, NIL(Void_t*) );
+			else /* replace old object with new one */
+			{	if(pp) /* remove old object */
+					pp->_rght = ll->_rght;
+				else	*tbl = ll->_rght;
+				o = _DTOBJ(disc,ll);
+				_dtfree(dt, ll, DT_DELETE);
+				DTANNOUNCE(dt, o, DT_DELETE);
+
+				goto do_insert;
+			}
+		}
 		else
 		{	/**/DEBUG_ASSERT(type&(DT_INSERT|DT_ATTACH|DT_APPEND|DT_RELINK));
-			if(!(dt->meth->type&DT_BAG) )
+			if((dt->meth->type&DT_BAG) )
+				goto do_insert;
+			else
 			{	if(type&(DT_INSERT|DT_APPEND|DT_ATTACH) )
-					type |= DT_SEARCH; /* for announcement */
+					type |= DT_MATCH; /* for announcement */
 				else if(lnk && (type&DT_RELINK) )
+				{	/* remove a duplicate */
+					o = _DTOBJ(disc, lnk);
 					_dtfree(dt, lnk, DT_DELETE);
+					DTANNOUNCE(dt, o, DT_DELETE);
+				}
 				DTRETURN(obj, _DTOBJ(disc,ll));
 			}
-			else	goto do_insert;
 		}
 	}
 	else /* no matching object */
-	{	if(!(type&(DT_INSERT|DT_APPEND|DT_ATTACH|DT_RELINK)) )
+	{	if(!(type&(DT_INSERT|DT_INSTALL|DT_APPEND|DT_ATTACH|DT_RELINK)) )
 			DTRETURN(obj, NIL(Void_t*));
 
 	do_insert: /* inserting a new object */
@@ -385,7 +409,9 @@ dt_return:
 
 static int hashevent(Dt_t* dt, int event, Void_t* arg)
 {
+	Dtlink_t	*list;
 	Dthash_t	*hash = (Dthash_t*)dt->data;
+	int		rv = -1;
 
 	if(event == DT_OPEN)
 	{	if(hash)

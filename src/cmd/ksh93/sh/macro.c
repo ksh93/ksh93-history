@@ -46,11 +46,6 @@
 #include	"national.h"
 #include	"streval.h"
 
-#undef STR_GROUP
-#ifndef STR_GROUP
-#   define STR_GROUP	0
-#endif
-
 #if SHOPT_MULTIBYTE
 #   undef isascii
 #   define isacii(c)	((c)<=UCHAR_MAX)
@@ -105,11 +100,11 @@ typedef struct  _mac_
 #define M_NAMECOUNT	7	/* ${#var*}	*/
 #define M_TYPE		8	/* ${@var}	*/
 
-static int	substring(const char*, const char*, int[], int);
+static int	substring(const char*, size_t, const char*, int[], int);
 static void	copyto(Mac_t*, int, int);
 static void	comsubst(Mac_t*, Shnode_t*, int);
 static int	varsub(Mac_t*);
-static void	mac_copy(Mac_t*,const char*, int);
+static void	mac_copy(Mac_t*,const char*, size_t);
 static void	tilde_expand2(Shell_t*,int);
 static char 	*sh_tilde(Shell_t*,const char*);
 static char	*special(Shell_t *,int);
@@ -223,7 +218,7 @@ int sh_macexpand(Shell_t* shp, register struct argnod *argp, struct argnod **arg
 	mp->let = ((flag&ARG_LET)!=0);
 	mp->split = !(flag&ARG_ASSIGN);
 	mp->assign = !mp->split;
-	mp->pattern = mp->split && !(flag&ARG_NOGLOB) && !sh_isoption(SH_NOGLOB);
+	mp->pattern = mp->split && !(flag&ARG_NOGLOB) && !sh_isoption(mp->shp,SH_NOGLOB);
 	mp->arrayok = mp->arith || (flag&ARG_ARRAYOK);
 	str = argp->argval;
 	fcsopen(str);
@@ -440,15 +435,17 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	register int	c,n;
 	register const char	*state = sh_lexstates[ST_MACRO];
 	register char	*cp,*first;
-	Lex_t		*lp = (Lex_t*)mp->shp->lex_context;
+	Shell_t		*shp = mp->shp;
+	Lex_t		*lp = (Lex_t*)shp->lex_context;
 	int		tilde = -1;
 	int		oldquote = mp->quote;
 	int		ansi_c = 0;
 	int		paren = 0;
 	int		ere = 0;
+	int		dotdot = 0;
 	int		brace = 0;
 	Sfio_t		*sp = mp->sp;
-	Stk_t		*stkp = mp->shp->stk;
+	Stk_t		*stkp = shp->stk;
 	char		*resume = 0;
 	mp->sp = NIL(Sfio_t*);
 	mp->quote = newquote;
@@ -518,7 +515,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					sfputc(stkp,ESCAPE);
 				break;
 			}
-			else if(sh_isoption(SH_BRACEEXPAND) && mp->pattern==4 && (*cp==',' || *cp==LBRACE || *cp==RBRACE || *cp=='.'))
+			else if(sh_isoption(shp,SH_BRACEEXPAND) && mp->pattern==4 && (*cp==',' || *cp==LBRACE || *cp==RBRACE || *cp=='.'))
 				break;
 			else if(mp->split && endch && !mp->quote && !mp->lit)
 			{
@@ -670,7 +667,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			c += (n!=S_EOF);
 			first = fcseek(c);
 			if(tilde>=0)
-				tilde_expand2(mp->shp,tilde);
+				tilde_expand2(shp,tilde);
 			goto done;
 		    case S_QUOTE:
 			if(mp->lit || mp->arith)
@@ -774,7 +771,7 @@ e_badsubscript,*cp);
 		    case S_BRACE:
 			if(!(mp->quote || mp->lit))
 			{
-				mp->patfound = mp->split && sh_isoption(SH_BRACEEXPAND);
+				mp->patfound = mp->split && sh_isoption(shp,SH_BRACEEXPAND);
 				brace++;
 			}
 		    pattern:
@@ -809,7 +806,7 @@ e_badsubscript,*cp);
 				if(c)
 					sfwrite(stkp,first,c);
 				first = fcseek(c);
-				tilde_expand2(mp->shp,tilde);
+				tilde_expand2(shp,tilde);
 #if _WINIX
 				if(Skip)
 				{
@@ -845,7 +842,7 @@ e_badsubscript,*cp);
 			{
 				sfwrite(stkp,first,c);
 				sfputc(stkp,0);
-				mp->dotdot = stktell(stkp);
+				dotdot = stktell(stkp);
 				cp = first = fcseek(c+2);
 			}
 			break;
@@ -853,6 +850,7 @@ e_badsubscript,*cp);
 	}
 done:
 	mp->sp = sp;
+	mp->dotdot = dotdot;
 	mp->quote = oldquote;
 }
 
@@ -968,7 +966,7 @@ static char *prefix(Shell_t *shp, char *id)
 			cp[1] = 0;
 		if(np && nv_isref(np))
 		{
-			int n;
+			size_t n;
 			char *sp;
 			shp->argaddr = 0;
 			while(nv_isref(np) && np->nvalue.cp)
@@ -1009,7 +1007,6 @@ static int subcopy(Mac_t *mp, int flag)
 	mp->pattern = flag?4:0;
 	mp->arrayok=1;
 	mp->subcopy++;
-	mp->dotdot = 0;
 	copyto(mp,RBRACT,0);
 	mp->subcopy = 0;
 	mp->pattern = xpattern;
@@ -1058,7 +1055,7 @@ int sh_macfun(Shell_t *shp, const char *name, int offset)
 static int namecount(Mac_t *mp,const char *prefix)
 {
 	int count = 0;
-	mp->nvwalk = nv_diropen((Namval_t*)0,prefix);
+	mp->nvwalk = nv_diropen((Namval_t*)0,prefix,mp->shp);
 	while(nv_dirnext(mp->nvwalk))
 		count++;
 	nv_dirclose(mp->nvwalk);
@@ -1070,7 +1067,7 @@ static char *nextname(Mac_t *mp,const char *prefix, int len)
 	char *cp;
 	if(len==0)
 	{
-		mp->nvwalk = nv_diropen((Namval_t*)0,prefix);
+		mp->nvwalk = nv_diropen((Namval_t*)0,prefix,mp->shp);
 		return((char*)mp->nvwalk);
 	}
 	if(!(cp=nv_dirnext(mp->nvwalk)))
@@ -1098,6 +1095,7 @@ static int varsub(Mac_t *mp)
 	Stk_t		*stkp = mp->shp->stk;
 retry1:
 	mp->zeros = 0;
+	mp->dotdot = 0;
 	idbuff[0] = 0;
 	idbuff[1] = 0;
 	c = fcmbget(&LEN);
@@ -1117,13 +1115,11 @@ retry1:
 			{
 				if(c=='#')
 					type = M_SIZE;
-#ifdef SHOPT_TYPEDEF
 				else if(c=='@')
 				{
 					type = M_TYPE;
 					goto retry1;
 				}
-#endif /* SHOPT_TYPEDEF */
 				else
 					type = M_VNAME;
 				mode = c;
@@ -1348,7 +1344,7 @@ retry1:
 					ap = nv_arrayptr(np=nq);
 				if(ap)
 				{
-					nv_putsub(np,v,ARRAY_SCAN);
+					np = nv_putsub(np,v,ARRAY_SCAN);
 					v = stkptr(stkp,mp->dotdot);
 					dolmax =1;
 					if(array_assoc(ap))
@@ -1405,7 +1401,6 @@ retry1:
 				if(ap && !mp->dotdot && !(ap->nelem&ARRAY_UNDEF))
 					addsub = 1;
 			}
-#ifdef SHOPT_TYPEDEF
 			else if(type==M_TYPE)
 			{
 				Namval_t *nq = nv_type(np);
@@ -1416,7 +1411,6 @@ retry1:
 					nv_attribute(np,mp->shp->strbuf,"typeset",1);
 				v = sfstruse(mp->shp->strbuf);
 			}
-#endif /* SHOPT_TYPEDEF */
 #if  SHOPT_FILESCAN
 			else if(mp->shp->cur_line && np==REPLYNOD)
 				v = mp->shp->cur_line;
@@ -1439,14 +1433,14 @@ retry1:
 				if((mp->let || (mp->arith&&nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL)))) && !nv_isattr(np,NV_INTEGER) && (offset==0 || isspace(c) || strchr(",.+-*/=%&|^?!<>",c)))
 					mp->zeros = 1;
 			}
-			if(savptr==stakptr(0))
+			if(savptr==stkptr(stkp,0))
 				stkseek(stkp,offset);
 			else
 				stkset(stkp,savptr,offset);
 		}
 		else
 		{
-			if(sh_isoption(SH_NOUNSET) && !isastchar(mode) && (type==M_VNAME || type==M_SIZE))
+			if(sh_isoption(mp->shp,SH_NOUNSET) && !isastchar(mode) && (type==M_VNAME || type==M_SIZE))
 				errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 			v = 0;
 			if(type==M_VNAME)
@@ -1496,7 +1490,7 @@ retry1:
 			}
 			else
 			{
-				dolmax = strlen(id);
+				dolmax = (int)strlen(id);
 				dolg = -1;
 				nextname(mp,id,0);
 				v = nextname(mp,id,dolmax);
@@ -1567,7 +1561,7 @@ retry1:
 		{
 			int newops = (c=='#' || c == '%' || c=='/');
 			offset = stktell(stkp);
-			if(newops && sh_isoption(SH_NOUNSET) && *id && id!=idbuff  && (!np || nv_isnull(np)))
+			if(newops && sh_isoption(mp->shp,SH_NOUNSET) && *id && id!=idbuff  && (!np || nv_isnull(np)))
 				errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 			if(c=='/' ||c==':' || ((!v || (nulflg && *v==0)) ^ (c=='+'||c=='#'||c=='%')))
 			{
@@ -1627,7 +1621,7 @@ retry1:
 	if(c==':')  /* ${name:expr1[:expr2]} */
 	{
 		char *ptr;
-		type = (int)sh_strnum(argp,&ptr,1);
+		type = (int)sh_strnum(mp->shp,argp,&ptr,1);
 		if(isastchar(mode))
 		{
 			if(id==idbuff)  /* ${@} or ${*} */
@@ -1694,11 +1688,11 @@ retry1:
 #endif /* SHOPT_MULTIBYTE */
 			else
 				v += type;
-			vsize = v?strlen(v):0;
+			vsize = v?(int)strlen(v):0;
 		}
 		if(*ptr==':')
 		{
-			if((type = (int)sh_strnum(ptr+1,&ptr,1)) <=0)
+			if((type = (int)sh_strnum(mp->shp,ptr+1,&ptr,1)) <=0)
 			{
 				v = 0;
 				mp->atmode = 0;
@@ -1733,7 +1727,7 @@ retry1:
 				vsize = type;
 			}
 			else
-				vsize = v?strlen(v):0;
+				vsize = v?(int)strlen(v):0;
 		}
 		if(*ptr)
 			mac_error(np);
@@ -1774,7 +1768,7 @@ retry1:
 			copyto(mp,0,0);
 			sfputc(stkp,0);
 			repstr = strdup(stkptr(stkp,n));
-			replen = strlen(repstr);
+			replen = (int)strlen(repstr);
 			stkseek(stkp,n);
 			*mp = savemac;
 			fcsopen(first);
@@ -1789,29 +1783,30 @@ retry2:
 	if(v && (!nulflg || *v ) && c!='+')
 	{
 		register int d = (mode=='@'?' ':mp->ifs);
-		regoff_t match[2*(MATCH_MAX+1)];
-		int nmatch, nmatch_prev, vsize_last;
-		char *vlast;
+		int match[2*(MATCH_MAX+1)],index;
+		int nmatch, nmatch_prev, vsize_last, tsize;
+		char *vlast,*oldv;
 		while(1)
 		{
 			if(!v)
 				v= "";
 			if(c=='/' || c=='#' || c== '%')
 			{
-				int index = 0;
 				flag = (type || c=='/')?(STR_GROUP|STR_MAXIMAL):STR_GROUP;
 				if(c!='/')
 					flag |= STR_LEFT;
-				nmatch = 0;
+				index = nmatch = 0;
+				tsize = (int)strlen(v);
 				while(1)
 				{
-					vsize = strlen(v);
+					vsize = tsize;
+					oldv = v;
 					nmatch_prev = nmatch;
 					if(c=='%')
-						nmatch=substring(v,pattern,match,flag&STR_MAXIMAL);
+						nmatch=substring(v,tsize,pattern,match,flag&STR_MAXIMAL);
 					else
-						nmatch=strgrpmatch(v,pattern,match,elementsof(match)/2,flag);
-					if(nmatch && replen>0)
+						nmatch=strngrpmatch(v,vsize,pattern,(ssize_t*)match,elementsof(match)/2,flag|STR_INT);
+					if(nmatch && repstr>0)
 						sh_setmatch(mp->shp,v,vsize,nmatch,match,index++);
 					if(nmatch)
 					{
@@ -1838,12 +1833,15 @@ retry2:
 							mac_copy(mp,v,1);
 							v++;
 						}
+						tsize -= v-oldv;
 						continue;
 					}
 					vsize = -1;
 					break;
 				}
-				if(replen==0)
+				if(index>1)
+					sh_setmatch(mp->shp,0,0,nmatch,0,-1);
+				else if(!repstr || (nmatch==0 && index==0))
 					sh_setmatch(mp->shp,vlast,vsize_last,nmatch,match,index++);
 			}
 			if(vsize)
@@ -1972,7 +1970,7 @@ retry2:
 			mac_error(np);
 		}
 	}
-	else if(var && sh_isoption(SH_NOUNSET) && type<=M_TREE && (!np  || nv_isnull(np) || (nv_isarray(np) && !np->nvalue.cp)))
+	else if(var && sh_isoption(mp->shp,SH_NOUNSET) && type<=M_TREE && (!np  || nv_isnull(np) || (nv_isarray(np) && !np->nvalue.cp)))
 	{
 		if(np)
 		{
@@ -2026,9 +2024,9 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	struct _mac_		savemac;
 	int			savtop = stktell(stkp);
 	char			lastc=0, *savptr = stkfreeze(stkp,0);
-	int			was_history = sh_isstate(SH_HISTORY);
-	int			was_verbose = sh_isstate(SH_VERBOSE);
-	int			was_interactive = sh_isstate(SH_INTERACTIVE);
+	int			was_history = sh_isstate(mp->shp,SH_HISTORY);
+	int			was_verbose = sh_isstate(mp->shp,SH_VERBOSE);
+	int			was_interactive = sh_isstate(mp->shp,SH_INTERACTIVE);
 	int			newlines,bufsize,nextnewlines;
 	Sfoff_t			foff;
 	Namval_t		*np;
@@ -2088,8 +2086,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		c = stktell(stkp);
 		str=stkfreeze(stkp,1);
 		/* disable verbose and don't save in history file */
-		sh_offstate(SH_HISTORY);
-		sh_offstate(SH_VERBOSE);
+		sh_offstate(mp->shp,SH_HISTORY);
+		sh_offstate(mp->shp,SH_VERBOSE);
 		if(mp->sp)
 			sfsync(mp->sp);	/* flush before executing command */
 		sp = sfnew(NIL(Sfio_t*),str,c,-1,SF_STRING|SF_READ);
@@ -2127,12 +2125,12 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 					num = lseek(fd, (off_t)0, SEEK_CUR);
 				goto out_offset;
 			}
-			if(!(sp=mp->shp->sftable[fd]))
+			if(!(sp=mp->shp->sftable[fd]) || (sffileno(sp)!=fd &&!(sfset(sp,0,0)&SF_STRING)))
 				sp = sfnew(NIL(Sfio_t*),(char*)malloc(IOBSIZE+1),IOBSIZE,fd,SF_READ|SF_MALLOC);
 			type = 3;
 		}
 		else
-			sp = sh_subshell(mp->shp,t,sh_isstate(SH_ERREXIT),type);
+			sp = sh_subshell(mp->shp,t,sh_isstate(mp->shp,SH_ERREXIT),type);
 		fcrestore(&save);
 	}
 	else
@@ -2140,9 +2138,9 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	sh_freeup(mp->shp);
 	mp->shp->st.staklist = saveslp;
 	if(was_history)
-		sh_onstate(SH_HISTORY);
+		sh_onstate(mp->shp,SH_HISTORY);
 	if(was_verbose)
-		sh_onstate(SH_VERBOSE);
+		sh_onstate(mp->shp,SH_VERBOSE);
 #else
 	sp = sfpopen(NIL(Sfio_t*),str,"r");
 #endif
@@ -2156,7 +2154,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	bufsize = sfvalue(sp);
 	/* read command substitution output and put on stack or here-doc */
 	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
-	sh_offstate(SH_INTERACTIVE);
+	sh_offstate(mp->shp,SH_INTERACTIVE);
 	if((foff = sfseek(sp,(Sfoff_t)0,SEEK_END)) > 0)
 	{
 		size_t soff = stktell(stkp); 
@@ -2227,7 +2225,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		mac_copy(mp,str,c);
 	}
 	if(was_interactive)
-		sh_onstate(SH_INTERACTIVE);
+		sh_onstate(mp->shp,SH_INTERACTIVE);
 	if(--newlines>0 && mp->shp->ifstable['\n']==S_DELIM)
 	{
 		if(mp->sp)
@@ -2250,7 +2248,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 /*
  * copy <str> onto the stack
  */
-static void mac_copy(register Mac_t *mp,register const char *str, register int size)
+static void mac_copy(register Mac_t *mp,register const char *str, register size_t size)
 {
 	register char		*state;
 	register const char	*cp=str;
@@ -2258,6 +2256,13 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 	Stk_t			*stkp=mp->shp->stk;
 	int			oldpat = mp->pattern;
 	nopat = (mp->quote||(mp->assign==1)||mp->arith);
+	if(size>512)
+	{
+		/* pre-allocate to improve performance */
+		c = stktell(stkp);
+		stkseek(stkp,c+size+(size>>4));
+		stkseek(stkp,c);
+	}
 	if(mp->zeros)
 	{
 		/* prevent leading 0's from becomming octal constants */
@@ -2483,7 +2488,7 @@ static void endfield(register Mac_t *mp,int split)
 		if(count>=0)
 		{
 			(*mp->arghead)->argflag |= ARG_MAKE;
-			if(mp->assign || sh_isoption(SH_NOGLOB))
+			if(mp->assign || sh_isoption(mp->shp,SH_NOGLOB))
 				argp->argflag |= ARG_RAW|ARG_EXP;
 		}
 		stkseek(stkp,ARGVAL);
@@ -2495,21 +2500,21 @@ static void endfield(register Mac_t *mp,int split)
  * Finds the right substring of STRING using the expression PAT
  * the longest substring is found when FLAG is set.
  */
-static int substring(register const char *string,const char *pat,int match[], int flag)
+static int substring(register const char *string,size_t len,const char *pat,int match[], int flag)
 {
 	register const char *sp=string;
-	register int size,len,nmatch,n;
+	register int size,nmatch,n;
 	int smatch[2*(MATCH_MAX+1)];
 	if(flag)
 	{
-		if(n=strgrpmatch(sp,pat,smatch,elementsof(smatch)/2,STR_RIGHT|STR_MAXIMAL))
+		if(n=strngrpmatch(sp,len,pat,(ssize_t*)smatch,elementsof(smatch)/2,STR_RIGHT|STR_MAXIMAL|STR_INT))
 		{
 			memcpy(match,smatch,n*2*sizeof(smatch[0]));
 			return(n);
 		}
 		return(0);
 	}
-	size = len = strlen(sp);
+	size = (int)len;
 	sp += size;
 	while(sp>=string)
 	{
@@ -2517,7 +2522,7 @@ static int substring(register const char *string,const char *pat,int match[], in
 		if(mbwide())
 			sp = lastchar(string,sp);
 #endif /* SHOPT_MULTIBYTE */
-		if(n=strgrpmatch(sp,pat,smatch,elementsof(smatch)/2,STR_RIGHT|STR_LEFT|STR_MAXIMAL))
+		if(n=strgrpmatch(sp,pat,(ssize_t*)smatch,elementsof(smatch)/2,STR_RIGHT|STR_LEFT|STR_MAXIMAL|STR_INT))
 		{
 			nmatch = n;
 			memcpy(match,smatch,n*2*sizeof(smatch[0]));
@@ -2610,7 +2615,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	if(np && !beenhere)
 	{
 		beenhere = 1;
-		sh_addbuiltin(shtilde,sh_btilde,0);
+		sh_addbuiltin(shp,shtilde,sh_btilde,0);
 		nv_onattr(np,NV_EXPORT);
 	}
 	av[0] = ".sh.tilde";
@@ -2620,7 +2625,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	sfset(iop,SF_READ,0);
 	sfstdout = iop;
 	if(np)
-		sh_fun(np, (Namval_t*)0, av);
+		sh_fun(shp,np, (Namval_t*)0, av);
 	else
 		sh_btilde(2, av, &shp->bltindata);
 	sfstdout = save;
@@ -2678,18 +2683,18 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 	if(fcgetc(c)=='/')
 	{
 		char	*str;
-		int	n=0,offset=staktell();
-		stakputs(string);
+		int	n=0,offset=stktell(shp->stk);
+		sfputr(shp->stk,string,-1);
 		do
 		{
-			stakputc(c);
+			sfputc(shp->stk,c);
 			n++;
 		}
 		while (fcgetc(c) && c!='/');
-		stakputc(0);
+		sfputc(shp->stk,0);
 		if(c)
 			fcseek(-1);
-		str = stakseek(offset);
+		str = stkseek(shp->stk,offset);
 		Skip = n;
 		if(logins_tree && (np=nv_search(str,logins_tree,0)))
 			return(nv_getval(np));
@@ -2709,7 +2714,10 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 skip:
 #endif /* _WINIX */
 	if(!logins_tree)
+	{
 		logins_tree = dtopen(&_Nvdisc,Dtbag);
+		dtuserdata(logins_tree,shp,1);
+	}
 	if(np=nv_search(string,logins_tree,NV_ADD))
 	{
 		c = shp->subshell;
@@ -2754,11 +2762,11 @@ static char *special(Shell_t *shp,register int c)
 			return(ltos(shp->gd->pid));
 		return(nv_getval(SH_DOLLARNOD));
 	    case '-':
-		return(sh_argdolminus(shp->arg_context));
+		return(sh_argdolminus((void*)shp));
 	    case '?':
 		return(ltos(shp->savexit));
 	    case 0:
-		if(sh_isstate(SH_PROFILE) || shp->fn_depth==0 || !shp->st.cmdname)
+		if(sh_isstate(shp,SH_PROFILE) || shp->fn_depth==0 || !shp->st.cmdname)
 			return(shp->shname);
 		else
 			return(shp->st.cmdname);
