@@ -113,10 +113,9 @@ void	sh_subtmpfile(Shell_t *shp)
 		register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 		register struct subshell *sp = subshell_data->pipe;
 		/* save file descriptor 1 if open */
-		if((sp->tmpfd = fd = fcntl(1,F_DUPFD,10)) >= 0)
+		if((sp->tmpfd = fd = sh_fcntl(1,F_dupfd_cloexec,10)) >= 0)
 		{
 			int err=errno;
-			fcntl(fd,F_SETFD,FD_CLOEXEC);
 			shp->fdstatus[fd] = shp->fdstatus[1]|IOCLEX;
 			while(close(1)<0 && errno==EINTR)
 				errno = err;
@@ -131,7 +130,7 @@ void	sh_subtmpfile(Shell_t *shp)
 			int fds[3];
 			Sfoff_t off;
 			fds[2] = 0;
-			sh_pipe(fds);
+			sh_rpipe(fds);
 			sp->pipefd = fds[0];
 			sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
 			/* write the data to the pipe */
@@ -211,7 +210,7 @@ void sh_subfork(void)
 	}
 }
 
-int nv_subsaved(register Namval_t *np)
+bool nv_subsaved(register Namval_t *np)
 {
 	register struct subshell	*sp;
 	register struct Link		*lp;
@@ -220,10 +219,10 @@ int nv_subsaved(register Namval_t *np)
 		for(lp=sp->svar; lp; lp = lp->next)
 		{
 			if(lp->node==np)
-				return(1);
+				return(true);
 		}
 	}
-	return(0);
+	return(false);
 }
 
 /*
@@ -320,7 +319,7 @@ static void nv_restore(struct subshell *sp)
 		if(nv_isattr(mp,NV_MINIMAL) && !nv_isattr(np,NV_EXPORT))
 			flags |= NV_MINIMAL;
 		if(nv_isarray(mp))
-			 nv_putsub(mp,NIL(char*),ARRAY_SCAN);
+			 nv_putsub(mp,NIL(char*),0,ARRAY_SCAN);
 		nofree = mp->nvfun?mp->nvfun->nofree:0;
 		_nv_unset(mp,NV_RDONLY|NV_CLONE);
 		if(nv_isarray(np))
@@ -487,6 +486,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		subenv = 0;
 	}
 	shp->curenv = ++subenv;
+	if(shp->curenv<=0)
+		shp->curenv = subenv = 1;
 	savst = shp->st;
 	sh_pushcontext(shp,&buff,SH_JMPSUB);
 	subshell = shp->subshell+1;
@@ -509,7 +510,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	if(!shp->pathlist)
 	{
 		shp->pathinit = 1;
-		path_get(shp,".");
+		path_get(shp,e_dot);
 		shp->pathinit = 0;
 	}
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
@@ -522,19 +523,17 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		job.curpgid = 0;
 	sp->subshare = shp->subshare;
 	sp->comsub = shp->comsub;
-	shp->subshare = comsub==2 ||  (comsub==1 && sh_isoption(shp,SH_SUBSHARE));
+	shp->subshare = comsub==2 ||  (comsub && sh_isoption(shp,SH_SUBSHARE));
 	if(comsub)
 		shp->comsub = comsub;
 	sp->shpwdfd=-1;
 	if(!comsub || !shp->subshare)
 	{
 		sp->shpwd = shp->pwd;
-		sp->shpwdfd=((shp->pwdfd >= 0))?sh_fcntl(shp->pwdfd, F_DUPFD, 10):-1;
-		if(sp->shpwdfd>=0)
-			sh_fcntl(sp->shpwdfd, F_SETFD, FD_CLOEXEC);
+		sp->shpwdfd=((shp->pwdfd >= 0))?sh_fcntl(shp->pwdfd, F_dupfd_cloexec, 10):-1;
 #ifdef O_SEARCH
-		else
-			errormsg(SH_DICT,ERROR_exit(1), "Can't obtain directory fd.");
+		if(sp->shpwdfd<0)
+			errormsg(SH_DICT,ERROR_system(1), "Can't obtain directory fd.");
 #endif
 		sp->pwd = (shp->pwd?strdup(shp->pwd):0);
 		sp->mask = shp->mask;
@@ -714,10 +713,10 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			Namval_t *pwdnod = sh_scoped(shp,PWDNOD);
 			if(shp->pwd)
 			{
-                               shp->pwd=sp->pwd;
+				shp->pwd=sp->pwd;
 #ifndef O_SEARCH
-                               if (sp->shpwdfd < 0)
-                                       chdir(shp->pwd);
+				if (sp->shpwdfd < 0)
+					chdir(shp->pwd);
 #endif
 				path_newdir(shp,shp->pathlist);
 			}
@@ -743,13 +742,13 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		shp->cpipe[1] = sp->cpipe;
 		shp->coutpipe = sp->coutpipe;
 	}
-       if(sp->shpwdfd >=0)
-       {
+	if(sp->shpwdfd >=0)
+	{
 		if(shp->pwdfd >=0)
 			sh_close(shp->pwdfd);
 		shp->pwdfd=sp->shpwdfd;
 		fchdir(shp->pwdfd);
-       }
+	}
 	shp->subshare = sp->subshare;
 	shp->comsub = sp->comsub;
 	shp->subdup = sp->subdup;

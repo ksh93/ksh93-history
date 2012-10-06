@@ -155,6 +155,36 @@ define	X_OK		1
 define	W_OK		2
 define	R_OK		4
 
+lib spawnvex fail{
+	echo
+	echo "typedef struct Spawnvex_s"
+	echo "{"
+	echo "	unsigned int	cur;"
+	echo "#ifdef _SPAWNVEX_PRIVATE_"
+	echo "	_SPAWNVEX_PRIVATE_"
+	echo "#endif"
+	echo "} Spawnvex_t;"
+	echo
+	echo "typedef int (*Spawnvex_f)(void*, uintmax_t, uintmax_t);"
+	echo
+	echo "#define SPAWN_FLUSH	0x0001"
+	echo "#define SPAWN_NOCALLBACK	0x0002"
+	echo "#define SPAWN_RESET	0x0004"
+	echo "#define SPAWN_UNDO	0x0008"
+	echo
+	echo "#define SPAWN_noop	(-1)"
+	echo
+	echo "#define SPAWN_cwd		(-2)"
+	echo "#define SPAWN_pgrp	(-3)"
+	echo "#define SPAWN_resetids	(-4)"
+	echo "#define SPAWN_sid		(-5)"
+	echo "#define SPAWN_sigdef	(-6)"
+	echo "#define SPAWN_sigmask	(-7)"
+	echo "#define SPAWN_truncate	(-8)"
+	echo "#define SPAWN_umask	(-9)"
+	echo
+}end
+
 print	#if _BLD_ast && defined(__EXPORT__)
 print	#define extern	__EXPORT__
 print	#endif
@@ -163,7 +193,7 @@ extern	_exit		void		(int)
 extern	abort		void		(void)
 extern	abs		int		(int)
 extern	access		int		(const char*, int)
-extern	alarm		unsigned	(unsigned)
+extern	alarm		unsigned int	(unsigned int)
 extern	atexit		int		(void(*)(void))
 extern	atof		double		(const char*)
 extern	atoi		int		(const char*)
@@ -236,8 +266,13 @@ extern	setgid		int		(gid_t)
 extern	setpgid		int		(pid_t, pid_t)
 extern	setsid		pid_t		(void)
 extern	setuid		int		(uid_t)
-extern	sleep		unsigned		(unsigned int)
+extern	sleep		unsigned int	(unsigned int)
 extern	spawnveg	pid_t		(const char*, char* const[], char* const[], pid_t)
+extern	spawnvex	pid_t		(const char*, char* const[], char* const[], Spawnvex_t*)
+extern	spawnvex_open	Spawnvex_t*	(void)
+extern	spawnvex_add	int		(Spawnvex_t*, intmax_t, intmax_t, Spawnvex_f, void*)
+extern	spawnvex_apply	int		(Spawnvex_t*, int, int)
+extern	spawnvex_close	int		(Spawnvex_t*)
 extern	srand		void		(unsigned int)
 extern	strcasecmp	int		(const char*, const char*)
 extern	strcat		char*		(char*, const char*)

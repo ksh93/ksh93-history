@@ -241,7 +241,7 @@ err=$(
 	        }
 		# consume almost all fds to push the test to the fd limit #
 		integer max=$(ulimit --nofile)
-		(( max -= 6 ))
+		(( max -= 10 ))
 		for ((i=20; i < max; i++))
 		do	exec {i}>&1
 		done
@@ -616,5 +616,16 @@ do	if	[[ -e $f ]]
 	then	$SHELL -c "x=\$(command -p tee $f </dev/null 2>/dev/null)" || err_exit "$f in command substitution fails"
 	fi
 done
+
+$SHELL > /dev/null -c 'echo $(for x in whatever; do case y in *) true;; esac; done)' || err_exit 'syntax error with case in command substitution'
+
+$SHELL 2> /dev/null <<- \EOF || err_exit 'cannot run 100000 subshells'
+	( for ((i=0; i < 100000; i++))
+	do      (b=$(printf %08d ${i}))
+	done )
+EOF
+
+print 'print OK'  | out=$(${SHELL})
+[[ $out == OK ]] || err_exit '$() command substitution not waiting for process completion'
 
 exit $((Errors<125?Errors:125))

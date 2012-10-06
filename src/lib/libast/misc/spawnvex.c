@@ -1,0 +1,782 @@
+/***********************************************************************
+*                                                                      *
+*               This software is part of the ast package               *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*                      and is licensed under the                       *
+*                 Eclipse Public License, Version 1.0                  *
+*                    by AT&T Intellectual Property                     *
+*                                                                      *
+*                A copy of the License is available at                 *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
+*                                                                      *
+*              Information and Software Systems Research               *
+*                            AT&T Research                             *
+*                           Florham Park NJ                            *
+*                                                                      *
+*                 Glenn Fowler <gsf@research.att.com>                  *
+*                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
+*                                                                      *
+***********************************************************************/
+#pragma prototyped
+/*
+ * son of spawnveg()
+ * more cooperative than posix_spawn()
+ */
+
+#define _SPAWNVEX_PRIVATE_ \
+	unsigned int	max; \
+	unsigned int	set; \
+	pid_t		pgrp; \
+	Spawnvex_u*	op;
+
+union _Spawnvex_u;
+typedef union _Spawnvex_u Spawnvex_u;
+
+#include <ast.h>
+
+#if _lib_spawnvex
+
+NoN(spawnvex)
+
+#else
+
+#include <error.h>
+#include <wait.h>
+#include <sig.h>
+
+#ifndef ENOSYS
+#define ENOSYS	EINVAL
+#endif
+
+#define VEXCHUNK	8
+#define VEXFLAG(x)	(1<<(-(x)))
+#define VEXINIT(p)	((p)->set=(p)->cur=0,(p)->pgrp=(-1))
+
+union _Spawnvex_u
+{
+	intmax_t	number;
+	void*		handle;
+	Spawnvex_f	callback;
+};
+
+Spawnvex_t*
+spawnvex_open(void)
+{
+	return newof(0, Spawnvex_t, 1, 0);
+}
+
+int
+spawnvex_add(Spawnvex_t* vex, intmax_t op, intmax_t arg, Spawnvex_f callback, void* handle)
+{
+	unsigned int	per;
+
+	if ((vex->cur + (handle ? 4 : 2)) >= vex->max)
+	{
+		vex->max += VEXCHUNK;
+		if (!(vex->op = oldof(vex->op, Spawnvex_u, vex->max, 0)))
+		{
+			vex->max = 0;
+			VEXINIT(vex);
+			return -1;
+		}
+	}
+	if (op == SPAWN_pgrp)
+	{
+#if OBSOLETE < 20150101
+		if (arg == 1)
+			arg = 0;
+#endif
+		vex->pgrp = arg;
+	}
+	if (op < 0)
+		vex->set |= VEXFLAG(op);
+	op <<= 1;
+	if (handle)
+		op |= 1;
+	vex->op[vex->cur++].number = op;
+	vex->op[vex->cur++].number = arg;
+	if (handle)
+	{
+		vex->op[vex->cur++].handle = handle;
+		vex->op[vex->cur++].callback = callback;
+	}
+	return vex->cur;
+}
+
+int
+spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
+{
+	int		i;
+	int		op;
+	int		arg;
+	int		err;
+	int		ret;
+	off_t		off;
+	void*		handle;
+	Spawnvex_f	callback;
+
+	if (cur < 0 || cur >= vex->max)
+		return EINVAL;
+	ret = 0;
+	if (!(flags & SPAWN_RESET))
+		for (i = cur; i < vex->cur;)
+		{
+			op = vex->op[i++].number;
+			arg = vex->op[i++].number;
+			if (op & 1)
+			{
+				vex->op[i-2].number = (SPAWN_noop<<1)|1;
+				if (flags & SPAWN_NOCALLBACK)
+				{
+					i += 2;
+					callback = 0;
+				}
+				else
+				{
+					handle = vex->op[i++].handle;
+					callback = vex->op[i++].callback;
+				}
+			}
+			else
+			{
+				vex->op[i-2].number = (SPAWN_noop<<1);
+				callback = 0;
+			}
+			err = 0;
+			switch (op >>= 1)
+			{
+			case SPAWN_cwd:
+				if (fchdir(arg))
+					err = errno;
+				break;
+			case SPAWN_noop:
+				break;
+			case SPAWN_pgrp:
+				/* parent may succeed and cause setpigid() to fail but that's ok */
+				if (setpgid(0, arg) < 0 && arg && errno == EPERM)
+					setpgid(arg, 0);
+				break;
+			case SPAWN_resetids:
+				if (setuid(getuid()) < 0 || setgid(getgid()) < 0)
+					err = errno;
+				break;
+			case SPAWN_sid:
+				if (setsid() < 0)
+					err = errno;
+				break;
+			case SPAWN_sigdef:
+				err = ENOSYS;
+				break;
+			case SPAWN_sigmask:
+				err = ENOSYS;
+				break;
+			case SPAWN_truncate:
+				if (callback)
+				{
+					if ((err = (*callback)(handle, op, arg)) < 0)
+						continue;
+					callback = 0;
+					if (err)
+						break;
+				}
+				if ((off = lseek(arg, 0, SEEK_CUR)) < 0 || ftruncate(arg, off) < 0)
+					err = errno;
+				break;
+			case SPAWN_umask:
+				umask(arg);
+				break;
+			default:
+				if (op < 0)
+					err = EINVAL;
+				else if (arg < 0)
+				{
+					if (callback)
+					{
+						if ((err = (*callback)(handle, op, arg)) < 0)
+							continue;
+						callback = 0;
+						if (err)
+							break;
+					}
+					if (close(op))
+						err = errno;
+				}
+				else if (op == arg)
+				{
+					if (fcntl(op, F_SETFD, 0) < 0)
+						err = errno;
+				}
+				else if (close(arg) || fcntl(op, F_DUPFD, arg) < 0)
+					err = errno;
+				break;
+			}
+			if (err || callback && (err = (*callback)(handle, op, arg)) > 0)
+			{
+				if (!(flags & SPAWN_FLUSH))
+					return err;
+				ret = err;
+			}
+		}
+	if (!(vex->cur = cur))
+		VEXINIT(vex);
+	return ret;
+}
+
+int
+spawnvex_close(Spawnvex_t* vex)
+{
+	if (!vex)
+		return -1;
+	if (vex->op)
+		free(vex->op);
+	free(vex);
+	return 0;
+}
+
+#if DEBUG_spawn
+
+/*
+ * DEBUG_spawn provides an emulation of ibm i5/OS spawn()
+ * where spawnvex() must do a dup dance before and after calling spawn()
+ */
+
+#undef	_lib_spawn
+#undef	_hdr_spawn
+#undef	_mem_pgroup_inheritance
+
+#define	_lib_spawn		1
+#define _hdr_spawn		1
+#define _mem_pgroup_inheritance	1
+
+#define SPAWN_FDCLOSED		(-1)
+
+#define SPAWN_NEWPGROUP		0
+
+#define SPAWN_SETGROUP		0x01
+
+struct inheritance
+{
+	int		flags;
+	pid_t		pgroup;
+	sigset_t	sigmask;
+	sigset_t	sigdefault;
+};
+
+static pid_t
+spawn(const char* path, int nmap, const int map[], const struct inheritance* inherit, char* const argv[], char* const envv[])
+{
+#if _lib_fork || _lib_vfork
+	pid_t			pid;
+	pid_t			pgid;
+	int			i;
+	int			n;
+	int			m;
+#if _real_vfork
+	volatile int		exec_errno;
+	volatile int* volatile	exec_errno_ptr;
+#else
+	int			j;
+	int			k;
+	int			msg[2];
+#endif
+#endif
+
+#if _lib_fork || _lib_vfork
+	pgid = inherit && (inherit->flags & SPAWN_SETGROUP) ? inherit->pgroup : -1;
+	n = errno;
+#if _real_vfork
+	exec_errno = 0;
+	exec_errno_ptr = &exec_errno;
+#else
+#if _lib_pipe2
+	if (pipe2(msg, O_CLOEXEC) < 0)
+		msg[0] = -1;
+#else
+	if (pipe(msg) < 0)
+		msg[0] = -1;
+	else
+	{
+		fcntl(msg[0], F_SETFD, FD_CLOEXEC);
+		fcntl(msg[1], F_SETFD, FD_CLOEXEC);
+	}
+#endif
+#endif
+	sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
+#if _lib_vfork
+	pid = vfork();
+#else
+	pid = fork();
+#endif
+	if (pid == -1)
+		n = errno;
+	else if (!pid)
+	{
+		sigcritical(0);
+		for (i = 0; i < nmap; i++)
+		{
+#if !_real_vfork
+			for (j = 0; j < elementsof(msg); j++)
+				if (i == msg[j] && (k = fcntl(i, F_DUPFD, 0)) >= 0)
+				{
+					fcntl(k, F_SETFD, FD_CLOEXEC);
+					msg[j] = k;
+				}
+#endif
+			if (i != map[i])
+			{
+				close(i);
+				fcntl(map[i], F_DUPFD, i);
+				close(map[i]);
+			}
+			else
+				fcntl(i, F_SETFD, 0);
+		}
+		if (pgid >= 0 && setpgid(0, pgid) < 0 && pgid && errno == EPERM)
+			setpgid(pgid, 0);
+		execve(path, argv, envv);
+#if _real_vfork
+		*exec_errno_ptr = errno;
+#else
+		if (msg[0] != -1)
+		{
+			m = errno;
+			write(msg[1], &m, sizeof(m));
+		}
+#endif
+		_exit(errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC);
+	}
+#if _real_vfork
+	if (pid != -1 && (m = *exec_errno_ptr))
+	{
+		while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+		pid = -1;
+		n = m;
+	}
+#else
+	if (msg[0] != -1)
+	{
+		close(msg[1]);
+		if (pid != -1)
+		{
+			m = 0;
+			while (read(msg[0], &m, sizeof(m)) == -1)
+				if (errno != EINTR)
+				{
+					m = errno;
+					break;
+				}
+			if (m)
+			{
+				while (waitpid(pid, &n, 0) && errno == EINTR);
+				pid = -1;
+				n = m;
+			}
+		}
+		close(msg[0]);
+	}
+#endif
+	sigcritical(0);
+	if (pgid >= 0 && setpgid(pid, pgid) < 0 && pgid && errno == EPERM)
+		setpgid(pid, pid);
+	errno = n;
+	return pid;
+#else
+	errno = ENOSYS;
+	return -1;
+#endif
+}
+
+#else
+
+#if _lib_spawn_mode
+
+#include <process.h>
+
+#ifndef P_NOWAIT
+#define P_NOWAIT	_P_NOWAIT
+#endif
+#ifndef P_DETACH
+#define P_DETACH	_P_DETACH
+#endif
+
+#else
+
+#if _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
+
+#include <spawn.h>
+
+#else
+
+#if _lib_posix_spawn < 2
+#undef	_lib_posix_spawn
+#endif
+
+#if _lib_posix_spawn
+
+#include <spawn.h>
+
+#else
+
+#include <ast_tty.h>
+#include <ast_vfork.h>
+
+#ifndef ENOSYS
+#define ENOSYS	EINVAL
+#endif
+
+#if _lib_spawnve && _hdr_process
+#include <process.h>
+#if defined(P_NOWAIT) || defined(_P_NOWAIT)
+#undef	_lib_spawnve
+#endif
+#endif
+
+#if !_lib_vfork
+#undef	_real_vfork
+#endif
+
+#endif
+#endif
+#endif
+#endif
+
+pid_t
+spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* vex)
+{
+	int				i;
+	int				op;
+	pid_t				pid;
+#if _lib_posix_spawn
+	int				arg;
+	int				err;
+	int				fd;
+	posix_spawnattr_t		ax;
+	posix_spawn_file_actions_t	fx;
+	Spawnvex_t*			xev = 0;
+#endif
+#if _lib_spawn_mode || _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
+	pid_t				pgid;
+	int				arg;
+#if _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
+	int*				map;
+	int				m;
+	struct inheritance		inherit;
+#endif
+#endif
+#if _lib_spawn_mode || _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
+	if (!envv)
+		envv = environ;
+#if _lib_spawn_mode
+	return spawnve(vex && vex->pgrp >= 0 ? P_DETACH : P_NOWAIT, path, argv, envv);
+#else
+	inherit.flags = 0;
+	m = 0;
+	map = 0;
+	if (vex)
+	{
+		for (i = 0; i < vex->cur;)
+		{
+			op = vex->op[i++].number;
+			arg = vex->op[i++].number;
+			if (op & 1)
+				i += 2;
+			op >>= 1;
+			if (op >= 0)
+			{
+				if (m < op)
+					m = op + 1;
+				if (m < arg)
+					m = arg + 1;
+			}
+		}
+		if (m)
+		{
+			if (!(map = newof(0, int, m, 0)))
+				goto bad;
+			for (i = 0; i < m; i++)
+				map[i] = SPAWN_FDCLOSED;
+		}
+		for (i = 0; i < vex->cur;)
+		{
+			op = vex->op[i++].number;
+			arg = vex->op[i++].number;
+			if (op & 1)
+				i += 2;
+			switch (op >>= 1)
+			{
+			case SPAWN_pgrp:
+				inherit.flags |= SPAWN_SETGROUP;
+				inherit.pgroup = arg ? arg : SPAWN_NEWPGROUP;
+				break;
+			case SPAWN_sigdef:
+				inherit.flags |= SPAWN_SETSIGDEF;
+				ingerit.sigdefault = arg;
+				break;
+			case SPAWN_sigmask:
+				inherit.flags |= SPAWN_SETSIGMASK;
+				ingerit.sigmask = arg;
+				break;
+			default:
+				if (op < 0)
+				{
+					err = EINVAL;
+					goto bad;
+				}
+				else if (arg < 0)
+					map[op] = SPAWN_FDCLOSED;
+				else
+					map[op] = arg;
+				break;
+			}
+		}
+	}
+	if ((pid = spawn(path, m, map, &inherit, argv, envv)) >= 0)
+		VEXINIT(vex);
+	return pid;
+ bad:
+	if (map)
+		free(map);
+	return -1;
+#endif
+
+#else
+
+#if _lib_spawnve
+#if _lib_fork || _lib_vfork
+	if (!vex || !vex->cur)
+#endif
+		return spawnve(path, argv, envv);
+#endif
+#if _lib_posix_spawn
+	if (vex && (vex->set & (0
+#if !_lib_posix_spawnattr_setfchdir
+		|VEXFLAG(SPAWN_cwd)
+#endif
+#if !_lib_posix_spawnattr_setsid
+		|VEXFLAG(SPAWN_sid)
+#endif
+#if !_lib_posix_spawnattr_setumask
+		|VEXFLAG(SPAWN_umask)
+#endif
+		)))
+#endif
+	{
+		pid_t			pgid;
+#if _lib_fork || _lib_vfork
+		int			n;
+		int			m;
+#if _real_vfork
+		volatile int		exec_errno;
+		volatile int* volatile	exec_errno_ptr;
+#else
+		int			msg[2];
+#endif
+#endif
+
+		if (!envv)
+			envv = environ;
+#if _lib_fork || _lib_vfork
+		n = errno;
+#if _real_vfork
+		exec_errno = 0;
+		exec_errno_ptr = &exec_errno;
+#else
+#if _lib_pipe2
+		if (pipe2(msg, O_CLOEXEC) < 0)
+			msg[0] = -1;
+#else
+		if (pipe(msg) < 0)
+			msg[0] = -1;
+		else
+		{
+			fcntl(msg[0], F_SETFD, FD_CLOEXEC);
+			fcntl(msg[1], F_SETFD, FD_CLOEXEC);
+		}
+#endif
+#endif
+		sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
+#if _lib_vfork
+		pid = vfork();
+#else
+		pid = fork();
+#endif
+		if (pid == -1)
+			n = errno;
+		else if (!pid)
+		{
+			sigcritical(0);
+			if (vex)
+				spawnvex_apply(vex, 0, SPAWN_NOCALLBACK);
+			execve(path, argv, envv);
+#if _real_vfork
+			*exec_errno_ptr = errno;
+#else
+			if (msg[0] != -1)
+			{
+				m = errno;
+				write(msg[1], &m, sizeof(m));
+			}
+#endif
+			_exit(errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC);
+		}
+#if _real_vfork
+		if (pid != -1 && (m = *exec_errno_ptr))
+		{
+			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+			pid = -1;
+			n = m;
+		}
+#else
+		if (msg[0] != -1)
+		{
+			close(msg[1]);
+			if (pid != -1)
+			{
+				m = 0;
+				while (read(msg[0], &m, sizeof(m)) == -1)
+					if (errno != EINTR)
+					{
+						m = errno;
+						break;
+					}
+				if (m)
+				{
+					while (waitpid(pid, &n, 0) && errno == EINTR);
+					pid = -1;
+					n = m;
+				}
+			}
+			close(msg[0]);
+		}
+#endif
+		sigcritical(0);
+		if (pid != -1 && vex)
+		{
+			if (vex->pgrp >= 0 && setpgid(pid, vex->pgrp) < 0 && vex->pgrp && errno == EPERM)
+				setpgid(pid, pid);
+			VEXINIT(vex);
+		}
+		errno = n;
+		return pid;
+#else
+		errno = ENOSYS;
+		return -1;
+#endif
+	}
+#if _lib_posix_spawn
+	if (vex)
+	{
+		if (err = posix_spawnattr_init(&ax))
+			goto nope;
+		if (err = posix_spawn_file_actions_init(&fx))
+		{
+			posix_spawnattr_destroy(&ax);
+			goto nope;
+		}
+		for (i = 0; i < vex->cur;)
+		{
+			op = vex->op[i++].number;
+			arg = vex->op[i++].number;
+			if (op & 1)
+				i += 2;
+			switch (op >>= 1)
+			{
+#if _lib_posix_spawnattr_setfchdir
+			case SPAWN_cwd:
+				if (err = posix_spawnattr_setfchdir(&ax, arg))
+					goto bad;
+				break;
+#endif
+			case SPAWN_pgrp:
+				if (err = posix_spawnattr_setpgroup(&ax, arg))
+					goto bad;
+				if (err = posix_spawnattr_setflags(&ax, POSIX_SPAWN_SETPGROUP))
+					goto bad;
+				break;
+			case SPAWN_resetids:
+				if (err = posix_spawnattr_setflags(&ax, POSIX_SPAWN_RESETIDS))
+					goto bad;
+				break;
+#if _lib_posix_spawnattr_setsid
+			case SPAWN_sid:
+				if (err = posix_spawnattr_setsid(&ax, arg))
+					goto bad;
+				break;
+#endif
+			case SPAWN_sigdef:
+				break;
+			case SPAWN_sigmask:
+				break;
+#if _lib_posix_spawnattr_setumask
+			case SPAWN_umask:
+				if (err = posix_spawnattr_setumask(&ax, arg))
+					goto bad;
+				break;
+#endif
+			default:
+				if (op < 0)
+				{
+					err = EINVAL;
+					goto bad;
+				}
+				else if (arg < 0)
+				{
+					if (err = posix_spawn_file_actions_addclose(&fx, op))
+						goto bad;
+				}
+				else if (arg == op)
+				{
+#ifdef F_DUPFD_CLOEXEC
+					if ((fd = fcntl(op, F_DUPFD_CLOEXEC, 0)) < 0)
+#else
+					if ((fd = fcntl(op, F_DUPFD, 0)) < 0 || fcntl(fd, F_SETFD, FD_CLOEXEC) < 0 && (close(fd), 1))
+#endif
+					{
+						err = errno;
+						goto bad;
+					}
+					if (!xev && !(xev = spawnvex_open()))
+						goto bad;
+					spawnvex_add(xev, fd, -1, 0, 0, 0);
+					if (err = posix_spawn_file_actions_adddup2(&fx, fd, op))
+						goto bad;
+				}
+				else if (err = posix_spawn_file_actions_adddup2(&fx, op, arg))
+					goto bad;
+				break;
+			}
+		}
+		if (err = posix_spawn(&pid, path, &fx, &ax, argv, envv ? envv : environ))
+			goto bad;
+		posix_spawnattr_destroy(&ax);
+		posix_spawn_file_actions_destroy(&fx);
+		if (xev)
+		{
+			spawnvex_apply(xev, 0, SPAWN_NOCALLBACK);
+			spawnvex_free(xev);
+		}
+		VEXINIT(vex);
+	}
+	else if (err = posix_spawn(&pid, path, NiL, NiL, argv, envv ? envv : environ))
+		goto nope;
+	return pid;
+ bad:
+	posix_spawnattr_destroy(&ax);
+	posix_spawn_file_actions_destroy(&fx);
+#if _lib_posix_spawn
+	if (xev)
+	{
+		spawnvex_apply(xev, 0, SPAWN_NOCALLBACK);
+		spawnvex_free(xev);
+	}
+#endif
+ nope:
+	errno = err;
+	return -1;
+#endif
+#endif
+}
+
+#endif

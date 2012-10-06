@@ -131,19 +131,19 @@ static const _ast_iconv_list_t	codes[] =
 
 	{
 	"ucs",
-	"ucs?(-)?(2)?(be)|utf-16?(be)",
+	"utf?(-)16?(be)",
 	"unicode runes",
-	"UCS-%s",
-	"2",
+	"UTF-%s",
+	"16",
 	CC_UCS,
 	},
 
 	{
 	"ucs-le",
-	"ucs?(-)?(2)le|utf-16le",
+	"utf?(-)16le",
 	"little endian unicode runes",
-	"UCS-%sLE",
-	"2",
+	"UTF-%sLE",
+	"16",
 	CC_SCU,
 	},
 
@@ -1436,21 +1436,23 @@ error(DEBUG_TRACE, "AHA#%d iconv_write %d", __LINE__, ts - tb);
 ssize_t
 _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, Iconv_disc_t* disc)
 {
-	char*		fb;
-	char*		fs;
-	char*		tb;
-	char*		ts;
-	size_t*		e;
-	size_t		fe;
-	size_t		fn;
-	size_t		fo;
-	size_t		ft;
-	size_t		tn;
-	size_t		i;
-	ssize_t		r = 0;
-	int		ok = 1;
-	int		locked;
-	Iconv_disc_t	compat;
+	char*			fb;
+	char*			fs;
+	char*			tb;
+	char*			ts;
+	size_t*			e;
+	size_t			fe;
+	size_t			fn;
+	size_t			fo;
+	size_t			ft;
+	size_t			tn;
+	size_t			i;
+	ssize_t			r = 0;
+	int			ok = 1;
+	int			locked;
+	Iconv_disc_t		compat;
+	Iconv_checksig_f	checksig = 0;
+	void*			handle = 0;
 
 	/*
 	 * the old api had optional size_t* instead of Iconv_disc_t*
@@ -1463,13 +1465,25 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, Iconv_disc_t*
 		iconv_init(disc, 0);
 	}
 	else
+	{
 		e = 0;
+		if (disc->version >= 20121001L)
+		{
+			checksig = disc->checksig;
+			handle= disc->handle;
+		}
+	}
 	tb = 0;
 	fe = OK;
 	ft = 0;
 	fn = n;
 	do
 	{
+		if (checksig && (*checksig)(handle))
+		{
+			r = -1;
+			break;
+		}
 		if (n != SF_UNBOUND)
 			n = -((ssize_t)(n & (((size_t)(~0))>>1)));
 		if ((!(fb = (char*)sfreserve(ip, n, locked = SF_LOCKR)) || !(fo = sfvalue(ip))) &&

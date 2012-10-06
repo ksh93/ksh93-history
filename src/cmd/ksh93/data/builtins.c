@@ -39,14 +39,18 @@
 
 #ifndef SHOPT_CMDLIB_DIR
 #   define SHOPT_CMDLIB_DIR	SH_CMDLIB_DIR
-#else
-#   ifndef SHOPT_CMDLIB_HDR
-#	define SHOPT_CMDLIB_HDR	<cmdlist.h>
-#   endif
+#endif
+#ifndef SHOPT_CMDLIB_HDR
+#   define SHOPT_CMDLIB_HDR	<cmdlist.h>
 #endif
 
 #define Q(f)		#f	/* libpp cpp workaround -- fixed 2005-04-11 */
-#define CMDLIST(f)	SH_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE, bltin(f),
+#if _AST_VERSION < 20121001L
+#define CMDLIST(f)	SHOPT_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE, bltin(f),
+#else
+#define CMDLIST(f,d)	d "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE|BLT_DISABLE, bltin(f), \
+			SH_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE, bltin(f),
+#endif
 
 #undef	basename
 #undef	dirname
@@ -1296,7 +1300,7 @@ USAGE_LICENSE
 	"can be created.]"
 "[r?Do not treat \b\\\b specially when processing the input line.]"
 "[s?Save a copy of the input as an entry in the shell history file.]"
-"[S?Treat the input as if it was saved from a spreasheet in csv format.]"
+"[S?Treat the input as if it was saved from a spreadsheet in csv format.]"
 "[u]#[fd:=0?Read from file descriptor number \afd\a instead of standard input.]"
 "[t]:[timeout?Specify a timeout \atimeout\a in seconds when reading from "
 	"a terminal or pipe.]"

@@ -2433,9 +2433,8 @@ addin:
 			last_virt = i;
 			ed_ringbell();
 		}
-		else if((c=='=' || (c=='\\'&&virtual[i]=='/')) && !vp->repeat_set)
+		else if((c=='=' || (c=='\\'&&virtual[last_virt]=='/')) && !vp->repeat_set)
 		{
-			last_virt = i;
 			vp->nonewline++;
 			ed_ungetchar(vp->ed,cntl('L'));
 			return(GOOD);

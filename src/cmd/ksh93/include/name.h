@@ -43,6 +43,7 @@ union Value
 	int			i;
 	unsigned int		u;
 	int32_t			*lp;
+	pid_t			*idp;
 	Sflong_t		*llp;	/* for long long arithmetic */
 	int16_t			s;
 	int16_t			*sp;
@@ -99,8 +100,8 @@ struct Namref
 /* This describes a user shell function node */
 struct Ufunction
 {
+	int64_t		lineno;		/* line number of function start */
 	int		*ptree;		/* address of parse tree */
-	int		lineno;		/* line number of function start */
 	short		argc;		/* number of references */
 	short		running;	/* function is running */
 	char		**argv;		/* reference argument list */
@@ -140,6 +141,7 @@ struct Ufunction
 #define NV_BLTIN	(NV_NOPRINT|NV_EXPORT)
 #define BLT_ENV		(NV_RDONLY)		/* non-stoppable,
 						 * can modify enviornment */
+#define BLT_DISABLE	(NV_BINARY)		/* bltin disabled */
 #define BLT_SPC		(NV_LJUST)		/* special built-ins */
 #define BLT_EXIT	(NV_RJUST)		/* exit value can be > 255 */
 #define BLT_DCL		(NV_TAGGED)		/* declaration command */
@@ -178,24 +180,24 @@ struct Ufunction
 
 /* ...	for arrays */
 
-#define array_elem(ap)	((ap)->nelem&ARRAY_MASK)
+#define array_elem(ap)	((ap)->nelem)
 #define array_assoc(ap)	((ap)->fun)
 
 extern int		array_maxindex(Namval_t*);
 extern char 		*nv_endsubscript(Namval_t*, char*, int, void*);
 extern Namfun_t 	*nv_cover(Namval_t*);
 extern Namarr_t 	*nv_arrayptr(Namval_t*);
-extern int		nv_arrayisset(Namval_t*, Namarr_t*);
-extern int		nv_arraysettype(Namval_t*, Namval_t*,const char*,int);
+extern bool		nv_arrayisset(Namval_t*, Namarr_t*);
+extern bool		nv_arraysettype(Namval_t*, Namval_t*,const char*,int);
 extern int		nv_aimax(Namval_t*);
-extern int		nv_atypeindex(Namval_t*, const char*);
-extern int		nv_setnotify(Namval_t*,char **);
-extern int		nv_unsetnotify(Namval_t*,char **);
+extern bool		nv_atypeindex(Namval_t*, const char*);
+extern bool		nv_setnotify(Namval_t*,char **);
+extern bool		nv_unsetnotify(Namval_t*,char **);
 extern struct argnod*	nv_onlist(struct argnod*, const char*);
 extern void 		nv_optimize(Namval_t*);
 extern void 		nv_unref(Namval_t*);
 extern void		_nv_unset(Namval_t*,int);
-extern int		nv_hasget(Namval_t*);
+extern bool		nv_hasget(Namval_t*);
 extern int		nv_clone(Namval_t*, Namval_t*, int);
 void			clone_all_disc(Namval_t*, Namval_t*, int);
 extern Namfun_t		*nv_clone_disc(Namfun_t*, int);
@@ -214,10 +216,10 @@ extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
 extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
-extern int		nv_subsaved(Namval_t*);
+extern bool		nv_subsaved(Namval_t*);
 extern void		nv_typename(Namval_t*, Sfio_t*);
 extern void		nv_newtype(Namval_t*);
-extern int		nv_istable(Namval_t*);
+extern bool		nv_istable(Namval_t*);
 extern size_t		nv_datasize(Namval_t*, size_t*);
 extern Namfun_t		*nv_mapchar(Namval_t*, const char*);
 #if SHOPT_FIXEDARRAY
@@ -265,4 +267,5 @@ extern const char	e_typecompat[];
 extern const char	e_globalref[];
 extern const char	e_tolower[];
 extern const char	e_toupper[];
+extern const char	e_astbin[];
 #endif /* _NV_PRIVATE */

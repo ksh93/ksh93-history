@@ -165,7 +165,7 @@ done
 
 $SHELL 2> /dev/null -c 'compound c;float -a c.ar;(( c.ar[2][3][3] = 5))' || 'multi-dimensional arrays in arithemtic expressions not working'
 
-expected='typeset -a -l -E c.ar=([2]=([3]=([3]=5) ) )'
+expected='typeset -a -l -E c.ar=(typeset -a [2]=(typeset -a [3]=([3]=5) ) )'
 unset c
 float c.ar
 c.ar[2][3][3]=5
@@ -213,13 +213,6 @@ typeset -a arr=( ( 00 ) ( 01 ) ( 02 ) ( 03 ) ( 04 ) ( 05 ) ( 06 ) ( 07 ) ( 08 ) 
 typeset -i i=10 j=0
 {  y=$( echo ${arr[i][j]} ) ;} 2> /dev/null
 [[ $y == 10 ]] || err_exit '${arr[10][0] should be 10 '
-
-unset cx l
-compound cx
-typeset -a cx.ar[4][4]
-print -v cx > /dev/null
-print -v cx | read -C l 2> /dev/null || err_exit 'read -C fails from output of print -v'
-[[ ${cx%cx=} ==  "${l%l=}" ]] || err_exit 'print -v for compound variable with fixed 2d array not working'
 
 unset A
 typeset -A A

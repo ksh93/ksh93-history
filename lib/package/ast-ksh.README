@@ -93,30 +93,120 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-12-07-25  --- Release ksh93u+ ---
-12-07-25  Fix builtin/plugin lookup logic that skipped uwin dlls.
-12-07-24  Work around freebsd bug where tcgetpgrp() returns 0 for no process group.
-12-07-23  A scoping error with namrefs to compound associative arrays has
+12-10-04  --- Release ksh93v- ---
+12-10-04  libcmd builtins are statically linked into ksh93 and by default are
+	  bound to the path /opt/ast/bin whether this path exists or not.
+	  Changing the .sh.op_astbin variable changes the binding.
+12-10-02  Fixed a bug that could cause a core dump when unsetting type
+	  instances.
+12-10-02  Command substitution for using $() no longer uses a pipe and
+	  waits for the process to complete before finishing. 
+12-10-01  Updated man page for [[ s1 < s2 ]] and [[ s1 > s2 ]] to clearify
+	  that the string comparisons are based on the locale.
+12-10-01 +Added the variable SH_OPTIONS which consitst of name=value pairs.
+	  For defined options it assigned value to the variable .sh.op_name.
+12-10-02 +Add the variable .sh.op_astbin to define the directory where several
+	  shell builtins will be bound.
+12-09-28  Fixed a bug that caused core dumps when unsetting an array of types
+	  on some systems.
+12-09-28  Fixed a LINENO bug that causes function line numbers to be wrong on
+	  some 32 bit systems.
+12-09-24  The LINENO variable can now handle scripts with more than 2147483647
+	  lines.
+12-09-24  The number of elements for an indexed array for a 64 bit architecture
+	  has been increased to 2147483647.
+12-09-21  A bug in which the output of a two dimensional sparse indexed array
+	  would cause the second subscript be treated as an associative
+	  array when read back in has been fixed. Elements that are sparse
+	  indexed arrays now are prefixed type "typeset -a".
+12-09-19  A bug in which running more that 32767 subshell could cause the
+	  shell to core dump has been fixed.
+12-09-19  A bug in which the freeing of a compound variable with types and
+	  arrays when leaving a function has been fixed.
+12-09-18  A bug in which compound -a for a type element did not display the
+	  -C attribute has been fixed.
+12-09-14  >; file now fails if the user does not have write permission on file. 
+12-09-13  Fixed a compilation problem with Solaris which does not have
+	  SOCK_CLEXEC.
+12-09-12  Moved from using libast spawnveg() to new libast spawnvex().
+12-09-12  Changed the default build to disable SHOPT_FIXEDARRAY.  
+12-09-11  Fixed two bugs related to name references to compound array
+	  variables.
+12-09-10 +Added ~{fd} expansion where fd is the number of an open file or
+	  a variable whose value is the number of an open file.
+12-09-10  Fixed a bug in typeset -m the .sh.match is being renamed.
+12-09-07  Fixed a bug in .sh.match code that coud cause the shell to quitely
+12-09-07  Modified the code to use bool instead of int in several places.
+12-09-05  Modified pipe and socketpair creating to create file descriptors
+	  with close-on-exec set.
+12-08-31  A bug in vi mode in which ~/tst/make/users/hv<TAB> did not expand
+	  correctly has been fixed.
+12-08-31  A bug that could cause a core dump after typeset -m var=.sh.match has
 	  been fixed.
-12-07-20  A bug where builtin -d /path/foo deleted foo has been fixed.
-12-07-18  A bug in which /dev/stdout did not work in command substitution on
-	  some systems has been fixed.
+12-08-30  For an assocative array A, $((A[sub])) no longer cause subscript sub
+	  to be created.
+12-08-29  A scoping error in setting the scope for a reference when the
+	  reference contained subscripts containing a variable from a different
+	  scope has been fixed.
+12-08-27  A number of changes to open files with close-on-exec has been made.
+12-08-24  A bug in which unsetting instance variables in a type could effect
+	  the value of that instance in other type instances has been fixed.
+12-08-23  A bug in which name references to compound variable array elements
+	  did not work correctly has been fixed.
+12-08-22  .sh.match now handles subpatterns that had no matches with
+	  ${var//pattern} correctly.
+12-08-21  A bug in setting .sh.match after ${var//pattern/string} when string
+	  is empty has been fixed.
+12-08-21  A bug in setting .sh.match after [[ string == pattern ]] has been
+	  fixed.
+12-08-21  The poll builtin from Roland Mainz has been added with the option
+	  SHOPT_POLL.
+12-08-21  A bug in which read -S did not handle "" inside double quotes has
+	  been fixed.
+12-08-21  A bug in which a compound variable defined in a type could not
+	  have elements added to it has been fixed.
+12-08-20  A bug in which creating a two dimemsional associatve array could
+	  add an extra 0 element to the second subscript has been fixed.
+12-08-20  typeset -H foo no longer unsets foo when foo has been exported to
+	  the shell.
+12-08-20  A file descriptor for the current directory is now made available
+	  to built-ins in the context pointer.
+12-08-10  Rewrote .sh.match expansions fixing several bugs and improving
+	  performance.
+12-08-09  A bug in which assignments following a process substitution argument
+	  were treated as assignments rather than arguments has been fixed.
+12-08-07  Fixed a bug in which discipline functions define in a type from
+	  within a namespace where not being run in the namespace.
+12-08-07  .sh.match no longer gets set for patterns in PS4 during set -x.
+12-07-25  Each shell variable now contains a pointer to the shell pointer.
+12-07-20  <shell.h> interface updated to pass the shell interpreter pointer
+	  to most functions.
 12-07-17  A bug in which the restricted option set in a subshell prevented
-	  some variables from getting restored when the subshell completed
-	  has been fixed.
-12-07-09  A bug in which the directory is not restored after a subshell changes
-	  the name of the directory for subshells executed in the same process
-	  has been fixed.
+          some variables from getting restored when the subshell completed
+          has been fixed.
+12-07-16  The code was modified to do automatic retry for several system calls
+	  the fail with errno set to EINTR.
+12-07-12 +Added -q option was added to kill to send queued signals on systems
+	  that support sigqueue().
+12-07-12 +Added -p option to builtin to output builtins in a format that can
+	  be used to reinput.
 12-07-09  A bug in which file descriptors created with {n}< file were not being
 	  closed has been fixed.
 12-07-09  The 12-04-04 fix for cd .. was not correct causing cd /etc;cd .. to
 	  remain in /etc.  This has been fixed.
+12-07-05  Eliminated compile options and code for ECHOPRINT and OLDTERMIO.
+12-07-05  Eliminated compile options BGX, ESH, HISTEXPAND, TYPEDEF and VSH.
+	  They are the default.
 12-07-02  A bug in which builtin name did now work for builtins found in a
 	  library added by builtin -f lib has been fixed.
+12-07-02 +The -a option was added to trap to cause the current setting to be
+	  appended to the new trap setting rather than replacing it.
 12-07-02  A bug in the edit modes which <tab> after a directory did not refresh
-          the input line has been fixed.
+	  the input line has been fixed.
 12-07-02  A bug in which an exit status > 256 corresponding to a signal was
-          not returned by a function to indicate a signal exit has been fixed.
+	  not by a function to indicate a signal exit has been fixed.
+
+12-06-28  --- Release ksh93u+ ---
 12-06-28  Fix ulimit -a to list (Kibytes) instead of (kbytes).
 12-06-27  Fix unitialized data reference for <CR> as first char in --vi mode.
 12-06-26  The formatting of printf "%q" for multibyte locales has changed to
@@ -3204,6 +3294,16 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+12-09-27 regex/reglib.h: fix superfluous mask in bit test macros that limited values to 256 bits (now unlimited)
+12-09-26 comp/iconv.c: fix UTF-16 <=> UCS-2 mixup
+12-09-26 string/qp.c: add { qpdecode() qpencode() }
+12-09-24 sfio: use #if _mmap_worthy instead of obsolete #ifdef MAP_TYPE
+12-09-14 tminit.c: for UTC zone with no native name use getenv("TZ")
+12-09-13 tmzone.c,tmxdate.c: handle [ZY][EW]n[ABC]? tz notation
+12-09-11 spawnvex: add generalized spawnveg() replacement
+12-07-31 cdt: sync with kpv
+12-07-31 error.h: add { Error_write_f, void* handle } for sh_exit()
+12-07-30 astsa: update to handle installation that already have { aso cdt sfio vmalloc }
 12-07-25 pathprobe.c: fix read() loop to handle EINTR
 12-06-28 vmalloc/malloc.c: use sbrk() unless VMALLOC_OPTIONS=mmap or asoinit(0,0,0)!=0 (workaround until next malloc update)
 12-06-28 aso/aso.c: asoinit(0,0,0): 0: no specific init, 1: app initialized
@@ -5015,6 +5115,10 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+12-10-03 cmdlist.h: _AST_VERSION>=20121001 => CMDLIST(command,"directory")
+12-10-03 grep.c,xargs.c: move from src/cmd/kshlib/cmdtst
+12-10-03 iconv.c: move from src/cmd/std
+12-09-27 tail.c: fix bug that exited tail -f on tvsleep() error (who cares if it returned sooner)
 12-06-25 getconf.c: don't defer to native getconf if we are it -- doh
 12-06-19 tail.c: be nice and use sh_sigcheck() and tvsleep() to verify interrupts
 12-05-31 cat,head,tee: use errno==EPIPE => ERROR_PIPE(errno)

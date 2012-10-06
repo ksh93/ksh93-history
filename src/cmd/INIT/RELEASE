@@ -1,3 +1,6 @@
+12-09-27 package.sh: fix admin log total logic
+12-09-18 cc.ibm.risc: fix -O disable logic that ate next arg
+12-09-11 make.probe: fix sunos cc/CC CC.STDLIB probe
 12-08-24 iffe.sh: add ``api n1 = n2''
 12-07-17 iffe.sh: add C code NOTE("...") to ammend --verbose output
 12-06-26 iffe.sh: fix "npt foo" to handle function-like macro foo()

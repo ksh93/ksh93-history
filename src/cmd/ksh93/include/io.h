@@ -55,6 +55,7 @@
 #define IOPICKFD	0x10000 /* file descriptor number was selected automatically */
 #define IOHERESTRING	0x20000 /* allow here documents to be string streams */
 #define IOSAVESTRING	0x40000 /* string file was saved */
+#define IOUSEVEX	0x80000 /* use spawnvex to save and restore  */
 
 /*
  * The remainder of this file is only used when compiled with shell
@@ -79,14 +80,14 @@ extern void 	sh_iorestore(Shell_t*,int,int);
 extern Sfio_t 	*sh_iostream(Shell_t*,int);
 extern int	sh_redirect(Shell_t*,struct ionod*,int);
 extern void 	sh_iosave(Shell_t *, int,int,char*);
-extern int 	sh_iovalidfd(Shell_t*, int);
-extern int 	sh_inuse(Shell_t*, int);
+extern bool 	sh_iovalidfd(Shell_t*, int);
+extern bool 	sh_inuse(Shell_t*, int);
 extern void 	sh_iounsave(Shell_t*);
 extern int	sh_chkopen(const char*);
 extern int	sh_ioaccess(int,int);
 extern int	sh_devtofd(const char*);
-extern int	sh_isdevfd(const char*);
-extern int	sh_source(Shell_t*, Sfio_t*, const char*);
+extern bool	sh_isdevfd(const char*);
+extern bool	sh_source(Shell_t*, Sfio_t*, const char*);
 
 /* the following are readonly */
 extern const char	e_pexists[];

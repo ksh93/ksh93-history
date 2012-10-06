@@ -57,7 +57,7 @@ static void rehash(register Namval_t *np,void *data)
  * Obtain a file handle to the directory "path" relative to directory
  * "dir", or open a NFSv4 xattr directory handle for file dir/path.
  */
-int sh_diropenat(Shell_t *shp, int dir, const char *path, int xattr)
+int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 {
 	int fd,apfd,shfd;
 	int savederrno=errno;
@@ -135,17 +135,11 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, int xattr)
 		return fd;
 
 	/* Move fd to a number > 10 and *register* the fd number with the shell */
-	shfd = sh_fcntl(fd, F_DUPFD, 10);
+	shfd = sh_fcntl(fd, F_dupfd_cloexec, 10);
 	savederrno=errno;
 	sh_close(fd);
-	/*
-	 * FIXME: |sh_fcntl()| should implement F_DUPFD_CLOEXEC
-	 * and F_DUP2FD_CLOEXEC to reduce the number of system calls
-	 */
-	if(shfd >=0)
-		sh_fcntl(shfd, F_SETFD, FD_CLOEXEC);
 	errno=savederrno;
-	return shfd;
+	return(shfd);
 }
 
 int	b_cd(int argc, char *argv[],Shbltin_t *context)
@@ -155,7 +149,8 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	register const char *dp;
 	register Shell_t *shp = context->shp;
 	int saverrno=0;
-	int rval,flag=0,xattr=0;
+	int rval;
+	bool flag=false,xattr=false;
 	char *oldpwd;
 	int newdirfd;
 	Namval_t *opwdnod, *pwdnod;
@@ -164,14 +159,14 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	while((rval = optget(argv,sh_optcd))) switch(rval)
 	{
 		case 'L':
-			flag = 0;
+			flag = false;
 			break;
 		case 'P':
-			flag = 1;
+			flag = true;
 			break;
 #ifdef O_XATTR
 		case '@':
-			xattr = 1;
+			xattr = true;
 			break;
 #endif
 		case ':':
@@ -293,8 +288,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 					continue;
 #endif /* SHOPT_FS_3D */
 		}
-		rval = newdirfd = sh_diropenat(shp,
-			((shp->pwdfd >= 0)?shp->pwdfd:AT_FDCWD),
+		rval = newdirfd = sh_diropenat(shp, shp->pwdfd,
 			path_relative(shp,stakptr(PATH_OFFSET)), xattr);
 		if(newdirfd >=0)
 		{
@@ -315,7 +309,11 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 				if(shp->pwdfd >= 0)
 				{
 					sh_close(shp->pwdfd);
+#ifdef AT_FDCWD
+					shp->pwdfd = AT_FDCWD;
+#else
 					shp->pwdfd = -1;
+#endif
 				}
 			}
 		}
@@ -329,7 +327,8 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	if(rval<0 && *dir=='/' && *(path_relative(shp,stakptr(PATH_OFFSET)))!='/')
 	{
 		rval = newdirfd = sh_diropenat(shp,
-			((shp->pwdfd >= 0)?shp->pwdfd:AT_FDCWD), dir, xattr);
+			shp->pwdfd,
+			dir, xattr);
 		if(newdirfd >=0)
 		{
 			/* chdir for directories on HSM/tapeworms may take minutes */
@@ -381,7 +380,7 @@ success:
 	if(*dir != '/')
 		return(0);
 	nv_putval(opwdnod,oldpwd,NV_RDONLY);
-	flag = (int)strlen(dir);
+	flag = (strlen(dir)>0)?true:false;
 	/* delete trailing '/' */
 	while(--flag>0 && dir[flag]=='/')
 		dir[flag] = 0;

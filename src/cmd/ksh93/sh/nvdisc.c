@@ -219,7 +219,7 @@ static void block_done(struct blocked *bp)
 {
 	blist = bp = bp->next;
 	if(bp && (bp->isub>=0 || bp->sub))
-		nv_putsub(bp->np, bp->sub,(bp->isub<0?0:bp->isub)|ARRAY_SETSUB);
+		nv_putsub(bp->np, bp->sub,(bp->isub<0?0:bp->isub),ARRAY_SETSUB);
 }
 
 /*
@@ -261,7 +261,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		_nv_unset(np,0);
 		if(sub)
 		{
-			nv_putsub(np, sub, ARRAY_ADD);
+			nv_putsub(np, sub, 0,ARRAY_ADD);
 			nv_putval(np,nv_getval(nr), 0);
 		}
 		else
@@ -521,7 +521,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		dp->dsize = sizeof(struct vardisc);
 		dp->putval = assign;
 		if(nv_isarray(np) && !nv_arrayptr(np))
-			nv_putsub(np,(char*)0, 1);
+			nv_putsub(np,(char*)0, 1,0);
 		nv_stack(np, (Namfun_t*)vp);
 	}
 	if(action==np)
@@ -650,7 +650,7 @@ Namfun_t *nv_clone_disc(register Namfun_t *fp, int flags)
 	return(nfp);
 }
 
-int nv_adddisc(Namval_t *np, const char **names, Namval_t **funs)
+bool nv_adddisc(Namval_t *np, const char **names, Namval_t **funs)
 {
 	register Nambfun_t *vp;
 	register int n=0;
@@ -661,7 +661,7 @@ int nv_adddisc(Namval_t *np, const char **names, Namval_t **funs)
 			n++;
 	}
 	if(!(vp = newof(NIL(Nambfun_t*),Nambfun_t,1,n*sizeof(Namval_t*))))
-		return(0);
+		return(false);
 	vp->fun.dsize = sizeof(Nambfun_t)+n*sizeof(Namval_t*);
 	vp->fun.nofree |= 2;
 	vp->num = n;
@@ -672,7 +672,7 @@ int nv_adddisc(Namval_t *np, const char **names, Namval_t **funs)
 	vp->fun.disc = &Nv_bdisc;
 	vp->bnames = names; 
 	nv_stack(np,&vp->fun);
-	return(1);
+	return(true);
 }
 
 /*
@@ -801,7 +801,7 @@ static void put_notify(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 
 static const Namdisc_t notify_disc  = {  0, put_notify };
 
-int nv_unsetnotify(Namval_t *np, char **addr)
+bool nv_unsetnotify(Namval_t *np, char **addr)
 {
 	register Namfun_t *fp;
 	for(fp=np->nvfun;fp;fp=fp->next)
@@ -812,21 +812,21 @@ int nv_unsetnotify(Namval_t *np, char **addr)
 			nv_stack(np,(Namfun_t*)0);
 			if(!(fp->nofree&1))
 				free((void*)fp);
-			return(1);
+			return(true);
 		}
 	}
-	return(0);
+	return(false);
 }
 
-int nv_setnotify(Namval_t *np, char **addr)
+bool nv_setnotify(Namval_t *np, char **addr)
 {
 	struct notify *pp = newof(0,struct notify, 1,0);
 	if(!pp)
-		return(0);
+		return(false);
 	pp->ptr = addr;
 	pp->hdr.disc = &notify_disc;
 	nv_stack(np,&pp->hdr);
-	return(1);
+	return(true);
 }
 
 static void *newnode(const char *name)
@@ -1439,7 +1439,7 @@ Dt_t *nv_dict(Namval_t* np)
 	return(shp->var_tree);
 }
 
-int nv_istable(Namval_t *np)
+bool nv_istable(Namval_t *np)
 {
 	return(nv_hasdisc(np,&table_disc)!=0);
 }
@@ -1488,16 +1488,16 @@ const Namdisc_t *nv_discfun(int which)
 	return(0);
 }
 
-int nv_hasget(Namval_t *np)
+bool nv_hasget(Namval_t *np)
 {
 	register Namfun_t	*fp;
 	for(fp=np->nvfun; fp; fp=fp->next)
 	{
 		if(!fp->disc || (!fp->disc->getnum && !fp->disc->getval))
 			continue;
-		return(1);
+		return(true);
 	}
-	return(0);
+	return(false);
 }
 
 #if SHOPT_NAMESPACE

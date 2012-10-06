@@ -643,7 +643,7 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 				continue;
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
 				nv_offattr(np,NV_NOFREE);
-			else if(tp->tp && !nv_isattr(np,NV_MINIMAL|NV_EXPORT) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)) && (ap->nelem&ARRAY_TREE))
+			else if(tp->tp && !nv_isattr(np,NV_MINIMAL|NV_EXPORT) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)) && (ap->flags&ARRAY_TREE))
 				errormsg(SH_DICT,ERROR_exit(1),e_typecompat,nv_name(np));
 			else if((ap=nv_arrayptr(np)) && nv_aindex(np)>0 && ap->nelem==1 && nv_getval(np)==Empty)
 			{
@@ -693,8 +693,8 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 					else
 					{
 						if(ap && comvar)
-							ap->nelem |= ARRAY_TREE;
-						nv_putsub(np, (char*)0, 0);
+							ap->flags |= ARRAY_TREE;
+						nv_putsub(np, (char*)0, 0, 0);
 					}
 				}
 				else if(nvflags&NV_ARRAY)
@@ -703,7 +703,7 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 					{
 						Namarr_t *ap=nv_arrayptr(np);
 						if(ap)
-							ap->nelem |= ARRAY_TREE;
+							ap->flags |= ARRAY_TREE;
 						else
 						{
 							_nv_unset(np,NV_RDONLY);
@@ -1450,6 +1450,8 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 		tp->scanmask |= (NV_DOUBLE|NV_EXPNOTE);
 	if(flag==NV_LTOU || flag==NV_UTOL)
 		tp->scanmask |= NV_UTOL|NV_LTOU;
+	if(root==tp->sh->bltin_tree)
+		tp->scanmask |= BLT_DISABLE;
 	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag);
 	argv = tp->argnam  = (char**)stkalloc(tp->sh->stk,(namec+1)*sizeof(char*));
 	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag&~NV_IARRAY);

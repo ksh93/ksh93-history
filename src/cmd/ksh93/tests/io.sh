@@ -146,6 +146,7 @@ print world
 chmod +x script
 [[ $( $SHELL ./script) == $'hello\nworld' ]] || err_exit 'closing 3 & 4 causes script to fail'
 cd ~- || err_exit "cd back failed"
+cd $tmp || { err_exit "cd $tmp failed"; exit ; }
 ( exec  > '' ) 2> /dev/null  && err_exit '> "" does not fail'
 unset x
 ( exec > ${x} ) 2> /dev/null && err_exit '> $x, where x null does not fail'
@@ -495,5 +496,10 @@ done	{n}< /dev/null
 
 n=$( exec {n}< /dev/null; print -r -- $n)
 [[ -r /dev/fd/$n ]] && err_exit "file descriptor n=$n left open after subshell"
+
+print hello > $tmp/foo
+redirect {fd}< $tmp
+[[ $(< ~{fd}/foo) == hello ]] 2> /dev/null || err_exit '~{fd}/foo not working'
+[[ $(< ~{$fd}/foo) == hello ]] 2> /dev/null || err_exit "~{$fd}/foo not working"
 
 exit $((Errors<125?Errors:125))

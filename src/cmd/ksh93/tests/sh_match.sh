@@ -166,10 +166,6 @@ cat >"${testscript}" <<-TEST1SCRIPT
 	# main
 	set -o nounset
 	
-	builtin mktemp
-	builtin rm
-	builtin wc
-	
 	typeset -a xar
 	parse_xmltext xar "\$xmltext"
 	rebuild_xml_and_verify xar "\$xmltext"

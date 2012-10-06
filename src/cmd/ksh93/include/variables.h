@@ -92,16 +92,18 @@
 #define SH_JOBPOOL	(shgd->bltin_nodes+62)
 #define SH_PGRP		(shgd->bltin_nodes+63)
 #define SH_SIG		(shgd->bltin_nodes+64)
-#define SHLVL		(shgd->bltin_nodes+65)
+#define SH_ASTBIN	(shgd->bltin_nodes+65)
+#define OPTIONS		(shgd->bltin_nodes+66)
+#define SHLVL		(shgd->bltin_nodes+67)
 #if SHOPT_FS_3D
-#   define VPATHNOD	(shgd->bltin_nodes+66)
+#   define VPATHNOD	(shgd->bltin_nodes+68)
 #   define NFS_3D	1
 #else
 #   define NFS_3D	0
 #endif /* SHOPT_FS_3D */
 #if SHOPT_VPIX
-#   define DOSPATHNOD	(shgd->bltin_nodes+66+NFS_3D)
-#   define VPIXNOD	(shgd->bltin_nodes+67+NFS_3D)
+#   define DOSPATHNOD	(shgd->bltin_nodes+68+NFS_3D)
+#   define VPIXNOD	(shgd->bltin_nodes+69+NFS_3D)
 #   define NVPIX	(NFS_3D+2)
 #else
 #   define NVPIX	NFS_3D

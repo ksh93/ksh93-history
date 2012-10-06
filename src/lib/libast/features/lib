@@ -28,11 +28,11 @@ lib	getopt,getsubopt,getopt_long,getopt_long_only
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
 lib	mbtowc,mbrtowc,memalign,memchr,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
-lib	mount,on_exit,onexit,opendir,pathconf
+lib	mount,on_exit,onexit,opendir,pathconf,pipe2
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
-lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair
-lib	spawn,spawnve,spawnveg
+lib	sigprocmask,sigsetmask,sigunblock,sigvec
+lib	spawn,spawnve,spawnveg,spawnvex
 lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
 lib	strmode,strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
@@ -40,6 +40,13 @@ lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
 lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
+lib	posix_spawnattr_setfchdir,posix_spawnattr_setsid,posix_spawnattr_setumask spawn.h
+lib	accept4,socketpair sys/socket.h
+
+lib	openat -D_ATFILE_SOURCE yes{
+	#define _ATFILE_SOURCE	1
+}end
+lib	fstatat64,openat64 -D_ATFILE_SOURCE -D_LARGEFILE64_SOURCE
 
 lib,npt	strtod,strtold,strtol,strtoll,strtoul,strtoull stdlib.h
 lib,npt	sigflag signal.h

@@ -28,16 +28,28 @@
 **	Written by Kiem-Phong Vo.
 */
 
+#ifndef AT_FDCWD
+#define AT_FDCWD		(-100)
+#endif
+
+#if _lib_openat64
+#define sysopenatf		openat64
+#else
+#if _lib_openat
+#define sysopenatf		openat
+#endif
+#endif
+
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern  __EXPORT__
 #endif
 extern
-#undef  extern
 
 #if __STD_C
-Sfio_t* _sfopen(Sfio_t* f, const char* file, const char* mode)
+Sfio_t* _sfopenat(int cwd, Sfio_t* f, const char* file, const char* mode)
 #else
-Sfio_t* _sfopen(f,file,mode)
+Sfio_t* _sfopenat(cwd, f,file,mode)
+int		cwd;		/* cwd fd */
 Sfio_t*		f;		/* old stream structure */
 char*		file;		/* file/string to be opened */
 char*		mode;		/* mode of the stream */
@@ -45,6 +57,20 @@ char*		mode;		/* mode of the stream */
 {
 	int	fd, oldfd, oflags, fflags, sflags;
 	SFMTXDECL(f);
+
+	if (file && *file == '/')
+		cwd = AT_FDCWD;
+#if !defined(sysopenatf)
+	if (cwd != AT_FDCWD)
+	{
+#ifdef ENOTDIR
+		errno = ENOTDIR;
+#else
+		errno = EINVAL;
+#endif
+		return NIL(Sfio_t*);
+	}
+#endif
 
 	/* get the control flags */
 	if((sflags = _sftype(mode,&oflags,&fflags,NIL(int*))) == 0)
@@ -100,11 +126,27 @@ char*		mode;		/* mode of the stream */
 			return NIL(Sfio_t*);
 
 #if _has_oflags /* open the file */
-		while((fd = sysopenf((char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
-			errno = 0;
+#ifdef sysopenatf
+		if (cwd == AT_FDCWD)
+#endif
+			while((fd = sysopenf((char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
+				errno = 0;
+#ifdef sysopenatf
+		else
+			while((fd = sysopenatf(cwd,(char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
+				errno = 0;
+#endif
 #else
-		while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
-			errno = 0;
+#ifdef sysopenatf
+		if (cwd == AT_FDCWD)
+#endif
+			while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
+				errno = 0;
+#ifdef sysopenatf
+		else
+			while((fd = sysopenatf(cwd,file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
+				errno = 0;
+#endif
 		if(fd >= 0)
 		{	if((oflags&(O_CREAT|O_EXCL)) == (O_CREAT|O_EXCL) )
 			{	CLOSE(fd);	/* error: file already exists */
@@ -124,9 +166,16 @@ char*		mode;		/* mode of the stream */
 			if((oflags&O_ACCMODE) != O_WRONLY)
 			{	/* the file now exists, reopen it for read/write */
 				CLOSE(fd);
-				while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 &&
-				      errno == EINTR)
-					errno = 0;
+#ifdef sysopenatf
+				if (cwd == AT_FDCWD)
+#endif
+					while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
+						errno = 0;
+#ifdef sysopenatf
+				else
+					while((fd = sysopenatf(cwd,file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
+						errno = 0;
+#endif
 			}
 		}
 #endif
@@ -141,6 +190,20 @@ char*		mode;		/* mode of the stream */
 
 	return f;
 }
+
+#if __STD_C
+Sfio_t* _sfopen(Sfio_t* f, const char* file, const char* mode)
+#else
+Sfio_t* _sfopen(f,file,mode)
+Sfio_t*		f;		/* old stream structure */
+char*		file;		/* file/string to be opened */
+char*		mode;		/* mode of the stream */
+#endif
+{
+	return _sfopenat(AT_FDCWD, f, file, mode);
+}
+
+#undef  extern
 
 #if __STD_C
 int _sftype(reg const char* mode, int* oflagsp, int* fflagsp, int* uflagp)

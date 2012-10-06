@@ -103,7 +103,7 @@ typedef struct  _mac_
 static int	substring(const char*, size_t, const char*, int[], int);
 static void	copyto(Mac_t*, int, int);
 static void	comsubst(Mac_t*, Shnode_t*, int);
-static int	varsub(Mac_t*);
+static bool	varsub(Mac_t*);
 static void	mac_copy(Mac_t*,const char*, size_t);
 static void	tilde_expand2(Shell_t*,int);
 static char 	*sh_tilde(Shell_t*,const char*);
@@ -386,7 +386,7 @@ void sh_machere(Shell_t *shp,Sfio_t *infile, Sfio_t *outfile, char *string)
 				break;
 			    }
 			    case S_PAR:
-				comsubst(mp,(Shnode_t*)0,1);
+				comsubst(mp,(Shnode_t*)0,3);
 				break;
 			    case S_EOF:
 				if((c=fcfill()) > 0)
@@ -974,7 +974,7 @@ static char *prefix(Shell_t *shp, char *id)
 				sub = nv_refsub(np);
 				np = nv_refnode(np);
 				if(sub)
-					nv_putsub(np,sub,0L);
+					nv_putsub(np,sub,0,0L);
 			}
 			id = (char*)malloc(strlen(cp)+1+(n=strlen(sp=nv_name(np)))+ (sub?strlen(sub)+3:1));
 			memcpy(id,sp,n);
@@ -1020,7 +1020,7 @@ static int subcopy(Mac_t *mp, int flag)
  * if name is a discipline function, run the function and put the results
  * on the stack so that ${x.foo} behaves like ${ x.foo;}
  */
-int sh_macfun(Shell_t *shp, const char *name, int offset)
+bool sh_macfun(Shell_t *shp, const char *name, int offset)
 {
 	Namval_t	*np, *nq;
 	np = nv_bfsearch(name,shp->fun_tree,&nq,(char**)0);
@@ -1047,9 +1047,9 @@ int sh_macfun(Shell_t *shp, const char *name, int offset)
 		stkseek(shp->stk,offset);
 		comsubst((Mac_t*)shp->mac_context,&t.node,2);
 		free(d.dol.dolval[0]);
-		return(1);
+		return(true);
 	}
-	return(0);
+	return(false);
 }
 
 static int namecount(Mac_t *mp,const char *prefix)
@@ -1079,7 +1079,7 @@ static char *nextname(Mac_t *mp,const char *prefix, int len)
  * This routine handles $param,  ${parm}, and ${param op word}
  * The input stream is assumed to be a string
  */
-static int varsub(Mac_t *mp)
+static bool varsub(Mac_t *mp)
 {
 	register int	c;
 	register int	type=0; /* M_xxx */
@@ -1161,8 +1161,8 @@ retry1:
 	    case S_PAR:
 		if(type)
 			goto nosub;
-		comsubst(mp,(Shnode_t*)0,1);
-		return(1);
+		comsubst(mp,(Shnode_t*)0,3);
+		return(true);
 	    case S_DIG:
 		var = 0;
 		c -= '0';
@@ -1316,7 +1316,7 @@ retry1:
 			if(sh_macfun(mp->shp,id,offset))
 			{
 				fcmbget(&LEN);
-				return(1);
+				return(true);
 			}
 		}
 		if(np && (flag&NV_NOADD) && nv_isnull(np))
@@ -1344,7 +1344,7 @@ retry1:
 					ap = nv_arrayptr(np=nq);
 				if(ap)
 				{
-					np = nv_putsub(np,v,ARRAY_SCAN);
+					np = nv_putsub(np,v,0,ARRAY_SCAN);
 					v = stkptr(stkp,mp->dotdot);
 					dolmax =1;
 					if(array_assoc(ap))
@@ -1360,8 +1360,8 @@ retry1:
 						np = 0;
 				}
 			}
-			else if(ap && (isastchar(mode)||type==M_TREE)  && !(ap->nelem&ARRAY_SCAN) && type!=M_SIZE)
-				nv_putsub(np,NIL(char*),ARRAY_SCAN);
+			else if(ap && (isastchar(mode)||type==M_TREE)  && !(ap->flags&ARRAY_SCAN) && type!=M_SIZE)
+				nv_putsub(np,NIL(char*),0,ARRAY_SCAN);
 			if(!isbracechar(c))
 				goto nosub;
 			else
@@ -1398,7 +1398,7 @@ retry1:
 			{
 				type = M_BRACE;
 				v = nv_name(np);
-				if(ap && !mp->dotdot && !(ap->nelem&ARRAY_UNDEF))
+				if(ap && !mp->dotdot && !(ap->flags&ARRAY_UNDEF))
 					addsub = 1;
 			}
 			else if(type==M_TYPE)
@@ -1462,7 +1462,7 @@ retry1:
 				dolg = -1;
 			else
 			{
-				ap->nelem &= ~ARRAY_SCAN;
+				ap->flags &= ~ARRAY_SCAN;
 				dolg = 0;
 		
 			}
@@ -1659,7 +1659,7 @@ retry1:
 				}
 				else if(type > 0)
 				{
-					if(nv_putsub(np,NIL(char*),type|ARRAY_SCAN))
+					if(nv_putsub(np,NIL(char*),type,ARRAY_SCAN))
 						v = nv_getval(np);
 					else
 						v = 0;
@@ -1806,7 +1806,7 @@ retry2:
 						nmatch=substring(v,tsize,pattern,match,flag&STR_MAXIMAL);
 					else
 						nmatch=strngrpmatch(v,vsize,pattern,(ssize_t*)match,elementsof(match)/2,flag|STR_INT);
-					if(nmatch && repstr>0)
+					if(nmatch && repstr)
 						sh_setmatch(mp->shp,v,vsize,nmatch,match,index++);
 					if(nmatch)
 					{
@@ -1839,10 +1839,10 @@ retry2:
 					vsize = -1;
 					break;
 				}
-				if(index>1)
-					sh_setmatch(mp->shp,0,0,nmatch,0,-1);
-				else if(!repstr || (nmatch==0 && index==0))
+				if(!repstr || (nmatch==0 && index==0))
 					sh_setmatch(mp->shp,vlast,vsize_last,nmatch,match,index++);
+				if(index>0 && c=='/' && type)
+					sh_setmatch(mp->shp,0,0,nmatch,0,-1);
 			}
 			if(vsize)
 				mac_copy(mp,v,vsize>0?vsize:strlen(v));
@@ -1903,11 +1903,11 @@ retry2:
 			{
 				if(dolmax &&  --dolmax <=0)
 				{
-					nv_putsub(np,NIL(char*),ARRAY_UNDEF);
+					nv_putsub(np,NIL(char*),0,ARRAY_UNDEF);
 					break;
 				}
 				if(ap)
-					ap->nelem |= ARRAY_SCAN;
+					ap->flags |= ARRAY_SCAN;
 				if(nv_nextsub(np) == 0)
 					break;
 				if(bysub)
@@ -1993,19 +1993,19 @@ retry2:
 		free(repstr);
 	if(idx)
 		free(idx);
-	return(1);
+	return(true);
 nosub:
 	if(type==M_BRACE && sh_lexstates[ST_NORM][c]==S_BREAK)
 	{
 		fcseek(-1);
 		comsubst(mp,(Shnode_t*)0,2);
-		return(1);
+		return(true);
 	}
 	if(type)
 		mac_error(np);
 	fcseek(-1);
 	nv_close(np);
-	return(0);
+	return(false);
 }
 
 /*
@@ -2150,6 +2150,11 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	mp->ifsp = nv_getval(np);
 	stkset(stkp,savptr,savtop);
 	newlines = 0;
+	if(type==3 && mp->shp->spid)
+	{
+		job_wait(mp->shp->spid);
+		mp->shp->spid = 0;
+	}
 	sfsetbuf(sp,(void*)sp,0);
 	bufsize = sfvalue(sp);
 	/* read command substitution output and put on stack or here-doc */
@@ -2609,6 +2614,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	char		shtilde[10], *av[3], *ptr=stkfreeze(shp->stk,1);
 	Sfio_t		*iop, *save=sfstdout;
 	Namval_t	*np;
+	int		r = 0;
 	static int	beenhere=0;
 	strcpy(shtilde,".sh.tilde");
 	np = nv_open(shtilde,shp->fun_tree, NV_VARNAME|NV_NOARRAY|NV_NOASSIGN|NV_NOFAIL);
@@ -2625,7 +2631,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	sfset(iop,SF_READ,0);
 	sfstdout = iop;
 	if(np)
-		sh_fun(shp,np, (Namval_t*)0, av);
+		r = sh_fun(shp,np, (Namval_t*)0, av);
 	else
 		sh_btilde(2, av, &shp->bltindata);
 	sfstdout = save;
@@ -2678,6 +2684,45 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 		else
 			cp = nv_getval(sh_scoped(shp,OLDPWDNOD));
 		return(cp);
+	}
+	if(c=='{')
+	{
+		char		*s2;
+		size_t		len;
+		int		fd, offset=stktell(shp->stk);
+		Spawnvex_t     *vc = (Spawnvex_t*)shp->vex;
+		if(!vc && (vc = spawnvex_open()))
+			shp->vex = (void*)vc;
+		if(!(s2=strchr(string++,'}')))
+			return(NIL(char*));
+		len = s2-string;
+		sfwrite(shp->stk,string,len+1);
+		s2 = stkptr(shp->stk,offset);
+		s2[len] = 0;
+		stkseek(shp->stk,offset);
+		if(isdigit(*s2))
+		{
+			fd=strtol(s2, &s2, 10);
+			if(*s2)
+				return(NIL(char*));
+		}
+		else
+		{
+			Namval_t *np=nv_open(s2, shp->var_tree, NV_VARNAME|NV_NOFAIL|NV_NOADD);
+			if (!np)
+				return(NIL(char*));
+			fd = (int)nv_getnum(np);
+			nv_close(np);
+		}
+		if(fd<0)
+			return(NIL(char*));
+		if (access("/proc/self/fd", X_OK) == 0)
+			sfprintf(shp->stk, "/proc/%ld/fd/%d", (long)getpid(), fd);
+		else
+			sfprintf(shp->stk,"/dev/fd/%d", fd);
+		if(vc)
+			spawnvex_add(vc,fd,fd,0,0);
+		return(stkfreeze(shp->stk,1));
 	}
 #if _WINIX
 	if(fcgetc(c)=='/')

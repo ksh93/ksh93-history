@@ -569,7 +569,7 @@ static int gettok(register struct vars *vp)
  * evaluate a subexpression with precedence
  */
 
-static int expr(register struct vars *vp,register int precedence)
+static bool expr(register struct vars *vp,register int precedence)
 {
 	register int	c, op;
 	int		invalid,wasop=0;
@@ -592,7 +592,7 @@ again:
 	    case A_EOF:
 		if(precedence>2)
 			ERROR(vp,e_moretokens);
-		return(1);
+		return(true);
 	    case A_MINUS:
 		op =  A_UMINUS;
 		goto common;
@@ -610,7 +610,7 @@ again:
 		op |= T_NOFLOAT;
 	    common:
 		if(!expr(vp,c))
-			return(0);
+			return(false);
 		sfputc(shp->stk,op);
 		break;
 	    default:
@@ -678,7 +678,7 @@ again:
 		{
 			wasop = 0;
 			if(!expr(vp,c))
-				return(0);
+				return(false);
 		}
 		switch(op)
 		{
@@ -701,7 +701,7 @@ again:
 			if(!expr(vp,c))
 			{
 				stkseek(shp->stk,stktell(shp->stk)-1);
-				return(0);
+				return(false);
 			}
 			lvalue.value = 0;
 			break;
@@ -735,7 +735,7 @@ again:
 				ERROR(vp,e_synbad);
 			vp->paren++;
 			if(!expr(vp,1))
-				return(0);
+				return(false);
 			vp->paren--;
 			if(fun)
 			{
@@ -781,7 +781,7 @@ again:
 			offset1 = stkpush(shp->stk,vp,0,short);
 			sfputc(shp->stk,A_POP);
 			if(!expr(vp,1))
-				return(0);
+				return(false);
 			if(gettok(vp)!=A_COLON)
 				ERROR(vp,e_questcolon);
 			sfputc(shp->stk,A_JMP);
@@ -789,7 +789,7 @@ again:
 			*((short*)stkptr(shp->stk,offset1)) = stktell(shp->stk);
 			sfputc(shp->stk,A_POP);
 			if(!expr(vp,3))
-				return(0);
+				return(false);
 			*((short*)stkptr(shp->stk,offset2)) = stktell(shp->stk);
 			lvalue.value = 0;
 			wasop = 0;
@@ -813,7 +813,7 @@ again:
 			offset = stkpush(shp->stk,vp,0,short);
 			sfputc(shp->stk,A_POP);
 			if(!expr(vp,c))
-				return(0);
+				return(false);
 			*((short*)stkptr(shp->stk,offset)) = stktell(shp->stk);
 			if(op!=A_QCOLON)
 				sfputc(shp->stk,A_NOTNOT);
@@ -895,7 +895,7 @@ again:
 	}
  done:
 	vp->nextchr = vp->errchr;
-	return(1);
+	return(true);
 }
 
 Arith_t *arith_compile(Shell_t *shp,const char *string,char **last,Sfdouble_t(*fun)(const char**,struct lval*,int,Sfdouble_t),int emode)

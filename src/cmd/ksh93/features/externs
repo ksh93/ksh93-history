@@ -5,6 +5,9 @@ lib	setreuid,setregid,nice,fork,spawnveg,fchdir
 lib	pathnative,pathposix,uwin_path,uwin_unpath,fts_notify
 lib	memcntl sys/mman.h
 lib	getexecuser,free_execattr exec_attr.h -lsecdb
+lib	openat,fstatat,pipe2,accept4
+typ	_Decimal64
+typ	_Decimal128
 
 reference	unistd.h
 

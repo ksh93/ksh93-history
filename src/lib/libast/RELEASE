@@ -1,3 +1,10 @@
+12-09-27 regex/reglib.h: fix superfluous mask in bit test macros that limited values to 256 bits (now unlimited)
+12-09-26 comp/iconv.c: fix UTF-16 <=> UCS-2 mixup
+12-09-26 string/qp.c: add { qpdecode() qpencode() }
+12-09-24 sfio: use #if _mmap_worthy instead of obsolete #ifdef MAP_TYPE
+12-09-14 tminit.c: for UTC zone with no native name use getenv("TZ")
+12-09-13 tmzone.c,tmxdate.c: handle [ZY][EW]n[ABC]? tz notation
+12-09-11 spawnvex: add generalized spawnveg() replacement
 12-07-31 cdt: sync with kpv
 12-07-31 error.h: add { Error_write_f, void* handle } for sh_exit()
 12-07-30 astsa: update to handle installation that already have { aso cdt sfio vmalloc }

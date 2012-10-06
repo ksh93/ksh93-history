@@ -410,7 +410,7 @@ unset foo
 unset foo
 foo=$(false) > /dev/null && err_exit 'failed command substitution with redirection not returning false'
 expected=foreback
-got=$(print -n fore; (sleep 2;print back)&)
+got=`print -n fore; (sleep 2;print back)&`
 [[ $got == $expected ]] || err_exit "command substitution background process output error -- got '$got', expected '$expected'"
 
 binfalse=$(whence -p false)

@@ -295,10 +295,6 @@
 
 #endif /*_PACKAGE_ast*/
 
-#if !_mmap_worthy
-#undef MAP_TYPE
-#endif
-
 #include	"FEATURE/float"
 
 #include	<errno.h>

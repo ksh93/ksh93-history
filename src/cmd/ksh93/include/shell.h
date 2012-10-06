@@ -37,14 +37,22 @@
 #else
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
+#if __STDC_VERSION__ >= 199901L
+#    include	<stdint.h>
+#endif
 
 #undef NOT_USED
-#define NOT_USED(x)	(&x,1)
+#define NOT_USED(x)	(&(x),1)
 
 /* options */
+#if __STDC_VERSION__ >= 199901L
+    typedef uint_fast64_t Shopt_t_data_t;
+#else
+    typedef unsigned int Shopt_t_data_t;
+#endif
 typedef struct
 {
-	unsigned long v[4];
+	Shopt_t_data_t v[(256/8)/sizeof(Shopt_t_data_t)];
 }
 Shopt_t;
 
@@ -124,7 +132,7 @@ typedef struct sh_scope
 	char		*cmdname;
 	char		*filename;
 	char		*funname;
-	int		lineno;
+	int64_t		lineno;
 	Dt_t		*var_tree;
 	struct sh_scope	*self;
 } Shscope_t;
@@ -197,9 +205,9 @@ extern Shell_t		*sh_init(int,char*[],Shinit_f);
 extern Sfio_t		*sh_iogetiop(int,int);
 extern int		sh_main(int, char*[], Shinit_f);
 extern void		sh_menu(Sfio_t*, int, char*[]);
-extern unsigned long	sh_offoption(int);
-extern unsigned long	sh_isoption(int);
-extern unsigned long	sh_onoption(int);
+extern void		sh_offoption(int);
+extern bool		sh_isoption(int);
+extern void		sh_onoption(int);
 extern int		sh_open(const char*, int, ...);
 extern int		sh_openmax(void);
 extern void		*sh_parse(Shell_t*, Sfio_t*,int);
@@ -228,9 +236,9 @@ extern Sfio_t		*sh_fd2sfio_20120720(Shell_t*,int);
 extern int 		sh_fun_20120720(Shell_t*,Namval_t*,Namval_t*, char*[]);
 extern int 		sh_funscope_20120720(Shell_t*,int,char*[],int(*)(void*),void*,int);
 extern Shscope_t	*sh_getscope_20120720(Shell_t*,int,int);
-extern unsigned long	sh_offoption_20120720(Shell_t*,int);
-extern unsigned long	sh_isoption_20120720(Shell_t*,int);
-extern unsigned long	sh_onoption_20120720(Shell_t*,int);
+extern void		sh_offoption_20120720(Shell_t*,int);
+extern bool		sh_isoption_20120720(Shell_t*,int);
+extern void		sh_onoption_20120720(Shell_t*,int);
 extern void		sh_menu_20120720(Shell_t *,Sfio_t*, int, char*[]);
 extern Sfio_t		*sh_pathopen_20120720(Shell_t*,const char*);
 extern int		sh_reinit_20120720(Shell_t*,char*[]);

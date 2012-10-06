@@ -258,7 +258,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			nv_unset(np);
 			if((ap=nv_arrayptr(np)) && !ap->fun)
 				ap->nelem--;
-			nv_putsub(np,NIL(char*),0L);
+			nv_putsub(np,NIL(char*),0L,0);
 		}
 		else if(flags&C_FLAG)
 		{
@@ -782,7 +782,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		}
 		if(array_index)
 		{
-			nv_putsub(np, NIL(char*), array_index++);
+			nv_putsub(np, NIL(char*), array_index++,0);
 			if(c!=S_NL)
 				continue;
 			name = *++names;

@@ -72,7 +72,7 @@ struct sh_scoped
 	char		*cmdname;
 	char		*filename;
 	char		*funname;
-	int		lineno;
+	int64_t		lineno;
 	Dt_t		*save_tree;	/* var_tree for calling function */
 	struct sh_scoped *self;		/* pointer to copy of this scope*/
 	Dt_t		*var_local;	/* local level variables for name() */
@@ -123,7 +123,7 @@ struct shared
 	gid_t		groupid;
 	gid_t		egroupid;
 	pid_t		pid;
-	int32_t		ppid;
+	pid_t		ppid;
 	unsigned char	sigruntime[2];
 	Namval_t	*bltin_nodes;
 	Namval_t	*bltin_cmds;
@@ -161,8 +161,8 @@ struct shared
 	Namval_t	*prev_table;	/* previous table used in nv_open  */ \
 	Sfio_t		*outpool;	/* ouput stream pool */ \
 	long		timeout;	/* read timeout */ \
-	short		curenv;		/* current subshell number */ \
-	short		jobenv;		/* subshell number for jobs */ \
+	long		curenv;		/* current subshell number */ \
+	long		jobenv;		/* subshell number for jobs */ \
 	int		infd;		/* input file descriptor */ \
 	short		nextprompt;	/* next prompt is PS<nextprompt> */ \
 	short		poolfiles; \
@@ -237,6 +237,8 @@ struct shared
 	void		*optlist; \
 	void		*sigmsg; \
 	void		**siginfo; \
+	void		*vex; \
+	void		*vexp; \
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
 	Shinit_f	userinit; \
@@ -274,6 +276,11 @@ struct shared
 
 #include	"shtable.h"
 #include	"regress.h"
+
+#if !defined(F_DUPFD_CLOEXEC)
+#undef	F_dupfd_cloexec
+#define F_dupfd_cloexec		(-99)
+#endif
 
 /* error exits from various parts of shell */
 #define	NIL(type)	((type)0)
@@ -409,7 +416,7 @@ extern pid_t 		sh_fork(Shell_t*,int,int*);
 extern pid_t		_sh_fork(Shell_t*,pid_t, int ,int*);
 extern char 		*sh_mactrim(Shell_t*,char*,int);
 extern int 		sh_macexpand(Shell_t*,struct argnod*,struct argnod**,int);
-extern int		sh_macfun(Shell_t*,const char*,int);
+extern bool		sh_macfun(Shell_t*,const char*,int);
 extern void 		sh_machere(Shell_t*,Sfio_t*, Sfio_t*, char*);
 extern void 		*sh_macopen(Shell_t*);
 extern char 		*sh_macpat(Shell_t*,struct argnod*,int);
@@ -437,39 +444,40 @@ extern void		sh_subtmpfile(Shell_t*);
 extern char 		*sh_substitute(Shell_t*,const char*,const char*,char*);
 extern void		sh_timetraps(Shell_t*);
 extern const char	*_sh_translate(const char*);
-extern int		sh_trace(Shell_t*,char*[],int);
+extern bool		sh_trace(Shell_t*,char*[],int);
 extern void		sh_trim(char*);
 extern int		sh_type(const char*);
 extern void             sh_unscope(Shell_t*);
 extern void		sh_utol(const char*, char*);
 extern int 		sh_whence(char**,int);
 #if SHOPT_COSHELL
-   extern int		sh_coaddfile(Shell_t*,char*);
+   extern bool		sh_coaddfile(Shell_t*,char*);
    extern int		sh_copipe(Shell_t*, int[], int);
    extern int		sh_coaccept(Shell_t*,int[],int);
 #endif /* SHOPT_COSHELL */
 #if SHOPT_NAMESPACE
     extern Namval_t	*sh_fsearch(Shell_t*,const char *,int);
 #endif /* SHOPT_NAMESPACE */
-extern int		sh_diropenat(Shell_t*, int, const char*, int);
+extern int		sh_diropenat(Shell_t*, int, const char*, bool);
 
 #ifndef ERROR_dictionary
 #   define ERROR_dictionary(s)	(s)
 #endif
 #define sh_translate(s)	_sh_translate(ERROR_dictionary(s))
 
-#define WBITS		(sizeof(long)*8)
+#define WBITS		(sizeof(Shopt_t_data_t)*8)
 #define WMASK		(0xff)
 
-#define is_option(s,x)	((s)->v[((x)&WMASK)/WBITS] & (1L << ((x) % WBITS)))
-#define on_option(s,x)	((s)->v[((x)&WMASK)/WBITS] |= (1L << ((x) % WBITS)))
-#define off_option(s,x)	((s)->v[((x)&WMASK)/WBITS] &= ~(1L << ((x) % WBITS)))
+#define is_option(s,x)	((bool)(((s)->v[((x)&WMASK)/WBITS] &  (1UL << ((x) % WBITS)))?true:false))
+#define on_option(s,x)	((void)((s)->v[((x)&WMASK)/WBITS] |=  (1UL << ((x) % WBITS))))
+#define off_option(s,x)	((void)((s)->v[((x)&WMASK)/WBITS] &= ~(1UL << ((x) % WBITS))))
+
 #undef sh_isoption
 #undef sh_onoption
 #undef sh_offoption
-#define sh_isoption(shp,x)	is_option(&(shp)->options,x)
-#define sh_onoption(shp,x)	on_option(&(shp)->options,x)
-#define sh_offoption(shp,x)	off_option(&(shp)->options,x)
+#define sh_isoption(shp,x)	is_option(&(shp)->options,(x))
+#define sh_onoption(shp,x)	on_option(&(shp)->options,(x))
+#define sh_offoption(shp,x)	off_option(&(shp)->options,(x))
 
 
 #define sh_state(x)	( 1<<(x))

@@ -2,4 +2,4 @@ iff NV_API
 
 api nv = shell
 
-api nv 20120720 nv_lastdict
+api nv 20120720 nv_lastdict nv_putsub

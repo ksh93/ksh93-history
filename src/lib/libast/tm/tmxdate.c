@@ -228,12 +228,14 @@ tmxdate(register const char* s, char** e, Time_t now)
 		state &= (state & HOLD) ? ~(HOLD) : ~(EXACT|LAST|NEXT|THIS);
 		if ((set|state) & (YEAR|MONTH|DAY))
 			skip['/'] = 1;
-		message((-1, "AHA#%d state=" FFMT " set=" FFMT, __LINE__, FLAGS(state), FLAGS(set)));
+		while (isspace(*s))
+			s++;
+		message((-1, "AHA#%d state=" FFMT " set=" FFMT " '%s'", __LINE__, FLAGS(state), FLAGS(set), s));
 		for (;;)
 		{
 			if (*s == '.' || *s == '-' || *s == '+')
 			{
-				if (((set|state) & (YEAR|MONTH|HOUR|MINUTE|ZONE)) == (YEAR|MONTH|HOUR|MINUTE) && (i = tmgoff(s, &t, TM_LOCALZONE)) != TM_LOCALZONE)
+				if (((set|state) & (MONTH|HOUR|MINUTE|ZONE)) == (MONTH|HOUR|MINUTE) && (i = tmgoff(s, &t, TM_LOCALZONE)) != TM_LOCALZONE)
 				{
 					zone = i;
 					state |= ZONE;

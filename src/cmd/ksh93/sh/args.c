@@ -802,6 +802,13 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 	if(monitor = (sh_isstate(shp,SH_MONITOR)!=0))
 		sh_offstate(shp,SH_MONITOR);
 	shp->subshell = 0;
+#ifdef SPAWN_cwd
+	if(shp->vex || (shp->vex = (void*)spawnvex_open()))
+		spawnvex_add((Spawnvex_t*)shp->vex,pv[fd],pv[fd],0,0);
+	else
+#endif /* SPAWN_cwd */
+		fcntl(pv[fd],F_SETFD,0);
+	shp->fdstatus[pv[fd]] &= ~IOCLEX;
 	if(fd)
 	{
 		shp->inpipe = pv;

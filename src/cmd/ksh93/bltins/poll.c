@@ -28,7 +28,6 @@
 #include "history.h"
 #include "terminal.h"
 #include <stdio.h>
-#include <stdbool.h>
 #include <poll.h>
 #include <tmx.h>
 #include <stk.h>
@@ -221,7 +220,7 @@ const char sh_optpoll[] =
 ;
 
 
-/* Like |nv_open()| but constructs variable name on the fly using |sprintf()| format */
+/* Like |nv_open()| but constructs variable name on the fly using |sfsprintf()| format */
 static
 Namval_t *nv_open_fmt(Dt_t *dict, int flags, const char *namefmt, ...)
 {
@@ -524,7 +523,7 @@ int b_poll(int argc, char *argv[], Shbltin_t* context)
 	 * Count number of array elememts. We need to do it "manually"
 	 * to handle sparse indexed and associative arrays
 	 */
-	nv_putsub(array_np, NULL, ARRAY_SCAN);
+	nv_putsub(array_np, NULL, 0, ARRAY_SCAN);
 	array_np_sub = array_np;
 	do
 	{
@@ -547,7 +546,7 @@ int b_poll(int argc, char *argv[], Shbltin_t* context)
 	/*
 	 * Walk the array again and fetch the data we need...
 	 */
-	nv_putsub(array_np, NULL, ARRAY_SCAN);
+	nv_putsub(array_np, NULL, 0, ARRAY_SCAN);
 	array_np_sub = array_np;
 	i = 0;
 	do
@@ -723,7 +722,7 @@ int b_poll(int argc, char *argv[], Shbltin_t* context)
 		/* Add array index to eventarray if this pollfd entry had any events */
 		if (eventarrayname && pollfd[i].revents)
 		{
-			sprintf(buff, "%s+=( '%s' )", eventarrayname, pollstat[i].array_subscript);
+			sfsprintf(buff, sizeof(buff), "%s+=( '%s' )", eventarrayname, pollstat[i].array_subscript);
 			sh_trap(shp, buff, 0);
 		}
 	}

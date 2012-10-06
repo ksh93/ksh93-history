@@ -103,6 +103,10 @@ void	sh_fault(register int sig)
 		{
 			shp->trapnote |= SH_SIGTRAP;
 			shp->sigflag[sig] |= SH_SIGTRAP;
+			if(!shp->siginfo)
+				shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
+			shp->siginfo[sig] = malloc(sizeof(siginfo_t));
+			memcpy(shp->siginfo[sig],info,sizeof(siginfo_t));
 		}
 		return;
 	}
@@ -422,6 +426,8 @@ void	sh_chktrap(Shell_t* shp)
 			sh_exit(shp,shp->exitval);
 		}
 	}
+	if(!shp->sigflag)
+		return;
 	if(shp->sigflag[SIGALRM]&SH_SIGALRM)
 		sh_timetraps(shp);
 	if((shp->sigflag[SIGCHLD]&SH_SIGTRAP) && shp->st.trapcom[SIGCHLD])
@@ -566,7 +572,7 @@ void sh_done(void *ptr, register int sig)
 		savxit = SH_EXITSIG|sig;
 	if(shp->userinit)
 		(*shp->userinit)(shp, -1);
-	if(t=shp->st.trapcom[0])
+	if(shp->st.trapcom && (t=shp->st.trapcom[0]))
 	{
 		shp->st.trapcom[0]=0; /*should free but not long */
 		shp->oldexit = savxit;
@@ -579,7 +585,8 @@ void sh_done(void *ptr, register int sig)
 		sh_offstate(shp,SH_ERREXIT);
 		sh_chktrap(shp);
 	}
-	nv_scan(shp->var_tree,array_notify,(void*)0,NV_ARRAY,NV_ARRAY);
+	if(shp->var_tree)
+		nv_scan(shp->var_tree,array_notify,(void*)0,NV_ARRAY,NV_ARRAY);
 	sh_freeup(shp);
 #if SHOPT_ACCT
 	sh_accend();
@@ -591,7 +598,7 @@ void sh_done(void *ptr, register int sig)
 		job_walk(shp,sfstderr,job_terminate,SIGHUP,NIL(char**));
 #endif	/* JOBS */
 	job_close(shp);
-	if(nv_search("VMTRACE", shp->var_tree,0))
+	if(shp->var_tree && nv_search("VMTRACE", shp->var_tree,0))
 		strmatch((char*)0,(char*)0);
 	sfsync((Sfio_t*)sfstdin);
 	sfsync((Sfio_t*)shp->outpool);

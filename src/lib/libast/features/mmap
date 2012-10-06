@@ -229,6 +229,16 @@ tst	note{ mmap is worth using }end output{
 	#include <sys/mman.h>
 	#include <sys/stat.h>
 	#include <sys/times.h>
+
+	#if _lib_mmap64
+	#undef	mmap
+	#define mmap	mmap64
+	#endif
+
+	#if _lib_munmap64
+	#undef	munmap
+	#define munmap	munmap64
+	#endif
 	
 	#define MAPSIZE (64*1024)
 	#define BUFSIZE	(MAPSIZE/8)

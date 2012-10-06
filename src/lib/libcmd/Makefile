@@ -26,7 +26,11 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c \
 	vmstate.c wc.c revlib.c wclib.c sumlib.o \
 	fts_fix.c lib.c \
+	grep.c xargs.c iconv.c \
 	-lfsg -lmd -lutil
+
+grep.o : LICENSE=since=1995,author=gsf+doug
+iconv.o xargs.o : LICENSE=since=1989,author=gsf
 
 sumlib.o : +lsum
 	$(AR) x $(*:O=1) $(<)
@@ -69,14 +73,34 @@ cmdlist.h : (src) $$(-mam:+$$(src))
 	$(" ")* -lcmd function list -- define your own CMDLIST()
 	$(" ")*/
 	
+	$("#")if _AST_VERSION < 20121001
+
 	!
-	$(SED) \
+	set $( $(SED) \
 		-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 		-e 's/^b_//' \
 		-e 's/(.*//' \
-		-e 's/.*/CMDLIST(&)/' \
 		$($(~):T=F) |
-	$(SORT) -u
+		$(SORT) -u
+		)
+	for cmd
+	do	echo "CMDLIST($cmd)"
+	done
+	cat <<!
+	
+	$("#")else
+
+	!
+	for cmd
+	do	for dir in /bin /usr/bin
+		do	[[ -x $dir/$cmd ]] && break
+		done
+		echo "CMDLIST($cmd, \"$dir\")"
+	done
+	cat <<!
+	
+	$("#")endif
+	!
 	} > 1.$(tmp).h
 	if	$(CMP) $(CMPFLAGS) 1.$(tmp).h $(<)
 	then	$(RM) $(RMFLAGS) 1.$(tmp).h

@@ -347,7 +347,7 @@ static void job_waitsafe(int sig)
  * Reap one job
  * When called with sig==0, it does a blocking wait
  */
-int job_reap(register int sig)
+bool job_reap(register int sig)
 {
 	Shell_t *shp = sh_getinterp();
 	register pid_t pid;
@@ -355,7 +355,8 @@ int job_reap(register int sig)
 	struct process *px;
 	register int flags;
 	struct jobsave *jp;
-	int nochild=0, oerrno, wstat;
+	bool nochild=false;
+	int oerrno, wstat;
 	Waitevent_f waitevent = shp->gd->waitevent;
 	static int wcontinued = WCONTINUED;
 #if SHOPT_COSHELL
@@ -568,7 +569,7 @@ int job_reap(register int sig)
 	{
 		errno = oerrno;
 		job.numbjob = 0;
-		nochild = 1;
+		nochild = true;
 	}
 	shp->gd->waitevent = waitevent;
 	if(sh_isoption(shp,SH_NOTIFY) && sh_isstate(shp,SH_TTYWAIT))
@@ -1108,15 +1109,19 @@ int job_kill(register struct process *pw,register int sig)
 	register int r;
 	const char *msg;
 	int qflag = sig&JOB_QFLAG;
+#ifdef SIGTSTP
+	int stopsig;
+#endif
 #if _lib_sigqueue
 	union sigval sig_val;
 	sig_val.sival_ptr = shp->sigmsg;
 #else
+#   define sigqueue(a,b,c)	kill(a,b)
 	int sig_val = 0;
 #endif
 	sig &= ~JOB_QFLAG;
 #ifdef SIGTSTP
-	int stopsig = (sig==SIGSTOP||sig==SIGTSTP||sig==SIGTTIN||sig==SIGTTOU);
+	stopsig = (sig==SIGSTOP||sig==SIGTSTP||sig==SIGTTIN||sig==SIGTTOU);
 #else
 #	define stopsig	1
 #endif	/* SIGTSTP */
@@ -1496,12 +1501,12 @@ static void job_prmsg(Shell_t *shp,register struct process *pw)
  * pid=-1 to wait for all runing processes
  */
 
-int	job_wait(register pid_t pid)
+bool	job_wait(register pid_t pid)
 {
 	Shell_t		*shp = sh_getinterp();
 	register struct process *pw=0,*px;
 	register int	jobid = 0;
-	int		nochild = 1;
+	bool		nochild = true;
 	char		intr = 0;
 	if(pid < 0)
 	{
@@ -1711,7 +1716,7 @@ int job_switch(register struct process *pw,int bgflag)
 		for(; pw; pw=pw->p_nxtproc)
 			pw->p_flag |= P_DISOWN;
 		job_unlock();
-		return(0);
+		return(false);
 	}
 #ifdef SIGTSTP
 	if(bgflag=='b')
@@ -1736,7 +1741,7 @@ int job_switch(register struct process *pw,int bgflag)
 		if(!(pw=job_unpost(shp,pw,1)))
 		{
 			job_unlock();
-			return(1);
+			return(true);
 		}
 		job.waitall = 1;
 		pw->p_flag |= P_FG;

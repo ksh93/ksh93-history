@@ -91,7 +91,7 @@ static char	beenhere = 0;
  * 1 returned if file found, 0 otherwise
  */
 
-int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
+bool sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
 {
 	char*	oid;
 	char*	nid;
@@ -100,7 +100,7 @@ int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
 	if (!file || !*file || (fd = path_open(shp,file, PATHCOMP)) < 0)
 	{
 		REGRESS(source, "sh_source", ("%s:ENOENT", file));
-		return 0;
+		return false;
 	}
 	oid = error_info.id;
 	nid = error_info.id = strdup(file);
@@ -109,7 +109,7 @@ int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
 	exfile(shp, iop, fd);
 	error_info.id = oid;
 	free(nid);
-	return 1;
+	return true;
 }
 
 #ifdef S_ISSOCK
@@ -125,7 +125,8 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	register Sfio_t  *iop;
 	register Shell_t *shp;
 	struct stat	statb;
-	int i, rshflag;		/* set for restricted shell */
+	int 		i;	/* set for restricted shell */
+	bool		rshflag;	/* set for restricted shell */
 	char *command;
 	free(malloc(64*1024));
 #ifdef _lib_sigvec

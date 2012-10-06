@@ -218,6 +218,7 @@ expected=foo
 got=${ tst.f;}
 [[ "$got" == "$expected" ]] || err_exit "_.g where g is a function in type discipline method failed -- expected '$expected', got '$got'"
 
+let 1
 typeset -T B_t=(
 	integer -a arr
 	function f
@@ -597,7 +598,7 @@ $SHELL << \EOF
 			 compound p=( hello=world )
 			 c.b.binsert p 1 $i
 		done
-		exp='typeset -C c=(board_t b=(typeset -a board_y=( [1]=(typeset -a board_x=( [0]=(field=(hello=world;))[1]=(field=(hello=world)));));))'
+		exp='typeset -C c=(board_t b=(typeset -C -a board_y=( [1]=(typeset -a board_x=( [0]=(field=(hello=world;))[1]=(field=(hello=world)));));))'
 		[[ $(typeset -p c) == "$exp" ]] || exit 1
 	}
 	main
@@ -677,5 +678,9 @@ redirect  {c.ar[b].in_fd}<&-
 redirect  {c.ar[a].out_fd}>&-
 redirect  {c.ar[b].out_fd}>&-
 rm -f fifo_a fifo_b
+
+typeset -T Z_t=(compound -a x)
+Z_t z
+[[ $(typeset -p z.x) ==  *'-C -a'* ]] || err_exit 'typeset -p for compound array element not displaying attributes'  
 
 exit $((Errors<125?Errors:125))

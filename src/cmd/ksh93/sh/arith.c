@@ -31,6 +31,7 @@
 #include	"variables.h"
 #include	"builtins.h"
 
+#undef SHOPT_FIXEDARRAY
 #ifndef LLONG_MAX
 #define LLONG_MAX	LONG_MAX
 #endif
@@ -118,12 +119,12 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		{
 			Namarr_t *ap = nv_arrayptr(np);
 			ap->nelem = dim;
-			nv_putsub(np,(char*)0,n);
+			nv_putsub(np,(char*),n,0);
 		}
 		else
 #endif /* SHOPT_FIXEDARRAY */
 		if(sub)
-			nv_putsub(np,sub,assign==NV_ASSIGN?ARRAY_ADD:0);
+			nv_putsub(np,sub,0,assign==NV_ASSIGN?ARRAY_ADD:0);
 	}
 	if(!nosub && flag)
 	{
@@ -168,9 +169,9 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			}
 #if SHOPT_FIXEDARRAY
 			ap = nv_arrayptr(np);
-			cp = nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE|(ap&&ap->fixed?NV_FARRAY:0),np->nvshell);
+			cp = nv_endsubscript(np,sub,(assign==NV_ASSIGN?NV_ADD:0)|NV_SUBQUOTE|(ap&&ap->fixed?NV_FARRAY:0),np->nvshell);
 #else
-			cp = nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE,np->endsubscript);
+			cp = nv_endsubscript(np,sub,(assign==NV_ASSIGN?NV_ADD:0)|NV_SUBQUOTE,np->nvshell);
 #endif /* SHOPT_FIXEDARRAY */
 			if(*cp!='[')
 				break;
@@ -194,7 +195,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		}
 	}
 	else if(nosub>0)
-		nv_putsub(np,(char*)0,nosub-1);
+		nv_putsub(np,(char*)0,nosub-1,0);
 	return(np);
 }
 

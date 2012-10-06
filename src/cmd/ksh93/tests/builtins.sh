@@ -642,4 +642,24 @@ read baz <<< 'foo\\\\bar'
 IFS=',' read -S a b c <<<'foo,"""title"" data",bar'
 [[ $b == '"title" data' ]] || err_exit '"" inside "" not handled correctly with read -S'
 
+PATH=/bin:/usr/bin
+basename=$(whence -p basename)
+cmp=$(whence -p cmp)
+.sh.op_astbin=/opt/ast/bin
+PATH=/opt/ast/bin:$PATH
+PATH=/opt/ast/bin:/bin:/usr/bin
+[[ ${SH_OPTIONS} == *astbin=/opt/ast/bin* ]] || err_exit "SH_OPTIONS=${SH_OPTIONS} but should contain astbin=/opt/ast/bin"
+[[ $(whence basename) == /opt/ast/bin/basename ]] || err_exit "basename bound to $(whence basename) but should be bound to /opt/ast/bin/basename" 
+[[ $(whence cmp) == /opt/ast/bin/cmp ]] || err_exit "cmp bound to $(whence cmp) but should be bound to /opt/ast/bin/cmp" 
+.sh.op_astbin=/bin
+SH_OPTIONS=astbin=/bin
+[[ ${SH_OPTIONS} == *astbin=/bin* ]] || err_exit "SH_OPTIONS=${SH_OPTIONS} but should contain astbin=/bin"
+[[ $(whence basename) == "$basename" ]] || err_exit "basename bound to $(whence basename) but should be bound to $basename" 
+[[ $(whence cmp) == "$cmp" ]] || err_exit "cmp bound to $(whence cmp) but should be bound to $cmp" 
+.sh.op_astbin=/opt/ast/bin
+[[ $(whence basename) == /opt/ast/bin/basename ]] || err_exit "basename bound to $(whence basename) but should be rebound to /opt/ast/bin/basename" 
+[[ $(whence cmp) == /opt/ast/bin/cmp ]] || err_exit "cmp bound to $(whence cmp) but should be rebound to /opt/ast/bin/cmp" 
+PATH=/bin:/usr/bin:/opt/ast/bin
+[[ $(whence basename) == "$basename" ]] || err_exit "basename bound to $(whence basename) but should be bound to $basename when PATH=$PATH" 
+[[ $(whence cmp) == "$cmp" ]] || err_exit "cmp bound to $(whence cmp) but should be bound to $cmp when PATH=$PATH" 
 exit $((Errors<125?Errors:125))

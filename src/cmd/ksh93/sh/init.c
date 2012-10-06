@@ -166,6 +166,7 @@ struct match
 	char		*rval[2];
 	int		*match;
 	char		*nodes;
+	char		*names;
 	int		first;
 	int		vsize;
 	int		vlen;
@@ -209,6 +210,8 @@ typedef struct _init_
 	Namfun_t	LC_ALL_init;
 	Namfun_t	LANG_init;
 #endif /* _hdr_locale */
+	Namfun_t	OPTIONS_init;
+	Namfun_t	OPTastbin_init;
 } Init_t;
 
 static Init_t		*ip;
@@ -748,6 +751,112 @@ static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	np->nvenv = 0;
 }
 
+static astbin_update(Shell_t *shp, const char *from, const char *to)
+{
+	Namval_t	*mp,*np;
+	const char	*path;
+	size_t		len,tolen,flen;
+	int		offset = stktell(shp->stk);
+	int		bin = (strcmp(from,"/bin")==0 || strcmp(from,"/usr/bin")==0);
+	int		tobin = (strcmp(to,"/bin")==0 || strcmp(to,"/usr/bin")==0);
+	if(bin)
+		from = "/usr/bin";
+	if(tobin)
+		to = "/usr/bin";
+	len = strlen(from);
+	tolen = strlen(to);
+	for(np=(Namval_t*)dtfirst(shp->bltin_tree);np;np=(Namval_t*)dtnext(shp->bltin_tree,np))
+	{
+		flen = len;
+		if(bin && memcmp(from+4,np->nvname,len-4)==0)
+			flen -=4;
+		else if(memcmp(from,np->nvname,len))
+			continue;
+		nv_onattr(np, BLT_DISABLE);
+		if(mp = nv_search(strrchr(np->nvname,'/')+1,shp->track_tree,0))
+			nv_onattr(mp,NV_NOALIAS);
+		stkseek(shp->stk,offset);
+		sfwrite(shp->stk,to,tolen);
+		sfputr(shp->stk,np->nvname+flen,0);
+		path = stkptr(shp->stk,offset);
+		mp = 0;
+		if(tobin)
+		{
+			mp =nv_search(path,shp->bltin_tree,0);
+			if(!mp)
+				path += 4;
+		}
+		if(!mp)
+			mp =nv_search(path,shp->bltin_tree,0);
+		if(mp)
+			nv_offattr(mp, BLT_DISABLE);
+		else
+			sh_addbuiltin(shp,path,(Shbltin_f)np->nvalue.bfp,0);
+	}
+	if(strcmp(from,SH_CMDLIB_DIR)==0)
+		path_cmdlib(shp,from,false);
+	if(strcmp(to,SH_CMDLIB_DIR)==0)
+		path_cmdlib(shp,to,true);
+}
+
+static void put_astbin(Namval_t* np,const char *val,int flags,Namfun_t *fp)
+{
+	if(!val || *val==0)
+		val = (char*)e_astbin;
+	if(strcmp(np->nvalue.cp,val))
+	{
+		astbin_update(np->nvshell,np->nvalue.cp,val);
+		nv_putv(np, val, flags,fp);
+	}
+}
+
+/* These two routines are for SH_OPTIONS */
+static void put_options(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
+{
+	Shell_t		*shp = np->nvshell;
+	Namval_t	*mp;
+	register int	c,offset = stktell(shp->stk);
+	const char	*cp=val,*sp;
+	if(!cp)
+	{
+		nv_putv(np,val,0,fp);
+		return;
+	}
+	sfputr(shp->stk,".sh.op",'_');
+	while((c==*cp)==' ' || c=='\t')
+		c++;
+	while(c = *cp++)
+	{
+		if(c=='=')
+		{
+			sfputc(shp->stk,0);
+			mp = nv_open(sp=stkptr(shp->stk,offset),shp->var_base,NV_VARNAME|NV_NOADD);
+			if(mp)
+				nv_putval(mp,cp,0);
+			else
+				sfprintf(sfstderr,"%s unknown option\n",sp);
+			stkseek(shp->stk,offset);
+			break;
+		}
+		sfputc(shp->stk,c);
+	}
+}
+
+static char* get_options(register Namval_t* np, Namfun_t *fp)
+{
+	Shell_t			*shp = np->nvshell;
+	register int		offset = stktell(shp->stk);
+	register char	const	*cp;
+	sfputr(shp->stk,"astbin",'=');
+	if(!(cp = nv_getval(SH_ASTBIN)))
+		cp = "/bin";
+	sfputr(shp->stk,cp,0);
+	cp = stkptr(shp->stk,offset);
+	nv_putv(np,cp,0,fp);
+	stkseek(shp->stk,offset);
+	return((char*)np->nvalue.cp);
+}
+
 static int hasgetdisc(register Namfun_t *fp)
 {
         while(fp && !fp->disc->getnum && !fp->disc->getval)
@@ -755,6 +864,33 @@ static int hasgetdisc(register Namfun_t *fp)
 	return(fp!=0);
 }
 
+static void match2d(Shell_t *shp,struct match *mp)
+{
+	Namval_t	*np;
+	int		i;
+	Namarr_t	*ap;
+	nv_disc(SH_MATCHNOD,&mp->hdr, NV_POP);
+	np = nv_namptr(mp->nodes,0);
+	for(i=0; i < mp->nmatch; i++)
+	{
+		np->nvname = mp->names +3*i;
+		if(i>9)
+		{
+			*np->nvname = '0'+i/10;
+			np->nvname[1] = '0' + (i%10);
+		}
+		else
+			*np->nvname = '0'+i;
+		np->nvshell = shp;
+		nv_putsub(np,(char*)0,1,0);
+		nv_putsub(np,(char*)0,0,0);
+		nv_putsub(SH_MATCHNOD, (char*)0, i,0);
+		nv_arraychild(SH_MATCHNOD, np,0);
+		np = nv_namptr(np+1,0);
+	}
+	if(ap = nv_arrayptr(SH_MATCHNOD))
+		ap->nelem = mp->nmatch;
+}
 /*
  * store the most recent value for use in .sh.match
  * treat .sh.match as a two dimensional array
@@ -771,15 +907,22 @@ void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],
 	if(index<0)
 	{
 		np = nv_namptr(mp->nodes,0);
+		if(mp->index==0)
+			match2d(shp,mp);
 		for(i=0; i < mp->nmatch; i++)
 		{
 			nv_disc(np,&mp->hdr,NV_LAST);
-			nv_putsub(np,(char*)0,mp->index);
+			nv_putsub(np,(char*)0,mp->index,0);
 			for(x=mp->index; x >=0; x--)
 			{
 				n = i + x*mp->nmatch;
 				if(mp->match[2*n+1]>mp->match[2*n])
-					nv_putsub(np,Empty,ARRAY_ADD|x);
+					nv_putsub(np,Empty,x,ARRAY_ADD);
+			}
+			if((ap=nv_arrayptr(np)) && array_elem(ap)==0)
+			{
+				nv_putsub(SH_MATCHNOD,(char*)0,i,0);
+				_nv_unset(SH_MATCHNOD,NV_RDONLY);
 			}
 			np = nv_namptr(np+1,0);
 		}
@@ -802,55 +945,34 @@ void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],
 				np = nv_namptr(np+1,0);
 			}
 			free((void*)mp->nodes);
+			mp->nodes = 0;
 		}
-		mp->nmatch = nmatch;
 		mp->vlen = 0;
-		mp->nodes = (char*)calloc(mp->nmatch*(NV_MINSZ+sizeof(void*)),1);
-		np = nv_namptr(mp->nodes,0);
 		if(ap && ap->hdr.next != &mp->hdr)
-		{
 			free((void*)ap);
-			ap = nv_arrayptr(np);
-			SH_MATCHNOD->nvfun = &ap->hdr;
-		}
-		if(ap)
+		SH_MATCHNOD->nvalue.cp = 0;
+		SH_MATCHNOD->nvfun = 0;
+		if(!(mp->nmatch=nmatch) && !v)
 		{
-			ap->nelem &= ~ARRAY_SCAN;
-			i = array_elem(ap);
-			ap->nelem++;
-			while(--i>= 0)
-			{
-				nv_putsub(SH_MATCHNOD, (char*)0,i);
-				_nv_unset(SH_MATCHNOD,NV_RDONLY);
-			}
-			ap->nelem--;
+			shp->subshell = savesub;
+			return;
 		}
-		if(!nv_hasdisc(SH_MATCHNOD,mp->hdr.disc))
-			nv_disc(SH_MATCHNOD,&mp->hdr,NV_LAST);
-		if(nmatch)
-			nv_putsub(SH_MATCHNOD, NIL(char*), (nmatch-1)|ARRAY_FILL|ARRAY_SETSUB);
-		if(ap = nv_arrayptr(SH_MATCHNOD))
-			ap->nelem =  mp->nmatch;
+		mp->nodes = (char*)calloc(mp->nmatch*(NV_MINSZ+sizeof(void*)+3),1);
+		mp->names = mp->nodes + mp->nmatch*(NV_MINSZ+sizeof(void*));
+		np = nv_namptr(mp->nodes,0);
+		nv_disc(SH_MATCHNOD,&mp->hdr,NV_LAST);
+		for(i=nmatch; --i>=0;)
+		{
+			if(match[2*i]>=0)
+				nv_putsub(SH_MATCHNOD,Empty,i,ARRAY_ADD);
+		}
 		mp->v = v;
 		mp->first = match[0];
 	}
 	else
 	{
 		if(index==1)
-		{
-			Namfun_t	*fp = SH_MATCHNOD->nvfun;
-			SH_MATCHNOD->nvfun = 0;
-			np = nv_namptr(mp->nodes,0);
-			for(i=0; i < mp->nmatch; i++)
-			{
-				np->nvshell = shp;
-				nv_putsub(SH_MATCHNOD, (char*)0, i);
-				nv_arraychild(SH_MATCHNOD, np,0);
-				np = nv_namptr(np+1,0);
-			}
-			if(ap = nv_arrayptr(SH_MATCHNOD))
-				ap->nelem = mp->nmatch;
-		}
+			match2d(shp,mp);
 	}
 	shp->subshell = savesub;
 	if(mp->nmatch)
@@ -880,16 +1002,12 @@ void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],
 			mp->vsize = x;
 		}
 		memcpy(mp->match+index,match,nmatch*2*sizeof(match[0]));
-		for(x=0,i=0; i < 2*nmatch; i++)
+		for(i=0; i < 2*nmatch; i++)
 		{
 			if(match[i]>=0)
 				mp->match[index+i] -= n;
-			else
-				x=1;
 
 		}
-		if(ap)
-			ap->nelem -= x;
 		while(i < 2*mp->nmatch)
 			mp->match[index+i++] = -1;
 		if(index==0)
@@ -900,7 +1018,7 @@ void sh_setmatch(Shell_t *shp,const char *v, int vsize, int nmatch, int match[],
 	}
 }
 
-#define array_scan(np)	((nv_arrayptr(np)->nelem&ARRAY_SCAN))
+#define array_scan(np)	((nv_arrayptr(np)->flags&ARRAY_SCAN))
 
 static char* get_match(register Namval_t* np, Namfun_t *fp)
 {
@@ -1021,6 +1139,8 @@ static const Namdisc_t SECONDS_disc	= {  sizeof(struct seconds), put_seconds, ge
 static const Namdisc_t RAND_disc	= {  sizeof(struct rand), put_rand, get_rand, nget_rand };
 static const Namdisc_t LINENO_disc	= {  sizeof(Namfun_t), put_lineno, get_lineno, nget_lineno };
 static const Namdisc_t L_ARG_disc	= {  sizeof(Namfun_t), put_lastarg, get_lastarg };
+static const Namdisc_t OPTastbin_disc	= {  sizeof(Namfun_t), put_astbin};
+static const Namdisc_t OPTIONS_disc	= {  sizeof(Namfun_t), put_options, get_options };
 
 
 #define MAX_MATH_ARGS	3
@@ -1423,15 +1543,15 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	}
 	sh_ioinit(shp);
 #ifdef AT_FDCWD
-       shp->pwdfd = sh_diropenat(shp, AT_FDCWD, e_dot, 0);
+       shp->pwdfd = sh_diropenat(shp, AT_FDCWD, e_dot, false);
 #else
        /* Systems without AT_FDCWD/openat() do not use the |dir| argument */
-       shp->pwdfd = sh_diropenat(shp, -1, e_dot, 0);
+       shp->pwdfd = sh_diropenat(shp, -1, e_dot, false);
 #endif
 #ifdef O_SEARCH
        /* This should _never_ happen, guranteed by design and goat sacrifice */
        if(shp->pwdfd < 0)
-               errormsg(SH_DICT,ERROR_exit(1), "Can't obtain directory fd.");
+               errormsg(SH_DICT,ERROR_system(1), "Can't obtain directory fd.");
 #endif
 
 	/* initialize signal handling */
@@ -1677,6 +1797,10 @@ int sh_reinit_20120720(Shell_t *shp,char *argv[])
 		Shell_t		*sh;
 		void		*extra[2];
 	} data;
+if(shp->vex && ((Spawnvex_t*)shp->vex)->cur)
+	write(-1,"gother6\n",9);
+if(shp->vexp && ((Spawnvex_t*)shp->vexp)->cur)
+	write(-1,"gother7\n",9);
 	for(np=dtfirst(shp->fun_tree);np;np=npnext)
 	{
 		if((dp=shp->fun_tree)->walk)
@@ -1931,14 +2055,16 @@ static void stat_init(Shell_t *shp)
 	sh_siglist(sp->sh,sp->sh->strbuf,sip->si_signo+1);
 	nv_putval(np,sfstruse(sp->sh->strbuf),NV_RDONLY);
 	np = create_svar(SH_SIG,"pid",0, fp);
-	np->nvalue.ip = &sip->si_pid;
+	np->nvalue.idp = &sip->si_pid;
 	np = create_svar(SH_SIG,"uid",0, fp);
-	np->nvalue.ip = &sip->si_uid;
+	np->nvalue.idp = &sip->si_uid;
 	np = create_svar(SH_SIG,"code",0, fp);
 	np->nvalue.ip = &sip->si_code;
 	np = create_svar(SH_SIG,"status",0, fp);
+#ifdef CLD_EXITED
 	if(sip->si_code==CLD_EXITED)
 		sip->si_status &= 0xf;
+#endif
 	np->nvalue.ip = &sip->si_status;
 	np->nvalue.ip = &sip->si_code;
 	np = create_svar(SH_SIG,"addr",0, fp);
@@ -2018,6 +2144,8 @@ static Init_t *nv_init(Shell_t *shp)
 	ip->LANG_init.disc = &LC_disc;
 	ip->LANG_init.nofree = 1;
 #endif /* _hdr_locale */
+	ip->OPTIONS_init.disc = &OPTIONS_disc;
+	ip->OPTastbin_init.disc = &OPTastbin_disc;
 	nv_stack(IFSNOD, &ip->IFS_init.hdr);
 	ip->IFS_init.hdr.nofree = 1;
 	nv_stack(PATHNOD, &ip->PATH_init);
@@ -2038,9 +2166,11 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_putval(RANDNOD, (char*)&d, NV_DOUBLE);
 	nv_stack(LINENO, &ip->LINENO_init);
 	SH_MATCHNOD->nvfun =  &ip->SH_MATCH_init.hdr;
-	nv_putsub(SH_MATCHNOD,(char*)0,10);
+	nv_putsub(SH_MATCHNOD,(char*)0,10,0);
 	nv_stack(SH_MATHNOD, &ip->SH_MATH_init);
 	nv_stack(SH_VERSIONNOD, &ip->SH_VERSION_init);
+	nv_stack(OPTIONS, &ip->OPTIONS_init);
+	nv_stack(SH_ASTBIN, &ip->OPTastbin_init);
 #ifdef _hdr_locale
 	nv_stack(LCTYPENOD, &ip->LC_TYPE_init);
 	nv_stack(LCALLNOD, &ip->LC_ALL_init);
@@ -2049,7 +2179,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(LCNUMNOD, &ip->LC_NUM_init);
 	nv_stack(LANGNOD, &ip->LANG_init);
 #endif /* _hdr_locale */
-	(PPIDNOD)->nvalue.lp = (&shp->gd->ppid);
+	(PPIDNOD)->nvalue.idp = (&shp->gd->ppid);
 	(TMOUTNOD)->nvalue.lp = (&shp->st.tmout);
 	(MCHKNOD)->nvalue.lp = (&sh_mailchk);
 	(OPTINDNOD)->nvalue.lp = (&shp->st.optindex);
@@ -2067,7 +2197,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
 	DOTSHNOD->nvalue.cp = Empty;
 	nv_onattr(DOTSHNOD,NV_RDONLY);
-	SH_LINENO->nvalue.ip = &shp->st.lineno;
+	SH_LINENO->nvalue.llp = &shp->st.lineno;
 	VERSIONNOD->nvalue.nrp = newof(0,struct Namref,1,0);
         VERSIONNOD->nvalue.nrp->np = SH_VERSIONNOD;
         VERSIONNOD->nvalue.nrp->root = nv_dict(DOTSHNOD);
@@ -2270,34 +2400,34 @@ skip:
 
 #define DISABLE	/* proto workaround */
 
-unsigned long sh_isoption_20120720 DISABLE (Shell_t *shp,int opt)
+bool sh_isoption_20120720 DISABLE (Shell_t *shp,int opt)
 {
 	return(sh_isoption(shp,opt));
 }
 #undef sh_isoption
-unsigned long sh_isoption DISABLE (int opt)
+bool sh_isoption DISABLE (int opt)
 {
 	return(sh_isoption_20120720(sh_getinterp(),opt));
 }
 
-unsigned long sh_onoption_20120720 DISABLE (Shell_t *shp,int opt)
+void sh_onoption_20120720 DISABLE (Shell_t *shp,int opt)
 {
-	return(sh_onoption(shp,opt));
+	sh_onoption(shp,opt);
 }
 #undef sh_onoption
-unsigned long sh_onoption DISABLE (int opt)
+void sh_onoption DISABLE (int opt)
 {
-	return(sh_onoption_20120720(sh_getinterp(),opt));
+	sh_onoption_20120720(sh_getinterp(),opt);
 }
 
-unsigned long sh_offoption_20120720 DISABLE (Shell_t *shp,int opt)
+void sh_offoption_20120720 DISABLE (Shell_t *shp,int opt)
 {
-	return(sh_offoption(shp,opt));
+	sh_offoption(shp,opt);
 }
 #undef sh_offoption
-unsigned long sh_offoption DISABLE (int opt)
+void sh_offoption DISABLE (int opt)
 {
-	return(sh_offoption_20120720(sh_getinterp(),opt));
+	sh_offoption_20120720(sh_getinterp(),opt);
 }
 
 void	sh_sigcheck DISABLE (Shell_t *shp)

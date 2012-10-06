@@ -117,6 +117,7 @@ typedef void (*sh_sigfun_t)(int);
     extern  sh_sigfun_t sh_signal(int,sh_sigfun_t);
     extern void 	sh_fault(int,siginfo_t*, void*);
     extern void		sh_setsiginfo(siginfo_t*);
+#   undef signal
 #   define signal(a,b)	sh_signal(a,(sh_sigfun_t)(b))
 #else
     extern void 	sh_fault(int);

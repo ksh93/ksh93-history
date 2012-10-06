@@ -319,6 +319,8 @@ extern int		pathsetlink(const char*, const char*);
 extern char*		pathshell(void);
 extern char*		pathtemp(char*, size_t, const char*, const char*, int*);
 extern char*		pathtmp(char*, const char*, const char*, int*);
+extern ssize_t		qpencode(const void*, size_t, void**, void*, size_t, void**);
+extern ssize_t		qpdecode(const void*, size_t, void**, void*, size_t, void**);
 extern char*		setenviron(const char*);
 extern int		stracmp(const char*, const char*);
 extern char*		strcopy(char*, const char*);

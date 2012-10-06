@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2012-06-19 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2012-09-27 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -639,11 +639,13 @@ b_tail(int argc, char** argv, Shbltin_t* context)
 		{
 			if (n)
 				n = 0;
-			else if (sh_checksig(context) || tvsleep(&tv, NiL))
+			else if (sh_checksig(context))
 			{
 				error_info.errors++;
 				break;
 			}
+			else
+				tvsleep(&tv, NiL);
 			pp = 0;
 			while (fp)
 			{
@@ -686,11 +688,13 @@ b_tail(int argc, char** argv, Shbltin_t* context)
 					{
 						i = 3;
 						while (--i && stat(fp->name, &st))
-							if (sh_checksig(context) || tvsleep(&tv, NiL))
+							if (sh_checksig(context))
 							{
 								error_info.errors++;
 								goto done;
 							}
+							else
+								tvsleep(&tv, NiL);
 						if (i && (fp->dev != st.st_dev || fp->ino != st.st_ino) && !init(fp, 0, 0, flags, &format))
 						{
 							if (!(flags & SILENT))

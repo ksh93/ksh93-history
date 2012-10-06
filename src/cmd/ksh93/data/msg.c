@@ -176,6 +176,7 @@ const char e_signo[]		= "Signal %d";
 #endif /* SHOPT_FS_3D */
 
 /* string constants */
+const char e_astbin[]		= SH_CMDLIB_DIR;
 const char e_heading[]		= "Current option settings";
 const char e_sptbnl[]		= " \t\n";
 const char e_tolower[]		= "tolower";

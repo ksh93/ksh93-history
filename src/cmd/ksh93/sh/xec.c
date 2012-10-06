@@ -57,15 +57,12 @@
 #if _lib_nice
     extern int	nice(int);
 #endif /* _lib_nice */
-#if !_lib_spawnveg
-#   define spawnveg(a,b,c,d)    spawnve(a,b,c)
-#endif /* !_lib_spawnveg */
 #if SHOPT_SPAWN
     static pid_t sh_ntfork(Shell_t*,const Shnode_t*,char*[],int*,int);
 #endif /* SHOPT_SPAWN */
 
 static void	sh_funct(Shell_t *,Namval_t*, int, char*[], struct argnod*,int);
-static int	trim_eq(const char*, const char*);
+static bool	trim_eq(const char*, const char*);
 static void	coproc_init(Shell_t*, int pipes[]);
 
 static void	*timeout;
@@ -73,6 +70,7 @@ static char	nlock;
 static char	pipejob;
 static char	nopost;
 static int	restorefd;
+static int	vex;
 
 struct funenv
 {
@@ -80,12 +78,6 @@ struct funenv
 	struct argnod	*env;
 	Namval_t	**nref;
 };
-
-#if 0
-#undef IOHERESTRING
-#define IOHERESTRING 0
-#endif
-
 
 /* ========	command execution	========*/
 
@@ -110,7 +102,7 @@ struct funenv
 static int      subpipe[3],subdup,tsetio,usepipe;
 static void iounpipe(Shell_t*);
 
-static int iousepipe(Shell_t *shp)
+static bool iousepipe(Shell_t *shp)
 {
 	int i,err=errno;
 	if(usepipe)
@@ -119,16 +111,14 @@ static int iousepipe(Shell_t *shp)
 		iounpipe(shp);
 	}
 	if(sh_rpipe(subpipe) < 0)
-		return(0);
+		return(false);
 	usepipe++;
-	fcntl(subpipe[0],F_SETFD,FD_CLOEXEC);
-	subpipe[2] = fcntl(1,F_DUPFD,10);
-	fcntl(subpipe[2],F_SETFD,FD_CLOEXEC);
+	subpipe[2] = sh_fcntl(1,F_dupfd_cloexec,10);
 	shp->fdstatus[subpipe[2]] = shp->fdstatus[1];
 	while(close(1)<0 && errno==EINTR)
 		errno = err;
 	fcntl(subpipe[1],F_DUPFD,1);
-	shp->fdstatus[1] = shp->fdstatus[subpipe[1]];
+	shp->fdstatus[1] = shp->fdstatus[subpipe[1]]&~IOCLEX;
 	sh_close(subpipe[1]);
 	if(subdup=shp->subdup) for(i=0; i < 10; i++)
 	{
@@ -139,7 +129,7 @@ static int iousepipe(Shell_t *shp)
 			shp->fdstatus[i] = shp->fdstatus[1];
 		}
 	}
-	return(1);
+	return(true);
 }
 
 static void iounpipe(Shell_t *shp)
@@ -572,9 +562,9 @@ int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subsc
 }
 
 /*
- * returns 1 when option -<c> is specified
+ * returns true when option -<c> is specified
  */
-static int checkopt(char *argv[], int c)
+static bool checkopt(char *argv[], int c)
 {
 	char *cp;
 	while(cp = *++argv)
@@ -588,7 +578,7 @@ static int checkopt(char *argv[], int c)
 		if(*cp=='h' && cp[1]==0 && *++argv==0)
 			break;
 	}
-	return(0);
+	return(false);
 }
 
 static void free_list(struct openlist *olist)
@@ -642,7 +632,7 @@ static int set_instance(Shell_t *shp,Namval_t *nq, Namval_t *node, struct Namref
 	if(sp)
 	{
 		nv_putval(SH_SUBSCRNOD,nr->sub=sp,NV_NOFREE);
-		return(ap->nelem&ARRAY_SCAN);
+		return(ap->flags&ARRAY_SCAN);
 	}
 	return(0);
 }
@@ -654,7 +644,7 @@ static void unset_instance(Namval_t *nq, Namval_t *node, struct Namref *nr,long 
 	L_ARGNOD->nvfun = node->nvfun;
 	if(nr->sub)
 	{
-		nv_putsub(nr->np, nr->sub, mode);
+		nv_putsub(nr->np, nr->sub, 0, mode);
 		free((void*)nr->sub);
 	}
 	_nv_unset(SH_NAMENOD,0);
@@ -728,7 +718,7 @@ static void *sh_coinit(Shell_t *shp,char **argv)
 	return((void*)csp);
 }
 
-int sh_coaddfile(Shell_t *shp, char *name)
+bool sh_coaddfile(Shell_t *shp, char *name)
 {
 	Namval_t *np = dtmatch(shp->inpool,name);
 	if(!np)
@@ -737,9 +727,9 @@ int sh_coaddfile(Shell_t *shp, char *name)
 		np->nvname = name;
 		(Namval_t*)dtinsert(shp->inpool,np);
 		shp->poolfiles++;
-		return(1);
+		return(true);
 	}
-	return(0);
+	return(false);
 }
 
 static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
@@ -843,7 +833,7 @@ static int sh_coexec(Shell_t *shp,const Shnode_t *t, int filt)
 	sp = sfnew(NULL,NULL,SF_UNBOUND,fd,SF_READ);
 	while(close(0)<0 && errno==EINTR)
 		errno = err;
-	open(e_devnull,O_RDONLY);
+	open(e_devnull,O_RDONLY|O_cloexec);
 	shp->offsets[0] = -1;
 	shp->offsets[1] = 0;
 	*save = savein;
@@ -1238,11 +1228,15 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					int was_nofork = execflg?sh_isstate(shp,SH_NOFORK):0;
 					struct checkpt *buffp = (struct checkpt*)stkalloc(shp->stk,sizeof(struct checkpt));
 					volatile unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
+#ifndef O_SEARCH
 					struct stat statb;
+#endif
 					bp = &shp->bltindata;
 					save_ptr = bp->ptr;
 					save_data = bp->data;
+#ifndef O_SEARCH
 					memset(&statb, 0, sizeof(struct stat));
+#endif
 					if(strchr(nv_name(np),'/'))
 					{
 						/*
@@ -1283,8 +1277,12 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						{
 							if(!shp->pwd)
 								path_pwd(shp,0);
-							else if(shp->pwd || shp->pwdfd>=0)
-								stat(".",&statb);
+#ifndef O_SEARCH
+							else if (shp->pwdfd>=0)
+								fstat(shp->pwdfd,&statb);
+							else if (shp->pwd)
+								stat(e_dot,&statb);
+#endif
 							sfsync(NULL);
 							share = sfset(sfstdin,SF_SHARE,0);
 							sh_onstate(shp,SH_STOPOK);
@@ -1363,10 +1361,14 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						sh_offstate(shp,SH_NOFORK);
 					if(!(nv_isattr(np,BLT_ENV)))
 					{
+#ifdef O_SEARCH
+						while((fchdir(shp->pwdfd) < 0) && errno==EINTR)
+							errno = 0;
+#else
 						if(shp->pwd || (shp->pwdfd >= 0))
 						{
 							struct stat stata;
-							stat(".",&stata);
+							stat(e_dot,&stata);
 							/* restore directory changed */
 							if(statb.st_ino!=stata.st_ino || statb.st_dev!=stata.st_dev)
 							{
@@ -1384,6 +1386,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 								}
 							}
 						}
+#endif /* O_SEARCH */
 						sh_offstate(shp,SH_STOPOK);
 						if(share&SF_SHARE)
 							sfset(sfstdin,SF_PUBLIC|SF_SHARE,1);
@@ -1585,6 +1588,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				}
 				nv_getval(RANDNOD);
 				restorefd = shp->topfd;
+				if(shp->vexp)
+					vex = ((Spawnvex_t*)shp->vexp)->cur;
 				if(type&FCOOP)
 				{
 					pipes[2] = 0;
@@ -1663,12 +1668,15 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					nlock--;
 					job_unlock();
 				}
+				if(shp->subshell)
+					shp->spid = parent;
 				if(type&FPCL)
 					sh_close(shp->inpipe[0]);
 				if(type&(FCOOP|FAMP))
 					shp->bckpid = parent;
 				else if(!(type&(FAMP|FPOU)))
 				{
+					Spawnvex_t	*vp;
 					if(!sh_isoption(shp,SH_MONITOR))
 					{
 						if(!(shp->sigflag[SIGINT]&(SH_SIGFAULT|SH_SIGOFF)))
@@ -1681,6 +1689,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						job_wait(parent);
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
+					if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+						spawnvex_apply(vp,vex,0);
 					if(usepipe && tsetio &&  subdup)
 						iounpipe(shp);
 					if(!sh_isoption(shp,SH_MONITOR))
@@ -2265,7 +2275,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				if(nameref)
 					nv_offattr(np,NV_REF);
 				else if(nv_isattr(np, NV_ARRAY))
-					nv_putsub(np,NIL(char*),0L);
+					nv_putsub(np,NIL(char*),0L,0);
 				nv_putval(np,cp,0);
 				if(nameref)
 					nv_setref(np,(Dt_t*)0,NV_VARNAME);
@@ -2790,7 +2800,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			}
 			else
 			{
-				register int traceon=0;
+				register bool traceon=0;
 				register char *right;
 				register char *trap;
 				char *argv[6];
@@ -2913,7 +2923,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
  * returns 1 if r == trim(s) otherwise 0
  */
 
-static int trim_eq(register const char *r,register const char *s)
+static bool trim_eq(register const char *r,register const char *s)
 {
 	register char c;
 	while(c = *s++)
@@ -2930,7 +2940,7 @@ static int trim_eq(register const char *r,register const char *s)
  * print out the command line if set -x is on
  */
 
-int sh_trace(Shell_t *shp,register char *argv[], register int nl)
+bool sh_trace(Shell_t *shp,register char *argv[], register int nl)
 {
 	register char *cp;
 	register int bracket = 0;
@@ -2977,9 +2987,9 @@ int sh_trace(Shell_t *shp,register char *argv[], register int nl)
 			}
 			sfset(sfstderr,SF_SHARE|SF_PUBLIC,1);
 		}
-		return(1);
+		return(true);
 	}
-	return(0);
+	return(false);
 }
 
 /*
@@ -3083,8 +3093,11 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 		{
 			if(!tsetio || !subdup)
 			{
+				Spawnvex_t *vp;
 				if(shp->topfd > restorefd)
 					sh_iorestore(shp,restorefd,0);
+				else if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+					spawnvex_apply(vp,vex,0);
 				iounpipe(shp);
 			}
 		}
@@ -3164,6 +3177,10 @@ pid_t sh_fork(Shell_t *shp,int flags, int *jobid)
 	shp->savesig = -1;
 	while(_sh_fork(shp,parent=fork(),flags,jobid) < 0);
 	sh_stats(STAT_FORKS);
+#ifdef SPAWN_cwd
+	if(parent==0 && shp->vex)
+		spawnvex_apply((Spawnvex_t*)shp->vex,0,0);
+#endif /* SPAWN_cwd */
 	if(!shp->subshell)
 	{
 		sig = shp->savesig;
@@ -3191,7 +3208,7 @@ static void  local_exports(register Namval_t *np, void *data)
 	register Namval_t	*mp;
 	register char		*cp;
 	if(nv_isarray(np))
-		nv_putsub(np,NIL(char*),0);
+		nv_putsub(np,NIL(char*),0,0);
 	if((cp = nv_getval(np)) && (mp = nv_search(nv_name(np), shp->var_tree, NV_ADD|HASH_NOSCOPE)) && nv_isnull(mp))
 		nv_putval(mp, cp, 0);
 }
@@ -3392,7 +3409,7 @@ static void coproc_init(Shell_t *shp, int pipes[])
 		sh_pipe(shp->cpipe);
 		if((outfd=shp->cpipe[1]) < 10) 
 		{
-		        int fd=fcntl(shp->cpipe[1],F_DUPFD,10);
+		        int fd=sh_fcntl(shp->cpipe[1],F_dupfd_cloexec,10);
 			if(fd>=10)
 			{
 			        shp->fdstatus[fd] = (shp->fdstatus[outfd]&~IOCLEX);
@@ -3524,6 +3541,8 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	char		**arge, *path;
 	volatile pid_t	grp = 0;
 	Pathcomp_t	*pp;
+	Spawnvex_t	*vp = (Spawnvex_t*)shp->vexp;
+	Spawnvex_t	*vc = (Spawnvex_t*)shp->vex;
 	if(flag)
 	{
 		otype = savetype;
@@ -3679,7 +3698,17 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		}
 		spawnpid = -1;
 		if(t->com.comio)
+		{
+			if(!vc)
+				shp->vex = vc = spawnvex_open();
+			if(!vp)
+				shp->vexp = vp = spawnvex_open();
+#if 0
+			sh_redirect(shp,t->com.comio,IOUSEVEX);
+#else
 			sh_redirect(shp,t->com.comio,0);
+#endif
+		}
 		error_info.id = *argv;
 		if(t->com.comset)
 		{
@@ -4006,7 +4035,8 @@ int sh_eval_20120720(Shell_t *shp,register Sfio_t *iop, int mode)
 	struct checkpt *pp = (struct checkpt*)shp->jmplist;
 	struct checkpt *buffp = (struct checkpt*)stkalloc(shp->stk,sizeof(struct checkpt));
 	static Sfio_t *io_save;
-	volatile int traceon=0, lineno=0;
+	volatile bool traceon=false;
+	volatile int lineno=0;
 	int binscript=shp->binscript;
 	char comsub = shp->comsub;
 	io_save = iop; /* preserve correct value across longjmp */

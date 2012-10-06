@@ -444,8 +444,8 @@ EOF
 }
 
 # run tests
-builtin poll	|| err_exit 'poll builtin not found.'
-builtin rmdir	|| err_exit 'rmdir builtin not found.'
+builtin poll	|| { err_exit 'poll builtin not found.'; exit 1; }
+builtin rmdir	|| { err_exit 'rmdir builtin not found.'; exit 1; }
 
 test1
 test_sparse_array1

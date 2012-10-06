@@ -84,7 +84,7 @@ struct forknod
 	int		forktyp;
 	struct ionod	*forkio;
 	Shnode_t	*forktre;
-	int		forkline;
+	int64_t		forkline;
 };
 
 
@@ -110,7 +110,7 @@ struct fornod
 	char	 	*fornam;
 	Shnode_t	*fortre;
 	struct comnod	*forlst;
-	int		forline;
+	int64_t		forline;
 };
 
 struct swnod
@@ -119,7 +119,7 @@ struct swnod
 	struct argnod	*swarg;
 	struct regnod	*swlst;
 	struct ionod	*swio;
-	int		swline;
+	int64_t		swline;
 };
 
 struct regnod
@@ -147,7 +147,7 @@ struct lstnod
 struct tstnod
 {
 	struct lstnod	tstlst;
-	int		tstline;	
+	int64_t		tstline;	
 };
 
 struct functnod
@@ -155,7 +155,7 @@ struct functnod
 	int		functtyp;
 	char		*functnam;
 	Shnode_t	*functtre;
-	int		functline;
+	int64_t		functline;
 	off_t		functloc;
 	struct slnod	*functstak;
 	struct comnod	*functargs;
@@ -164,9 +164,9 @@ struct functnod
 struct arithnod
 {
 	int		artyp;
-	int		arline;
 	struct argnod	*arexpr;
 	void		*arcomp;
+	int64_t		arline;
 };
 
 

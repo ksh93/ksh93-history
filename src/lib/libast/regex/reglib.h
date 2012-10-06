@@ -172,9 +172,9 @@ typedef struct regsubop_s
 
 #define HIT		SSIZE_MAX
 
-#define bitclr(p,c)	((p)[((c)>>3)&037]&=(~(1<<((c)&07))))
-#define bitset(p,c)	((p)[((c)>>3)&037]|=(1<<((c)&07)))
-#define bittst(p,c)	((p)[((c)>>3)&037]&(1<<((c)&07)))
+#define bitclr(p,c)	((p)[(c)>>3]&=(~(1<<((c)&07))))
+#define bitset(p,c)	((p)[(c)>>3]|=(1<<((c)&07)))
+#define bittst(p,c)	((p)[(c)>>3]&(1<<((c)&07)))
 
 #define setadd(p,c)	bitset((p)->bits,c)
 #define setclr(p,c)	bitclr((p)->bits,c)

@@ -133,7 +133,7 @@ static void		setupalias(Lex_t*,const char*, Namval_t*);
 static int		comsub(Lex_t*,int);
 static void		nested_here(Lex_t*);
 static int		here_copy(Lex_t*, struct ionod*);
-static int 		stack_grow(Lex_t*);
+static bool 		stack_grow(Lex_t*);
 static const Sfdisc_t alias_disc = { NULL, NULL, NULL, alias_exceptf, NULL };
 
 #if SHOPT_KIA
@@ -1601,7 +1601,14 @@ static int comsub(register Lex_t *lp, int endtok)
 				if(n==4)
 					break;
 				if(sh_lexstates[ST_NAME][c])
+				{
+					if(c==' ' || c=='\t')
+					{
+						n = 0;
+						continue;
+					}
 					goto skip;
+				}
 				word[n++] = c;
 			}
 			if(sh_lexstates[ST_NAME][c]==S_BREAK)
@@ -2521,7 +2528,7 @@ static void setupalias(Lex_t *lp, const char *string,Namval_t *np)
 /*
  * grow storage stack for nested constructs by STACK_ARRAY
  */
-static int stack_grow(Lex_t *lp)
+static bool stack_grow(Lex_t *lp)
 {
 	lp->lexd.lex_max += STACK_ARRAY;
 	if(lp->lexd.lex_match)

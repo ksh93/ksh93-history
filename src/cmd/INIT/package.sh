@@ -99,7 +99,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-08-07 $
+@(#)$Id: package (AT&T Research) 2012-09-27 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4886,13 +4886,17 @@ admin)	while	test ! -f $admin_db
 			*)	case " $hosts " in
 				*" $2 "*)
 					: ast date command assumed :
-					E=`eval date -E \`egrep '[ 	](start|done)[ 	][ 	]*at[ 	]' $admin_log/$2 | sed -e 's/.*[ 	][ 	]*at[ 	][ 	]*//' -e 's/[ 	][ 	]*in[ 	].*$//' -e 's/.*/"&"/'\``
+					log=$admin_log/$2
+					if	[[ -f $log.$1 ]]
+					then	log=$log.$1
+					fi
+					E=`eval date -E \`egrep '[ 	](start|done)[ 	][ 	]*at[ 	]' $log | sed -e 's/.*[ 	][ 	]*at[ 	][ 	]*//' -e 's/[ 	][ 	]*in[ 	].*$//' -e 's/.*/"&"/'\``
 					M=$6 T=$7 W=$8
 					case $admin_action in
 					make|view)
-						M=`egrep -c ']:.* (\*\*\*.* code|don'\''t know) | \*\*\* termination code ' $admin_log/$2` ;;
-					test)	T=`grep -ci 'fail[es]' $admin_log/$2` ;;
-					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:.' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:|: package not found|whence: command not found'` ;;
+						M=`egrep -c ']:.* (\*\*\*.* code|don'\''t know) | \*\*\* termination code ' $log` ;;
+					test)	T=`grep -ci 'fail[es]' $log` ;;
+					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:.' $log | egrep -cv 'start at|done  at|output captured|warning:|: package not found|whence: command not found'` ;;
 					esac
 					case $1 in
 					?|??|???|????|?????|??????|???????)

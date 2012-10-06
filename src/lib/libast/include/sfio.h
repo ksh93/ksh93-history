@@ -229,6 +229,7 @@ extern Sfio_t		_Sfstderr;
 
 extern Sfio_t*		sfnew _ARG_((Sfio_t*, Void_t*, size_t, int, int));
 extern Sfio_t*		sfopen _ARG_((Sfio_t*, const char*, const char*));
+extern Sfio_t*		sfopenat _ARG_((int, Sfio_t*, const char*, const char*));
 extern Sfio_t*		sfpopen _ARG_((Sfio_t*, const char*, const char*));
 extern Sfio_t*		sfstack _ARG_((Sfio_t*, Sfio_t*));
 extern Sfio_t*		sfswap _ARG_((Sfio_t*, Sfio_t*));

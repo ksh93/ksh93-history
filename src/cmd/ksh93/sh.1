@@ -867,6 +867,16 @@ and
 .B
 .SM $OLDPWD
 respectively.
+A
+.B \(ap
+followed by
+.BI { fd }
+where
+.I fd\^
+is a file descriptor number or the name of a variable
+whose value is a file descriptor, is replaced by a string
+that is the equivalent to the path name of the file or
+directory corresponding to this file descriptor.
 .PP
 In addition,
 when expanding a
@@ -1681,6 +1691,13 @@ element stores the complete match and the
 element stores the
 .IR i\^ -th
 submatch.
+For
+.B //
+the array is two dimensional with the first subscript indicating the
+most recent match and sub-pattern match and the second script indicating
+which match with
+.B 0
+representing the first match.
 The
 .B .sh.match
 variable
@@ -1697,6 +1714,22 @@ and stores the list of user defined arithmetic functions.
 .B .sh.name
 Set to the name of the variable at the time that a
 discipline function is invoked.
+.TP
+.B .sh.op_astbin
+The directory where several shell built-in commands are bound to.
+The default is
+.BR /opt/ast/bin .
+When the value is
+.BR /bin ,
+then builtins will be bound to
+.B /bin
+or
+.B /usr/bin
+depending on where the executable is found.
+This variable can be set by including it in the
+.B
+.SM SH_OPTIONS
+variable.
 .TP
 .B .sh.subscript
 Set to the name subscript of the variable at the time that a
@@ -2156,6 +2189,19 @@ when
 is unset,
 the execution trace prompt is also
 .RB `` "+ \|" ''.
+.TP
+.SM
+.B SH_OPTIONS
+The value consists of blank separated
+.IB name = value\^
+words.  For each
+.I name\^
+that is the name of a know option the variable
+.BI .sh.opt_ name\^
+is assigned
+.IR value .
+Currently the only valid option name is
+.BR astbin .
 .TP
 .SM
 .B SHELL
@@ -3287,14 +3333,14 @@ True, if
 .I string1\^
 comes before
 .I string2\^
-based on ASCII value of their characters.
+based on the current locale.
 .TP
 \f2string1\fP \f3>\fP \f2string2\fP
 True, if
 .I string1\^
 comes after
 .I string2\^
-based on ASCII value of their characters.
+based on the current locale.
 .PP
 The following obsolete arithmetic comparisons are also permitted:
 .PD 0

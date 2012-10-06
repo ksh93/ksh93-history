@@ -404,7 +404,7 @@ reg int		local;	/* a local call */
 
 	if(f->mode&SF_GETR)
 	{	f->mode &= ~SF_GETR;
-#ifdef MAP_TYPE
+#if _mmap_worthy
 		if((f->bits&SF_MMAP) && (f->tiny[0] += 1) >= (4*SF_NMAP) )
 		{	/* turn off mmap to avoid page faulting */
 			sfsetbuf(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
@@ -515,7 +515,7 @@ reg int		local;	/* a local call */
 			if((f->flags&(SF_SHARE|SF_PUBLIC)) == (SF_SHARE|SF_PUBLIC) &&
 			   (addr = SFSK(f,0,SEEK_CUR,f->disc)) != f->here)
 			{
-#ifdef MAP_TYPE
+#if _mmap_worthy
 				if((f->bits&SF_MMAP) && f->data)
 				{	SFMUNMAP(f,f->data,f->endb-f->data);
 					f->data = NIL(uchar*);
@@ -563,7 +563,7 @@ reg int		local;	/* a local call */
 		}
 
 		f->mode = SF_WRITE|SF_LOCK;
-#ifdef MAP_TYPE
+#if _mmap_worthy
 		if(f->bits&SF_MMAP)
 		{	if(f->data)
 				SFMUNMAP(f,f->data,f->endb-f->data);

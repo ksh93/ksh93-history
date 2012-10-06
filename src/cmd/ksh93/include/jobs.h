@@ -188,11 +188,9 @@ extern const char	e_signo[];
 
 extern void	job_clear(Shell_t*);
 extern void	job_bwait(char**);
-#if 1
 extern int	job_walk(Shell_t*,Sfio_t*,int(*)(struct process*,int),int,char*[]);
-#endif
 extern int	job_kill(struct process*,int);
-extern int	job_wait(pid_t);
+extern bool	job_wait(pid_t);
 extern int	job_post(Shell_t*,pid_t,pid_t);
 extern void	*job_subsave(void);
 extern void	job_subrestore(Shell_t*,void*);
@@ -204,7 +202,7 @@ extern void	job_chldtrap(Shell_t*, const char*,int);
 	extern int	job_terminate(struct process*,int);
 	extern int	job_switch(struct process*,int);
 	extern void	job_fork(pid_t);
-	extern int	job_reap(int);
+	extern bool	job_reap(int);
 #else
 #	define job_init(s,flag)
 #	define job_close(s)	(0)

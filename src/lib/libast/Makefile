@@ -56,8 +56,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 aso.3 ast.3 astsa.3 cdt.3 chr.3 compat.3 error.3 \
 	find.3 fmt.3 fmtls.3 fs3d.3 ftwalk.3 getcwd.3 hash.3 iblocks.3 \
 	int.3 ip6.3 magic.3 mem.3 mime.3 modecanon.3 optget.3 path.3 \
-	preroot.3 proc.3 re.3 regex.3 setenviron.3 sfdisc.3 sfio.3 \
-	sig.3 spawnveg.3 stak.3 stk.3 strcopy.3 strdup.3 strelapsed.3 \
+	preroot.3 proc.3 re.3 regex.3 setenviron.3 sfdisc.3 sfio.3 sig.3 \
+	spawnveg.3 spawnvex.3 stak.3 stk.3 strcopy.3 strdup.3 strelapsed.3 \
 	strerror.3 stresc.3 streval.3 strgid.3 strmatch.3 stropt.3 \
 	strperm.3 strsignal.3 strsort.3 strtape.3 strton.3 struid.3 \
 	swap.3 tab.3 tm.3 tmx.3 tok.3 touch.3 tv.3 vecargs.3 vmalloc.3 \
@@ -87,7 +87,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	error.c errorf.c errormsg.c errorx.c \
 	localeconv.c setlocale.c translate.c \
 	catopen.c iconv.c lc.c lctab.c mc.c \
-	base64.c recfmt.c recstr.c reclen.c fmtrec.c \
+	base64.c qp.c recfmt.c recstr.c reclen.c fmtrec.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtint.c fmtip4.c fmtip6.c fmtls.c \
 	fmtmatch.c fmtmode.c fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c \
@@ -114,7 +114,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strntol.c strntoll.c strntoul.c strntoull.c \
 	strcasecmp.c strncasecmp.c strerror.c \
 	mktemp.c tmpnam.c fsync.c \
-	execlp.c execve.c execvp.c execvpe.c spawnveg.c \
+	execlp.c execve.c execvp.c execvpe.c spawnveg.c spawnvex.c \
 	vfork.c killpg.c \
 	hsearch.c tsearch.c \
 	getlogin.c putenv.c setenv.c unsetenv.c \
@@ -227,7 +227,7 @@ virtual		ast/stdio.h
 
 		:NOPROTECT: sfprintf.c sfvprintf.c sfscanf.c sfvscanf.c
 
-		:NOOPTIMIZE: spawnveg.c
+		:NOOPTIMIZE: spawnvex.c
 "ibm.risc"	:NOOPTIMIZE: regcomp.c
 "linux.i386-64*":NOOPTIMIZE: sfset.c
 "sol?.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c tmxfmt.c

@@ -1,14 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
-*                  Common Public License, Version 1.0                  *
+*                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
-*            http://www.opensource.org/licenses/cpl1.0.txt             *
-*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
+*          http://www.eclipse.org/org/documents/epl-v10.html           *
+*         (with md5 checksum b35adb5213ca9657e911e9befb180842)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -29,6 +29,7 @@
 
 #include <ast.h>
 #include <tm.h>
+#include <ctype.h>
 
 /*
  * return timezone pointer given name and type
@@ -49,16 +50,63 @@ Tm_zone_t*
 tmzone(register const char* name, char** end, const char* type, int* dst)
 {
 	register Tm_zone_t*	zp;
-	register char*		prev;
+	register char*		p;
 	char*			e;
+	int			d;
 
 	static Tm_zone_t	fixed;
 	static char		off[16];
 
 	tmset(tm_info.zone);
-	if ((*name == '+' || *name == '-') && (fixed.west = tmgoff(name, &e, TM_LOCALZONE)) != TM_LOCALZONE && !*e)
+	if ((name[0] == '+' || name[0] == '-') && (fixed.west = tmgoff(name, &e, TM_LOCALZONE)) != TM_LOCALZONE && (!*e || isspace(*e)))
 	{
-		strlcpy(fixed.standard = fixed.daylight = off, name, sizeof(off));
+		p = fixed.standard = fixed.daylight = off;
+		*p++ = 'Z';
+		if ((d = fixed.west) <= 0)
+		{
+			d = -d;
+			*p++ = 'E';
+		}
+		else
+			*p++ = 'W';
+		p += sfsprintf(p, sizeof(off) - 2, "%u", d / 60);
+		if (d = (d % 60) / 15)
+			*p++ = 'A' + d - 1;
+		*p = 0;
+		fixed.dst = 0;
+		if (end)
+			*end = e;
+		if (dst)
+			*dst = 0;
+		return &fixed;
+	}
+	else if ((name[0] == 'Z' || name[0] == 'Y') && (name[1] == 'E' || name[1] == 'W') && name[2] >= '0' && name[2] <= '9')
+	{
+		e = (char*)name + 2;
+		fixed.west = 0;
+		while (*e >= '0' && *e <= '9')
+			fixed.west = fixed.west * 10 + (*e++ - '0');
+		fixed.west *= 60;
+		d = 0;
+		switch (*e)
+		{
+		case 'C':
+			d += 15;
+			/*FALLTHROUGH*/
+		case 'B':
+			d += 15;
+			/*FALLTHROUGH*/
+		case 'A':
+			d += 15;
+			e++;
+			break;
+		}
+		fixed.west += d;
+		if (name[1] == 'E')
+			fixed.west = -fixed.west;
+		fixed.dst = name[0] == 'Z' ? 0 : d ? -d : TM_DST;
+		memcpy(fixed.standard = fixed.daylight = off, name, d);
+		off[d] = 0;
 		if (end)
 			*end = e;
 		if (dst)
@@ -66,12 +114,12 @@ tmzone(register const char* name, char** end, const char* type, int* dst)
 		return &fixed;
 	}
 	zp = tm_info.local;
-	prev = 0;
+	p = 0;
 	do
 	{
 		if (zp->type)
-			prev = zp->type;
-		if (!type || type == prev || !prev)
+			p = zp->type;
+		if (!type || type == p || !p)
 		{
 			if (tmword(name, end, zp->standard, NiL, 0))
 			{

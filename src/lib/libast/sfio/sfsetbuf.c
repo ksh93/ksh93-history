@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -187,7 +187,7 @@ size_t	size;	/* buffer size, -1 for default size */
 	okmmap = (buf || (f->flags&SF_STRING) || (f->flags&SF_RDWR) == SF_RDWR) ? 0 : 1;
 
 	/* save old buffer info */
-#ifdef MAP_TYPE
+#if _mmap_worthy
 	if(f->bits&SF_MMAP)
 	{	if(f->data)
 		{	SFMUNMAP(f,f->data,f->endb-f->data);
@@ -319,7 +319,7 @@ size_t	size;	/* buffer size, -1 for default size */
 		}
 	}
 
-#ifdef MAP_TYPE
+#if _mmap_worthy
 	if(okmmap && size && (f->mode&SF_READ) && f->extent >= 0 )
 	{	/* see if we can try memory mapping */
 		if(!disc)

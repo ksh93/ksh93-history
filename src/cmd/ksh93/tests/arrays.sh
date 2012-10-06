@@ -673,5 +673,9 @@ $SHELL 2> /dev/null  <<- \+++ || err_exit '${ar[${a}..${b}]} not working'
 	[[ ${ar[${a}..${b}]} == 'b c' ]]
 +++
 
+unset A
+integer -A A
+(( A[a] ))
+[[ ${!A[@]} ]] &&  err_exit '(( A[a] )) should not create element a of A'
 
 exit $((Errors<125?Errors:125))

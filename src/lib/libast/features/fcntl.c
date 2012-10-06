@@ -349,6 +349,9 @@ main()
 	printf("#if _lib_fstat64\n");
 	printf("#define fstat		fstat64\n");
 	printf("#endif\n");
+	printf("#if _lib_fstatat64\n");
+	printf("#define fstatat		fstatat64\n");
+	printf("#endif\n");
 	printf("#if _lib_lstat64\n");
 	printf("#define lstat		lstat64\n");
 	printf("#endif\n");

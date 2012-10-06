@@ -418,7 +418,7 @@ int test_unop(Shell_t *shp,register int op,register const char *arg)
 		if(*arg=='?')
 			return(sh_lookopt(arg+1,&f)>0);
 		op = sh_lookopt(arg,&f);
-		return(op && (f==(sh_isoption(shp,op)!=0)));
+		return(op && (f==(sh_isoption(shp,op)!=false)));
 	    case 't':
 	    {
 		char *last;
