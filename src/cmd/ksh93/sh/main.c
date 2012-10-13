@@ -227,7 +227,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 					if(name = sh_mactry(shp,nv_getval(ENVNOD)))
 						name = *name ? strdup(name) : (char*)0;
 #if SHOPT_SYSRC
-					if(!strmatch(name, "?(.)/./*"))
+					if(!name || !strmatch(name, "?(.)/./*"))
 						sh_source(shp, iop, e_sysrc);
 #endif
 					if(name)

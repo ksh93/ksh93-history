@@ -34,7 +34,7 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 
 	if (!pgid)
 		vex = 0;
-	else if (!(vex = spawnvex_open()))
+	else if (!(vex = spawnvex_open(0)))
 		return -1;
 	else
 		spawnvex_add(vex, SPAWN_pgrp, pgid > 1 ? pgid : 0, 0, 0);

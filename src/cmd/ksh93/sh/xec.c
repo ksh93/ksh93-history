@@ -1351,6 +1351,10 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						if(jmpval<=SH_JMPCMD  && (!nv_isattr(np,BLT_SPC) || command))
 							jmpval=0;
 					}
+#ifdef SPAWN_cwd
+					if(shp->vex && ((Spawnvex_t*)shp->vex)->cur)
+						spawnvex_apply((Spawnvex_t*)shp->vex, 0, SPAWN_RESET);
+#endif
 					if(bp)
 					{
 						bp->bnode = 0;
@@ -3097,7 +3101,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 				if(shp->topfd > restorefd)
 					sh_iorestore(shp,restorefd,0);
 				else if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
-					spawnvex_apply(vp,vex,0);
+				spawnvex_apply(vp,vex,0);
 				iounpipe(shp);
 			}
 		}
@@ -3700,9 +3704,9 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		if(t->com.comio)
 		{
 			if(!vc)
-				shp->vex = vc = spawnvex_open();
+				shp->vex = vc = spawnvex_open(SPAWN_EXEC);
 			if(!vp)
-				shp->vexp = vp = spawnvex_open();
+				shp->vexp = vp = spawnvex_open(SPAWN_EXEC);
 #if 0
 			sh_redirect(shp,t->com.comio,IOUSEVEX);
 #else

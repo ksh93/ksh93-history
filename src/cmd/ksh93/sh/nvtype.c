@@ -1140,7 +1140,6 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 				nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(tp = (Namtype_t*)nv_hasdisc(nq, &type_disc))
 				tp->strsize = -tp->strsize;
-else sfprintf(sfstderr,"tp==NULL\n");
 			for(r=0; r < dp->numnodes; r++)
 			{
 				Namval_t *nr = nv_namptr(dp->nodes,r);
@@ -1149,6 +1148,8 @@ else sfprintf(sfstderr,"tp==NULL\n");
 				nq->nvshell = mp->nvshell;
 				dsize = nv_datasize(nr,&offset);
 				nq->nvflag = nr->nvflag;
+				if(nv_hasdisc(nr, &type_disc))
+					clone_all_disc(nr,nq,NV_RDONLY);
 				if(nr->nvalue.cp)
 				{
 					Namchld_t *xp = (Namchld_t*)nv_hasdisc(nr,&chtype_disc);

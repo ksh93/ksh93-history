@@ -2691,7 +2691,7 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 		size_t		len;
 		int		fd, offset=stktell(shp->stk);
 		Spawnvex_t     *vc = (Spawnvex_t*)shp->vex;
-		if(!vc && (vc = spawnvex_open()))
+		if(!vc && (vc = spawnvex_open(SPAWN_EXEC)))
 			shp->vex = (void*)vc;
 		if(!(s2=strchr(string++,'}')))
 			return(NIL(char*));

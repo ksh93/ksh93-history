@@ -25,7 +25,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: iconv (AT&T Research) 2012-10-01 $\n]"
+"[-?\n@(#)$Id: iconv (AT&T Research) 2012-10-09 $\n]"
 USAGE_LICENSE
 "[+NAME?iconv - codeset conversion]"
 "[+DESCRIPTION?\biconv\b converts the encoding of characters in the \afile\a"
@@ -151,7 +151,7 @@ b_iconv(int argc, register char** argv, Shbltin_t* context)
 	Optdisc_t	od;
 	Iconv_disc_t	id;
 
-	NoP(argc);
+	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	error_info.id = "iconv";
 	from = to = "native";
 	all = ignore = list = 0;

@@ -1,3 +1,4 @@
+12-10-12 misc/spawnvex.c,features/sys: spawnvex() finally working for spawn variants
 12-09-27 regex/reglib.h: fix superfluous mask in bit test macros that limited values to 256 bits (now unlimited)
 12-09-26 comp/iconv.c: fix UTF-16 <=> UCS-2 mixup
 12-09-26 string/qp.c: add { qpdecode() qpencode() }

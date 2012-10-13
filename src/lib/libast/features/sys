@@ -165,23 +165,39 @@ lib spawnvex fail{
 	echo "#endif"
 	echo "} Spawnvex_t;"
 	echo
+	echo "typedef struct Spawnvex_noexec_s"
+	echo "{"
+	echo "	Spawnvex_t*	vex;		/* caller vex handle		*/"
+	echo "	void*		handle;		/* caller callback handle	*/"
+	echo "	const char* 	path;		/* spawnvex() path		*/"
+	echo "	char* const* 	argv;		/* spawnvex() argv		*/"
+	echo "	char* const* 	envv;		/* spawnvex() envv		*/"
+	echo "	unsigned int	flags;		/* SPAWN_(EXEC|FORK|VFORK)	*/"
+	echo "	int		msgfd;		/* if no return and >= 0 close	*/"
+	echo "} Spawnvex_noexec_t;"
+	echo
 	echo "typedef int (*Spawnvex_f)(void*, uintmax_t, uintmax_t);"
 	echo
 	echo "#define SPAWN_FLUSH	0x0001"
-	echo "#define SPAWN_NOCALLBACK	0x0002"
+	echo "#define SPAWN_NOCALL	0x0002"
 	echo "#define SPAWN_RESET	0x0004"
 	echo "#define SPAWN_UNDO	0x0008"
 	echo
+	echo "#define SPAWN_EXEC	0x0001"
+	echo "#define SPAWN_FORK	0x0002"
+	echo "#define SPAWN_VFORK	0x0004"
+	echo
 	echo "#define SPAWN_noop	(-1)"
 	echo
-	echo "#define SPAWN_cwd		(-2)"
-	echo "#define SPAWN_pgrp	(-3)"
-	echo "#define SPAWN_resetids	(-4)"
-	echo "#define SPAWN_sid		(-5)"
-	echo "#define SPAWN_sigdef	(-6)"
-	echo "#define SPAWN_sigmask	(-7)"
-	echo "#define SPAWN_truncate	(-8)"
-	echo "#define SPAWN_umask	(-9)"
+	echo "#define SPAWN_cwd	(-2)"
+	echo "#define SPAWN_noexec	(-3)"
+	echo "#define SPAWN_pgrp	(-4)"
+	echo "#define SPAWN_resetids	(-5)"
+	echo "#define SPAWN_sid	(-6)"
+	echo "#define SPAWN_sigdef	(-7)"
+	echo "#define SPAWN_sigmask	(-8)"
+	echo "#define SPAWN_truncate	(-9)"
+	echo "#define SPAWN_umask	(-10)"
 	echo
 }end
 
@@ -269,7 +285,7 @@ extern	setuid		int		(uid_t)
 extern	sleep		unsigned int	(unsigned int)
 extern	spawnveg	pid_t		(const char*, char* const[], char* const[], pid_t)
 extern	spawnvex	pid_t		(const char*, char* const[], char* const[], Spawnvex_t*)
-extern	spawnvex_open	Spawnvex_t*	(void)
+extern	spawnvex_open	Spawnvex_t*	(unsigned int)
 extern	spawnvex_add	int		(Spawnvex_t*, intmax_t, intmax_t, Spawnvex_f, void*)
 extern	spawnvex_apply	int		(Spawnvex_t*, int, int)
 extern	spawnvex_close	int		(Spawnvex_t*)

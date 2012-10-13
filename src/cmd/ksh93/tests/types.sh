@@ -218,7 +218,6 @@ expected=foo
 got=${ tst.f;}
 [[ "$got" == "$expected" ]] || err_exit "_.g where g is a function in type discipline method failed -- expected '$expected', got '$got'"
 
-let 1
 typeset -T B_t=(
 	integer -a arr
 	function f
@@ -682,5 +681,30 @@ rm -f fifo_a fifo_b
 typeset -T Z_t=(compound -a x)
 Z_t z
 [[ $(typeset -p z.x) ==  *'-C -a'* ]] || err_exit 'typeset -p for compound array element not displaying attributes'  
+
+out='foo f 123'
+typeset -T bam_t=(
+	f=123
+	function out { print foo f ${_.f}; }
+)
+bam_t f
+[[ ${f.f} == 123 ]] || err_exit "f.f is ${f.f} should be 123"
+[[ ${ f.out } == "$out" ]] 2> /dev/null || err_exit "f.out is ${ f.out } should be $out"
+typeset -T bar_t=(
+	bam_t foo
+	b=456
+	function out { _.foo.out; }
+)
+bar_t b
+[[ ${b.b} == 456 ]] || err_exit "b.b is ${b.b} should be 456"
+[[ ${ b.out } == "$out" ]] || err_exit "b.out is ${ b.out } should be $out"
+typeset -T baz_t=(
+	bar_t bar
+	z=789
+	function out { _.bar.out ;}
+)
+baz_t z
+[[ ${z.z} == 789 ]] || err_exit "z.z is ${z.z} should be 789"
+[[ ${ z.out } == "$out" ]] 2> /dev/null || err_exit "z.out should be $out"
 
 exit $((Errors<125?Errors:125))

@@ -53,7 +53,7 @@
 
 static int		canexecute(Shell_t*,char*,int);
 static void		funload(Shell_t*,int,const char*);
-static void		exscript(Shell_t*,char*, char*[], char**);
+static void		exscript(Shell_t*,char*, char*[], char*const*);
 static bool		path_chkpaths(Shell_t*,Pathcomp_t*,Pathcomp_t*,Pathcomp_t*,int);
 static void		path_checkdup(Shell_t *shp,register Pathcomp_t*);
 
@@ -105,6 +105,10 @@ static pid_t path_pfexecve(Shell_t *shp,const char *path, char *argv[],char *con
 #if SHOPT_PFSH 
 	char  resolvedpath[PATH_MAX + 1];
 	pid_t	pid;
+#endif /*SHOPT_PFSH */
+	if(shp->vex && ((Spawnvex_t*)shp->vex)->cur)
+		spawnvex_apply((Spawnvex_t*)shp->vex,0,0);
+#if SHOPT_PFSH 
 	if(spawn)
 	{
 		while((pid = vfork()) < 0)
@@ -137,7 +141,11 @@ static pid_t _spawnveg(Shell_t *shp,const char *path, char* const argv[], char* 
 	{
 		sh_stats(STAT_SPAWN);
 #ifdef SPAWN_cwd
-		pid = spawnvex(path,argv,envp,(Spawnvex_t*)shp->vex);
+		{
+			char *arg0 = argv[0], **av0= (char**)&argv[0];
+			pid = spawnvex(path,argv,envp,(Spawnvex_t*)shp->vex);
+			*av0 = arg0;
+		}
 #else
 		pid = spawnveg(path,argv,envp,pgid);
 #endif /* SPAWN_cwd */
@@ -1021,10 +1029,6 @@ void	path_exec(Shell_t *shp,register const char *arg0,register char *argv[],stru
 	shp->path_err= ENOENT;
 	sfsync(NIL(Sfio_t*));
 	timerdel(NIL(void*));
-#ifdef SPAWN_cwd
-	if(shp->vex)
-		spawnvex_apply((Spawnvex_t*)shp->vex,0,0);
-#endif /* SPAWN_cwd */
 	/* find first path that has a library component */
 	while(pp && (pp->flags&PATH_SKIP))
 		pp = pp->next;
@@ -1051,6 +1055,42 @@ void	path_exec(Shell_t *shp,register const char *arg0,register char *argv[],stru
 		errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec,arg0);
 }
 
+#ifdef SPAWN_cwd
+static int vexexec(void *ptr, uintmax_t fd1, uintmax_t fd2)
+{
+	char		*devfd;
+	int		 fd;
+	Spawnvex_noexec_t *ep = (Spawnvex_noexec_t*)ptr;
+	Shell_t		*shp = (Shell_t*)ep->handle;
+	char		**argv = (char**)ep->argv;
+	if(fd2!=ENOEXEC)
+		return((int)fd2);
+	if(ep->flags&SPAWN_FORK)
+	{
+		if(ep->msgfd>=0)
+			close(ep->msgfd);
+		spawnvex_apply(ep->vex,0,SPAWN_RESET);
+		exscript((Shell_t*)ep->handle,(char*)ep->path,argv,ep->envv);
+	}
+	if(!(ep->flags&SPAWN_EXEC))
+		return(ENOEXEC);
+	fd = open(ep->path,O_RDONLY);
+	argv[-1] = argv[0];
+	argv[0] = (char*)ep->path;
+	if(fd>=0)
+	{
+		struct stat statb;
+		sfprintf(shp->strbuf,"/dev/fd/%d",fd);
+		if(stat(devfd=sfstruse(shp->strbuf),&statb)>=0)
+			argv[0] =  devfd;
+	}
+	if(!shp->gd->shpath)
+		shp->gd->shpath = pathshell();
+	execve(shp->gd->shpath,&argv[-1],ep->envv);
+	return(errno);
+}
+#endif
+
 pid_t path_spawn(Shell_t *shp,const char *opath,register char **argv, char **envp, Pathcomp_t *libpath, int spawn)
 {
 	register char *path;
@@ -1062,15 +1102,18 @@ pid_t path_spawn(Shell_t *shp,const char *opath,register char **argv, char **env
 	pid_t		pid= -1;
 #ifdef SPAWN_cwd
 	Spawnvex_t*	vex = (Spawnvex_t*)shp->vex;
-	if(!vex && spawn>1)
-	{
-		if (!(vex = spawnvex_open()))
-			return(-1);
+	if(!vex && (vex = spawnvex_open(SPAWN_EXEC)))
 		shp->vex = (void*)vex;
-	}
 	if(spawn>1)
+	{
+		if(!vex)
+			return(-1);
 		spawnvex_add(vex, SPAWN_pgrp, spawn>>1,0,0);
-		
+	}
+#if 1
+	if(vex)
+		spawnvex_add(vex,SPAWN_noexec,0,vexexec,(void*)shp);	
+#endif
 #endif /* SPAWN_cwd */
 	/* leave room for inserting _= pathname in environment */
 	envp--;
@@ -1270,7 +1313,7 @@ retry:
  * Assume file is a Shell script and execute it.
  */
 
-static void exscript(Shell_t *shp,register char *path,register char *argv[],char **envp)
+static void exscript(Shell_t *shp,register char *path,register char *argv[],char *const*envp)
 {
 	register Sfio_t *sp;
 	path = path_relative(shp,path);

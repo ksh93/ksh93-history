@@ -80,7 +80,7 @@ cmdlist.h : (src) $$(-mam:+$$(src))
 		-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 		-e 's/^b_//' \
 		-e 's/(.*//' \
-		$($(~):T=F) |
+		$($(~:O=1)) |
 		$(SORT) -u
 		)
 	for cmd

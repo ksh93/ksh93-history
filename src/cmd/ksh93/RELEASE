@@ -1,4 +1,7 @@
-12-10-04  --- Release ksh93v- ---
+12-10-09  --- Release ksh93v- ---
+12-10-09  A bug in which nested types were not able to invoke a discipline
+	  method defined by an embedded type has been fixed.
+12-10-09 +read -d '' now reads up to a NUL byte.
 12-10-04  libcmd builtins are statically linked into ksh93 and by default are
 	  bound to the path /opt/ast/bin whether this path exists or not.
 	  Changing the .sh.op_astbin variable changes the binding.

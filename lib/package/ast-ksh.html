@@ -196,7 +196,10 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-12-10-04  --- Release ksh93v- ---
+12-10-09  --- Release ksh93v- ---
+12-10-09  A bug in which nested types were not able to invoke a discipline
+	  method defined by an embedded type has been fixed.
+12-10-09 +read -d '' now reads up to a NUL byte.
 12-10-04  libcmd builtins are statically linked into ksh93 and by default are
 	  bound to the path /opt/ast/bin whether this path exists or not.
 	  Changing the .sh.op_astbin variable changes the binding.
@@ -3400,6 +3403,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+12-10-12 misc/spawnvex.c,features/sys: spawnvex() finally working for spawn variants
 12-09-27 regex/reglib.h: fix superfluous mask in bit test macros that limited values to 256 bits (now unlimited)
 12-09-26 comp/iconv.c: fix UTF-16 &lt;=&gt; UCS-2 mixup
 12-09-26 string/qp.c: add { qpdecode() qpencode() }
@@ -5705,7 +5709,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>October 06, 2012</TD>
+<TD align=right>October 13, 2012</TD>
 </TR>
 </TABLE>
 <P>

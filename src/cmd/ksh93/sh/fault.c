@@ -58,6 +58,20 @@ static int	cursig = -1;
     }
 #endif
 
+static int	notify_builtin(Shell_t *shp, int sig)
+{
+	int action = 0;
+#ifdef ERROR_NOTIFY
+	if(error_info.flags&ERROR_NOTIFY)
+		action = (*shp->bltinfun)(-sig,(char**)0,(void*)0);
+	if(action>0)
+		return(action);
+#endif
+	if(shp->bltindata.notify)
+		shp->bltindata.sigset = 1;
+	return(action);
+}
+
 /*
  * Most signals caught or ignored by the shell come here
 */
@@ -135,6 +149,8 @@ void	sh_fault(register int sig)
 		if(flag&SH_SIGDONE)
 		{
 			void *ptr=0;
+			if(shp->bltinfun)
+				action = notify_builtin(shp,sig);
 			if((flag&SH_SIGINTERACTIVE) && sh_isstate(shp,SH_INTERACTIVE) && !sh_isstate(shp,SH_FORKED) && ! shp->subshell)
 			{
 				/* check for TERM signal between fork/exec */
@@ -211,17 +227,10 @@ void	sh_fault(register int sig)
 		}
 #endif /* SIGTSTP */
 	}
-#ifdef ERROR_NOTIFY
-	if((error_info.flags&ERROR_NOTIFY) && shp->bltinfun)
-		action = (*shp->bltinfun)(-sig,(char**)0,(void*)0);
+	if(shp->bltinfun)
+		action = notify_builtin(shp,sig);
 	if(action>0)
 		return;
-#endif
-	if(shp->bltinfun && shp->bltindata.notify)
-	{
-		shp->bltindata.sigset = 1;
-		return;
-	}
 	shp->trapnote |= flag;
 	if(sig <= shp->gd->sigmax)
 		shp->sigflag[sig] |= flag;

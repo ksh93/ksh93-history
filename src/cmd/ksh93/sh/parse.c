@@ -1497,7 +1497,9 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			if(argno>=0 && argno++==cmdarg && !(flag&SH_ARRAY) && *argp->argval!='/')
 			{
 				/* check for builtin command */
-				Namval_t *np=nv_bfsearch(argp->argval,lexp->sh->fun_tree, (Namval_t**)&t->comnamq,(char**)0);
+				Namval_t *np=0;
+				if(*argp->argval!='_' || argp->argval[1]!='.')
+					np=nv_bfsearch(argp->argval,lexp->sh->fun_tree, (Namval_t**)&t->comnamq,(char**)0);
 				if(cmdarg==0)
 					t->comnamp = (void*)np;
 				if(np && is_abuiltin(np))

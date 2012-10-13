@@ -3,7 +3,7 @@ ref	-D_def_map_ast=1
 cmd	universe
 
 hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen,limits
-hdr	locale,ndir,nl_types,process,spawn,syslog,utime,vfork
+hdr	locale,ndir,nl_types,process,syslog,utime,vfork
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
 	int
@@ -32,7 +32,6 @@ lib	mount,on_exit,onexit,opendir,pathconf,pipe2
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec
-lib	spawn,spawnve,spawnveg,spawnvex
 lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
 lib	strmode,strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
@@ -40,7 +39,6 @@ lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
 lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
-lib	posix_spawnattr_setfchdir,posix_spawnattr_setsid,posix_spawnattr_setumask spawn.h
 lib	accept4,socketpair sys/socket.h
 
 lib	openat -D_ATFILE_SOURCE yes{
@@ -55,7 +53,6 @@ mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen,dirent.d_type sys/types.h dirent.h
 mem	DIR sys/types.h - dirent.h - sys/dir.h
 mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
-mem	inheritance.pgroup spawn.h
 
 sys	dir,filio,jioctl,localedef,ptem,resource
 sys	socket,stream,systeminfo,universe,vfork
@@ -245,146 +242,6 @@ tst	real_vfork note{ vfork child shares data with parent }end execute{
 		if (!vfork())
 			code = 0;
 		_exit(code);
-	}
-}end
-
-tst	lib_posix_spawn unistd.h stdlib.h spawn.h -Dfork=______fork note{ posix_spawn exists and it works and its worth using }end status{
-	#include <sys/types.h>
-	#include <sys/stat.h>
-	#include <sys/wait.h>
-	#include <spawn.h>
-	#include <signal.h>
-	#include <fcntl.h>
-	#include <string.h>
-	/* if it uses fork() why bother? */
-	#undef fork
-	pid_t fork _ARG_((void)) { NOTE("uses fork()"); return -1; }
-	pid_t _fork _ARG_((void)) { NOTE("uses _fork()"); return -1; }
-	pid_t __fork _ARG_((void)) { NOTE("uses __fork()"); return -1; }
-	int
-	main(argc, argv)
-	int	argc;
-	char**	argv;
-	{
-		char*			s;
-		pid_t			pid;
-		posix_spawnattr_t	attr;
-		int			n;
-		int			status;
-		char*			cmd[3];
-		char			tmp[1024];
-		if (argv[1])
-			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
-		signal(SIGHUP, SIG_IGN);
-		if (posix_spawnattr_init(&attr))
-		{
-			NOTE("posix_spawnattr_init() FAILED");
-			_exit(0);
-		}
-		if (posix_spawnattr_setpgroup(&attr, 0))
-		{
-			NOTE("posix_spawnattr_setpgroup() FAILED");
-			_exit(0);
-		}
-		if (posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP))
-		{
-			NOTE("posix_spawnattr_setflags() FAILED");
-			_exit(0);
-		}
-		/* first try an a.out and verify that SIGHUP is ignored */
-		cmd[0] = argv[0];
-		cmd[1] = "test";
-		cmd[2] = 0;
-		if (posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
-		{
-			NOTE("posix_spawn() FAILED");
-			_exit(0);
-		}
-		status = 1;
-		if (wait(&status) < 0)
-		{
-			NOTE("wait() FAILED");
-			_exit(0);
-		}
-		if (status != 0)
-		{
-			NOTE("SIGHUP ignored in parent not ignored in child");
-			_exit(0);
-		}
-		/* must return exec-type errors or its useless to us *unless* there is no [v]fork() */
-		n = strlen(cmd[0]);
-		if (n >= (sizeof(tmp) - 3))
-		{
-			NOTE("test executable path too long");
-			_exit(0);
-		}
-		strcpy(tmp, cmd[0]);
-		tmp[n] = '.';
-		tmp[n+1] = 's';
-		tmp[n+2] = 'h';
-		tmp[n+3] = 0;
-		if ((n = open(tmp, O_CREAT|O_WRONLY, S_IRWXU|S_IRWXG|S_IRWXO)) < 0 ||
-		    chmod(tmp, S_IRWXU|S_IRWXG|S_IRWXO) < 0 ||
-		    write(n, "exit 99\n", 8) != 8 ||
-		    close(n) < 0)
-		{
-			NOTE("test script create FAILED");
-			_exit(0);
-		}
-		cmd[0] = tmp;
-		n = 0; /* 0 means reject */
-		pid = -1;
-		if (posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
-		{
-			n = 2;
-			NOTE("ENOEXEC produces posix_spawn() error (BEST)");
-		}
-		else if (pid == -1)
-			NOTE("ENOEXEC returns pid == -1");
-		else if (wait(&status) != pid)
-			NOTE("ENOEXEC produces no child process");
-		else if (!WIFEXITED(status))
-			NOTE("ENOEXEC produces signal exit");
-		else
-		{
-			status = WEXITSTATUS(status);
-			if (status == 127)
-			{
-				n = 1;
-				NOTE("ENOEXEC produces exit status 127 (GOOD)");
-			}
-			else if (status == 99)
-				NOTE("ENOEXEC invokes sh");
-			else if (status == 0)
-				NOTE("ENOEXEC reports no error");
-		}
-		_exit(n);
- 	}
-}end
-
-tst	lib_spawn_mode unistd.h stdlib.h note{ first spawn arg is mode and it works }end execute{
-	#include <signal.h>
-	#include <process.h>
-	#ifndef P_NOWAIT
-	#define P_NOWAIT _P_NOWAIT
-	#endif
-	int
-	main(argc, argv)
-	int	argc;
-	char**	argv;
-	{
-		int	status;
-		char*	cmd[3];
-		if (argv[1])
-			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
-		signal(SIGHUP, SIG_IGN);
-		cmd[0] = argv[0];
-		cmd[1] = "test";
-		cmd[2] = 0;
-		if (spawnv(P_NOWAIT, cmd[0], cmd) < 0)
-			_exit(1);
-		status = 1;
-		_exit(wait(&status) < 0 || status != 0);
 	}
 }end
 

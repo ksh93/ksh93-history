@@ -10,7 +10,7 @@ valgrindflags='--xml=yes --log-file=/dev/null --track-origins=yes --read-var-inf
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2012-08-24 $
+@(#)$Id: shtests (AT&T Research) 2012-10-10 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -339,8 +339,7 @@ do	if	[[ ! -r $i ]]
 			fi
 			if	(( e == 0 ))
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
-			else	e=$?
-				if	(( e != 1 ))
+			else	if	(( e != 1 ))
 				then	E=${E}s
 				fi
 				echo test $o failed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} with exit code $e "[ $t $T $e $E ]"
