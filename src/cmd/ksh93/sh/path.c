@@ -1059,7 +1059,7 @@ void	path_exec(Shell_t *shp,register const char *arg0,register char *argv[],stru
 static int vexexec(void *ptr, uintmax_t fd1, uintmax_t fd2)
 {
 	char		*devfd;
-	int		 fd;
+	int		 fd= -1;
 	Spawnvex_noexec_t *ep = (Spawnvex_noexec_t*)ptr;
 	Shell_t		*shp = (Shell_t*)ep->handle;
 	char		**argv = (char**)ep->argv;
@@ -1070,13 +1070,15 @@ static int vexexec(void *ptr, uintmax_t fd1, uintmax_t fd2)
 		if(ep->msgfd>=0)
 			close(ep->msgfd);
 		spawnvex_apply(ep->vex,0,SPAWN_RESET);
-		exscript((Shell_t*)ep->handle,(char*)ep->path,argv,ep->envv);
+		if(!shp->subshell)
+		{
+			exscript((Shell_t*)ep->handle,(char*)ep->path,argv,ep->envv);
+			return(ENOEXEC);
+		}
 	}
-	if(!(ep->flags&SPAWN_EXEC))
+	else if(!(ep->flags&SPAWN_EXEC))
 		return(ENOEXEC);
 	fd = open(ep->path,O_RDONLY);
-	argv[-1] = argv[0];
-	argv[0] = (char*)ep->path;
 	if(fd>=0)
 	{
 		struct stat statb;
@@ -1084,6 +1086,8 @@ static int vexexec(void *ptr, uintmax_t fd1, uintmax_t fd2)
 		if(stat(devfd=sfstruse(shp->strbuf),&statb)>=0)
 			argv[0] =  devfd;
 	}
+	argv[-1] = argv[0];
+	argv[0] = (char*)ep->path;
 	if(!shp->gd->shpath)
 		shp->gd->shpath = pathshell();
 	execve(shp->gd->shpath,&argv[-1],ep->envv);
@@ -1102,7 +1106,7 @@ pid_t path_spawn(Shell_t *shp,const char *opath,register char **argv, char **env
 	pid_t		pid= -1;
 #ifdef SPAWN_cwd
 	Spawnvex_t*	vex = (Spawnvex_t*)shp->vex;
-	if(!vex && (vex = spawnvex_open(SPAWN_EXEC)))
+	if(!vex && (vex = spawnvex_open(0)))
 		shp->vex = (void*)vex;
 	if(spawn>1)
 	{
@@ -1110,10 +1114,8 @@ pid_t path_spawn(Shell_t *shp,const char *opath,register char **argv, char **env
 			return(-1);
 		spawnvex_add(vex, SPAWN_pgrp, spawn>>1,0,0);
 	}
-#if 1
 	if(vex)
 		spawnvex_add(vex,SPAWN_noexec,0,vexexec,(void*)shp);	
-#endif
 #endif /* SPAWN_cwd */
 	/* leave room for inserting _= pathname in environment */
 	envp--;
@@ -1342,6 +1344,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 		register uid_t euserid;
 		char *savet=0;
 		struct stat statb;
+		int err=0;
 		if((n=sh_open(path,O_RDONLY|O_cloexec,0)) >= 0)
 		{
 			/* move <n> if n=0,1,2 */
@@ -1350,6 +1353,8 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 				goto openok;
 			sh_close(n);
 		}
+		else
+			err = errno;
 		if((euserid=geteuid()) != shp->gd->userid)
 		{
 			strncpy(name+9,fmtbase((long)getpid(),10,0),sizeof(name)-10);
@@ -1370,6 +1375,11 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 		}
 		savet = *--argv;
 		*argv = path;
+		if(err==EACCES && sh_access(e_suidexec,X_OK)<0)
+		{
+			errno = EACCES;
+			return;
+		}
 		path_pfexecve(shp,e_suidexec,argv,envp,0);
 	fail:
 		/*
@@ -1555,8 +1565,8 @@ static Pathcomp_t *path_addcomp(Shell_t *shp,Pathcomp_t *first, Pathcomp_t *old,
 
 bool path_cmdlib(Shell_t *shp, const char *dir, bool on)
 {
-	register Pathcomp_t *pp, *pplast=0;
-	for(pp=shp->pathlist; pp; pplast=pp, pp = pp->next)
+	register Pathcomp_t *pp;
+	for(pp=shp->pathlist; pp; pp = pp->next)
 	{
 		if(strcmp(pp->name,dir))
 			continue;

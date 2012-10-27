@@ -486,6 +486,9 @@ secname(char* section)
 		case 'C':
 			s = "COMPATIBILITY ";
 			break;
+		case 'I':
+			s = "MAINFRAME ";
+			break;
 		case 'U':
 			s = "UWIN ";
 			break;

@@ -1394,7 +1394,7 @@ void _vmoptions()
 					case 't':	/* watch=<addr> */
 						if (!vm)
 							vm = vmopen(Vmdcsystem, Vmdebug, 0);
-						if (v && vm && vm->meth.meth == VM_MTDEBUG && (n = atou(&v)) >= 0)
+						if (v && vm && vm->meth.meth == VM_MTDEBUG && (n = atou(&v)))
 							vmdbwatch((Void_t*)n);
 						break;
 					}

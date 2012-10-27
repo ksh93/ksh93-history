@@ -2153,7 +2153,9 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	if(type==3 && mp->shp->spid)
 	{
 		job_wait(mp->shp->spid);
-		mp->shp->spid = 0;
+		if(mp->shp->pipepid==mp->shp->spid)
+			mp->shp->spid = 0;
+		mp->shp->pipepid = 0;
 	}
 	sfsetbuf(sp,(void*)sp,0);
 	bufsize = sfvalue(sp);
@@ -2614,7 +2616,6 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	char		shtilde[10], *av[3], *ptr=stkfreeze(shp->stk,1);
 	Sfio_t		*iop, *save=sfstdout;
 	Namval_t	*np;
-	int		r = 0;
 	static int	beenhere=0;
 	strcpy(shtilde,".sh.tilde");
 	np = nv_open(shtilde,shp->fun_tree, NV_VARNAME|NV_NOARRAY|NV_NOASSIGN|NV_NOFAIL);
@@ -2631,7 +2632,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	sfset(iop,SF_READ,0);
 	sfstdout = iop;
 	if(np)
-		r = sh_fun(shp,np, (Namval_t*)0, av);
+		sh_fun(shp,np, (Namval_t*)0, av);
 	else
 		sh_btilde(2, av, &shp->bltindata);
 	sfstdout = save;
@@ -2691,7 +2692,7 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 		size_t		len;
 		int		fd, offset=stktell(shp->stk);
 		Spawnvex_t     *vc = (Spawnvex_t*)shp->vex;
-		if(!vc && (vc = spawnvex_open(SPAWN_EXEC)))
+		if(!vc && (vc = spawnvex_open(0)))
 			shp->vex = (void*)vc;
 		if(!(s2=strchr(string++,'}')))
 			return(NIL(char*));

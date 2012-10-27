@@ -1487,6 +1487,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 			}
 			tp->scanmask = flag&~NV_NOSCOPE;
 			tp->scanroot = root;
+			tp->sh->last_root = root;
 			print_namval(file,np,option,tp);
 			if(!is_abuiltin(np) && nv_isvtree(np))
 			{

@@ -707,4 +707,11 @@ baz_t z
 [[ ${z.z} == 789 ]] || err_exit "z.z is ${z.z} should be 789"
 [[ ${ z.out } == "$out" ]] 2> /dev/null || err_exit "z.out should be $out"
 
+$SHELL  2> /dev/null <<- \EOF || err_exit 'typeset -p with types not working'
+	typeset -T Man_t=( typeset X)
+	Man_t Man
+	function bootstrap { : ;}
+	[[ $(typeset -p) == *Man_t* ]] 2> /dev/null 
+EOF
+
 exit $((Errors<125?Errors:125))

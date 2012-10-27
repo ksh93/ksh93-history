@@ -219,7 +219,7 @@ tst	mmap_devzero note{ use mmap on /dev/zero to get raw memory }end execute{
 	}
 }end
 
-tst	note{ mmap is worth using }end output{
+tst	-D_LARGEFILE64_SOURCE note{ mmap is worth using }end output{
 	#if !_lib_mmap
 	(
 	#endif
@@ -323,12 +323,12 @@ tst	note{ mmap is worth using }end output{
 		remove(file);
 	
 		if(4*mmtm <= 3*rdtm)
-			printf("#define _mmap_worthy	2	/* mmap is great */\n");
+			printf("#define _mmap_worthy	2	/* mmap outperforms read on 64Ki buffers -- use it */\n");
 		else if(4*mmtm <= 5*rdtm)
-			printf("#define _mmap_worthy	1	/* mmap is good */\n");
-	
+			printf("#define _mmap_worthy	2	/* mmap is slightly better than read on 64Ki buffers -- use it */\n");
 		else
-			return 1;
+			printf("#define _mmap_worthy	2	/* mmap worse than read on 64Ki buffers -- use it anyway */\n");
+
 		return 0;
 	}
 }end

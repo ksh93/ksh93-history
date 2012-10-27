@@ -1,3 +1,8 @@
+12-10-25 xargs.c: drop bogus "out of space" diagnostic for "command not found"
+12-10-24 tr.c: move from src/cmd/builtin
+12-10-24 grep.c: change -S,--strict to -p.--strict|lenient, add -K,--ksh-regexp -S,--sh-regexp
+12-10-19 od.c: move from src/cmd/builtin
+12-10-15 iconv.c: use sh_run() for /usr/bin/iconv -l
 12-10-03 cmdlist.h: _AST_VERSION>=20121001 => CMDLIST(command,"directory")
 12-10-03 grep.c,xargs.c: move from src/cmd/kshlib/cmdtst
 12-10-03 iconv.c: move from src/cmd/std

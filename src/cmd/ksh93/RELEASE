@@ -1,4 +1,25 @@
-12-10-09  --- Release ksh93v- ---
+12-10-24  --- Release ksh93v- ---
+12-10-24  A bug in which causes the shell to report a syntax error when a
+	  command substitution appeared on the line that started a here
+	  document has been fixed.
+12-10-23  The shell now uses the new spawnvex*() functions for redirections
+	  of simple command that are not builtin.
+12-10-21  Here documents with $() and ${ } use larger buffers.
+12-10-21  Builtins now use mmap() for file that are opened for reading.
+12-10-18  A bug in which preceding a special builtin with command did not
+	  prevent assignments from remaining has been fixed.
+12-10-17  A bug in the self documentation for types with causes the field
+	  descriptors to be off by 1 has been fixed.
+12-10-17  An array bug which caused a regression test to fail has been fixed.
+12-10-16  A bug in the exit status for command substitution caused by no longer
+	  using pipes has been fixed.
+12-10-16  A bug in the self documentation for types with discipline functions
+	  led to an extra line containing -. and has been fixed.
+12-10-16  Fixed a bug with typeset -p that could cause a core dump.
+12-10-15  Fixed a bug in which unsigned long was used when unsigned long long
+	  was needed.
+12-10-15  Fixed a bug in in which could cause long double data to not
+	  aligned correctly in types.
 12-10-09  A bug in which nested types were not able to invoke a discipline
 	  method defined by an embedded type has been fixed.
 12-10-09 +read -d '' now reads up to a NUL byte.

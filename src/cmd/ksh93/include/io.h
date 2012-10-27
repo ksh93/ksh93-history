@@ -74,6 +74,7 @@ extern int	sh_iorenumber(Shell_t*,int,int);
 extern void 	sh_pclose(int[]);
 extern int 	sh_rpipe(int[]);
 extern void 	sh_iorestore(Shell_t*,int,int);
+extern void 	sh_vexrestore(Shell_t*,int);
 #if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
    __EXPORT__
 #endif

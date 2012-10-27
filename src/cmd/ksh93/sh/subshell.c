@@ -474,6 +474,9 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	struct sh_scoped savst;
 	struct dolnod   *argsav=0;
 	int argcnt;
+#ifdef SPAWN_cwd
+	Spawnvex_t *vp;
+#endif
 	memset((char*)sp, 0, sizeof(*sp));
 	sfsync(shp->outpool);
 	sh_sigcheck(shp);
@@ -572,7 +575,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			sp->tmpfd = -1;
 			sp->pipefd = -1;
 			/* use sftmp() file for standard output */
-			if(!(iop = sftmp(PIPE_BUF)))
+			if(!(iop = sftmp(comsub==1?PIPE_BUF:IOBSIZE)))
 			{
 				sfswap(sp->saveout,sfstdout);
 				errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
@@ -763,6 +766,14 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		sh_argfree(shp,argsav,0);
 	if(shp->topfd != buff.topfd)
 		sh_iorestore(shp,buff.topfd|IOSUBSHELL,jmpval);
+#ifdef SPAWN_cwd
+	if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+	{
+		sh_vexrestore(shp,shp->vexi);
+		if((vp=(Spawnvex_t*)shp->vex) && vp->cur)
+			spawnvex_apply(vp,0,SPAWN_RESET);
+	}
+#endif
 	if(sp->sig)
 	{
 		if(sp->prev)

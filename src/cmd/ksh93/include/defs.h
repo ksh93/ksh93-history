@@ -182,6 +182,8 @@ struct shared
 	pid_t		pipepid; \
 	pid_t		outpipepid; \
 	int		topfd; \
+	int		errorfd; \
+	int		vexi; \
 	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
 	char		intrap; \
@@ -468,9 +470,9 @@ extern int		sh_diropenat(Shell_t*, int, const char*, bool);
 #define WBITS		(sizeof(Shopt_t_data_t)*8)
 #define WMASK		(0xff)
 
-#define is_option(s,x)	((bool)(((s)->v[((x)&WMASK)/WBITS] &  (1UL << ((x) % WBITS)))?true:false))
-#define on_option(s,x)	((void)((s)->v[((x)&WMASK)/WBITS] |=  (1UL << ((x) % WBITS))))
-#define off_option(s,x)	((void)((s)->v[((x)&WMASK)/WBITS] &= ~(1UL << ((x) % WBITS))))
+#define is_option(s,x)	((bool)(((s)->v[((x)&WMASK)/WBITS] &  (1ULL << ((x) % WBITS)))?true:false))
+#define on_option(s,x)	((void)((s)->v[((x)&WMASK)/WBITS] |=  (1ULL << ((x) % WBITS))))
+#define off_option(s,x)	((void)((s)->v[((x)&WMASK)/WBITS] &= ~(1ULL << ((x) % WBITS))))
 
 #undef sh_isoption
 #undef sh_onoption

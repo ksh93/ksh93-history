@@ -630,7 +630,7 @@ static ssize_t fmtbase64(Shell_t *shp, Sfio_t *iop, char *string, int alt)
 #endif
 }
 
-static int varname(const char *str, size_t n)
+static int varname(const char *str, ssize_t n)
 {
 	register int c,dot=1,len=1;
 	if(n < 0)

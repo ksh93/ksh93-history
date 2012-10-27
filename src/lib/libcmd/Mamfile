@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-06-20
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-10-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -486,6 +486,29 @@ done ${PACKAGE_ast_INCLUDE}/ast_iconv.h
 done ${PACKAGE_ast_INCLUDE}/iconv.h
 prev cmd.h implicit
 done iconv.c
+make od.c
+prev ${PACKAGE_ast_INCLUDE}/wctype.h implicit
+prev ${PACKAGE_ast_INCLUDE}/wchar.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_float.h implicit
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_float.h
+prev ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
+prev ${PACKAGE_ast_INCLUDE}/iconv.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
+make ${PACKAGE_ast_INCLUDE}/swap.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/swap.h
+prev ${PACKAGE_ast_INCLUDE}/sig.h implicit
+prev cmd.h implicit
+done od.c
+make tr.c
+prev ${PACKAGE_ast_INCLUDE}/regex.h implicit
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
+prev cmd.h implicit
+done tr.c
 exec - {
 exec - cat <<!
 exec - #pragma prototyped
@@ -501,7 +524,7 @@ exec - -e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - -e 's/^b_//' \
 exec - -e 's/(.*//' \
 exec - -e 's/.*/extern int	b_&(int, char**, Shbltin_t*);/' \
-exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c grep.c xargs.c iconv.c |
+exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c grep.c xargs.c iconv.c od.c tr.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -830,8 +853,20 @@ prev iconv.c
 setv LICENSE -DLICENSE="since=1989,author=gsf"
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1989-2012 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libcmd]"\" -c iconv.c
 done iconv.o generated
+make od.o
+prev od.c
+meta od.o %.c>%.o od.c od
+prev od.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2012 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libcmd]"\" -c od.c
+done od.o generated
+make tr.o
+prev tr.c
+meta tr.o %.c>%.o tr.c tr
+prev tr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2012 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libcmd]"\" -c tr.c
+done tr.o generated
 exec - ${AR} rc libcmd.a cmdinit.o basename.o cat.o chgrp.o chmod.o chown.o cksum.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o md5sum.o mkdir.o mkfifo.o mktemp.o mv.o paste.o pathchk.o
-exec - ${AR} rc libcmd.a pids.o rev.o rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o vmstate.o wc.o revlib.o wclib.o sumlib.o fts_fix.o lib.o grep.o xargs.o iconv.o
+exec - ${AR} rc libcmd.a pids.o rev.o rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o vmstate.o wc.o revlib.o wclib.o sumlib.o fts_fix.o lib.o grep.o xargs.o iconv.o od.o tr.o
 exec - (ranlib libcmd.a) >/dev/null 2>&1 || true
 done libcmd.a generated
 done cmd virtual
@@ -932,6 +967,8 @@ prev lib.c
 prev grep.c
 prev xargs.c
 prev iconv.c
+prev od.c
+prev tr.c
 exec - {
 exec - cat <<!
 exec - #pragma prototyped
@@ -946,7 +983,7 @@ exec - set $( sed \
 exec - -e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - -e 's/^b_//' \
 exec - -e 's/(.*//' \
-exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c grep.c xargs.c iconv.c |
+exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c grep.c xargs.c iconv.c od.c tr.c |
 exec - sort -u
 exec - )
 exec - for cmd

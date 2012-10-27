@@ -662,4 +662,24 @@ SH_OPTIONS=astbin=/bin
 PATH=/bin:/usr/bin:/opt/ast/bin
 [[ $(whence basename) == "$basename" ]] || err_exit "basename bound to $(whence basename) but should be bound to $basename when PATH=$PATH" 
 [[ $(whence cmp) == "$cmp" ]] || err_exit "cmp bound to $(whence cmp) but should be bound to $cmp when PATH=$PATH" 
+
+unset y
+exp='outside f, 1, 2, 3, outside f'
+got=$(
+	f() {
+	    if [ -n "${_called_f+_}" ]; then
+	        for y; do
+	            printf '%s, ' "$y"
+	        done
+	    else
+	        _called_f= y= command eval '{ typeset +x y; } 2>/dev/null; f "$@"'
+	    fi
+	}
+	y='outside f'
+	printf "$y, "
+	f 1 2 3
+	echo "$y"
+)
+[[ $got == "$exp" ]] || err_exit 'assignments to "command special_built-in" leaving side effects.'
+
 exit $((Errors<125?Errors:125))

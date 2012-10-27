@@ -159,6 +159,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfswap.c sftable.c sftell.c sftmp.c sfungetc.c sfvprintf.c \
 	sfvscanf.c sfwr.c sfwrite.c sfpurge.c sfraise.c sfwalk.c \
 	sfgetm.c sfmutex.c sfputm.c sfresize.c \
+	sfgetwc.c sfputwc.c \
 	_sfclrerr.c _sfeof.c _sferror.c _sffileno.c \
 	_sfopen.c _sfstacked.c _sfvalue.c \
 	_sfgetc.c _sfgetl.c _sfgetl2.c _sfgetu.c _sfgetu2.c \

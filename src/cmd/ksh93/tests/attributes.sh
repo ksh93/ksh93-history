@@ -475,4 +475,13 @@ typeset -H bar=$foo
 got=$( $SHELL -c 'typeset -H foo;print -r -- "$foo')
 [[ $got == "$bar" ]] || err_exit 'typeset -H not working for export variables'
 
+unset exp got
+typeset -Z4 VAR1
+VAR1=1
+exp=$(typeset -p VAR1)
+export VAR1
+got=$(typeset -p VAR1)
+got=${got/ -x/}
+[[ $got == "$exp" ]] || err_exit 'typeset -x causes zerofill width to change'
+
 exit $((Errors<125?Errors:125))

@@ -1,3 +1,6 @@
+12-10-17 comp/conf.tab: add PC MIN_HOLE_SIZE
+12-10-16 spawnvex.c: spawnvex_open(SPAWN_EXEC) => posix_spawn() exit ENOENT=126 ENOEXEC=127 ok
+12-10-15 hash/hashlib.h,hash/hashscan.c: fix *ancient* hashscan() bug that didn't handle hashsize() during scan
 12-10-12 misc/spawnvex.c,features/sys: spawnvex() finally working for spawn variants
 12-09-27 regex/reglib.h: fix superfluous mask in bit test macros that limited values to 256 bits (now unlimited)
 12-09-26 comp/iconv.c: fix UTF-16 <=> UCS-2 mixup

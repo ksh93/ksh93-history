@@ -757,16 +757,18 @@ static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *fp)
 		sfprintf(out,"[+?\b%s\b defines the following discipline functions:]{\n",np->nvname);
 		for(i=0; i < dp->ndisc; i++)
 		{
+			char *dot;
 			sfputr(shp->stk,dp->names[i],0);
-			cp = 0;
+			dot = cp = Empty;
 			if((nq = nv_search(stkptr(shp->stk,offset),shp->fun_tree,0)) && nq->nvalue.cp)
+			{
 				cp = nq->nvalue.rp->help;
+				dot = ".";
+			}
 			if(nq && nv_isattr(nq,NV_STATICF))
-				sfprintf(out,"\t[+%s?:static:%s]\n",dp->names[i],cp?cp:Empty);
+				sfprintf(out,"\t[+%s?:static:%s%s]\n",dp->names[i],cp,dot);
 			else
-				sfprintf(out,"\t[+%s?%s]\n",dp->names[i],cp?cp:Empty);
-			if(cp)
-				sfputc(out,'.');
+				sfprintf(out,"\t[+%s?%s%s]\n",dp->names[i],cp,dot);
 			stkseek(shp->stk,n);
 		}
 		sfprintf(out,"}\n");
@@ -889,7 +891,8 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 	int		i,j,k,nd=0,nref=0,iref=0,inherit=0;
 	int		size=sizeof(NV_DATA), dsize=0, nnodes;
 	int		binary=NV_BINARY|NV_RAW;
-	size_t		offset=0,m,n;
+	size_t		offset=0,m;
+	ssize_t		n;
 	char		*name=0, *cp, *sp, **help;
 	Namtype_t	*pp,*qp=0,*dp,*tp;
 	Dt_t		*root = nv_dict(mp);
@@ -969,7 +972,7 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 	nv_setsize(mp,offset);
 	if(nd)
 		nd++;
-	k = roundof(sizeof(Namtype_t),sizeof(Sfdouble_t)) - sizeof(Namtype_t);
+	k = roundof(sizeof(Namtype_t)+nnodes*NV_MINSZ,sizeof(Sfdouble_t)) - (sizeof(Namtype_t)+nnodes*NV_MINSZ);
 	pp = newof(NiL, Namtype_t, 1, nnodes*NV_MINSZ + offset + size + (nnodes+nd)*sizeof(char*) + iref*sizeof(struct Namref)+k);
 	pp->fun.dsize = sizeof(Namtype_t)+nnodes*NV_MINSZ +offset+k;
 	pp->fun.type = mp;
@@ -1104,11 +1107,11 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 		{
 			/* need to save the string pointer */
 			nv_offattr(np,NV_EXPORT);
-			help[k] = cp;
+			help[k-1] = cp;
 			cp = strcopy(cp,np->nvenv);
-			j = *help[k];
+			j = *help[k-1];
 			if(islower(j))
-				*help[k] = toupper(j);
+				*help[k-1] = toupper(j);
 			*cp++ = 0;
 			np->nvenv = 0;
 		}

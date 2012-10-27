@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: xargs (AT&T Research) 2012-04-11 $\n]"
+"[-?\n@(#)$Id: xargs (AT&T Research) 2012-10-26 $\n]"
 USAGE_LICENSE
 "[--plugin?ksh]"
 "[+NAME?xargs - construct arg list and execute command]"
@@ -132,10 +132,11 @@ b_xargs(int argc, register char** argv, Shbltin_t* context)
 	size_t			size = 0;
 	int			term = -1;
 
+	char*			av[4];
 	Xargs_t			xargs;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
-	CMDDISC(&xargs.disc, CMD_EMPTY, errorf);
+	CMDDISC(&xargs.disc, CMD_CHECKED|CMD_EMPTY, errorf);
 	xargs.disc.runf = run;
 	xargs.context = context;
 	for (;;)
@@ -229,89 +230,98 @@ b_xargs(int argc, register char** argv, Shbltin_t* context)
 	argv += opt_info.index;
 	if (error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
-	if (!(xargs.cmd = cmdopen(argv, argmax, size, insert, &xargs.disc)))
-		error(ERROR_SYSTEM|3, "out of space");
-	sfopen(sfstdin, NiL, "rt");
-	error_info.line = 1;
-	if (term >= 0)
-		while (!sh_checksig(context))
-		{
-			if (!(s = sfgetr(sfstdin, term, 0)))
-			{
-				if (sfvalue(sfstdin) > 0)
-					error(2, "last argument incomplete");
-				break;
-			}
-			error_info.line++;
-			if ((c = sfvalue(sfstdin) - 1) && (s[c-1] != '\r' || --c))
-				cmdarg(xargs.cmd, s, c);
-		}
-	else if (!(sp = sfstropen()))
-		error(ERROR_SYSTEM|2, "out of space [arg]");
-	else
+	av[0] = "whence";
+	av[1] = "-q";
+	av[2] = argv[0];
+	av[3] = 0;
+	if (sh_run(context, 3, av))
+		error(3, "%s: command not found", argv[0]);
+	if (xargs.cmd = cmdopen(argv, argmax, size, insert, &xargs.disc))
 	{
-		while (!sh_checksig(context))
-		{
-			switch (c = sfgetc(sfstdin))
+		sfopen(sfstdin, NiL, "rt");
+		error_info.line = 1;
+		if (term >= 0)
+			while (!sh_checksig(context))
 			{
-			case '"':
-			case '\'':
-				q = c;
-				while ((c = sfgetc(sfstdin)) != q)
+				if (!(s = sfgetr(sfstdin, term, 0)))
 				{
-					if (c == EOF)
-						goto arg;
-					if (c == '\n')
-					{
-						error(1, "missing %c quote", q);
-						error_info.line++;
-						goto arg;
-					}
-					sfputc(sp, c);
+					if (sfvalue(sfstdin) > 0)
+						error(2, "last argument incomplete");
+					break;
 				}
-				continue;
-			case '\\':
-				if ((c = sfgetc(sfstdin)) == EOF)
+				error_info.line++;
+				if ((c = sfvalue(sfstdin) - 1) && (s[c-1] != '\r' || --c))
+					cmdarg(xargs.cmd, s, c);
+			}
+		else if (!(sp = sfstropen()))
+			error(ERROR_SYSTEM|2, "out of space [arg]");
+		else
+		{
+			while (!sh_checksig(context))
+			{
+				switch (c = sfgetc(sfstdin))
 				{
+				case '"':
+				case '\'':
+					q = c;
+					while ((c = sfgetc(sfstdin)) != q)
+					{
+						if (c == EOF)
+							goto arg;
+						if (c == '\n')
+						{
+							error(1, "missing %c quote", q);
+							error_info.line++;
+							goto arg;
+						}
+						sfputc(sp, c);
+					}
+					continue;
+				case '\\':
+					if ((c = sfgetc(sfstdin)) == EOF)
+					{
+						if (sfstrtell(sp))
+							goto arg;
+						break;
+					}
+					if (c == '\n')
+						error_info.line++;
+					sfputc(sp, c);
+					continue;
+				case EOF:
 					if (sfstrtell(sp))
 						goto arg;
 					break;
-				}
-				if (c == '\n')
+				case '\n':
 					error_info.line++;
-				sfputc(sp, c);
-				continue;
-			case EOF:
-				if (sfstrtell(sp))
-					goto arg;
-				break;
-			case '\n':
-				error_info.line++;
-			arg:
-				c = sfstrtell(sp);
-				if (!(s = sfstruse(sp)))
-					error(ERROR_SYSTEM|3, "out of space");
-				if (eof && streq(s, eof))
-					break;
-				if (c || insert)
-				{
-					if (lines && c > 1 && isspace(s[c - 2]))
-						cmdarg(xargs.cmd, 0, -1);
-					cmdarg(xargs.cmd, s, c);
+				arg:
+					c = sfstrtell(sp);
+					if (!(s = sfstruse(sp)))
+						error(ERROR_SYSTEM|3, "out of space");
+					if (eof && streq(s, eof))
+						break;
+					if (c || insert)
+					{
+						if (lines && c > 1 && isspace(s[c - 2]))
+							cmdarg(xargs.cmd, 0, -1);
+						cmdarg(xargs.cmd, s, c);
+					}
+					continue;
+				default:
+					if (isspace(c))
+						goto arg;
+					sfputc(sp, c);
+					continue;
 				}
-				continue;
-			default:
-				if (isspace(c))
-					goto arg;
-				sfputc(sp, c);
-				continue;
+				break;
 			}
-			break;
+			sfclose(sp);
 		}
-		sfclose(sp);
+		if (sferror(sfstdin))
+			error(ERROR_SYSTEM|2, "input read error");
+		cmdclose(xargs.cmd);
 	}
-	if (sferror(sfstdin))
-		error(ERROR_SYSTEM|2, "input read error");
-	cmdclose(xargs.cmd);
+	else if (!error_info.errors)
+		error(ERROR_SYSTEM|2, "out of space");
 	return error_info.errors != 0;
 }

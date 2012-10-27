@@ -803,7 +803,7 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 		sh_offstate(shp,SH_MONITOR);
 	shp->subshell = 0;
 #ifdef SPAWN_cwd
-	if(shp->vex || (shp->vex = (void*)spawnvex_open(SPAWN_EXEC)))
+	if(shp->vex || (shp->vex = (void*)spawnvex_open(0)))
 		spawnvex_add((Spawnvex_t*)shp->vex,pv[fd],pv[fd],0,0);
 	else
 #endif /* SPAWN_cwd */

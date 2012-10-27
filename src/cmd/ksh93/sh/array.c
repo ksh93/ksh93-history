@@ -395,9 +395,14 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 	np->nvalue.cp = up->cp;
 	if(!up->cp)
 	{
-			char *xp = nv_setdisc(np,"get",np,(Namfun_t*)np);
+		char *xp = nv_setdisc(np,"get",np,(Namfun_t*)np);
 		if(flag!=ARRAY_ASSIGN)
+		{
+			struct index_array *aq=(struct index_array*)arp->scope;
+			if(xp==(char*)np && aq && aq->maxi<ap->cur)
+				return(np);
 			return(xp && xp!=(char*)np?np:0);
+		}
 		if(!array_covered(np,ap))
 			ap->header.nelem++;
 	}
@@ -822,11 +827,12 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	register struct index_array *ap;
 	register int i;
 	register int newsize = arsize(arp,maxi+1);
+	size_t	size;
 	if (maxi >= ARRAY_MAX)
 		errormsg(SH_DICT,ERROR_exit(1),e_subscript, fmtbase((long)maxi,10,0));
-	i = (newsize-1)*sizeof(union Value*)+newsize;
-	ap = new_of(struct index_array,i);
-	memset((void*)ap,0,sizeof(*ap)+i);
+	size = (newsize-1)*sizeof(union Value*)+newsize;
+	ap = new_of(struct index_array,size);
+	memset((void*)ap,0,sizeof(*ap)+size);
 	ap->maxi = newsize;
 	ap->cur = maxi;
 	ap->bits =  (unsigned char*)&ap->val[newsize];
@@ -834,7 +840,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	if(arp)
 	{
 		ap->header = arp->header;
-		ap->header.hdr.dsize = sizeof(*ap) + i;
+		ap->header.hdr.dsize = sizeof(*ap) + size;
 		for(i=0;i < arp->maxi;i++)
 		{
 			ap->bits[i] = arp->bits[i];
@@ -848,7 +854,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	{
 		int flags = 0;
 		Namval_t *mp=0;
-		ap->header.hdr.dsize = sizeof(*ap) + i;
+		ap->header.hdr.dsize = sizeof(*ap) + size;
 		i = 0;
 		ap->header.fun = 0;
 		if((nv_isnull(np)||np->nvalue.cp==Empty) && nv_isattr(np,NV_NOFREE))

@@ -497,4 +497,7 @@ print foo > $tmp/foofile
 x=$( $SHELL 2> /dev/null 'read <<< $(<'"$tmp"'/foofile) 2> /dev/null;print -r "$REPLY"')
 [[ $x == foo ]] || err_exit '<<< $(<file) not working'
 
+$SHELL 2> /dev/null -c 'true <<- ++EOF++ || true "$(true)"
+++EOF++' || err_exit 'command substitution on heredoc line causes syntax error'
+
 exit $((Errors<125?Errors:125))

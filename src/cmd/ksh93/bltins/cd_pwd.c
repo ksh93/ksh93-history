@@ -59,7 +59,7 @@ static void rehash(register Namval_t *np,void *data)
  */
 int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 {
-	int fd,apfd,shfd;
+	int fd,shfd;
 	int savederrno=errno;
 #ifndef AT_FDCWD
 	NOT_USED(dir);

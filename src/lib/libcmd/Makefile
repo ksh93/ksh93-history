@@ -27,6 +27,7 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	vmstate.c wc.c revlib.c wclib.c sumlib.o \
 	fts_fix.c lib.c \
 	grep.c xargs.c iconv.c \
+	od.c tr.c \
 	-lfsg -lmd -lutil
 
 grep.o : LICENSE=since=1995,author=gsf+doug

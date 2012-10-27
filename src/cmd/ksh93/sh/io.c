@@ -544,7 +544,9 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd)
 	}
 	if(status&IOREAD)
 	{
-		if(!(bp = (char *)malloc(IOBSIZE+1)))
+		if(shp->bltinfun && shp->bltindata.bnode && !nv_isattr(shp->bltindata.bnode,BLT_SPC))
+			bp = 0;
+		else if(!(bp = (char *)malloc(IOBSIZE+1)))
 			return(NIL(Sfio_t*));
 		flags |= SF_READ;
 		if(!(status&IOWRITE))
@@ -558,7 +560,8 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd)
 	{
 		if(status&IOTTY)
 			sfset(iop,SF_LINE|SF_WCWIDTH,1);
-		sfsetbuf(iop, bp, IOBSIZE);
+		if(bp)
+			sfsetbuf(iop, bp, IOBSIZE);
 	}
 	else if(!(iop=sfnew((fd<=2?iop:0),bp,IOBSIZE,fd,flags)))
 		return(NIL(Sfio_t*));
@@ -601,7 +604,6 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd)
 static void io_preserve(Shell_t* shp, register Sfio_t *sp, register int f2)
 {
 	register int fd;
-	int dupflag;
 	if(sp)
 		fd = sfsetfd(sp,10);
 	else
@@ -1189,13 +1191,33 @@ static char *io_usename(Shell_t *shp,char *name, int *perm, int fno, int mode)
 	return(tname);
 }
 
+#ifdef SPAWN_cwd
+/*
+ * restore sfstderr and close file descriptors
+ */
+void sh_vexrestore(Shell_t *shp, int n)
+{
+	Spawnvex_t	*vp = (Spawnvex_t*)shp->vexp;
+	if(vp && vp->cur>0)
+	{
+	        if(error_info.fd != shp->errorfd)
+		{
+			sfsetfd(sfstderr,-1);
+                	sfclose(sfstderr);
+                	sfstderr = shp->sftable[shp->errorfd];
+                	error_info.fd = shp->errorfd;
+		}
+		spawnvex_apply(vp,n,0);
+	}
+}
+
 /*
  * set up standard stream in the child
  */
 static int iovex_child(void *context, uintmax_t fd1, uintmax_t fd2)
 {
 	Shell_t *shp = (Shell_t*)context;
-	Sfio_t	*spnew,*sp=shp->sftable[fd2];
+	Sfio_t	*sp=shp->sftable[fd2];
 #if 1
 	char buff[256];
 	int n = sfsprintf(buff,sizeof(buff),"fd1=%d fd2=%d\n",fd1,fd2);
@@ -1209,8 +1231,8 @@ static int iovex_child(void *context, uintmax_t fd1, uintmax_t fd2)
 		sp->_file = fd2; 
 		sfset(sp,SF_SHARE|SF_PUBLIC,1);
 	}
-	return(0);
 #endif
+	return(0);
 }
 
 static int iovex_trunc(void *context, uintmax_t origfd, uintmax_t fd2)
@@ -1230,6 +1252,7 @@ static int iovex_rename(void *context, uintmax_t origfd, uintmax_t fd2)
 	free(context);
 	return(0);
 }
+#endif
 
 /*
  * I/O redirection
@@ -1254,8 +1277,10 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	int isstring = shp->subshell?(sfset(sfstdout,0,0)&SF_STRING):0;
 	int herestring = (flag&IOHERESTRING);
 	int vex = (flag&IOUSEVEX);
+#ifdef SPAWN_cwd
 	Spawnvex_t	*vp = (Spawnvex_t*)shp->vexp;
 	Spawnvex_t	*vc = (Spawnvex_t*)shp->vex;
+#endif
 	Sfio_t		*sp;
 	flag &= ~(IOHERESTRING|IOUSEVEX);
 
@@ -1336,6 +1361,10 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			errormsg(SH_DICT,ERROR_system(1),e_file+4);
 		if(iof&IOLSEEK)
 		{
+#ifdef SPAWN_cwd
+			if(vex && (fd=spawnvex_get(vc,fn,0))>=0)
+				fn = fd;
+#endif
 			io_op[2] = '#';
 			if(iof&IOARITH)
 			{
@@ -1364,7 +1393,12 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				if((fd=fname[0])>='0' && fd<='9')
 				{
 					char *number = fname;
+					int f;
 					dupfd = strtol(fname,&number,10);
+#ifdef SPAWN_cwd
+					if(vex && (f=spawnvex_get(vc,dupfd,0))>=0)
+						dupfd = f;
+#endif
 					if(*number=='-')
 					{
 						toclose = dupfd;
@@ -1422,7 +1456,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					shp->sftable[fd] = sfnew(NIL(Sfio_t*),cp,r,-1,SF_READ|SF_STRING);
 					shp->fdstatus[fd] = shp->fdstatus[dupfd];
 				}
-				else if((fd=sh_fcntl(dupfd,F_DUPFD,3))<0)
+				else if((fd=sh_fcntl(dupfd,F_dupfd_cloexec,3))<0)
 					goto fail;
 				if(fd>= shp->gd->lim.open_max)
 					sh_iovalidfd(shp,fd);
@@ -1663,7 +1697,9 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				}
 				else if(vex)
 				{
+#ifdef SPAWN_cwd
 					Spawnvex_f fun = 0;
+#endif
 					void 	*arg= (void*)shp;
 					if(trunc)
 						fun = iovex_trunc;
@@ -1674,8 +1710,16 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 						strcpy((char*)arg+sizeof(void*),fname);
 						fun = iovex_rename;
 					}
+#ifdef SPAWN_cwd
 					spawnvex_add(vc,fd,fn,fn<3?iovex_child:0,arg);
 					spawnvex_add(vp,fd,-1,fun,arg);
+#endif
+					if(fn == error_info.fd)
+					{
+						sfsync(sfstderr);
+						sfstderr = sh_iostream(shp,fd);
+						error_info.fd = fd;
+					}
 				}
 				else
 				{
@@ -2248,9 +2292,11 @@ int sh_iocheckfd(Shell_t *shp, register int fd)
 	if(!(n&(IOSEEK|IONOSEEK)))
 	{
 		struct stat statb;
+		Sfio_t *sp = shp->sftable[fd];
 		/* /dev/null check is a workaround for select bug */
 		static ino_t null_ino;
 		static dev_t null_dev;
+		shp->sftable[fd] = 0;
 		if(null_ino==0 && stat(e_devnull,&statb) >=0)
 		{
 			null_ino = statb.st_ino;
@@ -2286,6 +2332,7 @@ int sh_iocheckfd(Shell_t *shp, register int fd)
 			n |= IONOSEEK;
 		else
 			n |= IOSEEK;
+		shp->sftable[fd] = sp;
 	}
 	if(fd==0)
 		n &= ~IOWRITE;

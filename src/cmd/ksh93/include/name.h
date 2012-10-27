@@ -62,8 +62,12 @@ union Value
 
 /* used for arrays */
 
-#define ARRAY_MAX 	(1L<<ARRAY_BITS) /* maximum number of elements in an array */
-#define ARRAY_MASK	(ARRAY_MAX-1)	/* For index values */
+#if _ast_sizeof_pointer >= 8
+   #define ARRAY_MAX	(1UL <<31) /* maximum number of elements in an array */
+#else
+#   define ARRAY_MAX 	(1UL<<ARRAY_BITS) /* maximum number of elements in an array */
+#endif
+#define ARRAY_MASK	((1UL<<ARRAY_BITS)-1)	/* For backward compatibility */
 
 #define ARRAY_INCR	32	/* number of elements to grow when array 
 				   bound exceeded.  Must be a power of 2 */

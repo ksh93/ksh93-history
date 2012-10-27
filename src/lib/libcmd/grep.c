@@ -21,7 +21,7 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: grep (AT&T Research) 2012-05-11 $\n]"
+"[-?\n@(#)$Id: grep (AT&T Research) 2012-10-24 $\n]"
 USAGE_LICENSE
 "[--plugin?ksh]"
 "[+NAME?grep - search lines in files for matching patterns]"
@@ -50,6 +50,8 @@ USAGE_LICENSE
     "\apatterns\a.]"
 "[P:perl-regexp?\bpgrep\b mode: \bperl\b(1) regular expression "
     "\apatterns\a.]"
+"[K:ksh-regexp?\bksh\b(1) extended file match \apatterns\a.]"
+"[S:sh-regexp?\bsh\b(1) file match \apatterns\a.]"
 "[F:fixed-string?\bfgrep\b mode: fixed string \apatterns\a.]"
 "[A:approximate-regexp?\bagrep\b mode: approximate regular expression "
     "\apatterns\a (not implemented.)]"
@@ -81,11 +83,11 @@ USAGE_LICENSE
 "[n:number|line-number?Prefix each matched line with its line number.]"
 "[N:name?Set the standard input file name prefix to "
     "\aname\a.]:[name:=empty]"
+"[p:strict|pedantic?Enable strict \apattern\a interpretation with diagnostics.]"
 "[q:quiet|silent?Do not print matching lines.]"
 "[r|R:recursive?Recursively process all files in each named directory. "
     "Use \btw -e\b \aexpression\a \bgrep ...\b to control the directory "
     "traversal.]"
-"[S:strict?Enable strict \apattern\a interpretation with diagnostics.]"
 "[s:suppress|no-messages?Suppress error and warning messages.]"
 "[t:total?Only print a single matching line count for all files.]"
 "[T:test?Enable implementation specific tests.]: [test]"
@@ -731,6 +733,9 @@ grep(char* id, int options, int argc, char** argv, Shbltin_t* context)
 		case 'H':
 			state.prefix = opt_info.num;
 			break;
+		case 'K':
+			state.options |= REG_SHELL|REG_AUGMENTED|REG_LENIENT;
+			break;
 		case 'L':
 			state.list = -opt_info.num;
 			break;
@@ -744,7 +749,7 @@ grep(char* id, int options, int argc, char** argv, Shbltin_t* context)
 			state.options |= REG_EXTENDED|REG_LENIENT;
 			break;
 		case 'S':
-			state.options &= ~REG_LENIENT;
+			state.options |= REG_SHELL|REG_LENIENT;
 			break;
 		case 'T':
 			s = opt_info.arg;
@@ -818,6 +823,9 @@ grep(char* id, int options, int argc, char** argv, Shbltin_t* context)
 			break;
 		case 'n':
 			state.number = 1;
+			break;
+		case 'p':
+			state.options &= ~REG_LENIENT;
 			break;
 		case 'q':
 			state.query = 1;

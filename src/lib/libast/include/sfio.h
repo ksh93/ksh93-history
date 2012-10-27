@@ -269,6 +269,8 @@ extern int		sfscanf _ARG_((Sfio_t*, const char*, ...));
 extern int		sfsscanf _ARG_((const char*, const char*, ...));
 extern int		sfvsscanf _ARG_((const char*, const char*, va_list));
 extern int		sfvscanf _ARG_((Sfio_t*, const char*, va_list));
+extern int		sfgetwc _ARG_((Sfio_t*));
+extern int		sfputwc _ARG_((Sfio_t*, int w));
 
 /* mutex locking for thread-safety */
 extern int		sfmutex _ARG_((Sfio_t*, int));

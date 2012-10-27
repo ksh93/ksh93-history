@@ -25,7 +25,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: iconv (AT&T Research) 2012-10-09 $\n]"
+"[-?\n@(#)$Id: iconv (AT&T Research) 2012-10-15 $\n]"
 USAGE_LICENSE
 "[+NAME?iconv - codeset conversion]"
 "[+DESCRIPTION?\biconv\b converts the encoding of characters in the \afile\a"
@@ -112,7 +112,7 @@ optinfo(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 }
 
 static int
-listall(void)
+listall(void* context)
 {
 	
 	register iconv_list_t*	ic;
@@ -124,8 +124,13 @@ listall(void)
 	p = "/usr/bin/iconv";
 	if (!access(p, X_OK) || !access(p += 4, X_OK))
 	{
+		char*	argv[3];
+
 		sfprintf(sfstdout, "\n");
-		execl(p, "iconv", "-l", 0);
+		argv[0] = (char*)p;
+		argv[1] = "-l";
+		argv[2] = 0;
+		return sh_run(context, 2, argv);
 	}
 	return 0;
 }
@@ -213,7 +218,7 @@ b_iconv(int argc, register char** argv, Shbltin_t* context)
 	if (error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
 	if (list)
-		return listall();
+		return listall(context);
 	if ((cvt = iconv_open(to, from)) == (iconv_t)(-1))
 	{
 		if ((cvt = iconv_open(to, "utf-8")) == (iconv_t)(-1))

@@ -751,7 +751,7 @@ static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	np->nvenv = 0;
 }
 
-static astbin_update(Shell_t *shp, const char *from, const char *to)
+static void astbin_update(Shell_t *shp, const char *from, const char *to)
 {
 	Namval_t	*mp,*np;
 	const char	*path;
@@ -823,7 +823,7 @@ static void put_options(register Namval_t* np,const char *val,int flags,Namfun_t
 		return;
 	}
 	sfputr(shp->stk,".sh.op",'_');
-	while((c==*cp)==' ' || c=='\t')
+	while((c=*cp)==' ' || c=='\t')
 		c++;
 	while(c = *cp++)
 	{
@@ -1025,7 +1025,6 @@ static char* get_match(register Namval_t* np, Namfun_t *fp)
 	struct match	*mp = (struct match*)fp;
 	int		sub,sub2=0,n,i =!mp->index;
 	char		*val;
-	Namval_t	*nq;
 	sub = nv_aindex(SH_MATCHNOD);
 	if(sub<0)
 		sub = 0;
@@ -1907,6 +1906,7 @@ static const char *shdiscnames[] = { "tilde", 0};
 
 static Namval_t *create_sig(Namval_t *np,const char *name,int flag,Namfun_t *fp)
 {
+	return(0);
 }
 
 struct Svars

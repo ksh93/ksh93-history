@@ -70,7 +70,6 @@ static char	nlock;
 static char	pipejob;
 static char	nopost;
 static int	restorefd;
-static int	vex;
 
 struct funenv
 {
@@ -134,7 +133,7 @@ static bool iousepipe(Shell_t *shp)
 
 static void iounpipe(Shell_t *shp)
 {
-	int n,err;
+	int n,err=errno;
 	char buff[SF_BUFSIZE];
 	while(close(1)<0 && errno==EINTR)
 		errno = err;
@@ -710,8 +709,8 @@ static void *sh_coinit(Shell_t *shp,char **argv)
 	csp->coshell->data = (void*)csp;
 	csp->name = (char*)(csp+1);
 	strcpy(csp->name,name);
-	for(id=0; coused&(1<<id); id++);
-	coused |= (1<<id);
+	for(id=0; coused&(1LL<<id); id++);
+	coused |= (1LL<<id);
 	csp->id = id;
 	csp->next = job.colist;
 	job.colist = csp;
@@ -1062,7 +1061,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			io = t->tre.treio;
 			if(shp->envlist = argp = t->com.comset)
 			{
-				if(argn==0 || (np && nv_isattr(np,(BLT_DCL|BLT_SPC))))
+				if(argn==0 || (np && (nv_isattr(np,BLT_DCL)||(!command && nv_isattr(np,BLT_SPC)))))
 				{
 					Namval_t *tp=0;
 					if(argn)
@@ -1381,12 +1380,12 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 								if(shp->pwdfd >= 0)
 								{
 									 while((fchdir(shp->pwdfd) < 0) && errno==EINTR)
-										errno = 0;
+										errno = err;
 								}
 								else
 								{
 									 while((chdir(shp->pwd) < 0) && errno==EINTR)
-										errno = 0;
+										errno = err;
 								}
 							}
 						}
@@ -1592,8 +1591,10 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				}
 				nv_getval(RANDNOD);
 				restorefd = shp->topfd;
+#ifdef SPAWN_cwd
 				if(shp->vexp)
-					vex = ((Spawnvex_t*)shp->vexp)->cur;
+					shp->vexi = ((Spawnvex_t*)shp->vexp)->cur;
+#endif
 				if(type&FCOOP)
 				{
 					pipes[2] = 0;
@@ -1693,8 +1694,10 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						job_wait(parent);
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
+#ifdef SPAWN_cwd
 					if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
-						spawnvex_apply(vp,vex,0);
+						sh_vexrestore(shp,shp->vexi);
+#endif
 					if(usepipe && tsetio &&  subdup)
 						iounpipe(shp);
 					if(!sh_isoption(shp,SH_MONITOR))
@@ -3097,11 +3100,13 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 		{
 			if(!tsetio || !subdup)
 			{
+#ifdef SPAWN_cwd
 				Spawnvex_t *vp;
+				if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+					sh_vexrestore(shp,shp->vexi);
+#endif
 				if(shp->topfd > restorefd)
 					sh_iorestore(shp,restorefd,0);
-				else if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
-				spawnvex_apply(vp,vex,0);
 				iounpipe(shp);
 			}
 		}
@@ -3545,8 +3550,10 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	char		**arge, *path;
 	volatile pid_t	grp = 0;
 	Pathcomp_t	*pp;
+#ifdef SPAWN_cwd
 	Spawnvex_t	*vp = (Spawnvex_t*)shp->vexp;
 	Spawnvex_t	*vc = (Spawnvex_t*)shp->vex;
+#endif
 	if(flag)
 	{
 		otype = savetype;
@@ -3703,10 +3710,13 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		spawnpid = -1;
 		if(t->com.comio)
 		{
+#ifdef SPAWN_cwd
 			if(!vc)
-				shp->vex = vc = spawnvex_open(SPAWN_EXEC);
+				shp->vex = vc = spawnvex_open(0);
 			if(!vp)
-				shp->vexp = vp = spawnvex_open(SPAWN_EXEC);
+				shp->vexp = vp = spawnvex_open(0);
+#endif
+			shp->errorfd = error_info.fd;
 #if 0
 			sh_redirect(shp,t->com.comio,IOUSEVEX);
 #else
