@@ -1,3 +1,4 @@
+12-11-21 wc.c,wclib.c: add --invalid-bytes, -X and fix invalid byte logic
 12-10-25 xargs.c: drop bogus "out of space" diagnostic for "command not found"
 12-10-24 tr.c: move from src/cmd/builtin
 12-10-24 grep.c: change -S,--strict to -p.--strict|lenient, add -K,--ksh-regexp -S,--sh-regexp

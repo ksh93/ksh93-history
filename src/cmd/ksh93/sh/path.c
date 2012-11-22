@@ -143,8 +143,11 @@ static pid_t _spawnveg(Shell_t *shp,const char *path, char* const argv[], char* 
 #ifdef SPAWN_cwd
 		{
 			char *arg0 = argv[0], **av0= (char**)&argv[0];
+			int fd;
 			pid = spawnvex(path,argv,envp,(Spawnvex_t*)shp->vex);
 			*av0 = arg0;
+			if(pid>0 && shp->comsub && (fd=sffileno(sfstdout))!=1 && fd>=0)
+				spawnvex_add((Spawnvex_t*)shp->vex, fd, 1,0,0);
 		}
 #else
 		pid = spawnveg(path,argv,envp,pgid);
@@ -347,7 +350,8 @@ static char *path_lib(Shell_t *shp,Pathcomp_t *pp, char *path)
 		char save[8];
 		for( ;pp; pp=pp->next)
 		{
-			path_checkdup(shp,pp);
+			if(!pp->dev && !pp->ino)
+				path_checkdup(shp,pp);
 			if(pp->ino==statb.st_ino && pp->dev==statb.st_dev && pp->mtime==statb.st_mtime)
 				return(pp->lib);
 		}
@@ -1601,7 +1605,7 @@ static bool path_chkpaths(Shell_t *shp,Pathcomp_t *first, Pathcomp_t* old,Pathco
 		*sp++ = '/';
 		n=read(fd,cp=sp,n);
 		sp[n] = 0;
-		sh_close(fd);
+		close(fd);
 		for(ep=0; n--; cp++)
 		{
 			if(*cp=='=')

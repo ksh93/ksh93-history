@@ -500,4 +500,19 @@ x=$( $SHELL 2> /dev/null 'read <<< $(<'"$tmp"'/foofile) 2> /dev/null;print -r "$
 $SHELL 2> /dev/null -c 'true <<- ++EOF++ || true "$(true)"
 ++EOF++' || err_exit 'command substitution on heredoc line causes syntax error'
 
+(
+	cat=$(whence -p cat) 
+	function foobar
+	{
+		$cat <<- XXX
+			hello
+		XXX
+	}
+	$cat > $f <<- EOF
+		$(foobar)
+		world
+	EOF
+) > $f > /dev/null
+[[ $(<$f) == $'hello\nworld' ]] || err_exit 'nested here-document fails'
 exit $((Errors<125?Errors:125))
+

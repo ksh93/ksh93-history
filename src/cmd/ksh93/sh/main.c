@@ -385,7 +385,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 			}
 			fcntl(fno,F_SETFD,FD_CLOEXEC);
 			shp->fdstatus[fno] |= IOCLEX;
-			iop = sh_iostream((void*)shp,fno);
+			iop = sh_iostream((void*)shp,fno,fno);
 		}
 		else
 			iop = sfstdin;

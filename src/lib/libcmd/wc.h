@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -35,9 +35,10 @@
 #define WC_WORDS	0x02
 #define WC_CHARS	0x04
 #define WC_MBYTE	0x08
-#define WC_LONGEST	0x10
-#define WC_QUIET	0x20
-#define WC_NOUTF8	0x40
+#define WC_INVAL	0x10
+#define WC_LONGEST	0x20
+#define WC_QUIET	0x40
+#define WC_NOUTF8	0x80
 
 typedef struct
 {
@@ -45,6 +46,7 @@ typedef struct
 	Sfoff_t words;
 	Sfoff_t lines;
 	Sfoff_t chars;
+	Sfoff_t inval;
 	Sfoff_t longest;
 	int	mode;
 	int	mb;

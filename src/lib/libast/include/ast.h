@@ -185,7 +185,7 @@ typedef struct
 #define mbcoll()	(ast.mb_xfrm!=0)
 #define mbwide()	(mbmax()>1)
 
-#define mb2wc(w,p,n)	(*ast.mb_towc)(&w,(char*)p,n)
+#define mb2wc(w,p,n)	(*ast.mb_towc)(&(w),(char*)(p),(n))
 #define mbchar(p)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),mbmax()))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=ast.mb_sync+1,ast.tmp_int)):(*(unsigned char*)(p++)))
 #define mbnchar(p,n)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),n))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=ast.mb_sync+1,ast.tmp_int)):(*(unsigned char*)(p++)))
 #define mbinit()	(mbwide()?(*ast.mb_towc)((wchar_t*)0,(char*)0,mbmax()):0)

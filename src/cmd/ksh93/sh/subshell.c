@@ -154,7 +154,7 @@ void	sh_subtmpfile(Shell_t *shp)
 				shp->fdstatus[fd] = IOCLOSE;
 			}
 		}
-		sh_iostream(shp,1);
+		sh_iostream(shp,1,1);
 		sfset(sfstdout,SF_SHARE|SF_PUBLIC,1);
 		sfpool(sfstdout,shp->outpool,SF_WRITE);
 		if(pp && pp->olist  && pp->olist->strm == sfstdout)
@@ -505,6 +505,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	sp->options = shp->options;
 	sp->jobs = job_subsave();
 	sp->subdup = shp->subdup;
+	shp->subdup = 0;
 #if SHOPT_COSHELL
 	sp->coshell = shp->coshell;
 	shp->coshell = 0;
@@ -630,7 +631,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		if(sp->pipefd>=0)
 		{
 			/* sftmp() file has been returned into pipe */
-			iop = sh_iostream(shp,sp->pipefd);
+			iop = sh_iostream(shp,sp->pipefd,sp->pipefd);
 			sfclose(sfstdout);
 		}
 		else
@@ -768,11 +769,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		sh_iorestore(shp,buff.topfd|IOSUBSHELL,jmpval);
 #ifdef SPAWN_cwd
 	if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
-	{
-		sh_vexrestore(shp,shp->vexi);
-		if((vp=(Spawnvex_t*)shp->vex) && vp->cur)
-			spawnvex_apply(vp,0,SPAWN_RESET);
-	}
+		sh_vexrestore(shp,buff.vexi);
 #endif
 	if(sp->sig)
 	{

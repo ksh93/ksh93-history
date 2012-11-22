@@ -81,7 +81,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-09-27 $
+@(#)$Id: package (AT&T Research) 2012-11-20 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2826,20 +2826,20 @@ cat $INITROOT/$i.sh
 
 			(
 				cd /tmp || exit 3
+				trap "rm -f pkg$pid.*" 0 1 2
 				cp $INITROOT/hello.c pkg$pid.c || exit 3
 				$cc -o pkg$pid.exe pkg$pid.c > pkg$pid.e 2>&1 || {
-					if $cc -Dnew=old -o pkg$pid.exe pkg$pid.c > /dev/null 2>&1
+					if	$cc -Dnew=old -o pkg$pid.exe pkg$pid.c > /dev/null 2>&1
 					then	echo "$command: ${warn}$CC: must be a C compiler (not C++)" >&2
 					else	cat pkg$pid.e
 						echo "$command: ${warn}$CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
 					fi
 					exit 2
 				}
-				if ./pkg$pid.exe >/dev/null 2>&1
+				if	./pkg$pid.exe >/dev/null 2>&1
 				then	code=0
 				else	code=1
 				fi
-				rm -f pkg$pid.*
 				exit $code
 			)
 			code=$?

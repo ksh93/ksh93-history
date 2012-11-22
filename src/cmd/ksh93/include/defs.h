@@ -183,7 +183,6 @@ struct shared
 	pid_t		outpipepid; \
 	int		topfd; \
 	int		errorfd; \
-	int		vexi; \
 	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
 	char		intrap; \
@@ -249,7 +248,7 @@ struct shared
 	char		*cur_line; \
 	int		offsets[10]; \
 	Sfio_t		**sftable; \
-	unsigned char	*fdstatus; \
+	unsigned int	*fdstatus; \
 	const char	*pwd; \
 	void		*jmpbuffer; \
 	void		*mktype; \

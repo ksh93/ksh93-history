@@ -1731,6 +1731,10 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	 */
 	error_info.id = strdup(shp->st.dolv[0]); /* error_info.id is $0 */
 	shp->jmpbuffer = (void*)&shp->checkbase;
+#ifdef SPAWN_cwd
+	shp->vex = spawnvex_open(0);
+	shp->vexp = spawnvex_open(0);
+#endif
 	sh_pushcontext(shp,&shp->checkbase,SH_JMPSCRIPT);
 	shp->st.self = &shp->global;
         shp->topscope = (Shscope_t*)shp->st.self;
@@ -1772,6 +1776,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	NV_MKINTTYPE(blkcnt_t,"block count",0);
 	NV_MKINTTYPE(time_t,"seconds since the epoch",0);
 	nv_mkstat();
+
 #endif
 	if(shp->userinit=userinit)
 		(*userinit)(shp, 0);

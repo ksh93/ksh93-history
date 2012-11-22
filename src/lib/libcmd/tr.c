@@ -26,13 +26,12 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tr (AT&T Research) 2012-10-24 $\n]"
+"[-?\n@(#)$Id: tr (AT&T Research) 2012-11-12 $\n]"
 USAGE_LICENSE
 "[+NAME?tr - translate, squeeze, and/or delete characters]"
-"[+DESCRIPTION?\btr\b copies the standard input to the standard output"
-"	with substitution or deletion of selected characters. Input"
-"	characters in \aset1\a are mapped to corresponding characters"
-"	in \aset2\a.]"
+"[+DESCRIPTION?\btr\b copies the standard input to the standard output "
+    "with substitution or deletion of selected characters. Input characters "
+    "in \aset1\a are mapped to corresponding characters in \aset2\a.]"
 
 "[c:complement?Complement \aset1\a using the character value order.]"
 "[C:collate?Complement \aset1\a using the character collation order.]"
@@ -42,54 +41,65 @@ USAGE_LICENSE
 "[t:truncate-set1?Truncate \aset1\a to the length of \aset2\a.]"
 
 "[+?\asets\a are specified as strings of characters. Most represent"
-"	themselves. Interpreted sequences are:]{"
-"	[+\\nnn?character with octal value \annn\a]"
-"	[+\\xnn?character with hexadecimal value \ann\a]"
-"	[+\\\\?backslash]"
-"	[+\\a?alert]"
-"	[+\\b?backpace]"
-"	[+\\f?form feed]"
-"	[+\\r?return]"
-"	[+\\t?horizontal tab]"
-"	[+\\v?vertical tab]"
-"	[+\\E?escape]"
-"	[+c1-c2?all characters from \ac1\a to \ac2\a in ascending order]"
-"	[+[c1-c2]]?same as \ac1-c2\a if both \asets\a use this form]"
-"	[+[[c*]]]]?in \aset2\a, copies of \\ac\\a until length of \aset1\a]"
-"	[+[[c*n]]]]?\\an\\a copies of \\ac\\a]"
-"	[+[[::alnum::]]]]?all letters and digits]"
-"	[+[[::alpha::]]]]?all letters]"
-"	[+[[::blank::]]]]?all horizontal whitespace]"
-"	[+[[::cntrl::]]]]?all control characters]"
-"	[+[[::digit::]]]]?all digits]"
-"	[+[[::graph::]]]]?all printable characters, not including space]"
-"	[+[[::lower::]]]]?all lower case letters]"
-"	[+[[::print::]]]]?all printable characters, including space]"
-"	[+[[::punct::]]]]?all punctuation characters]"
-"	[+[[::space::]]]]?all horizontal or vertical whitespace]"
-"	[+[[::upper::]]]]?all upper case letters]"
-"	[+[[::xdigit::]]]]?all hexadecimal digits]"
-"	[+[[=c=]]]]?all characters which are equivalent to \\ac\\a]"
-"	}"
-"[+?Translation occurs if \b-d\b is not given and both \aset1\a"
-"	and \aset2\a appear. \b-t\b may be used only when translating."
-"	\aset2\a is extended to the length of \aset1\a by repeating its last"
-"	character as necessary.  Excess characters in \aset2\a are ignored."
-"	Only [:lower:]] and [:upper:]] are guaranteed to expand in ascending"
-"	order. They may only be used in pairs to specify case conversion."
-"	\b-s\b uses \aset1\a if neither translating nor deleting, otherwise"
-"	squeeze uses \aset2\a and occurs after translation or deletion.]"
+    "themselves. Interpreted sequences are:]"
+    "{"
+        "[+\\nnn?character with octal value \annn\a]"
+        "[+\\xnn?character with hexadecimal value \ann\a]"
+        "[+\\\\?backslash]"
+        "[+\\a?alert]"
+        "[+\\b?backpace]"
+        "[+\\f?form feed]"
+        "[+\\r?return]"
+        "[+\\t?horizontal tab]"
+        "[+\\v?vertical tab]"
+        "[+\\E?escape]"
+        "[+c1-c2?all characters from \ac1\a to \ac2\a in ascending order]"
+        "[+[c1-c2]]?same as \ac1-c2\a if both \asets\a use this form]"
+        "[+[[c*]]]]?in \aset2\a, copies of \ac\a until length of \aset1\a]"
+        "[+[[c*n]]]]?\an\a copies of \ac\a]"
+        "[+[[::alnum::]]]]?all letters and digits]"
+        "[+[[::alpha::]]]]?all letters]"
+        "[+[[::blank::]]]]?all horizontal whitespace]"
+        "[+[[::cntrl::]]]]?all control characters]"
+        "[+[[::digit::]]]]?all digits]"
+        "[+[[::graph::]]]]?all printable characters, not including space]"
+        "[+[[::lower::]]]]?all lower case letters]"
+        "[+[[::print::]]]]?all printable characters, including space]"
+        "[+[[::punct::]]]]?all punctuation characters]"
+        "[+[[::space::]]]]?all horizontal or vertical whitespace]"
+        "[+[[::upper::]]]]?all upper case letters]"
+        "[+[[::xdigit::]]]]?all hexadecimal digits]"
+        "[+[[=c=]]]]?all characters which are equivalent to \ac\a]"
+    "}"
+"[+?Translation occurs if \b-d\b is not given and both \aset1\a and "
+    "\aset2\a appear. \b-t\b may be used only when translating. \aset2\a is "
+    "extended to the length of \aset1\a by repeating its last character as "
+    "necessary. Excess characters in \aset2\a are ignored. Only [:lower:]]"
+    "and [:upper:]] are guaranteed to expand in ascending order. They may "
+    "only be used in pairs to specify case conversion. \b-s\b uses \aset1\a "
+    "if neither translating nor deleting, otherwise squeeze uses \aset2\a "
+    "and occurs after translation or deletion.]"
+"[+?The \bLC_COLLATE\b and \bLC_CTYPE\b locale categories affect the "
+    "character collation order for the \b-C\b option and how characters are "
+    "interpreted (single/multi byte.) Somebody please design a portable "
+    "defacto standard locale aware collation sequence API.]"
 
 "\n"
 "\n[ set1 [ set2 ] ]\n"
 "\n"
-"[+SEE ALSO?\bsed\b(1), \bascii\b(5)]"
+
+"[+SEE ALSO?\bsed\b(1), \bwcscmp\b(3), \bwcsxfrm\b(3), \bascii\b(5)]"
+
 ;
 
 #include <cmd.h>
 #include <ctype.h>
 #include <error.h>
 #include <regex.h>
+
+#if _hdr_wctype
+#include <wctype.h>
+#endif
 
 #define TR_COLLATE	0x0001
 #define TR_COMPLEMENT	0x0002
@@ -104,9 +114,23 @@ USAGE_LICENSE
 
 #define setchar(p,s,t)	((p)->type=(t),(p)->prev=(p)->last=(-1),(p)->isit=0,(p)->count=0,(p)->base=(p)->next=(s))
 
-#define mb2wc(w,p,n)	(*ast.mb_towc)(&w,(char*)p,n)
+#if !defined(towupper) && !_lib_towupper
+#define towupper(x)	toupper(x)
+#endif
 
-typedef struct
+#if !defined(towlower) && !_lib_towlower
+#define towlower(x)	tolower(x)
+#endif
+
+typedef int (*Compare_f)(const void*, const void*);
+
+typedef struct Collate_s
+{
+	wchar_t		seq[15];
+	wchar_t		chr;
+} Collate_t;
+
+typedef struct Tr_s
 {
 	Shbltin_t*	context;
 	int		convert;
@@ -130,27 +154,6 @@ typedef struct
 } Tr_t;
 
 static const char*	typename[] = { "source", "destination" };
-
-#if _lib_wcscoll
-
-/*
- * collate vector of runes
- */
-
-static int
-collate(const void* ap, const void* bp)
-{
-	wchar_t		a[2];
-	wchar_t		b[2];
-
-	a[0] = *(uint32_t*)ap;
-	a[1] = 0;
-	b[0] = *(uint32_t*)bp;
-	b[1] = 0;
-	return wcscoll(a, b);
-}
-
-#endif
 
 /*
  * return next string character
@@ -189,7 +192,8 @@ nextchar(register Tr_t* tr)
 	{
 		while (++tr->prev <= tr->last)
 			if (!tr->isit || (*tr->isit)(tr->prev))
-				return (!tr->type || !tr->convert) ? tr->prev : tr->convert == 'l' ? tolower(tr->prev) : toupper(tr->prev);
+				return (!tr->type || !tr->convert) ? tr->prev : tr->convert == 'l' ? towlower(tr->prev) : towupper(tr->prev);
+		tr->prev--;
 		tr->last = -1;
 		tr->hold = tr->next;
 		mbchar(tr->hold);
@@ -332,7 +336,7 @@ nextchar(register Tr_t* tr)
  */
 
 static Tr_t*
-tropen(unsigned char* src, unsigned char* dst, int flags, Shbltin_t* context)
+tropen(unsigned char* src, unsigned char* dst, unsigned int flags, Shbltin_t* context)
 {
 	register Tr_t*	tr;
 	register int	c;
@@ -419,9 +423,28 @@ error(-1, "src %d '%c'", n, c);
 				if (n > 0x7f)
 					tr->mb = 1;
 			}
-#if _lib_wcscoll
+#if _lib_wcscmp && _lib_wcsxfrm
 		if (flags & TR_COLLATE)
-			qsort(set, c, sizeof(set[0]), collate);
+		{
+			Collate_t*	col;
+			wchar_t		w[2];
+
+			if (!(col = newof(0, Collate_t, c, 0)))
+			{
+				error(ERROR_SYSTEM|2, "out of space (how about a standard collating sequence api)");
+				goto big;
+			}
+			w[1] = 0;
+			for (n = 0; n < c; n++)
+			{
+				w[0] = set[n];
+				col[n].chr = set[n];
+				wcsxfrm(col[n].seq, w, sizeof(col[n].seq));
+			}
+			qsort(col, c, sizeof(col[0]), (Compare_f)wcscmp);
+			for (n = 0; n < c; n++)
+				set[n] = col[n].chr;
+		}
 #endif
 		tr->src = c;
 	}
@@ -715,8 +738,8 @@ trcopy(Tr_t* tr, Sfio_t* ip, Sfio_t* op, ssize_t ncopy)
 int
 b_tr(int argc, char** argv, Shbltin_t* context)
 {
-	register int	flags = 0;
-	Tr_t*		tr;
+	register unsigned int	flags = 0;
+	Tr_t*			tr;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	flags = 0;

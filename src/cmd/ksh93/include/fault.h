@@ -97,6 +97,7 @@ struct checkpt
 	sigjmp_buf	*prev;
 	int		topfd;
 	int		mode;
+	int		vexi;
 	struct openlist	*olist;
 #if (ERROR_VERSION >= 20030214L)
 	Error_context_t err;
@@ -107,6 +108,7 @@ struct checkpt
 
 #define sh_pushcontext(shp,bp,n)( (bp)->mode=(n) , (bp)->olist=0,  \
 				  (bp)->topfd=shp->topfd, (bp)->prev=shp->jmplist, \
+				  (bp)->vexi=((Spawnvex_t*)shp->vexp)->cur, \
 				  (bp)->err = *ERROR_CONTEXT_BASE, \
 					shp->jmplist = (sigjmp_buf*)(&(bp)->buff) \
 				)

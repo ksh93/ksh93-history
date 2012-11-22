@@ -632,4 +632,13 @@ print 'print OK' | out=$( ${SHELL} 2>&1 )
 out2="${out}$?"
 [[ "$out2" == 'OK0' ]]  ||  err_exit -u2 "expected OK0 got $out2"
 
+fun()
+{
+	echo=$(whence -p echo)
+	foo=` $echo foo`
+	print -n stdout=$foo
+	print -u2 stderr=$foo
+}
+[[ `fun 2>&1` == 'stdout=foostderr=foo' ]] || err_exit 'nested command substitution with 2>&1 not working'
+
 exit $((Errors<125?Errors:125))

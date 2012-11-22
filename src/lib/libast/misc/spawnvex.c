@@ -32,6 +32,7 @@
 	unsigned int	max; \
 	unsigned int	set; \
 	unsigned int	flags; \
+	unsigned int	frame; \
 	pid_t		pgrp; \
 	int		noexec; \
 	Spawnvex_u*	op;
@@ -342,7 +343,7 @@ NoN(spawnvex)
 
 #define VEXCHUNK	8
 #define VEXFLAG(x)	(1<<(-(x)))
-#define VEXINIT(p)	((p)->set=(p)->cur=0,(p)->noexec=(-1),(p)->pgrp=(-1))
+#define VEXINIT(p)	((p)->cur=(p)->frame,(p)->set=0)
 
 union _Spawnvex_u
 {
@@ -515,16 +516,15 @@ spawnvex_add(Spawnvex_t* vex, intmax_t op, intmax_t arg, Spawnvex_f callback, vo
 	}
 	switch (op)
 	{
-	case SPAWN_noexec:
-		if (callback)
-			vex->noexec = vex->cur;
+	case SPAWN_frame:
+		arg = vex->frame;
+		vex->frame = vex->cur;
 		break;
 	case SPAWN_pgrp:
 #if OBSOLETE < 20150101
 		if (arg == 1)
 			arg = 0;
 #endif
-		vex->pgrp = arg;
 		break;
 	}
 	if (op < 0)
@@ -551,6 +551,8 @@ int
 spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 {
 	int		i;
+	int		j;
+	int		k;
 	int		op;
 	int		arg;
 	int		err;
@@ -558,14 +560,34 @@ spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 	off_t		off;
 	void*		handle;
 	Spawnvex_f	callback;
+	unsigned char	siz[512];
 
 	if (cur < 0 || cur > vex->max)
 		return EINVAL;
 	ret = 0;
 	if (!(flags & SPAWN_RESET))
 	{
-		for (i = cur; i < vex->cur;)
+		vex->noexec = -1;
+		vex->pgrp = -1;
+		i = cur;
+		if (flags & SPAWN_UNDO)
 		{
+			for (j = 0; i < vex->cur && j < elementsof(siz) - 1; j++)
+				i += (siz[j] = (vex->op[i].number & 1) ? 4 : 2);
+			siz[j] = 0;
+		}
+		for (;;)
+		{
+			k = i;
+			if (flags & SPAWN_UNDO)
+			{
+				if (j < 1)
+					break;
+				i -= siz[j];
+				i -= siz[--j];
+			}
+			else if (i >= vex->cur)
+				break;
 			op = vex->op[i++].number;
 			arg = vex->op[i++].number;
 			if (!(op & 1))
@@ -588,6 +610,7 @@ spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 				switch (op)
 				{
 				case SPAWN_noop:
+				case SPAWN_frame:
 					break;
 				case SPAWN_cwd:
 					if (fchdir(arg))
@@ -601,11 +624,13 @@ spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 #endif
 				case SPAWN_noexec:
 					callback = 0;
+					vex->noexec = k;
 					break;
 				case SPAWN_pgrp:
 					/* parent may succeed and cause setpigid() to fail but that's ok */
 					if (setpgid(0, arg) < 0 && arg && errno == EPERM)
 						setpgid(arg, 0);
+					vex->pgrp = (pid_t)arg;
 					break;
 				case SPAWN_resetids:
 					if (arg == 1)
@@ -654,8 +679,12 @@ spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 							if (err)
 								break;
 						}
+#if 0
 						if (close(op))
 							err = errno;
+#else
+						close(op);
+#endif
 					}
 					else if (op == arg)
 					{
@@ -681,8 +710,18 @@ spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 				close(op);
 		}
 	}
-	if (!(flags & SPAWN_NOCALL) && !(vex->cur = cur))
-		VEXINIT(vex);
+	if (!(flags & SPAWN_NOCALL))
+	{
+		if (!(flags & SPAWN_FRAME))
+			vex->frame = 0;
+		else if (vex->op && (vex->op[vex->frame].number / 2) == SPAWN_frame)
+		{
+			cur = vex->frame;
+			vex->frame = (unsigned int)vex->op[vex->frame + 1].number;
+		}
+		if (!(vex->cur = cur))
+			VEXINIT(vex);
+	}
 	return ret;
 }
 
@@ -777,6 +816,8 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 	m = 0;
 	if (vex)
 	{
+		vex->noexec = -1;
+		vex->pgrp = -1;
 		flags = vex->flags;
 		if (!(xev = spawnvex_open(0)))
 			goto bad;
@@ -833,55 +874,66 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 			arg = vex->op[i++].number;
 			if (op & 1)
 				i += 2;
-			op /= 2;
-			if (op >= 0)
+			switch (op /= 2)
 			{
-				if (arg < 0)
+			case SPAWN_frame:
+				vex->frame = (unsigned int)arg;
+				break;
+			case SPAWN_pgrp:
+				vex->pgrp = (pid_t)arg;
+				break;
+			default:
+				if (op >= 0)
 				{
-					if ((i = save(op, &ic, m)) < 0)
+					if (arg < 0)
 					{
-						if (i < -1)
+						if ((i = save(op, &ic, m)) < 0)
+						{
+							if (i < -1)
+								goto bad;
+						}
+						else if (restore(xev, i, op, ic) < 0)
+						{
+							close(i);
+							goto bad;
+						}
+						else
+							close(op);
+					}
+					else if (arg == op)
+					{
+						if (spawnvex_add(xev, SPAWN_cloexec, arg, 0, 0) < 0)
+							goto bad;
+						if (fcntl(arg, F_SETFD, 0) < 0)
 							goto bad;
 					}
-					else if (restore(xev, i, op, ic) < 0)
-					{
-						close(i);
+					else if ((j = save(arg, &jc, m)) < -1)
 						goto bad;
-					}
 					else
-						close(op);
-				}
-				else if (arg == op)
-				{
-					if (spawnvex_add(xev, SPAWN_cloexec, arg, 0, 0) < 0)
-						goto bad;
-					if (fcntl(arg, F_SETFD, 0) < 0)
-						goto bad;
-				}
-				else if ((j = save(arg, &jc, m)) < -1)
-					goto bad;
-				else
-				{
-					if (fcntl(op, F_DUPFD, arg) >= 0)
 					{
-						if ((i = save(op, &ic, m)) >= 0)
+						close(arg);
+						if (fcntl(op, F_DUPFD, arg) >= 0)
 						{
-							if (restore(xev, i, op, ic) >= 0)
+							if ((i = save(op, &ic, m)) >= 0)
 							{
-								close(op);
-								if (j < 0 || restore(xev, j, arg, jc) >= 0)
-									continue;
+								if (restore(xev, i, op, ic) >= 0)
+								{
+									close(op);
+									if (j < 0 || restore(xev, j, arg, jc) >= 0)
+										continue;
+								}
+								close(i);
 							}
-							close(i);
 						}
+						if (j >= 0)
+						{
+							fcntl(j, F_DUPFD, arg);
+							close(j);
+						}
+						goto bad;
 					}
-					if (j >= 0)
-					{
-						fcntl(j, F_DUPFD, arg);
-						close(j);
-					}
-					goto bad;
 				}
+				break;
 			}
 		}
 	pid = spawnve(vex && vex->pgrp >= 0 ? P_DETACH : P_NOWAIT, path, argv, envv);
@@ -908,6 +960,9 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 			{
 			case SPAWN_noop:
 			case SPAWN_noexec:
+				break;
+			case SPAWN_frame:
+				vex->frame = (unsigned int)arg;
 				break;
 			case SPAWN_pgrp:
 				inherit.flags |= SPAWN_SETGROUP;
@@ -1050,15 +1105,14 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 		{
 			if (!(flags & SPAWN_FOREGROUND))
 				sigcritical(0);
-			i = vex ? vex->noexec : -1;
-			if (vex && (n = spawnvex_apply(vex, 0, SPAWN_NOCALL)))
+			if (vex && (n = spawnvex_apply(vex, 0, SPAWN_FRAME|SPAWN_NOCALL)))
 				errno = n;
 			else
 			{
 				error(-1, "AHA#%d %d spawnvex execve before vex=%p path=%s", __LINE__, getpid(), vex, path);
 				execve(path, argv, envv);
 				error(-1, "AHA#%d %d spawnvex execve FAILED vex=%p path=%s", __LINE__, getpid(), vex, path);
-				if (i >= 0)
+				if (vex && (i = vex->noexec) >= 0)
 				{
 					nx.vex = vex;
 					nx.handle = vex->op[i + 3].handle;
@@ -1070,7 +1124,7 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 					 * setting SPAWN_EXEC here means that it is more efficient to
 					 * exec(interpreter) on script than to fork() initialize and
 					 * read script -- highly subjective, based on some ksh
-					 * implementtaion, and probably won't be set unless its a
+					 * implementaions, and probably won't be set unless its a
 					 * noticable win
 					 */
 
@@ -1233,7 +1287,7 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 			spawnvex_close(xev);
 		}
 		if (vex->flags & SPAWN_CLEANUP)
-			spawnvex_apply(vex, 0, SPAWN_CLEANUP);
+			spawnvex_apply(vex, 0, SPAWN_FRAME|SPAWN_CLEANUP);
 		VEXINIT(vex);
 	}
 	else if (err = posix_spawn(&pid, path, NiL, NiL, argv, envv ? envv : environ))

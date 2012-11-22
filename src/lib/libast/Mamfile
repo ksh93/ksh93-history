@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-10-15
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-11-09
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -357,9 +357,9 @@ prev std/endian.h implicit
 done port/astmath.c
 exec - X=1
 exec - for N in 1 2 3 4 5 6 8
-exec - do if ${CC} -DN=$N -DIS ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd -o astmath.exe port/astmath.c 2>/dev/null
+exec - do if ${CC} -DN=$N -DIS -o astmath.exe port/astmath.c 2>/dev/null
 exec - then : implicit math function N=$N :
-exec - elif ${CC} -DN=$N -DIS ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd -o astmath.exe port/astmath.c -lm 2>/dev/null
+exec - elif ${CC} -DN=$N -DIS -o astmath.exe port/astmath.c -lm 2>/dev/null
 exec - then : math function N=$N requires -lm :
 exec - X=0
 exec - break

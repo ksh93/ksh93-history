@@ -233,7 +233,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 	char			inquote = 0;
 	struct	checkpt		buff;
 	Edit_t			*ep = (struct edit*)shp->gd->ed_context;
-	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd)))
+	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd,fd)))
 		return(1);
 	sh_stats(STAT_READS);
 	if(names && (name = *names))
@@ -286,13 +286,13 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 	if(size || (flags>>D_FLAG))	/* delimiter not new-line or fixed size read */
 	{
 		if((shp->fdstatus[fd]&IOTTY) && !keytrap)
-			tty_raw(fd,1);
+			tty_raw(sffileno(iop),1);
 		if(!(flags&(N_FLAG|NN_FLAG)))
 		{
 			delim = ((unsigned)flags)>>(D_FLAG+1);
 			ep->e_nttyparm.c_cc[VEOL] = delim;
 			ep->e_nttyparm.c_lflag |= ISIG;
-			tty_set(fd,TCSADRAIN,&ep->e_nttyparm);
+			tty_set(sffileno(iop),TCSADRAIN,&ep->e_nttyparm);
 		}
 	}
 	binary = nv_isattr(np,NV_BINARY);
@@ -335,7 +335,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		size = nv_size(np);
 	}
 	was_write = (sfset(iop,SF_WRITE,0)&SF_WRITE)!=0;
-	if(fd==0)
+	if(sffileno(iop)==0)
 		was_share = (sfset(iop,SF_SHARE,shp->redir0!=2)&SF_SHARE)!=0;
 	if(timeout || (shp->fdstatus[fd]&(IOTTY|IONOSEEK)))
 	{
@@ -364,7 +364,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		else
 			end = var + sizeof(buf) - 1;
 		up = cur = var;
-		if((sfset(iop,SF_SHARE,1)&SF_SHARE) && fd!=0)
+		if((sfset(iop,SF_SHARE,1)&SF_SHARE) && sffileno(iop)!=0)
 			was_share = 1;
 		if(size==0)
 		{
@@ -824,7 +824,7 @@ done:
 		sfset(iop,SF_SHARE,0);
 	nv_close(np);
 	if((shp->fdstatus[fd]&IOTTY) && !keytrap)
-		tty_cooked(fd);
+		tty_cooked(sffileno(iop));
 	if(flags&S_FLAG)
 		hist_flush(shp->gd->hist_ptr);
 	if(jmpval > 1)

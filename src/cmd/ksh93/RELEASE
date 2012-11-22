@@ -1,4 +1,9 @@
-12-10-24  --- Release ksh93v- ---
+12-11-20  --- Release ksh93v- ---
+12-11-20  Numerous changes related to new algorithm for shell redirections
+	  using the spawnvex() library.  Not yet used in all cases.
+12-11-14  A bug with caused by using spawnvex*() functions for redirections
+	  of simple commands with here-documents has been fixed.
+12-11-12  A memory leak which occured while doing path search has been fixed.
 12-10-24  A bug in which causes the shell to report a syntax error when a
 	  command substitution appeared on the line that started a here
 	  document has been fixed.
@@ -133,7 +138,7 @@
 12-07-02  A bug in the edit modes which <tab> after a directory did not refresh
 	  the input line has been fixed.
 12-07-02  A bug in which an exit status > 256 corresponding to a signal was
-	  not by a function to indicate a signal exit has been fixed.
+	  not returned by a function to indicate a signal exit has been fixed.
 
 12-06-28  --- Release ksh93u+ ---
 12-06-28  Fix ulimit -a to list (Kibytes) instead of (kbytes).

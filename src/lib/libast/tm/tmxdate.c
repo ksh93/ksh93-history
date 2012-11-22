@@ -520,12 +520,14 @@ tmxdate(register const char* s, char** e, Time_t now)
 		if (!(state & CRON))
 		{
 			/*
-			 * check for cron date
+			 * check for cron/iso date
 			 *
 			 *	min hour day-of-month month day-of-week
 			 *
 			 * if it's cron then determine the next time
 			 * that satisfies the specification
+			 *
+			 * if it's iso then its a point in time
 			 *
 			 * NOTE: the only spacing is ' '||'_'||';'
 			 */
@@ -767,7 +769,8 @@ tmxdate(register const char* s, char** e, Time_t now)
 					if (dig2(t, k) < 1 || k > 31)
 						break;
 					flags |= DAY;
-					goto save_yymmdd;
+					if (*t != 'T' && *t != 't' || !isdigit(*++t))
+						goto save_yymmdd;
 				}
 				n = strtol(s = t, &t, 0);
 				if ((t - s) < 2)
@@ -967,6 +970,12 @@ tmxdate(register const char* s, char** e, Time_t now)
 						tm->tm_year = m;
 						s = t;
 						set |= flags;
+						if ((*s == '-' || *s == '+') && (i = tmgoff(s, &t, TM_LOCALZONE)) != TM_LOCALZONE)
+						{
+							zone = i;
+							set |= ZONE;
+							s = t;
+						}
 						continue;
 					}
 					for (s = t; skip[*s]; s++);
