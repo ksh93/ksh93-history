@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1007,7 +1007,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			else if(i=='=' || (i=='\\' && out[cur-1]=='/'))
 			{
 				draw(ep,REFRESH);
-				if(count>0)
+				if(count>0 || i=='\\')
 					ep->ed->e_tabcount=0;
 				else
 				{
@@ -1063,6 +1063,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			draw(ep,REFRESH);
 			return(-1);
 #endif
+		case 'O':	/* after running top <ESC>O instead of <ESC>[ */
 		case '[':	/* feature not in book */
 			switch(i=ed_getchar(ep->ed,1))
 			{

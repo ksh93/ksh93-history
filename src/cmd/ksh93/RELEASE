@@ -1,19 +1,52 @@
-12-11-20  --- Release ksh93v- ---
+13-02-13  --- Release ksh93v- ---
+13-02-13  A bug in which hitting interrupt with reading from a terminal
+	  sent the interrupt to the current process rather than the current
+	  process group has been fixed.
+13-02-13  A bug in which x.name and x[0].name were not treated the same
+	  has been fixed.
+13-02-08 +The -p option was added to enum to display the values that are
+	  valid for the enum.
+13-02-07 +A preset alias named bool which is an alias for an enum
+	  named _Bool which has values true and false has been added.
+13-02-07  A bug in the processing of multibyte characters in non utf8 locales
+	  in command substitution has been fixed.
+13-02-05  Fixed emacs tab completion bug in which typing <tab><tab> in a
+	  directory with one element that contained an element of one entry
+	  did not expand to both names.
+13-02-24  Increased the maximum level of recursion for evaluating variables
+	  inside arithmetic expressions from 9 to 1024.
+13-02-24  Added exp10 math function.
+13-01-31  A bug in integer division which occured for numbers between INT_MAX
+	  and UINT_MAX has been fixed.
+13-01-31  A bug in the parser that did not allow for redirections with
+	  ((...)) arithmetic statements has been fixed.
+13-01-17 +User define math functions introduced on 10-03-24 now allow passing
+	  arrays as arguments.
+13-01-10 +ksh now treats ESC-O-letter the same as ESC-[-letter in vi and emacs
+	  edit modes.
+12-12-10  A bug with enumerations types when declaring an indexed array of
+	  an enumeration type has been fixed.
+12-11-30  A bug in which whence or type on a preset alias did not output the
+	  value has been fixed.
+12-11-28  Assigning an element of an indexed array as an empty array now
+	  correctly displays this with typeset -p.
+12-11-28  typeset -p of an array variable whose 0 element was an array variable
+	  with no elements did not output correctly and has been fixed.
 12-11-20  Numerous changes related to new algorithm for shell redirections
 	  using the spawnvex() library.  Not yet used in all cases.
 12-11-14  A bug with caused by using spawnvex*() functions for redirections
 	  of simple commands with here-documents has been fixed.
 12-11-12  A memory leak which occured while doing path search has been fixed.
-12-10-24  A bug in which causes the shell to report a syntax error when a
+12-10-24  A bug which caused the shell to report a syntax error when a
 	  command substitution appeared on the line that started a here
 	  document has been fixed.
 12-10-23  The shell now uses the new spawnvex*() functions for redirections
 	  of simple command that are not builtin.
 12-10-21  Here documents with $() and ${ } use larger buffers.
-12-10-21  Builtins now use mmap() for file that are opened for reading.
+12-10-21  Builtins now use mmap() for files that are opened for reading.
 12-10-18  A bug in which preceding a special builtin with command did not
 	  prevent assignments from remaining has been fixed.
-12-10-17  A bug in the self documentation for types with causes the field
+12-10-17  A bug in the self documentation for types which causes the field
 	  descriptors to be off by 1 has been fixed.
 12-10-17  An array bug which caused a regression test to fail has been fixed.
 12-10-16  A bug in the exit status for command substitution caused by no longer

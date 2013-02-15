@@ -1,3 +1,5 @@
+13-02-14 misc/optget.c: -Wall cleanup -- thanks werner
+13-01-03 string/stropt.c: fix off-by-one comparison bug - happy new year
 12-11-15 misc/spawnvex.c: add SPAWN_frame and SPAWN_FRAME
 12-11-10 tm/tmxdate.c: handle yyyymmddThhmmss.nnnnnnnnn[-+]hhmm
 12-10-17 comp/conf.tab: add PC MIN_HOLE_SIZE

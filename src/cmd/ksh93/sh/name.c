@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -448,6 +448,7 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 						}
 					}
 					nv_setvec(np,(arg->argflag&ARG_APPEND),argc,argv);
+					nv_onattr(np,NV_ARRAY);
 					if(traceon || trap)
 					{
 						int n = -1;
@@ -727,7 +728,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 	Namfun_t		*fp=0;
 	long			mode, add=0;
 	int			copy=0,isref,top=0,noscope=(flags&NV_NOSCOPE);
-	int			nofree=0, level=0;
+	int			nofree=0, level=0, zerosub=0;
 	Namarr_t		*ap;
 	if(root==shp->var_tree)
 	{
@@ -742,6 +743,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 		cp++;
 	while(1)
 	{
+		if(zerosub && !np)
+			strcpy(sp,cp-1);
+		zerosub = 0;
 		switch(c = *(unsigned char*)(sp = cp))
 		{
 		    case '[':
@@ -891,7 +895,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 #if NVCACHE
 				nvcache.ok = 0;
 #endif
-				if(c=='.') /* don't optimize */
+				if(nv_isattr(np,NV_TABLE) || c=='.') /* don't optimize */
 					shp->argaddr = 0;
 				else if((flags&NV_NOREF) && (c!='[' && *cp!='.'))
 				{
@@ -1067,8 +1071,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						sub = m?nv_getsub(np):0;
 						if(!sub)
 						{
-							if(m && !(n&NV_ADD))
+							if(m && !(n&NV_ADD) && *cp!='.')
 								return(0);
+							zerosub = 1;
 							sub = "0";
 						}
 						n = strlen(sub)+2;

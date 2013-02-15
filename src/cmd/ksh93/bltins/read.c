@@ -145,7 +145,7 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2), "%s", optusage((char*)0));
 	if(!((r=shp->fdstatus[fd])&IOREAD)  || !(r&(IOSEEK|IONOSEEK)))
-		r = sh_iocheckfd(shp,fd);
+		r = sh_iocheckfd(shp,fd,fd);
 	if(fd<0 || !(r&IOREAD))
 		errormsg(SH_DICT,ERROR_system(1),e_file+4);
 	/* look for prompt */

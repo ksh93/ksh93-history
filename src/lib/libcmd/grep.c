@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -21,7 +21,7 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: grep (AT&T Research) 2012-10-24 $\n]"
+"[-?\n@(#)$Id: grep (AT&T Research) 2013-05-07 $\n]"
 USAGE_LICENSE
 "[--plugin?ksh]"
 "[+NAME?grep - search lines in files for matching patterns]"
@@ -37,7 +37,10 @@ USAGE_LICENSE
             "alternations.)]"
         "[+egrep?Extended regular expressions (alternations, one or "
             "more.)]"
-        "[+pgrep?\bperl\b(1) regular expressions (lenient extended.)]"
+        "[+plgrep?\bperl\b(1) regular expressions (lenient extended.) "
+            "This command is not installed by default. However any \bast\b "
+            "grep executable may be (hard) linked to a name matching \"p*grep\" "
+            "to create a \bplgrep\b executable.]"
         "[+xgrep?Augmented regular expressions (conjunction, negation.)]"
         "[+fgrep?Fixed string expressions.]"
         "[+agrep?Approximate regular expressions (not implemented.)]"
@@ -48,7 +51,7 @@ USAGE_LICENSE
     "\apatterns\a.]"
 "[X:augmented-regexp?\bxgrep\b mode: augmented regular expression "
     "\apatterns\a.]"
-"[P:perl-regexp?\bpgrep\b mode: \bperl\b(1) regular expression "
+"[P:perl-regexp?\bplgrep\b mode: \bperl\b(1) regular expression "
     "\apatterns\a.]"
 "[K:ksh-regexp?\bksh\b(1) extended file match \apatterns\a.]"
 "[S:sh-regexp?\bsh\b(1) file match \apatterns\a.]"
@@ -1002,7 +1005,7 @@ b_grep(int argc, char** argv, Shbltin_t* context)
 		break;
 	case 'p':
 	case 'P':
-		s = "pgrep";
+		s = "plgrep";
 		options = REG_EXTENDED|REG_LENIENT;
 		break;
 	case 'x':
@@ -1029,13 +1032,6 @@ b_fgrep(int argc, char** argv, Shbltin_t* context)
 {
 	NoP(argc);
 	return grep("fgrep", REG_LITERAL, argc, argv, context);
-}
-
-int
-b_pgrep(int argc, char** argv, Shbltin_t* context)
-{
-	NoP(argc);
-	return grep("pgrep", REG_EXTENDED|REG_LENIENT, argc, argv, context);
 }
 
 int

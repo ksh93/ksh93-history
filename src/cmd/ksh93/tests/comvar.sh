@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -690,5 +690,10 @@ unset xx
 xx=(foo=bar)
 xx=()
 [[ $xx == $'(\n)' ]] || err_exit 'xx=() not unsetting previous value'
+
+a=(foo=bar)
+[[ ${a[0].foo} == "${a.foo}" ]] || err_exit 'a[0].foo should be equal to a.foo'
+a[0].foo=bam
+[[ ${a[0].foo} == "${a.foo}" ]] || err_exit 'a[0].foo should be equal to a.foo after assignment to a[0].foo'
 
 exit $((Errors<125?Errors:125))

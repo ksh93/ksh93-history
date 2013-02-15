@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -61,6 +61,7 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 {
 	int fd,shfd;
 	int savederrno=errno;
+	struct stat fs;
 #ifndef AT_FDCWD
 	NOT_USED(dir);
 #endif
@@ -133,6 +134,12 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 
 	if(fd < 0)
 		return fd;
+	if (!fstat(fd, &fs) && !S_ISDIR(fs.st_mode))
+	{
+		close(fd);
+		errno = ENOTDIR;
+		return -1;
+	}
 
 	/* Move fd to a number > 10 and *register* the fd number with the shell */
 	shfd = sh_fcntl(fd, F_dupfd_cloexec, 10);

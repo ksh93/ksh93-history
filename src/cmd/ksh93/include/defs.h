@@ -238,8 +238,8 @@ struct shared
 	void		*optlist; \
 	void		*sigmsg; \
 	void		**siginfo; \
-	void		*vex; \
-	void		*vexp; \
+	Spawnvex_t	*vex; \
+	Spawnvex_t	*vexp; \
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
 	Shinit_f	userinit; \

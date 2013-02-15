@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1182,7 +1182,8 @@ USAGE_LICENSE
 	"[+%T?Treat \astring\a as a date/time string and format it.  The "
 		"\bT\b can be preceded by \b(\b\adformat\a\b)\b, where "
 		"\adformat\a is a date format as defined by the \bdate\b "
-		"command.]"
+		"command.  Values given as digits are interpreted the same way "
+		"they are by the \btouch\b command.]"
 	"[+%Z?Output a byte whose value is \b0\b.]"
 	"\fextra\f"
 "}"
@@ -1243,7 +1244,7 @@ USAGE_LICENSE
 	"[+0?Successful completion.]"
 	"[+>0?An error occurred.]"
 "}"
-"[+SEE ALSO?\bdate\b(1), \bprint\b(1), \bread\b(1)]"
+"[+SEE ALSO?\bdate\b(1), \bprint\b(1), \bread\b(1), \btouch\b(1)]"
 ;
 
 const char sh_optpwd[] =

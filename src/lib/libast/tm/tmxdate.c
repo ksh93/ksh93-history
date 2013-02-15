@@ -135,7 +135,7 @@ powerize(Tm_t* tm, unsigned long p, unsigned long q, unsigned long u)
 		q *= 10;
 		t *= 10;
 	}
-	tm->tm_nsec += (int)(t % TMX_RESOLUTION);
+	tm->tm_nsec += (int)((unsigned long)t % TMX_RESOLUTION);
 	tm->tm_sec += (int)(t / TMX_RESOLUTION);
 }
 

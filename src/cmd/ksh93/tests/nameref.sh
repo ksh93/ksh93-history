@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -694,5 +694,16 @@ typeset -n ref='arr[2]'
 [[ $(typeset -p ref) == *'arr[2]'* ]] || err_exit 'typeset -p ref when ref is a reference to an index array element is wrong'
 
 $SHELL  2> /dev/null -c 'function x { nameref lv=gg ; compound -A lv.c=( [4]=( x=1 )) ; } ; compound gg ; x' || err_exit 'compound array assignment with nameref in a function failed'
+
+unset one bar baz arr val vv
+one=1 bar=2 baz=3
+arr=(one bar baz)
+nameref vv
+val=$(
+	for vv in "${arr[@]}"
+	do	print -n -- "$vv"
+	done
+)
+[[ $val == 123 ]] || err_exit 'optimization bug with for loops with references'
 
 exit $((Errors<125?Errors:125))

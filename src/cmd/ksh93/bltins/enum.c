@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -30,6 +30,8 @@ USAGE_LICENSE
 "[+?If the list of \avalue\as is omitted, then \atypename\a must name an "
     "indexed array variable with at least two elements.]" 
 "[i:ignorecase?The values are case insensitive.]"
+"[p?Writes the enums to standard output.  If \typename\a is omitted then all "
+	"\benum\bs are written.]"
 "\n"
 "\n\atypename\a[\b=(\b \avalue\a ... \b)\b]\n"
 "\n"
@@ -174,6 +176,7 @@ static char* get_enum(register Namval_t* np, Namfun_t *fp)
 	return(buff);
 }
 
+
 static Sfdouble_t get_nenum(register Namval_t* np, Namfun_t *fp)
 {
 	return(nv_getn(np,fp));
@@ -181,13 +184,43 @@ static Sfdouble_t get_nenum(register Namval_t* np, Namfun_t *fp)
 
 const Namdisc_t ENUM_disc        = {  0, put_enum, get_enum, get_nenum, 0,0,clone_enum };
 
+static int sh_outenum(Shell_t *shp, Sfio_t *iop, Namval_t *tp)
+{
+	Namval_t	*mp;
+	Dt_t		*dp=0;
+	char		nvtype[sizeof(NV_CLASS)];
+	struct Enum	*ep;
+	int		i;
+	if(!tp)
+	{
+		strcpy(nvtype,NV_CLASS);
+		if(!(mp = nv_open(nvtype, shp->var_tree,NV_NOADD|NV_VARNAME)))
+			return(0);
+		dp  =   nv_dict(mp);
+		tp = (Namval_t*)dtfirst(dp);
+	}
+	while(tp)
+	{
+		if(!tp->nvfun || !(ep=nv_hasdisc(tp,&ENUM_disc)))
+			continue;
+		sfprintf(iop,"enum %s%s=(\n",(ep->iflag?"-i ":""),tp->nvname);
+		for(i=0; i <ep->nelem ; i++)
+			sfprintf(iop,"\t%s\n",ep->values[i]);
+		sfprintf(iop,")\n");
+		if(!dp)
+			break;
+		tp = (Namval_t*)dtnext(dp,tp);
+	}
+	return(0);
+}
+
 #ifdef STANDALONE
 static int enum_create(int argc, char** argv, Shbltin_t *context)
 #else
 int b_enum(int argc, char** argv, Shbltin_t *context)
 #endif
 {
-	int			i,n,iflag = 0;
+	int			pflag=0,i,n,iflag = 0;
 	ssize_t			sz;
 	Namval_t		*np, *tp;
 	Namarr_t		*ap;
@@ -204,6 +237,9 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 	{
 		switch (optget(argv, enum_usage))
 		{
+		case 'p':
+			pflag = 'p';
+			continue;
 		case 'i':
 			iflag = 'i';
 			continue;
@@ -217,11 +253,13 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 		break;
 	}
 	argv += opt_info.index;
-	if (error_info.errors || !*argv || *(argv + 1))
+	if (error_info.errors)
 	{
 		error(ERROR_USAGE|2, "%s", optusage(NiL));
 		return 1;
 	}
+	if(!*argv)
+		sh_outenum(shp,sfstdout,(Namval_t*)0);
 	while(cp = *argv++)
 	{
 		if(!(np = nv_open(cp, shp->var_tree, NV_VARNAME|NV_NOADD))  || !(ap=nv_arrayptr(np)) || ap->fun || (sz=ap->nelem) < 2)
@@ -229,6 +267,11 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 		n = stktell(shp->stk);
 		sfprintf(shp->stk,"%s.%s%c",NV_CLASS,np->nvname,0);
 		tp = nv_open(stkptr(shp->stk,n), shp->var_tree, NV_VARNAME);
+		if(pflag)
+		{
+			sh_outenum(shp,sfstdout,tp);
+			continue;
+		}
 		stkseek(shp->stk,n);
 		n = sz;
 		i = 0;
@@ -267,6 +310,7 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 		optdisc.opt.infof = enuminfo;
 		optdisc.np = tp;
 		nv_addtype(tp, enum_type, &optdisc.opt, sizeof(optdisc)); 
+		nv_onattr(np,NV_LTOU|NV_UTOL);
 	}
 	return error_info.errors != 0;
 }

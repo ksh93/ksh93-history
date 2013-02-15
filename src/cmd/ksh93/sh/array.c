@@ -419,6 +419,8 @@ bool nv_arraysettype(Namval_t *np, Namval_t *tp, const char *sub, int flags)
 	Namarr_t	*ap = nv_arrayptr(np);
 	av[1] = 0;
 	shp->last_table = 0;
+	if(!tp->nvfun)
+		return(true);
 	if(!ap->table)
 	{
 		ap->table = dtopen(&_Nvdisc,Dtoset);
@@ -1166,9 +1168,8 @@ bool nv_nextsub(Namval_t *np)
 				if(nv_isarray(mp))
 				{
 					aq = (struct index_array*)nv_arrayptr(mp);
-					if(!aq || (aq->header.nelem)==0)
-						continue;
-					nv_putsub(mp,NIL(char*),0,ARRAY_SCAN);
+					if(aq && aq->header.nelem)
+						nv_putsub(mp,NIL(char*),0,ARRAY_SCAN);
 				}
 			}
 			return(true);

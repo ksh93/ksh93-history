@@ -49,6 +49,7 @@
 
 #define RW_ALL	(S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH)
 #define LIBCMD	"cmd"
+#undef open
 
 
 static int		canexecute(Shell_t*,char*,int);
@@ -106,8 +107,11 @@ static pid_t path_pfexecve(Shell_t *shp,const char *path, char *argv[],char *con
 	char  resolvedpath[PATH_MAX + 1];
 	pid_t	pid;
 #endif /*SHOPT_PFSH */
-	if(shp->vex && ((Spawnvex_t*)shp->vex)->cur)
-		spawnvex_apply((Spawnvex_t*)shp->vex,0,0);
+	if(shp->vex->cur)
+	{
+		spawnvex_apply(shp->vex,0,0);
+		spawnvex_apply(shp->vexp,0,SPAWN_RESET);
+	}
 #if SHOPT_PFSH 
 	if(spawn)
 	{
@@ -144,10 +148,10 @@ static pid_t _spawnveg(Shell_t *shp,const char *path, char* const argv[], char* 
 		{
 			char *arg0 = argv[0], **av0= (char**)&argv[0];
 			int fd;
-			pid = spawnvex(path,argv,envp,(Spawnvex_t*)shp->vex);
+			pid = spawnvex(path,argv,envp,shp->vex);
 			*av0 = arg0;
 			if(pid>0 && shp->comsub && (fd=sffileno(sfstdout))!=1 && fd>=0)
-				spawnvex_add((Spawnvex_t*)shp->vex, fd, 1,0,0);
+				spawnvex_add(shp->vex, fd, 1,0,0);
 		}
 #else
 		pid = spawnveg(path,argv,envp,pgid);
@@ -546,7 +550,7 @@ static int	path_opentype(Shell_t *shp,const char *name, register Pathcomp_t *pp,
 			oldpp = oldpp->next;
 		if(fun && (!oldpp || !(oldpp->flags&PATH_FPATH)))
 			continue;
-		if((fd = sh_open(path_relative(shp,stkptr(shp->stk,PATH_OFFSET)),O_RDONLY|O_cloexec,0)) >= 0)
+		if((fd = open(path_relative(shp,stkptr(shp->stk,PATH_OFFSET)),O_RDONLY|O_cloexec,0)) >= 0)
 		{
 			if(fstat(fd,&statb)<0 || S_ISDIR(statb.st_mode))
 			{
@@ -948,7 +952,7 @@ static int canexecute(Shell_t *shp,register char *path, int isfun)
 	path = path_relative(shp,path);
 	if(isfun)
 	{
-		if((fd=sh_open(path,O_RDONLY|O_cloexec,0))<0 || fstat(fd,&statb)<0)
+		if((fd=open(path,O_RDONLY|O_cloexec,0))<0 || fstat(fd,&statb)<0)
 			goto err;
 	}
 	else if(stat(path,&statb) < 0)
@@ -1109,17 +1113,11 @@ pid_t path_spawn(Shell_t *shp,const char *opath,register char **argv, char **env
 	size_t		r;
 	pid_t		pid= -1;
 #ifdef SPAWN_cwd
-	Spawnvex_t*	vex = (Spawnvex_t*)shp->vex;
-	if(!vex && (vex = spawnvex_open(0)))
-		shp->vex = (void*)vex;
 	if(spawn>1)
 	{
-		if(!vex)
-			return(-1);
-		spawnvex_add(vex, SPAWN_pgrp, spawn>>1,0,0);
+		spawnvex_add(shp->vex, SPAWN_pgrp, spawn>>1,0,0);
 	}
-	if(vex)
-		spawnvex_add(vex,SPAWN_noexec,0,vexexec,(void*)shp);	
+	spawnvex_add(shp->vex,SPAWN_noexec,0,vexexec,(void*)shp);	
 #endif /* SPAWN_cwd */
 	/* leave room for inserting _= pathname in environment */
 	envp--;
@@ -1263,7 +1261,12 @@ retry:
 			while(_sh_fork(shp,pid,0,(int*)0) < 0);
 #   ifdef SPAWN_cwd
 			if(shp->vex)
-				spawnvex_apply((Spawnvex_t*)shp->vex,0,0);
+			{
+				spawnvex_apply(shp->vex,0,0);
+#if 0
+				spawnvex_apply(shp->vexp,0,SPAWN_RESET);
+#endif
+			}
 #   endif /* SPAWN_cwd */
 			((struct checkpt*)shp->jmplist)->mode = SH_JMPEXIT;
 #else
@@ -1349,7 +1352,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 		char *savet=0;
 		struct stat statb;
 		int err=0;
-		if((n=sh_open(path,O_RDONLY|O_cloexec,0)) >= 0)
+		if((n=open(path,O_RDONLY|O_cloexec,0)) >= 0)
 		{
 			/* move <n> if n=0,1,2 */
 			n = sh_iomovefd(shp,n);

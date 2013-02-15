@@ -93,7 +93,66 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-12-10-09  --- Release ksh93v- ---
+13-02-13  --- Release ksh93v- ---
+13-02-13  A bug in which hitting interrupt with reading from a terminal
+	  sent the interrupt to the current process rather than the current
+	  process group has been fixed.
+13-02-13  A bug in which x.name and x[0].name were not treated the same
+	  has been fixed.
+13-02-08 +The -p option was added to enum to display the values that are
+	  valid for the enum.
+13-02-07 +A preset alias named bool which is an alias for an enum
+	  named _Bool which has values true and false has been added.
+13-02-07  A bug in the processing of multibyte characters in non utf8 locales
+	  in command substitution has been fixed.
+13-02-05  Fixed emacs tab completion bug in which typing <tab><tab> in a
+	  directory with one element that contained an element of one entry
+	  did not expand to both names.
+13-02-24  Increased the maximum level of recursion for evaluating variables
+	  inside arithmetic expressions from 9 to 1024.
+13-02-24  Added exp10 math function.
+13-01-31  A bug in integer division which occured for numbers between INT_MAX
+	  and UINT_MAX has been fixed.
+13-01-31  A bug in the parser that did not allow for redirections with
+	  ((...)) arithmetic statements has been fixed.
+13-01-17 +User define math functions introduced on 10-03-24 now allow passing
+	  arrays as arguments.
+13-01-10 +ksh now treats ESC-O-letter the same as ESC-[-letter in vi and emacs
+	  edit modes.
+12-12-10  A bug with enumerations types when declaring an indexed array of
+	  an enumeration type has been fixed.
+12-11-30  A bug in which whence or type on a preset alias did not output the
+	  value has been fixed.
+12-11-28  Assigning an element of an indexed array as an empty array now
+	  correctly displays this with typeset -p.
+12-11-28  typeset -p of an array variable whose 0 element was an array variable
+	  with no elements did not output correctly and has been fixed.
+12-11-20  Numerous changes related to new algorithm for shell redirections
+	  using the spawnvex() library.  Not yet used in all cases.
+12-11-14  A bug with caused by using spawnvex*() functions for redirections
+	  of simple commands with here-documents has been fixed.
+12-11-12  A memory leak which occured while doing path search has been fixed.
+12-10-24  A bug which caused the shell to report a syntax error when a
+	  command substitution appeared on the line that started a here
+	  document has been fixed.
+12-10-23  The shell now uses the new spawnvex*() functions for redirections
+	  of simple command that are not builtin.
+12-10-21  Here documents with $() and ${ } use larger buffers.
+12-10-21  Builtins now use mmap() for files that are opened for reading.
+12-10-18  A bug in which preceding a special builtin with command did not
+	  prevent assignments from remaining has been fixed.
+12-10-17  A bug in the self documentation for types which causes the field
+	  descriptors to be off by 1 has been fixed.
+12-10-17  An array bug which caused a regression test to fail has been fixed.
+12-10-16  A bug in the exit status for command substitution caused by no longer
+	  using pipes has been fixed.
+12-10-16  A bug in the self documentation for types with discipline functions
+	  led to an extra line containing -. and has been fixed.
+12-10-16  Fixed a bug with typeset -p that could cause a core dump.
+12-10-15  Fixed a bug in which unsigned long was used when unsigned long long
+	  was needed.
+12-10-15  Fixed a bug in in which could cause long double data to not
+	  aligned correctly in types.
 12-10-09  A bug in which nested types were not able to invoke a discipline
 	  method defined by an embedded type has been fixed.
 12-10-09 +read -d '' now reads up to a NUL byte.
@@ -207,7 +266,7 @@ All recorded changes follow.
 12-07-02  A bug in the edit modes which <tab> after a directory did not refresh
 	  the input line has been fixed.
 12-07-02  A bug in which an exit status > 256 corresponding to a signal was
-	  not by a function to indicate a signal exit has been fixed.
+	  not returned by a function to indicate a signal exit has been fixed.
 
 12-06-28  --- Release ksh93u+ ---
 12-06-28  Fix ulimit -a to list (Kibytes) instead of (kbytes).
@@ -3297,6 +3356,13 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+13-02-14 misc/optget.c: -Wall cleanup -- thanks werner
+13-01-03 string/stropt.c: fix off-by-one comparison bug - happy new year
+12-11-15 misc/spawnvex.c: add SPAWN_frame and SPAWN_FRAME
+12-11-10 tm/tmxdate.c: handle yyyymmddThhmmss.nnnnnnnnn[-+]hhmm
+12-10-17 comp/conf.tab: add PC MIN_HOLE_SIZE
+12-10-16 spawnvex.c: spawnvex_open(SPAWN_EXEC) => posix_spawn() exit ENOENT=126 ENOEXEC=127 ok
+12-10-15 hash/hashlib.h,hash/hashscan.c: fix *ancient* hashscan() bug that didn't handle hashsize() during scan
 12-10-12 misc/spawnvex.c,features/sys: spawnvex() finally working for spawn variants
 12-09-27 regex/reglib.h: fix superfluous mask in bit test macros that limited values to 256 bits (now unlimited)
 12-09-26 comp/iconv.c: fix UTF-16 <=> UCS-2 mixup
@@ -5119,6 +5185,15 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+13-02-14 Makefile: add { cmdext.h cmdlist.h } force rebuild -- must do this better
+13-02-07 grep.c: drop b_pgrep() but retain p*grep argv[0] check
+12-12-12 mktemp.c: fix doc literal [...] => [...]]
+12-11-21 wc.c,wclib.c: add --invalid-bytes, -X and fix invalid byte logic
+12-10-25 xargs.c: drop bogus "out of space" diagnostic for "command not found"
+12-10-24 tr.c: move from src/cmd/builtin
+12-10-24 grep.c: change -S,--strict to -p.--strict|lenient, add -K,--ksh-regexp -S,--sh-regexp
+12-10-19 od.c: move from src/cmd/builtin
+12-10-15 iconv.c: use sh_run() for /usr/bin/iconv -l
 12-10-03 cmdlist.h: _AST_VERSION>=20121001 => CMDLIST(command,"directory")
 12-10-03 grep.c,xargs.c: move from src/cmd/kshlib/cmdtst
 12-10-03 iconv.c: move from src/cmd/std
@@ -5460,6 +5535,7 @@ All recorded changes follow.
 
 :::::::: libcoshell ::::::::
 
+12-12-01 coexec.c,cowait.c: fix service fd bugs
 12-02-22 coinit.c: handle non-identifier export var names
 11-12-13 cowait.c: handle sfpoll() error return on interrupt
 11-11-21 cowait.c: poll before blocking read to weed out killed jobs (no 'x' message)

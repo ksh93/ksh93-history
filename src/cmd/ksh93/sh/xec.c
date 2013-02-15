@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -78,6 +78,21 @@ struct funenv
 	struct argnod	*env;
 	Namval_t	**nref;
 };
+
+static int io_usevex(struct ionod *iop)
+{
+	struct ionod *first = iop;
+	for(;iop;iop=iop->ionxt)
+	{
+		if((iop->iofile&IODOC) && !(iop->iofile&IOQUOTE) && iop!=first)
+			return(0);
+	}
+	return(IOUSEVEX);
+}
+#if 1
+#undef IOUSEVEX
+#define IOUSEVEX	0
+#endif
 
 /* ========	command execution	========*/
 
@@ -915,8 +930,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 		int		argn;
 		int 		skipexitset = 0;
 #ifdef SPAWN_cwd
-		Spawnvex_t	*vp = (Spawnvex_t*)shp->vexp;
-		int		vexi = vp->cur;
+		int		vexi = shp->vexp->cur;
 #endif
 		volatile int	was_interactive = 0;
 		volatile int	was_errexit = sh_isstate(shp,SH_ERREXIT);
@@ -957,9 +971,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			type &= (COMMSK|COMSCAN);
 			sh_stats(STAT_SCMDS);
 			error_info.line = t->com.comline-shp->st.firstline;
-#if 1
-			spawnvex_add((Spawnvex_t*)shp->vex,SPAWN_frame,0,0,0);
-#endif
+			spawnvex_add(shp->vex,SPAWN_frame,0,0,0);
 			com = sh_argbuild(shp,&argn,&(t->com),OPTIMIZE);
 			echeck = 1;
 			if(t->tre.tretyp&COMSCAN)
@@ -1276,11 +1288,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 							else
 								type = (execflg && !shp->subshell && !shp->st.trapcom[0]);
 							shp->redir0 = 1;
-#if 0
 							sh_redirect(shp,io,type|(np==SYSDOT?0:IOHERESTRING|IOUSEVEX));
-#else
-							sh_redirect(shp,io,type|(np==SYSDOT?0:IOHERESTRING));
-#endif
 							for(item=buffp->olist;item;item=item->next)
 								item->strm=0;
 						}
@@ -1362,15 +1370,15 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						if(jmpval<=SH_JMPCMD  && (!nv_isattr(np,BLT_SPC) || command))
 							jmpval=0;
 					}
-					if(np!=SYSEXEC && shp->vex && ((Spawnvex_t*)shp->vex)->cur)
+					if(np!=SYSEXEC && shp->vex->cur)
 #if 1
-						spawnvex_apply((Spawnvex_t*)shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
+						spawnvex_apply(shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
 #else
 					{
 						int fd;
-						spawnvex_apply((Spawnvex_t*)shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
+						spawnvex_apply(shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
 						if(shp->comsub && (fd=sffileno(sfstdout))!=1 && fd>=0)
-							spawnvex_add((Spawnvex_t*)shp->vex,fd,1,0,0);
+							spawnvex_add(shp->vex,fd,1,0,0);
 					}
 #endif
 					if(bp)
@@ -1436,7 +1444,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					/* don't restore for subshell exec */
 					if((shp->topfd>topfd) && !(shp->subshell && np==SYSEXEC))
 						sh_iorestore(shp,topfd,jmpval);
-					if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+					if(shp->vexp->cur>vexi)
 						sh_vexrestore(shp,vexi);
 					shp->redir0 = 0;
 					if(jmpval)
@@ -1514,7 +1522,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 
 					{
 						if(io)
-							indx = sh_redirect(shp,io,execflg/*|IOUSEVEX*/);
+							indx = sh_redirect(shp,io,execflg|IOUSEVEX);
 #if SHOPT_NAMESPACE
 						if(*np->nvname=='.')
 						{
@@ -1535,8 +1543,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 #if SHOPT_NAMESPACE
 					enter_namespace(shp,namespace);
 #endif /* SHOPT_NAMESPACE */
-					spawnvex_apply((Spawnvex_t*)shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
-					if(vp->cur>vexi)
+					spawnvex_apply(shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
+					if(shp->vexp->cur>vexi)
 						sh_vexrestore(shp,vexi);
 					if(io)
 					{
@@ -1556,7 +1564,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			}
 			else if(!io)
 			{
-				spawnvex_apply((Spawnvex_t*)shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
+				spawnvex_apply(shp->vex, 0, SPAWN_RESET|SPAWN_FRAME);
 			setexit:
 				exitset(shp);
 				break;
@@ -1616,7 +1624,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				nv_getval(RANDNOD);
 				restorefd = shp->topfd;
 #ifdef SPAWN_cwd
-				restorevex = vp->cur;
+				restorevex = shp->vexp->cur;
 #endif
 				if(type&FCOOP)
 				{
@@ -1704,7 +1712,6 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					shp->bckpid = parent;
 				else if(!(type&(FAMP|FPOU)))
 				{
-					Spawnvex_t	*vp;
 					if(!sh_isoption(shp,SH_MONITOR))
 					{
 						if(!(shp->sigflag[SIGINT]&(SH_SIGFAULT|SH_SIGOFF)))
@@ -1718,7 +1725,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
 #ifdef SPAWN_cwd
-					if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+					if(shp->vexp->cur > vexi)
 						sh_vexrestore(shp,vexi);
 #endif
 					if(usepipe && tsetio &&  subdup)
@@ -1828,7 +1835,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 							rewrite = 1;
 					}
 				}
-				sh_redirect(shp,t->tre.treio,1);
+				sh_redirect(shp,t->tre.treio,1|IOUSEVEX);
 				if(rewrite)
 				{
 					job_lock();
@@ -1840,7 +1847,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						job_post(shp,parent,0);
 						job_wait(parent);
 						sh_iorestore(shp,topfd,SH_JMPCMD);
-						if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+						if(shp->vexp->cur>vexi)
 							sh_vexrestore(shp,vexi);
 						sh_done(shp,(shp->exitval&SH_EXITSIG)?(shp->exitval&SH_EXITMASK):0);
 
@@ -1928,7 +1935,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				sfsync(shp->outpool);
 			sh_popcontext(shp,buffp);
 			sh_iorestore(shp,buffp->topfd,jmpval);
-			if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+			if(shp->vexp->cur>vexi)
 				sh_vexrestore(shp,buffp->vexi);
 			if(buffp->olist)
 				free_list(buffp->olist);
@@ -2311,12 +2318,15 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					}
 				}
 				if(nameref)
-					nv_offattr(np,NV_REF);
+					nv_offattr(np,NV_REF|NV_TABLE);
 				else if(nv_isattr(np, NV_ARRAY))
 					nv_putsub(np,NIL(char*),0L,0);
 				nv_putval(np,cp,0);
 				if(nameref)
+				{
 					nv_setref(np,(Dt_t*)0,NV_VARNAME);
+					nv_onattr(np,NV_TABLE);
+				}
 				if(trap=shp->st.trap[SH_DEBUGTRAP])
 				{
 					av[0] = (t->tre.tretyp&COMSCAN)?"select":"for";
@@ -2348,6 +2358,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				if(shp->st.breakcnt<0)
 					shp->st.execbrk = (++shp->st.breakcnt !=0);
 			}
+			if(nameref)
+				nv_offattr(np,NV_TABLE);
 #if SHOPT_OPTIMIZE
 		endfor:
 			sh_popcontext(shp,buffp);
@@ -2742,11 +2754,6 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				slp = (struct slnod*)np->nvenv;
 				sh_funstaks(slp->slchild,-1);
 				stkclose(slp->slptr);
-				if(shp->funload)
-				{
-					free((void*)np->nvalue.rp);
-					np->nvalue.rp = 0;
-				}
 				if(rp->sdict)
 				{
 					Namval_t *mp, *nq;
@@ -2759,6 +2766,12 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					}
 					dtclose(rp->sdict);
 					rp->sdict = 0;
+				}
+				if(shp->funload)
+				{
+					if(!shp->fpathdict)
+						free((void*)np->nvalue.rp);
+					np->nvalue.rp = 0;
 				}
 			}
 			if(!np->nvalue.rp)
@@ -3132,8 +3145,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 			if(!tsetio || !subdup)
 			{
 #ifdef SPAWN_cwd
-				Spawnvex_t *vp;
-				if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+				if(shp->vexp->cur>restorevex)
 					sh_vexrestore(shp,restorevex);
 #endif
 				if(shp->topfd > restorefd)
@@ -3219,7 +3231,10 @@ pid_t sh_fork(Shell_t *shp,int flags, int *jobid)
 	sh_stats(STAT_FORKS);
 #ifdef SPAWN_cwd
 	if(parent==0 && shp->vex)
-		spawnvex_apply((Spawnvex_t*)shp->vex,0,SPAWN_FRAME);
+	{
+		spawnvex_apply(shp->vex,0,0);
+		spawnvex_apply(shp->vexp,0,SPAWN_RESET);
+	}
 #endif /* SPAWN_cwd */
 	if(!shp->subshell)
 	{
@@ -3560,17 +3575,6 @@ static void sigreset(Shell_t *shp,int mode)
 	}
 }
 
-static int io_usevex(struct ionod *iop)
-{
-	struct ionod *first = iop;
-	for(;iop;iop=iop->ionxt)
-	{
-		if((iop->iofile&IODOC) && !(iop->iofile&IOQUOTE) && iop!=first)
-			return(0);
-	}
-	return(IOUSEVEX);
-}
-
 /*
  * A combined fork/exec for systems with slow or non-existent fork()
  */
@@ -3585,10 +3589,6 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	char		**arge, *path;
 	volatile pid_t	grp = 0;
 	Pathcomp_t	*pp;
-#ifdef SPAWN_cwd
-	Spawnvex_t	*vp = (Spawnvex_t*)shp->vexp;
-	Spawnvex_t	*vc = (Spawnvex_t*)shp->vex;
-#endif
 	if(flag)
 	{
 		otype = savetype;
@@ -3704,7 +3704,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		if(t->fork.forkio || otype)
 		{
 			sh_iorestore(shp,buffp->topfd,jmpval);
-			if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+			if(shp->vexp->cur>buffp->vexi)
 				sh_vexrestore(shp,buffp->vexi);
 		}
 		if(optimize==0)
@@ -3877,7 +3877,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	{
 		sh_iorestore(shp,buffp->topfd,jmpval);
 #ifdef SPAWN_cwd
-		if((vp=(Spawnvex_t*)shp->vexp) && vp->cur)
+		if(shp->vexp->cur > buffp->vexi)
 			sh_vexrestore(shp,buffp->vexi);
 #endif
 
@@ -4024,7 +4024,13 @@ int sh_funscope_20120720(Shell_t *shp,int argn, char *argv[],int(*fun)(void*),vo
 					if(np && (nq=*nref++))
 					{
 						np->nvalue.nrp = newof(0,struct Namref,1,0);
-						np->nvalue.nrp->np = nq;
+						if(nv_isattr(nq,NV_LDOUBLE)==NV_LDOUBLE)
+							np->nvalue.nrp->np = nq;
+						else
+						{
+							np->nvalue.nrp->np = (Namval_t*)((Sflong_t)(*nq->nvalue.ldp));
+							nv_onattr(nq,NV_LDOUBLE);
+						}
 						nv_onattr(np,NV_REF|NV_NOFREE);
 					}
 				}

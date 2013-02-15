@@ -1,3 +1,4 @@
+12-12-05 C+probe: elide */tmp/* and */probe[0-9]* from stdinclude
 12-10-25 ditto.sh: set DITTO_OPTIONS=dst=1 in destination read script
 12-09-27 package.sh: fix admin log total logic
 12-09-18 cc.ibm.risc: fix -O disable logic that ate next arg

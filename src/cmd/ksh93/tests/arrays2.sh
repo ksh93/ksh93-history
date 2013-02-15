@@ -220,4 +220,32 @@ typeset -A A[a]
 A[a][z]=1
 [[ ${!A[a][@]} == z ]] || err_exit 'A[a] should have only subscript z'
 
+typeset -a EMPTY_ARRAY=()
+typeset -a g_arr=()
+function initialize
+{
+    g_arr[0]=(11 22 33)
+    g_arr[1]=( "${EMPTY_ARRAY[@]}" )
+}
+initialize
+exp='typeset -a g_arr[0]=(11 22 33)'
+got=$(typeset -p g_arr[0])
+[[ $got == "$exp" ]] || err_exit "typeset -p g_arr[0] expeccted $exp got $got"
+exp='typeset -a g_arr[1]'
+got=$(typeset -p g_arr[1])
+[[ $got == "$exp" ]] || err_exit "typeset -p g_arr[1] expeccted $exp got $got"
+exp='typeset -a g_arr=((11 22 33)  () )'
+got=$(typeset -p g_arr)
+[[ $got == "$exp" ]] || err_exit "typeset -p g_arr expeccted $exp got $got"
+
+unset arr
+typeset -a arr
+typeset -a arr[0]=()
+exp='typeset -a arr[0]'
+got=$(typeset -p arr[0])
+[[ $got == "$exp" ]] || err_exit "arr[0] expected $exp got $got"
+exp='typeset -a arr=( () )'
+got=$(typeset -p arr)
+[[ $got == "$exp" ]] || err_exit "arr expected $exp got $got"
+
 exit $((Errors<125?Errors:125))

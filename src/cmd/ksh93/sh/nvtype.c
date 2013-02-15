@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1401,7 +1401,7 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 			nv_putsub(np,"0",0,ARRAY_FILL);
 			ap = nv_arrayptr(np);
 			nelem = 1;
-		
+			nv_arraysettype(np, tp, "0" ,flags);
 		}
 	}
 	else
@@ -1682,13 +1682,16 @@ int	sh_outtype(Shell_t *shp,Sfio_t *out)
 	if(indent==0)
 	for(tp = (Namval_t*)dtfirst(dp); tp; tp = (Namval_t*)dtnext(dp,tp))
 	{
+		/* skip over enums */
+		if(tp->nvfun && !nv_isvtree(tp))
+			continue;
 		if(!nv_search(tp->nvname,shp->bltin_tree,0))
 			continue;
 		sfprintf(out,"typeset -T %s\n",tp->nvname);
 	}
 	for(tp = (Namval_t*)dtfirst(dp); tp; tp = (Namval_t*)dtnext(dp,tp))
 	{
-		if(nv_isnull(tp))
+		if(nv_isnull(tp) || !nv_isvtree(tp))
 			continue;
 		if(indent && (memcmp(tp->nvname,shp->prefix,n-1) || tp->nvname[n-1]!='.' || strchr(tp->nvname+n,'.')))
 			continue;

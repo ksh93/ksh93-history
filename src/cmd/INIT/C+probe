@@ -3,7 +3,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2012-02-29
+# @(#)C probe (AT&T Research) 2012-12-05
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -631,14 +631,19 @@ case $good in
 	for f in `cat include.out`
 	do	if	test -d "$f"
 		then	g=`echo $f | sed -e 's,[\\/][\\/]*[^\\/]*$,,'`
-			case " $stdinclude " in
-			*\ $f\ *|*\ $g\ *)
+			case /$g/ in
+			*/tmp/*|*/probe[0123456789]*)
 				;;
-			*)	stdinclude="$stdinclude $f"
-				case $f in
-				/usr/include)	usrinclude=$f ;;
+			*)	case " $stdinclude " in
+				*\ $f\ *|*\ $g\ *)
+					;;
+				*)	stdinclude="$stdinclude $f"
+					case $f in
+					/usr/include)	usrinclude=$f ;;
+					esac
+					bad=1
+					;;
 				esac
-				bad=1
 				;;
 			esac
 		fi

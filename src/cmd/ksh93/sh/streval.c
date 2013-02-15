@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -43,7 +43,7 @@
 #   define SH_DICT	"libshell"
 #endif
 
-#define MAXLEVEL	9
+#define MAXLEVEL	1024
 #define SMALL_STACK	12
 
 /*
@@ -151,6 +151,19 @@ static Sfdouble_t U2F(Sfulong_t u)
 #else
 #define U2F(x)		x
 #endif
+
+static void array_args(Shell_t *shp, char *tp, int n)
+{
+	while(n--)
+	{
+		if(tp[n]==3)
+		{
+			Namval_t *np = nv_namptr(shp->mathnodes,n);
+			nv_offattr(np,NV_LDOUBLE);
+		}
+	}
+}
+	
 
 Sfdouble_t	arith_exec(Arith_t *ep)
 {
@@ -314,6 +327,10 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			*++sp = (Sfdouble_t)(cp-ep->code);
 			cp += sizeof(Math_f);
 			*++tp = *cp++;
+			node.userfn = 0;
+			if(*tp > 1) 
+				node.userfn = 1;
+			*tp &= 1;
 			continue;
 		    case A_PUSHN:
 			cp = roundptr(ep,cp,Sfdouble_t);
@@ -363,7 +380,11 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			else if(type==2 || tp[-1]==2)
 				num = U2F((Sfulong_t)(sp[-1]) / (Sfulong_t)(num));
 			else
-				num = (Sflong_t)(sp[-1]) / (Sflong_t)(num);
+			{
+				Sfdouble_t x = floorl(sp[-1]);
+				Sfdouble_t y = floorl(num);
+				num = floorl(x/y);
+			}
 			break;
 		    case A_LSHIFT:
 			if(tp[-1]==2)
@@ -428,7 +449,9 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				c &= ~T_BINARY;
 				arg[0] = num;
 				arg[1] = 0;
+				array_args(shp,tp+1,1);
 				num = sh_mathfun(shp,(void*)fun,1,arg);
+				node.userfn = 0;
 				break;
 			}
 			num = (*((Math_1f_f)fun))(num);
@@ -449,7 +472,9 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				arg[0] = sp[1];
 				arg[1] = num;
 				arg[2] = 0;
+				array_args(shp,tp+1,2);
 				num = sh_mathfun(shp,(void*)fun,2,arg);
+				node.userfn = 0;
 				break;
 			}
 			if(c&T_NOFLOAT)
@@ -474,7 +499,9 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				arg[1] = sp[2];
 				arg[2] = num;
 				arg[3] = 0;
+				array_args(shp,tp+1,3);
 				num = sh_mathfun(shp,(void*)fun,3,arg);
+				node.userfn = 0;
 				break;
 			}
 			num = (*((Math_3f_f)fun))(sp[1],sp[2],num);
@@ -727,7 +754,7 @@ again:
 					userfun = T_NOFLOAT;
 				sfputc(shp->stk,A_PUSHF);
 				stkpush(shp->stk,vp,fun,Math_f);
-				sfputc(shp->stk,1);
+				sfputc(shp->stk,1+(userfun==T_BINARY));
 			}
 			else
 				vp->infun = 0;

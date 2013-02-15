@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2012-11-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2013-02-13
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -254,6 +254,7 @@ prev std/endian.h implicit
 prev std/endian.h implicit
 done FEATURE/sys generated
 prev FEATURE/lib implicit
+prev FEATURE/common implicit
 done features/botch.c
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} ' run features/botch.c
 done FEATURE/botch generated

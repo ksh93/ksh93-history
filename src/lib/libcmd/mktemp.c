@@ -21,13 +21,13 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: mktemp (AT&T Research) 2012-09-06 $\n]"
+"[-?\n@(#)$Id: mktemp (AT&T Research) 2012-12-12 $\n]"
 USAGE_LICENSE
 "[+NAME?mktemp - make temporary file or directory]"
 "[+DESCRIPTION?\bmktemp\b creates a temporary file with optional base "
     "name prefix \aprefix\a. If \aprefix\a is omitted then \btmp\b is used "
     "and \b--tmp\b is implied. A consecutive string of trailing X's in "
-    "\aprefix\a is replaced by a pseudorandom combination of [0-9a-zA-Z]"
+    "\aprefix\a is replaced by a pseudorandom combination of [0-9a-zA-Z]]"
     "characters, otherwise the first 5 characters of \aprefix\a is catenated "
     "with a pseudorandom string to construct a file name component of 14 "
     "characters. If \adirectory\a is specified or if \aprefix\a contains a "
@@ -45,9 +45,9 @@ USAGE_LICENSE
     "by the pseudo-random part. If there are no \bX\b's then the "
     "pseudo-random part is appended to the prefix.]"
 "[d:directory?Create a directory instead of a regular file.]"
-"[m:mode]:[mode?Set the mode of the created temporary to \amode\a. "
+"[m:mode?Set the mode of the created temporary to \amode\a. "
     "\amode\a is symbolic or octal mode as in \bchmod\b(1). Relative modes "
-    "assume an initial mode of \bu=rwx\b.]"
+    "assume an initial mode of \bu=rwx\b.]:[mode]"
 "[p:default?Use \adirectory\a if the \bTMPDIR\b environment variable is "
     "not defined. Implies \b--tmp\b.]:[directory]"
 "[q:quiet?Suppress file and directory error diagnostics.]"

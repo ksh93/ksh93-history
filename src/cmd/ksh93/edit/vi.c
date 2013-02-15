@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1052,7 +1052,7 @@ static int cntlmode(Vi_t *vp)
 			if(lookahead)
 			{
 				ed_ungetchar(vp->ed,c=ed_getchar(vp->ed,1));
-				if(c=='[')
+				if(c=='[' || c=='O')
 				{
 					vp->repeat = 1;
 					continue;
@@ -1624,6 +1624,7 @@ static int mvcursor(register Vi_t* vp,register int motion)
 		tcur_virt = last_virt;
 		break;
 
+	case 'O':
 	case '[':
 		switch(motion=getcount(vp,ed_getchar(vp->ed,-1)))
 		{

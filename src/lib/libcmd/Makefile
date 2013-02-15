@@ -44,6 +44,7 @@ src = $(*$(*$(*cmd)):N=*.c:T=F)
 
 cmdext.h : (src) $$(-mam:+$$(src))
 	{
+	# 2013-02-14 force rebuild #
 	cat <<!
 	$("#")pragma prototyped
 	$("/")*
@@ -68,6 +69,7 @@ cmdext.h : (src) $$(-mam:+$$(src))
 
 cmdlist.h : (src) $$(-mam:+$$(src))
 	{
+	# 2013-02-14 force rebuild #
 	cat <<!
 	$("#")pragma prototyped
 	$("/")*
@@ -77,13 +79,13 @@ cmdlist.h : (src) $$(-mam:+$$(src))
 	$("#")if _AST_VERSION < 20121001
 
 	!
-	set $( $(SED) \
+	set ` $(SED) \
 		-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 		-e 's/^b_//' \
 		-e 's/(.*//' \
 		$($(~:O=1)) |
 		$(SORT) -u
-		)
+		`
 	for cmd
 	do	echo "CMDLIST($cmd)"
 	done

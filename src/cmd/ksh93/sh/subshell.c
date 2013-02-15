@@ -662,7 +662,10 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			}
 			sfset(iop,SF_READ,1);
 		}
-		sfswap(sp->saveout,sfstdout);
+		if(sp->saveout)
+			sfswap(sp->saveout,sfstdout);
+		else
+			sfstdout = &_Sfstdout;
 		/*  check if standard output was preserved */
 		if(sp->tmpfd>=0)
 		{

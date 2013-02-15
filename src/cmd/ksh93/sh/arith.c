@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -446,6 +446,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 	    case VALUE:
 	    {
 		register Namval_t *np = (Namval_t*)(lvalue->value);
+		Namarr_t *ap;
 		if(sh_isoption(shp,SH_NOEXEC))
 			return(0);
 		np = scope(np,lvalue,0);
@@ -480,6 +481,12 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			lvalue->value = (char*)ERROR_dictionary(e_notset);
 			lvalue->emode |= 010;
 			return(0);
+		}
+		if(lvalue->userfn && (ap=nv_arrayptr(np)) && (ap->flags&ARRAY_UNDEF))
+		{
+			r = (Sfdouble_t)((Sflong_t)np);
+			lvalue->isfloat=3;
+			return(r);
 		}
 		r = nv_getnum(np);
 		if(nv_isattr(np,NV_INTEGER|NV_BINARY)==(NV_INTEGER|NV_BINARY))

@@ -146,9 +146,9 @@ struct Ufunction
 #define BLT_ENV		(NV_RDONLY)		/* non-stoppable,
 						 * can modify enviornment */
 #define BLT_DISABLE	(NV_BINARY)		/* bltin disabled */
-#define BLT_SPC		(NV_LJUST)		/* special built-ins */
+#define BLT_SPC		(NV_TAGGED)		/* special built-ins */
 #define BLT_EXIT	(NV_RJUST)		/* exit value can be > 255 */
-#define BLT_DCL		(NV_TAGGED)		/* declaration command */
+#define BLT_DCL		(NV_LJUST)		/* declaration command */
 #define BLT_NOSFIO	(NV_IMPORT)		/* doesn't use sfio */
 #define NV_OPTGET	(NV_BINARY)		/* function calls getopts */
 #define nv_isref(n)	(nv_isattr((n),NV_REF|NV_TAGGED|NV_FUNCT)==NV_REF)

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -240,6 +240,12 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 			else if(sh_isoption(shp,SH_INTERACTIVE) && sh_isoption(shp,SH_PRIVILEGED))
 				sh_source(shp, iop, e_suidprofile);
 		}
+		/* add enum type _Bool */
+		if(i=sh_isoption(shp,SH_XTRACE))
+			sh_offoption(shp,SH_XTRACE);
+		sh_trap(shp,"enum _Bool=(false true) ;",0);
+		if(i)
+			sh_onoption(shp,SH_XTRACE);
 		shp->st.cmdname = error_info.id = command;
 		sh_offstate(shp,SH_PROFILE);
 		if(rshflag)

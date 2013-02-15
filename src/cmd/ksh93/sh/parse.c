@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1388,6 +1388,7 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 		return(t);
 	}
 	sh_lex(lexp);
+done:
 	if(io=inout(lexp,io,0))
 	{
 		if((tok=t->tre.tretyp&COMMSK) != TFORK)
@@ -1395,7 +1396,6 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 		t=makeparent(lexp,tok,t);
 		t->tre.treio=io;
 	}
-done:
 	lexp->lasttok = savwdval;
 	lexp->lastline = savline;
 	return(t);

@@ -1801,10 +1801,6 @@ int sh_reinit_20120720(Shell_t *shp,char *argv[])
 		Shell_t		*sh;
 		void		*extra[2];
 	} data;
-if(shp->vex && ((Spawnvex_t*)shp->vex)->cur)
-	write(-1,"gother6\n",9);
-if(shp->vexp && ((Spawnvex_t*)shp->vexp)->cur)
-	write(-1,"gother7\n",9);
 	for(np=dtfirst(shp->fun_tree);np;np=npnext)
 	{
 		if((dp=shp->fun_tree)->walk)

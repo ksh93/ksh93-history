@@ -469,7 +469,9 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, int flags)
 	proc->wfd = -1;
 	proc->flags = flags;
 	sfsync(NiL);
-	if (environ && envv != (char**)environ && (envv || (flags & PROC_PARANOID) || argv && (environ[0][0] != '_' || environ[0][1] != '=')))
+	if (!envv && !(flags & (PROC_ENVCLEAR|PROC_PARANOID)))
+		envv = environ;
+	else if (environ && envv != (char**)environ && (envv || (flags & PROC_PARANOID) || argv && (environ[0][0] != '_' || environ[0][1] != '=')))
 	{
 		if (!setenviron(NiL))
 			goto bad;

@@ -3020,9 +3020,15 @@ syntax,
 .PD
 where
 .I name\^
-is the function name used in the arithmetic expression and each identifier,
+is the function name used in the arithmetic expression.
+If the calling argument corresponding to
 .I ident\^
-is a name reference to the long double precision floating point argument.
+is the name of an array variable, then
+.I ident\^
+is a name reference to this array.  Otherwise, 
+.I ident\^
+is a reference to long double precision floating point variable containing
+the value from the caller.
 The value of
 .B .sh.value
 when the function returns is the value of this function.
@@ -6603,6 +6609,9 @@ and to format the date/time according to the
 as defined for the
 .BR date (1)
 command.
+Values specified as digits are interpreted as described in the
+.BR touch (1)
+command.
 .TP
 .B %Z
 A
@@ -8182,6 +8191,7 @@ cat(1),
 cd(1),
 chmod(1),
 cut(1),
+date(1),
 egrep(1),
 echo(1),
 emacs(1),
@@ -8193,6 +8203,7 @@ newgrp(1),
 pfexec(1),
 stty(1),
 test(1),
+touch(1),
 umask(1),
 vi(1),
 dup(2),

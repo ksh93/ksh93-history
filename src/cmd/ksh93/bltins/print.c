@@ -287,7 +287,7 @@ skip2:
 		n = 0;
 	}
 	else if(!(n=shp->fdstatus[fd]))
-		n = sh_iocheckfd(shp,fd);
+		n = sh_iocheckfd(shp,fd,fd);
 	if(!(n&IOWRITE))
 	{
 		/* don't print error message for stdout for compatibility */

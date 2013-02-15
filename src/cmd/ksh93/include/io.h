@@ -67,7 +67,7 @@
     struct ionod;
 #endif /* !ARG_RAW */
 
-extern int	sh_iocheckfd(Shell_t*,int);
+extern int	sh_iocheckfd(Shell_t*,int,int);
 extern void 	sh_ioinit(Shell_t*);
 extern int 	sh_iomovefd(Shell_t*,int);
 extern int	sh_iorenumber(Shell_t*,int,int);

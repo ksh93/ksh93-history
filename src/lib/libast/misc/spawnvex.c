@@ -34,6 +34,7 @@
 	unsigned int	flags; \
 	unsigned int	frame; \
 	pid_t		pgrp; \
+	int		debug; \
 	int		noexec; \
 	Spawnvex_u*	op;
 
@@ -496,6 +497,12 @@ spawnvex_open(unsigned int flags)
 	{
 		VEXINIT(vex);
 		vex->flags = flags;
+#ifdef F_DUPFD_CLOEXEC
+		vex->debug = (flags & SPAWN_DEBUG) ? fcntl(2, F_DUPFD_CLOEXEC, 60) : -1;
+#else
+		if ((vex->debug = (flags & SPAWN_DEBUG) ? fcntl(2, F_DUPFD, 60) : -1) >= 0)
+			fcntl(vex->debug, F_SETFD, FD_CLOEXEC);
+#endif
 	}
 	return vex;
 }
@@ -503,7 +510,6 @@ spawnvex_open(unsigned int flags)
 int
 spawnvex_add(Spawnvex_t* vex, intmax_t op, intmax_t arg, Spawnvex_f callback, void* handle)
 {
-	error(-1, "AHA#%d %d spawnvex add vex=%p cur=%d op=%I*d arg=%I*d callback=%p handle=%p", __LINE__, getpid(), vex, vex->cur, sizeof(op), op, sizeof(arg), arg, callback, callback ? handle : 0);
 	if ((vex->cur + (callback ? 4 : 2)) >= vex->max)
 	{
 		vex->max += VEXCHUNK;
@@ -537,6 +543,8 @@ spawnvex_add(Spawnvex_t* vex, intmax_t op, intmax_t arg, Spawnvex_f callback, vo
 		else
 			op++;
 	}
+	if (vex->debug > 0)
+		error(ERROR_OUTPUT, vex->debug, "spawnvex add %4d %8d %p %4d %4I*d %4I*d %p %p", __LINE__, getpid(), vex, vex->cur, sizeof(op), op / 2, sizeof(arg), arg, callback, callback ? handle : NiL);
 	vex->op[vex->cur++].number = op;
 	vex->op[vex->cur++].number = arg;
 	if (callback)
@@ -602,8 +610,9 @@ spawnvex_apply(Spawnvex_t* vex, int cur, int flags)
 				callback = vex->op[i++].callback;
 				handle = vex->op[i++].handle;
 			}
-			error(-1, "AHA#%d %d spawnvex apply vex=%p cur=%d op=%I*d arg=%I*d callback=%p handle=%p", __LINE__, getpid(), vex, vex->cur - ((op & 1) ? 4 : 2), sizeof(op), op / 2, sizeof(arg), arg, callback, callback ? handle : 0);
 			op /= 2;
+			if (vex->debug >= 0)
+				error(ERROR_OUTPUT, vex->debug, "spawnvex app %4d %8d %p %4d %4I*d %4I*d %p %p", __LINE__, getpid(), vex, k, sizeof(op), op, sizeof(arg), arg, callback, callback ? handle : NiL);
 			if (!(flags & SPAWN_CLEANUP))
 			{
 				err = 0;
@@ -773,6 +782,8 @@ spawnvex_close(Spawnvex_t* vex)
 		return -1;
 	if (vex->op)
 		free(vex->op);
+	if (vex->debug >= 0)
+		close(vex->debug);
 	free(vex);
 	return 0;
 }
@@ -808,7 +819,8 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 #endif
 #endif
 
-	error(-1, "AHA#%d %d spawnvex exec vex=%p path=%s", __LINE__, getpid(), vex, path);
+	if (vex && vex->debug >= 0)
+		error(ERROR_OUTPUT, vex->debug, "spawnvex exe %4d %8d %p %4d \"%s\"", __LINE__, getpid(), vex, vex->cur, path);
 #if _lib_spawn_mode || _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
 	if (!envv)
 		envv = environ;
@@ -996,7 +1008,7 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 			}
 		}
 	}
-	pid = spawn(path, m, map, &inherit, argv, envv);
+	pid = spawn(path, m, map, &inherit, (const char**)argv, (const char**)envv);
 #endif
 	if (pid >= 0 && vex)
 		VEXINIT(vex);
@@ -1109,9 +1121,11 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 				errno = n;
 			else
 			{
-				error(-1, "AHA#%d %d spawnvex execve before vex=%p path=%s", __LINE__, getpid(), vex, path);
+				if (vex && vex->debug >= 0)
+					error(ERROR_OUTPUT, vex->debug, "spawnvex exe %4d %8d %p %4d \"%s\"", __LINE__, getpid(), vex, vex->cur, path);
 				execve(path, argv, envv);
-				error(-1, "AHA#%d %d spawnvex execve FAILED vex=%p path=%s", __LINE__, getpid(), vex, path);
+				if (vex && vex->debug >= 0)
+					error(ERROR_OUTPUT, vex->debug, "spawnvex exe %4d %8d %p %4d \"%s\" FAILED", __LINE__, getpid(), vex, vex->cur, path);
 				if (vex && (i = vex->noexec) >= 0)
 				{
 					nx.vex = vex;
@@ -1292,6 +1306,8 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 	}
 	else if (err = posix_spawn(&pid, path, NiL, NiL, argv, envv ? envv : environ))
 		goto nope;
+	if (vex && vex->debug >= 0)
+		error(ERROR_OUTPUT, vex->debug, "spawnvex exe %4d %8d %p %4d \"%s\" %8d posix_spawn", __LINE__, getpid(), vex, vex->cur, path, pid);
 	return pid;
  bad:
 	posix_spawnattr_destroy(&ax);
@@ -1305,6 +1321,8 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 #endif
  nope:
 	errno = err;
+	if (vex && vex->debug >= 0)
+		error(ERROR_OUTPUT, vex->debug, "spawnvex exe %4d %8d %p %4d \"%s\" %8d posix_spawn FAILED", __LINE__, getpid(), vex, vex->cur, path, -1);
 	return -1;
 #endif
 #endif

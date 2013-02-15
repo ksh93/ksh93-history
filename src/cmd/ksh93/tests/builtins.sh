@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -617,6 +617,9 @@ then	(
 	)
 fi
 cd "$tmp"
+
+> foobar
+CDPATH= $SHELL 2> /dev/null -c 'cd foobar' && err_exit "cd to a regular file should fail"
 
 $SHELL +E -i <<- \! && err_exit 'interactive shell should not exit 0 after false'
 	false

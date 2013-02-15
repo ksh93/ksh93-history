@@ -71,4 +71,9 @@ arr[green]=foo
 read -A arr <<<  'x y z xx yy'
 [[ ${arr[1]} == ${arr[green]}  ]] || err_exit 'arr[1] != arr[green] after read'
 
+enum Bool=(false true)
+Bool -a bar
+bar[3]=true
+[[ $((5+bar[3])) != 6 ]] && err_exit '$((5+bar[3])) should be 6'
+
 exit $((Errors<125?Errors:125))

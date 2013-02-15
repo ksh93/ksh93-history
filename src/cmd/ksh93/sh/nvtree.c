@@ -643,7 +643,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			nv_outnode(mp, out, indent,0);
 			if(indent>0)
 				sfnputc(out,'\t',indent);
-			sfputc(out,')');
+			if(nv_arrayptr(mp))
+				sfputc(out,')');
 			sfputc(out,indent>=0?'\n':' ');
 			if(ap && !array_assoc(ap))
 				ap->flags |= scan;
@@ -673,6 +674,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		}
 		if(mp && nv_isvtree(mp))
 			fmtq = ep;
+		else if(!ep && !mp && nv_isarray(np))
+			fmtq = " ()";
 		else if(!(fmtq = sh_fmtq(ep)))
 			fmtq = "";
 		else if(!associative && (ep=strchr(fmtq,'=')))
@@ -692,7 +695,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		if(indent<0)
 		{
 			c = indent < -1?-1:';';
-			if(ap)
+			if(ap || nv_isarray(np))
 				c = more?' ':-1;
 		}
 		sfputr(out,fmtq,c);
