@@ -178,14 +178,11 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 	Math_f fun;
 	struct lval node;
 	Shell_t	*shp = ep->shp;
+	memset(&node,0,sizeof(node));
 	node.shp = shp;
 	node.emode = ep->emode;
 	node.expr = ep->expr;
 	node.elen = ep->elen;
-	node.value = 0;
-	node.nosub = 0;
-	node.ptr = 0;
-	node.eflag = 0;
 	if(level++ >=MAXLEVEL)
 	{
 		arith_error(e_recursive,ep->expr,ep->emode);

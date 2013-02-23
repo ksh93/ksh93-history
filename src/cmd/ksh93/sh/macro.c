@@ -80,6 +80,7 @@ typedef struct  _mac_
 	char		zeros;		/* strip leading zeros when set */
 	char		arrayok;	/* $x[] ok for arrays */
 	char		subcopy;	/* set when copying subscript */
+	char		macsub;		/* set to 1 when running mac_substitute */
 	int		dotdot;		/* set for .. in subscript */
 	void		*nvwalk;	/* for name space walking*/
 } Mac_t;
@@ -861,7 +862,23 @@ done:
 static void mac_substitute(Mac_t *mp, register char *cp,char *str,register int subexp[],int subsize)
 {
 	register int	c,n;
-	register char *first=cp;
+	register char *first=fcseek(0);
+	char		*ptr;
+	Mac_t		savemac;
+	Stk_t		*stkp = mp->shp->stk;
+	n = stktell(stkp);
+	savemac = *mp;
+	mp->pattern = 3;
+	mp->split = 0;
+	mp->macsub++;
+	fcsopen(cp);
+	copyto(mp,0,0);
+	sfputc(stkp,0);
+	ptr = cp = strdup(stkptr(stkp,n));
+	stkseek(stkp,n);
+	*mp = savemac;
+	fcsopen(first);
+	first = cp;
 	while(1)
 	{
 		while((c= *cp++) && c!=ESCAPE);
@@ -889,6 +906,7 @@ static void mac_substitute(Mac_t *mp, register char *cp,char *str,register int s
 	}
 	if(n=cp-first-1)
 		mac_copy(mp,first,n);
+	free(ptr);
 }
 
 #if  SHOPT_FILESCAN
@@ -1758,22 +1776,7 @@ retry1:
 		}
 		pattern = strdup(argp);
 		if((type=='/' || c=='/') && (repstr = mac_getstring(pattern)))
-		{
-			Mac_t	savemac;
-			char	*first = fcseek(0);
-			int	n = stktell(stkp);
-			savemac = *mp;
-			fcsopen(repstr);
-			mp->pattern = 3;
-			mp->split = 0;
-			copyto(mp,0,0);
-			sfputc(stkp,0);
-			repstr = strdup(stkptr(stkp,n));
 			replen = (int)strlen(repstr);
-			stkseek(stkp,n);
-			*mp = savemac;
-			fcsopen(first);
-		}
 		if(v || c=='/' && offset>=0)
 			stkseek(stkp,offset);
 	}
@@ -1807,7 +1810,7 @@ retry2:
 						nmatch=substring(v,tsize,pattern,match,flag&STR_MAXIMAL);
 					else
 						nmatch=strngrpmatch(v,vsize,pattern,(ssize_t*)match,elementsof(match)/2,flag|STR_INT);
-					if(nmatch && repstr)
+					if(nmatch && repstr && !mp->macsub)
 						sh_setmatch(mp->shp,v,vsize,nmatch,match,index++);
 					if(nmatch)
 					{
@@ -1840,9 +1843,9 @@ retry2:
 					vsize = -1;
 					break;
 				}
-				if(!repstr || (nmatch==0 && index==0))
+				if(!mp->macsub && (!repstr || (nmatch==0 && index==0)))
 					sh_setmatch(mp->shp,vlast,vsize_last,nmatch,match,index++);
-				if(index>0 && c=='/' && type)
+				if(!mp->macsub && index>0 && c=='/' && type)
 					sh_setmatch(mp->shp,0,0,nmatch,0,-1);
 			}
 			if(vsize)
@@ -1990,8 +1993,6 @@ retry2:
 		nv_close(np);
 	if(pattern)
 		free(pattern);
-	if(repstr)
-		free(repstr);
 	if(idx)
 		free(idx);
 	return(true);

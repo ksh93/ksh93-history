@@ -685,4 +685,7 @@ got=$(
 )
 [[ $got == "$exp" ]] || err_exit 'assignments to "command special_built-in" leaving side effects.'
 
+{ $SHELL -c 'kill %' ;} 2> /dev/null
+[[ $? == 1 ]] || err_exit "'kill %' has wrong exit status"
+
 exit $((Errors<125?Errors:125))

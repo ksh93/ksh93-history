@@ -811,8 +811,8 @@ z=([zero]=9.2 [one]=2  [two]=3 [three]=6.4 [four]=5)
 [[ $((dotprod(x,x))) == 163.6 ]] || err_exit "dotprod of two identical index arrays  is $((dotprod(x,x))) should be 163.6"
 [[ $((dotprod(z,y))) == 28.2 ]] || err_exit "dotprod of index and associative array  is $((dotprod(z,y))) should be 28.2"
 [[ $((dotprod(x,x))) == 163.6 ]] || err_exit "dotprod of two identical associaive arrays  is $((dotprod(z,z))) should be 163.6"
-[[ $((norm(x))) == 12.7906215642555855 ]] || err_exit "norm of index array  is $((norm(x))) should be 12.7906215642555855"
-[[ $((norm(z))) == 12.7906215642555855 ]] || err_exit "norm of associative array  is $((norm(z))) should be 12.7906215642555855"
+[[ $((norm(x))) == $((sqrt(163.6))) ]] || err_exit "norm of index array  is $((norm(x))) should be 12.7906215642555855"
+[[ $((norm(z))) == $((sqrt(163.6))) ]] || err_exit "norm of associative array  is $((norm(z))) should be 12.7906215642555855"
 
 $SHELL -c 'for ((i = 0; i < 1023; i++)); do eval a$i=a$((i+1));done;a1023=999;print $((a0))' > /dev/null 2>&1 || err_exit 'arithmetic recursive evaluation too deep'
 

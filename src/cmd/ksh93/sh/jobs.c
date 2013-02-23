@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1104,7 +1104,7 @@ static struct process *job_bystring(register char *ajob)
 
 int job_kill(register struct process *pw,register int sig)
 {
-	Shell_t	*shp = pw->p_shp;
+	Shell_t	*shp;
 	register pid_t pid;
 	register int r;
 	const char *msg;
@@ -1114,6 +1114,9 @@ int job_kill(register struct process *pw,register int sig)
 #endif
 #if _lib_sigqueue
 	union sigval sig_val;
+	if(pw==0)
+		goto error;
+	shp = pw->p_shp;
 	sig_val.sival_ptr = shp->sigmsg;
 #else
 #   define sigqueue(a,b,c)	kill(a,b)
@@ -1127,8 +1130,6 @@ int job_kill(register struct process *pw,register int sig)
 #endif	/* SIGTSTP */
 	job_lock();
 	errno = ECHILD;
-	if(pw==0)
-		goto error;
 	pid = pw->p_pid;
 #if SHOPT_COSHELL
 	if(pw->p_cojob)

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -929,6 +929,8 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	mp->nvfun = fp;
 	if(fp=np->nvfun)
 	{
+		Shell_t	*shp = (Shell_t*)np->nvshell;
+		Namval_t *last_table = shp->last_table;
 		if(nv_isattr(mp,NV_EXPORT|NV_MINIMAL) == (NV_EXPORT|NV_MINIMAL))
 		{
 			mp->nvenv = 0;
@@ -940,6 +942,7 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	        mp->nvflag |= np->nvflag&~(NV_ARRAY|NV_MINIMAL|NV_NOFREE);
 		flag = mp->nvflag;
 		clone_all_disc(np, mp, flags);
+		shp->last_table = last_table;
 	}
 	if(flags&NV_APPEND)
 		return(1);

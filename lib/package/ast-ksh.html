@@ -196,7 +196,16 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-13-02-13  --- Release ksh93v- ---
+13-02-22  --- Release ksh93v- ---
+13-02-22  'kill %' caused the shell to core dump.  This has been fixed.
+13-02-21  The 12-01-16 bug fix prevented .sh.match from being used in the
+	  replacement string.  The previous code was restored and a different
+	  fix which prevented .sh.match from being computed for nested
+	  replacement has been used instead.  
+13-02-20  Fixed two bugs related to reading compound variables with
+	  read -C that contain sub-elemects that are type variables.
+13-02-19  Fixed a bug introdueced on 13-01-17 when adding the feauture of
+	  allowing math functions to pass arrays as arguments.
 13-02-13  A bug in which hitting interrupt with reading from a terminal
 	  sent the interrupt to the current process rather than the current
 	  process group has been fixed.
@@ -5785,7 +5794,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>February 14, 2013</TD>
+<TD align=right>February 23, 2013</TD>
 </TR>
 </TABLE>
 <P>

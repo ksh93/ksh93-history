@@ -354,7 +354,7 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 				if(prefix && tp->com.comset && *cp=='[')
 				{
 					shp->prefix = 0;
-					np = nv_open(prefix,shp->last_root,flag);
+					np = nv_open(prefix,shp->var_tree,flag);
 					shp->prefix = prefix;
 					if(np)
 					{
@@ -491,6 +491,7 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 							if(!(array&NV_IARRAY) && !(tp->com.comset->argflag&ARG_MESSAGE))
 								nv_setarray(np,nv_associative);
 						}
+						shp->typeinit = 0;
 						sh_setlist(shp,tp->com.comset,flags&~NV_STATIC,0);
 						shp->prefix = prefix;
 						if(tp->com.comset->argval[1]!='[')

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -713,5 +713,21 @@ $SHELL  2> /dev/null <<- \EOF || err_exit 'typeset -p with types not working'
 	function bootstrap { : ;}
 	[[ $(typeset -p) == *Man_t* ]] 2> /dev/null 
 EOF
+
+typeset -T zz_t=( compound -a bar )
+(
+exp="$(
+        compound c=( zz_t d ) 
+        integer c.d.bar[4][6][8].b=789 
+        print -v c)"
+read -C got  <<< "$exp"
+[[ $got == "$exp" ]] || err_exit 'read -C for compound variable containing a type not working correctly'
+) & wait $!
+[[ $? == 0 ]] || err_exit 'read -C for compound variable containing a type not working correctly'
+
+unset c
+exp=$(compound c=( zz_t d=( typeset -C -a bar=( [4]=( zz_t b=( typeset -C -a bar)))));print -v c)
+read -C got <<< "$exp"
+[[ $got == "$exp" ]] || err_exit 'read -C for compound variable containing a nested type not working correctly'
 
 exit $((Errors<125?Errors:125))
