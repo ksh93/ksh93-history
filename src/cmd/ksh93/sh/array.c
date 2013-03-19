@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -398,7 +398,7 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 		char *xp = nv_setdisc(np,"get",np,(Namfun_t*)np);
 		if(flag!=ARRAY_ASSIGN)
 		{
-			struct index_array *aq=(struct index_array*)arp->scope;
+			struct index_array *aq= (arp->fun?0:(struct index_array*)arp->scope);
 			if(xp==(char*)np && aq && aq->maxi<ap->cur)
 				return(np);
 			return(xp && xp!=(char*)np?np:0);
@@ -1735,7 +1735,11 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			ap->header.scope = 0;
 		}
 		else
+		{
+			if(ap->cur=nv_search("0",ap->header.table,0))
+				nv_associative(np,(char*)0,NV_ADELETE);
 			dtclose(ap->header.table);
+		}
 		return((void*)ap);
 	    case NV_ANEXT:
 		if(!ap->pos)

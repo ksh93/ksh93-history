@@ -139,6 +139,14 @@ cat <<!
 	#define	off_t		off64_t
 	#endif
 
+	#if _lib_opendir64
+	#if !defined(opendir)
+	#define opendir		opendir64
+	#endif
+	#if _typ_DIR64 && !defined(DIR)
+	#define DIR		DIR64
+	#endif
+	#endif
 	#if _lib_readdir64 && _typ_struct_dirent64
 	#ifndef	dirent
 	#define dirent		dirent64
@@ -146,6 +154,18 @@ cat <<!
 	#ifndef	readdir
 	#define readdir		readdir64
 	#endif
+	#endif
+	#if _lib_rewinddir64 && !defined(rewinddir)
+	#define rewinddir	rewinddir64
+	#endif
+	#if _lib_seekdir64 && !defined(seekdir)
+	#define seekdir		seekdir64
+	#endif
+	#if _lib_telldir64 && !defined(telldir)
+	#define telldir		telldir64
+	#endif
+	#if _lib_closedir64 && !defined(closedir)
+	#define closedir	closedir64
 	#endif
 
 	#endif

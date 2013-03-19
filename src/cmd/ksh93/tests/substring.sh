@@ -254,9 +254,7 @@ fi
 if	[[ ${var//+(\S)/Q} != 'Q Q' ]]
 then	err_exit '${var//+(\S)/Q} not workding'
 fi
-print PWD=$PWD
 var=$($SHELL -c 'v=/vin:/usr/vin r=vin; : ${v//vin/${r//v/b}};typeset -p .sh.match') 2> /dev/null
-exit
 [[ $var == 'typeset -a .sh.match=((vin vin) )' ]] || err_exit '.sh.match not correct when replacement pattern contains a substring match'
 foo='foo+bar+'
 [[ $(print -r -- ${foo//+/'|'}) != 'foo|bar|' ]] && err_exit "\${foobar//+/'|'}"

@@ -38,7 +38,8 @@ lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
 lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
 lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
-lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
+lib	open64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
+lib	opendir64,readdir64,rewinddir64,seekdir64,telldir64,closedir64 -D_LARGEFILE64_SOURCE dirent.h
 lib	accept4,socketpair sys/socket.h
 
 lib	openat -D_ATFILE_SOURCE yes{
@@ -58,7 +59,7 @@ sys	dir,filio,jioctl,localedef,ptem,resource
 sys	socket,stream,systeminfo,universe,vfork
 
 typ	ino64_t,off64_t -D_LARGEFILE64_SOURCE
-typ	struct.dirent64 -D_LARGEFILE64_SOURCE dirent.h
+typ	struct.dirent64,DIR64 -D_LARGEFILE64_SOURCE dirent.h
 
 tst	tst_errno note{ errno can be assigned }end link{
 	_BEGIN_EXTERNS_

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -713,7 +713,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 
 static void outval(char *name, const char *vname, struct Walk *wp)
 {
-	register Namval_t *np, *nq, *last_table=wp->shp->last_table;
+	register Namval_t *tp=0, *np, *nq, *last_table=wp->shp->last_table;
         register Namfun_t *fp;
 	int isarray=0, special=0,mode=0;
 	Dt_t *root = wp->root?wp->root:wp->shp->var_base;
@@ -726,6 +726,9 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	}
 	if(!wp->out)
 		wp->shp->last_table = last_table;
+	if(wp->shp->last_table)
+		tp = nv_type(wp->shp->last_table);
+	last_table = wp->shp->last_table;
 	fp = nv_hasdisc(np,&treedisc);
 	if(*name=='.')
 	{
@@ -760,15 +763,38 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(!xp)
 			return;
 	}
+#if 0
 	if(nv_isnull(np) && !nv_isarray(np) && !nv_isattr(np,NV_INTEGER))
 		return;
+#else
+	if(!nv_isarray(np) && !nv_isattr(np,NV_INTEGER))
+	{
+		if(nv_isnull(np))
+			return;
+		if(np->nvalue.cp==Empty && tp && (last_table->nvname[0]!='_' || last_table->nvname[1]))
+		{
+			for(fp=np->nvfun;fp;fp=fp->next)
+			{
+				if(fp->disc && (fp->disc->getval || fp->disc->getnum))
+				break;
+			}
+			if(!fp)
+				return;
+		}
+	}
+#endif
 	if(special || (nv_isarray(np) && nv_arrayptr(np)))
 	{
 		isarray=1;
 		if(array_elem(nv_arrayptr(np))==0)
+		{
+			Namval_t *mp;
 			isarray=2;
+			if(tp  && (last_table->nvname[0]!='_' || last_table->nvname[1]))
+				return;
+		}
 		else
-			nq = nv_putsub(np,NIL(char*),0,ARRAY_SCAN|(wp->out?ARRAY_NOCHILD:0));
+			nq = nv_putsub(np,NIL(char*),0,ARRAY_SCAN|(wp->out&&!nv_type(np)?ARRAY_NOCHILD:0));
 	}
 	if(!wp->out)
 	{

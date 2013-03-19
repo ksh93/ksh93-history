@@ -30,7 +30,12 @@ print	#undef	_lib_lseek64
 print	#undef	_lib_lstat64
 print	#undef	_lib_mmap64
 print	#undef	_lib_open64
+print	#undef	_lib_opendir64
 print	#undef	_lib_readdir64
+print	#undef	_lib_rewinddir64
+print	#undef	_lib_seekdir64
+print	#undef	_lib_telldir64
+print	#undef	_lib_closedir64
 print	#undef	_lib_stat64
 print	#undef	_lib_statvfs64
 print	#undef	_lib_truncate64

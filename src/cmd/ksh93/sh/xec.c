@@ -1292,7 +1292,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 							for(item=buffp->olist;item;item=item->next)
 								item->strm=0;
 						}
-						if(!(nv_isattr(np,BLT_ENV)))
+						if(!nv_isattr(np,BLT_ENV) && !nv_isattr(np,BLT_SPC))
 						{
 							if(!shp->pwd)
 								path_pwd(shp,0);

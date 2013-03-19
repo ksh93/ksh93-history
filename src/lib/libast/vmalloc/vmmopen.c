@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -26,10 +26,15 @@ void _STUB_vmmapopen(){}
 #else
 
 #include	"vmhdr.h"
+
+#if !_PACKAGE_ast
+
 #include	<sys/types.h>
 #include	<string.h>
 #if _hdr_unistd
 #include	<unistd.h>
+#endif
+
 #endif
 
 #undef	ALIGN	/* some sys/param.h define this */

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -75,5 +75,14 @@ enum Bool=(false true)
 Bool -a bar
 bar[3]=true
 [[ $((5+bar[3])) != 6 ]] && err_exit '$((5+bar[3])) should be 6'
+
+got=$(myvar_c=foo $SHELL -c 'printf "%s\n" "${!myvar_*}"')
+[[ $got == myvar_c ]] || err_exit '${!myvar_*} does not expand at start of script'
+
+myvar_c=foo
+enum _XX=(foo bar)
+[[ ${!myvar_*} ==  myvar_c ]] || err_exit '${!myvar_*} does not expand after enum'
+
+
 
 exit $((Errors<125?Errors:125))

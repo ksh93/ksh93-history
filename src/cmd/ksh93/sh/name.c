@@ -1048,7 +1048,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						if((n&NV_ADD)&&(flags&NV_ARRAY))
 							n |= ARRAY_FILL;
 						if(flags&NV_ASSIGN)
-							n |= NV_ADD;
+							n |= NV_ADD| ARRAY_FILL;
 						table = shp->last_table;
 						cp = nv_endsubscript(np,sp,n|(flags&(NV_ASSIGN|NV_FARRAY)),np->nvshell);
 						shp->last_table = table;
@@ -1230,7 +1230,6 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			cp = xp;
 		}
 	}
-	return(np);
 }
 
 /*
@@ -1322,10 +1321,12 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	struct Cache_entry	*xp;
 #endif
 	
-	sh_stats(STAT_NVOPEN);
 	memset(&fun,0,sizeof(fun));
 	shp->openmatch = 0;
 	shp->last_table = 0;
+	if(!name)
+		return(0);
+	sh_stats(STAT_NVOPEN);
 	if(!root)
 		root = shp->var_tree;
 	shp->last_root = root;
@@ -2441,6 +2442,8 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 			}
 		}
 		npnext = (Namval_t*)dtnext(root,np);
+		if(nv_arrayptr(np))
+			nv_putsub(np,NIL(char*),0,ARRAY_SCAN);
 		_nv_unset(np,flags);
 		nv_delete(np,root,0);
 	}
@@ -2661,7 +2664,7 @@ static Namfun_t *clone_optimize(Namval_t* np, Namval_t *mp, int flags, Namfun_t 
 	return((Namfun_t*)0);
 }
 
-static const Namdisc_t optimize_disc  = {sizeof(struct optimize),put_optimize,0,0,0,0,clone_optimize};
+const Namdisc_t OPTIMIZE_disc  = {sizeof(struct optimize),put_optimize,0,0,0,0,clone_optimize};
 
 void nv_optimize(Namval_t *np)
 {
@@ -2682,7 +2685,7 @@ void nv_optimize(Namval_t *np)
 				shp->argaddr = 0;
 				return;
 			}
-			if(fp->disc== &optimize_disc)
+			if(fp->disc== &OPTIMIZE_disc)
 				break;
 		}
 		if((xp= (struct optimize*)fp) && xp->ptr==shp->argaddr)
@@ -2701,7 +2704,7 @@ void nv_optimize(Namval_t *np)
 		}
 		else
 		{
-			op->hdr.disc = &optimize_disc;
+			op->hdr.disc = &OPTIMIZE_disc;
 			op->next = (struct optimize*)shp->optlist;
 			shp->optlist = (void*)op;
 			nv_stack(np,&op->hdr);
@@ -3584,7 +3587,7 @@ void nv_unref(register Namval_t *np)
 		Namfun_t *fp;
 		for(fp=nq->nvfun; fp; fp = fp->next)
 		{
-			if(fp->disc== &optimize_disc)
+			if(fp->disc== &OPTIMIZE_disc)
 			{
 				optimize_clear(nq,fp);
 				return;

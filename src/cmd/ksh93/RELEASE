@@ -1,4 +1,30 @@
-13-02-22  --- Release ksh93v- ---
+13-03-17  --- Release ksh93v- ---
+13-03-17  A bug with print -v for an array of integer or floats has been fixed.
+13-03-15  Two memory leaks related to arrays created in functions has been
+	  fixed.
+13-03-14  A bug in reading an instance of an indexed array variable has been
+	  fixed.
+13-03-12  Initialized a variable in sh/macro.c that had been uninitialized.
+13-03-12  Fixed a bug that could cause a core dump with associative arrays 
+	  used withing types.
+13-03-12  Empty fields and empty arrays as type elements are not displayed
+	  when expanding a type instance.
+13-03-11  The trap command now blocks signals that have traps until the
+	  trap command completes.
+13-03-11  Signals that have traps that occur while processing a trap are
+	  deferred until the trap command completes.
+13-03-10  A bug in the expansion of a compound variable containing nested
+          types that contains arrays has been fixed.
+13-03-06  The patch made on 13-02-07 to handle non utf8 locales has been
+	  removed (for now) because it broke a utf8 locale script. 
+13-03-05  A bug in which ${!var*} to not expand correctly when it was at
+	  the beginning of a script for after a call to enum has been fixed.
+13-03-05  A bug in the expansion of a compound variable containing nested
+	  types has been fixed.
+13-03-04  A bug in the for loop optimizer which could falsely treat typeset -b
+	  as loop invariants  has been fixed.
+13-02-27  The exit value from expanding the PS[1-4] prompts no longer affect
+	  the exit status of the shell when you exit with EOF.
 13-02-22  'kill %' caused the shell to core dump.  This has been fixed.
 13-02-21  The 12-01-16 bug fix prevented .sh.match from being used in the
 	  replacement string.  The previous code was restored and a different

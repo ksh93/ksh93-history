@@ -201,7 +201,7 @@ static int sh_outenum(Shell_t *shp, Sfio_t *iop, Namval_t *tp)
 	}
 	while(tp)
 	{
-		if(!tp->nvfun || !(ep=nv_hasdisc(tp,&ENUM_disc)))
+		if(!tp->nvfun || !(ep=(struct Enum *)nv_hasdisc(tp,&ENUM_disc)))
 			continue;
 		sfprintf(iop,"enum %s%s=(\n",(ep->iflag?"-i ":""),tp->nvname);
 		for(i=0; i <ep->nelem ; i++)
@@ -312,6 +312,7 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 		nv_addtype(tp, enum_type, &optdisc.opt, sizeof(optdisc)); 
 		nv_onattr(np,NV_LTOU|NV_UTOL);
 	}
+	nv_open(0,shp->var_tree,0);
 	return error_info.errors != 0;
 }
 

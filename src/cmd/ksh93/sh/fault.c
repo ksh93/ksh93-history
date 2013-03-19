@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -104,6 +104,12 @@ void	sh_fault(register int sig)
 	}
 #endif  /* SIGWINCH */
 	trap = shp->st.trapcom[sig];
+if(sig==SIGBUS)
+{
+	signal(sig,SIG_DFL);
+	sigrelease(sig);
+	kill(getpid(),sig);
+}
 	if(shp->savesig)
 	{
 		/* critical region, save and process later */
@@ -414,6 +420,8 @@ void	sh_chktrap(Shell_t* shp)
 	register char *trap;
 	if(!(shp->trapnote&~SH_SIGIGNORE))
 		sig=0;
+	if(sh.intrap)
+		return;
 	shp->trapnote &= ~SH_SIGTRAP;
 	/* execute errexit trap first */
 	if(sh_isstate(shp,SH_ERREXIT) && shp->exitval)

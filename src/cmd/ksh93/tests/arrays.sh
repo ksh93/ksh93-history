@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -677,5 +677,16 @@ unset A
 integer -A A
 (( A[a] ))
 [[ ${!A[@]} ]] &&  err_exit '(( A[a] )) should not create element a of A'
+
+got=$($SHELL 2> /dev/null -c 'integer n=0; read  a[n++]<<<foo;read  a[n++]<<<bar;typeset -p a')
+exitval=$?
+(( exitval == 0))  || err_exit "read a[n++] has bad exit value $exitval"
+[[ $got == 'typeset -a a=(foo bar)' ]] || err_exit "read a[n++] yields '$got', but should get 'typeset -a a=(foo bar)'"
+
+integer -a ar
+ar+=( 4 )
+ar+=( 5 6  )
+exp=$'(\n\t4\n\t5\n\t6\n)'
+[[ $(print -v ar) == "$exp" ]] || err_exit 'print -v not working for integer arrays'
 
 exit $((Errors<125?Errors:125))

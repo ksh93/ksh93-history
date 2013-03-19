@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1994-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1994-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2012-08-24 # update in USAGE too #
+version=2013-03-06 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -716,7 +716,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2012-08-24 $
+@(#)$Id: iffe (AT&T Research) 2013-03-06 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -4483,8 +4483,8 @@ nam &/g' \
 #endif/'
 					;;
 				typ)	case $p in
-					"")	x= ;;
-					*)	x="$p " ;;
+					"")	x= r='*' ;;
+					*)	x="$p " r= ;;
 					esac
 					is typ "$x$v"
 					{
@@ -4508,7 +4508,7 @@ $x$v v; i = 1; v = i;"
 $tst
 $ext
 $inc
-struct xxx { $x$v mem; };
+struct xxx { $x$v$r mem; };
 static struct xxx v;
 struct xxx* f() { return &v; }"
 						;;

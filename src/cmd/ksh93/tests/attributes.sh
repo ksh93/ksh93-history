@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -483,5 +483,12 @@ export VAR1
 got=$(typeset -p VAR1)
 got=${got/ -x/}
 [[ $got == "$exp" ]] || err_exit 'typeset -x causes zerofill width to change'
+
+unset var
+typeset -bZ6 var
+for i in 2 3
+do      read -r -N6 var
+	[[ $var == dHdvdG93 ]] &&  ((i !=2)) && err_exit 'loop optimization bug with typeset -b variables'
+done <<< 'twotowthreetfourro'
 
 exit $((Errors<125?Errors:125))

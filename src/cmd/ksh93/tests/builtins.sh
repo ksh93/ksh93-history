@@ -688,4 +688,8 @@ got=$(
 { $SHELL -c 'kill %' ;} 2> /dev/null
 [[ $? == 1 ]] || err_exit "'kill %' has wrong exit status"
 
+got=$(printf %s\\n {a..f} | IFS=$'\n' read -rd '' -A a; typeset -p a)
+exp=$'typeset -a a=($\'a\\nb\\nc\\nd\\ne\\nf\\n\')'
+[[ $got == "$exp" ]] || err_exit "exp=$exp" "got=$got"
+
 exit $((Errors<125?Errors:125))

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -340,6 +340,12 @@ then	LC_ALL=en_US.UTF-8
 	fi
 	
 fi
+
+typeset -r utf8_euro_char1=$'\u[20ac]'
+typeset -r utf8_euro_char2=$'\342\202\254'
+(( (${#utf8_euro_char1} == 1) && (${#utf8_euro_char2} == 1) )) \
+        || export LC_ALL='en_US.UTF-8'
+[[ "$(printf '\u[20ac]')" == $'\342\202\254' ]]  || err_exit 'locales not handled correctly in command substitution'
 
 exit $((Errors<125?Errors:125))
 

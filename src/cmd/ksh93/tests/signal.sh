@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -431,5 +431,13 @@ unset enda endb
 a
 [[ $endb ]] &&  err_exit 'TERM signal did not kill function b'
 [[ $enda == 1 ]] || err_exit 'TERM signal killed function a'
+
+got=$($SHELL <<- \EOF
+	trap 'print foo; kill -s USR2 $$; print bar' USR1
+
+	trap 'print USR2' USR2
+	kill -s USR1 $$
+EOF)
+[[ $got == $'foo\nbar\nUSR2' ]] || err_exit 'the trap command not blocking trapped signals until trap command completes'
 
 exit $((Errors<125?Errors:125))

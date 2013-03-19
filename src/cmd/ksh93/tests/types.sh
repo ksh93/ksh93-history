@@ -82,7 +82,7 @@ do
 done
 typeset -T Frame_t=( typeset file lineno )
 Frame_t frame
-[[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno)' ]] || err_exit 'empty fields in type not displayed'
+[[ $(typeset -p frame) == 'Frame_t frame=()' ]] || err_exit 'empty fields in type not displayed'
 x=( typeset -a arr=([2]=abc [4]=(x=1 y=def));zz=abc)
 typeset -C y=x
 [[ "$x" == "$y" ]] || print -u2 'y is not equal to x'
@@ -729,5 +729,79 @@ unset c
 exp=$(compound c=( zz_t d=( typeset -C -a bar=( [4]=( zz_t b=( typeset -C -a bar)))));print -v c)
 read -C got <<< "$exp"
 [[ $got == "$exp" ]] || err_exit 'read -C for compound variable containing a nested type not working correctly'
+
+exp='ub=(
+	Job_t -A job=(
+		[IVAI]=(
+			schedule=UBCYINV1
+		)
+	)
+)'
+got=$( $SHELL 2> /dev/null <<- \EOF
+	typeset -T Module_t=( typeset hit; typeset -A call contract table_read table_write )
+	typeset -T Command_t=( typeset name parm; typeset -A input output module )
+	typeset -T Job_t=( typeset schedule; Command_t -a command )
+	typeset -T Schedule_t=( typeset -A job )
+	typeset -T Ub_t=( Schedule_t -A schedule; Job_t -A job; Module_t -A module )
+	Ub_t ub
+	typeset s=UBCYINV1
+	typeset n=IVAI
+	ub.job[$n].schedule=$s
+	print -r -- ub="$ub"
+EOF)
+[[ $? == 0 ]] || err_exit 'assignment in nested type fails'
+[[ $got == "$exp" ]] || err_exit 'assignment in nested type returns wrong value'
+
+got=$($SHELL <<- \EOF
+	typeset -T Module_t=( typeset hit; typeset -A call contract table_read table_write )
+	typeset -T Command_t=( typeset name parm; typeset -A input output module )
+	typeset -T Job_t=( typeset schedule; Command_t -a command )
+	typeset -T Schedule_t=( typeset -A job )
+	typeset -T Ub_t=( Schedule_t -A schedule; Job_t -A job; Module_t -A module )
+	Ub_t ub
+	typeset s=SCHEDULE
+	typeset j=JOB
+	ub.job[$j].schedule=$s
+	ub.job[$j].command[0].name=COMMAND-1
+	ub.job[$j].command[0].parm='parm-11,parm-12,parm-13'
+	ub.job[$j].command[0].input[INPUT]=input-1
+	ub.job[$j].command[0].output[OUTPUT]=output-1
+	ub.job[$j].command[1].name=COMMAND-2
+	ub.job[$j].command[1].parm='parm-21,parm-22,parm-23'
+	ub.job[$j].command[1].input[INPUT]=input-2
+	ub.job[$j].command[1].output[OUTPUT]=output-2
+	print -r "$ub" > ~/junk
+	print -r "$ub"
+EOF)
+exp='(
+	Job_t -A job=(
+		[JOB]=(
+			schedule=SCHEDULE
+			Command_t -a command=(
+				(
+					name=COMMAND-1
+					parm=parm-11,parm-12,parm-13
+					typeset -A input=(
+						[INPUT]=input-1
+					)
+					typeset -A output=(
+						[OUTPUT]=output-1
+					)
+				)
+				(
+					name=COMMAND-2
+					parm=parm-21,parm-22,parm-23
+					typeset -A input=(
+						[INPUT]=input-2
+					)
+					typeset -A output=(
+						[OUTPUT]=output-2
+					)
+				)
+			)
+		)
+	)
+)'
+[[ $got == "$exp" ]] || err_exit "expansion of variable containing a type that contains an index array of types not correct."
 
 exit $((Errors<125?Errors:125))

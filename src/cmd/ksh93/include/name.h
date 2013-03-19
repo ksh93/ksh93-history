@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -232,6 +232,7 @@ extern Namfun_t		*nv_mapchar(Namval_t*, const char*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern const Namdisc_t	ENUM_disc;
+extern const Namdisc_t	OPTIMIZE_disc;
 extern char		nv_local;
 extern Dtdisc_t		_Nvdisc;
 extern const char	*nv_discnames[];

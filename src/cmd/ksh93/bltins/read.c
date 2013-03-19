@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -471,7 +471,8 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			timerdel(timeslot);
 		if(binary && !((size=nv_size(np)) && nv_isarray(np) && c!=size))
 		{
-			if((c==size) && np->nvalue.cp && !nv_isarray(np))
+			int optimize = !np->nvfun || !nv_hasdisc(np,&OPTIMIZE_disc);
+			if(optimize && (c==size) && np->nvalue.cp && !nv_isarray(np))
 				memcpy((char*)np->nvalue.cp,var,c);
 			else
 			{

@@ -344,7 +344,14 @@ static int fixnode(Namtype_t *dp, Namtype_t *pp, int i, struct Namref *nrp,int f
 				nq->nvalue.cp = 0;
 			nq->nvfun = 0;
 			if(nv_isarray(nq) && ((flag&NV_IARRAY) || nv_type(np)))
+			{
+				Shell_t *shp = sh_ptr(np);
+				Namval_t *last_table = shp->last_table;
+				if(nv_type(np))
+					shp->last_table = np;
 				clone_all_disc(np,nq,flag&~NV_TYPE);
+				shp->last_table = last_table;
+			}
 			else
 				clone_all_disc(np,nq,flag);
 			if(fp)
