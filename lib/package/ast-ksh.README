@@ -93,7 +93,32 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
-13-03-17  --- Release ksh93v- ---
+13-04-02  --- Release ksh93v- ---
+13-04-02  A bug in the handling of string files in a type that is a member
+	  of another type has been fixed/
+13-04-02  A bug in cd ../.foobar, where ../.foobar exists, has been fixed.
+13-03-29  A bug in which read -r -d delim ignored -r has been fixed.
+13-03-28  A bug in which the KEYBD trap did not work correctly lines that
+	  are continued  has been fixed.
+13-03-28  read with line delimiter 0 and field separater \n did not split on
+	  '\n' and has been fixed.
+13-03-28  A bug in which "typeset -a" could cause a core dump has been fixed.
+13-03-27 +The variable .sh.sig containing siginfo information is no set during
+	  a SIGCHLD trap.
+13-03-26  A bug resulting from one of the memory leak bugs fixed on 13-03-15
+	  has been fixed.
+13-03-22  A bug in displaying indexed arrays of types in a compound variable
+	  has been fixed.
+13-03-22  A bug in which typeset -T did not display subtype names correctly
+	  do to a caching problem has been fixed.
+13-03-21  A bug in which ${...PATH=...} command substitution did not preserve 
+	  path bindings has been fixed.
+13-03-20  The exit value from the expansion of the PS1 prompt no longer affects
+	  the exit status of the shell.
+13-03-20  A fork bomb which could occur when a job was stopped in a shell with
+	  monitor mode, but not a job control shell has been fixed.
+13-03-19  A new patch to replace the patch removed on 13-03-06 for non utf8
+	  locales in command substitution has been added.
 13-03-17  A bug with print -v for an array of integer or floats has been fixed.
 13-03-15  Two memory leaks related to arrays created in functions has been
 	  fixed.
@@ -3389,8 +3414,27 @@ All recorded changes follow.
 	  has been fixed.
 
 
+:::::::: msggen ::::::::
+
+13-04-01 split src/cmd/msgcc into { src/cmd/msggen src/cmd/msgcc }
+10-10-20 msgcc.sh: add raw type (like str) for ksh -D style strings
+10-06-01 sync with ast api 20100601
+06-11-15 msgcc.sh: date -f x => date +x for ast-base portability
+06-10-11 add sfstruse() error checks
+02-03-11 msgcc: fix merge replacement threshhold logic
+	 msggen: convert { \a \b \f \n \r \v } back to C escapes
+	 msgcpp: set pp:modern
+02-02-14 msggen: add -f to list printf format signatures
+01-10-10 msgcc: allow some email forms to pass
+01-06-10 msgcpp: add proper escapes to OMIT pattern
+01-05-29 msgcc: add similar unused message replacement, -M-similar
+01-04-22 msgcc,msggen,msgget: use mcindex()
+01-01-31 ignore ls generation errors
+00-04-20 first release
+
 :::::::: libast ::::::::
 
+13-04-01 misc/spawnvex.c: fix omitted SPAWN_frame case that caused EINVAL
 13-03-11 sfio/sfflsbuf.c: memcpy() => memmove() ouch
 13-03-11 path/pathfind.c: type=="" => type=0
 13-03-07 features/(dirent|lib|sys): handle opendir64 => DIR64

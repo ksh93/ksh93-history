@@ -2060,14 +2060,23 @@ static void stat_init(Shell_t *shp)
 	np = create_svar(SH_SIG,"uid",0, fp);
 	np->nvalue.idp = &sip->si_uid;
 	np = create_svar(SH_SIG,"code",0, fp);
-	np->nvalue.ip = &sip->si_code;
+	if(sip->si_signo==SIGCHLD) 
+	{
+		nv_offattr(np,NV_INTEGER);
+		if(sip->si_code==CLD_EXITED)
+			np->nvalue.cp = "exited";
+		else if(sip->si_code==CLD_DUMPED)
+			np->nvalue.cp = "dumped";
+		else
+			np->nvalue.cp = "killed";
+	}
+	else
+	{
+		nv_onattr(np,NV_INTEGER);
+		np->nvalue.ip = &sip->si_code;
+	}
 	np = create_svar(SH_SIG,"status",0, fp);
-#ifdef CLD_EXITED
-	if(sip->si_code==CLD_EXITED)
-		sip->si_status &= 0xf;
-#endif
 	np->nvalue.ip = &sip->si_status;
-	np->nvalue.ip = &sip->si_code;
 	np = create_svar(SH_SIG,"addr",0, fp);
 	np->nvsize = 16;
 	np->nvalue.llp = (Sflong_t*)&sip->si_addr;

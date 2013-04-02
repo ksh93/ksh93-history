@@ -223,8 +223,8 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		char	*sp;
 		for(dp=dir; *dp=='.'; dp++)
 		{
-			if(*++dp=='.' && (*++dp=='/' || *dp==0))
-				n++;
+			if(dp[1] =='.' && (dp[2]=='/' || dp[2]==0))
+				n++,dp+=2;
 			else if(*dp && *dp!='/')
 				break;
 			if(*dp==0)

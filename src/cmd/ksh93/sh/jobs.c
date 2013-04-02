@@ -64,6 +64,9 @@ static struct jobsave *job_savelist;
 static int njob_savelist;
 static struct process *pwfg;
 static int jobfork;
+#ifdef _lib_sigaction
+    static siginfo_t	Siginfo;
+#endif /* _lib_sigaction */
 
 pid_t	pid_fromstring(char *str)
 {
@@ -200,6 +203,9 @@ void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
 	shp->sigflag[SIGCHLD] &= ~SH_SIGTRAP;
 	trapnote = shp->trapnote;
 	shp->trapnote = 0;
+#ifdef _lib_sigaction
+	sh_setsiginfo(&Siginfo);
+#endif /* _lib_sigaction */
 	for(pw=job.pwlist;pw;pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -444,6 +450,19 @@ bool job_reap(register int sig)
 		flags |= WNOHANG;
 		job.waitsafe++;
 		jp = 0;
+#ifdef _lib_sigaction
+		Siginfo.si_signo = SIGCHLD;
+		Siginfo.si_pid = pid;
+		Siginfo.si_uid = shp->gd->userid;
+		Siginfo.si_code = CLD_EXITED;
+		if (WIFSIGNALED(wstat))
+		{
+			Siginfo.si_value.sival_int = WTERMSIG(wstat);
+			Siginfo.si_code = WTERMCORE(wstat)?CLD_DUMPED:CLD_KILLED;
+		}
+		else
+			Siginfo.si_value.sival_int = WEXITSTATUS(wstat);
+#endif /* _lib_sigaction */
 		lastpid = pid;
 		if(!(pw=job_bypid(pid)))
 		{
@@ -1119,7 +1138,6 @@ int job_kill(register struct process *pw,register int sig)
 	shp = pw->p_shp;
 	sig_val.sival_ptr = shp->sigmsg;
 #else
-#   define sigqueue(a,b,c)	kill(a,b)
 	int sig_val = 0;
 #endif
 	sig &= ~JOB_QFLAG;

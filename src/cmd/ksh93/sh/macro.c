@@ -49,6 +49,7 @@
 #if SHOPT_MULTIBYTE
 #   undef isascii
 #   define isacii(c)	((c)<=UCHAR_MAX)
+#   include	<lc.h>
 #else
 #   define mbchar(p)       (*(unsigned char*)p++)
 #endif /* SHOPT_MULTIBYTE */
@@ -1161,8 +1162,13 @@ retry1:
 #if  SHOPT_FILESCAN
 			if(mp->shp->cur_line)
 			{
-				v = getdolarg(mp->shp,1,(int*)0);
 				dolmax = MAX_ARGN;
+				v = getdolarg(mp->shp,1,&vsize);
+				if(c=='*' || !mp->quoted)
+				{
+					dolmax = 1;
+					vsize = -1;
+				}
 			}
 			else
 #endif  /* SHOPT_FILESCAN */
@@ -1885,8 +1891,6 @@ retry2:
 #if  SHOPT_FILESCAN
 				if(mp->shp->cur_line)
 				{
-					if(dolmax==MAX_ARGN && isastchar(mode))
-						break;
 					if(!(v=getdolarg(mp->shp,dolg,&vsize)))
 					{
 						dolmax = dolg;
@@ -2025,6 +2029,11 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	struct _mac_		savemac;
 	int			savtop = stktell(stkp);
 	char			lastc=0, *savptr = stkfreeze(stkp,0);
+#if SHOPT_MULTIBYTE
+	const Lc_t		*lc=lcinfo(LC_CTYPE)->lc;
+	wchar_t			lastw=0;
+#endif /* SHOPT_MULTIBYTE */
+	ssize_t                 len;
 	int			was_history = sh_isstate(mp->shp,SH_HISTORY);
 	int			was_verbose = sh_isstate(mp->shp,SH_VERBOSE);
 	int			was_interactive = sh_isstate(mp->shp,SH_INTERACTIVE);
@@ -2215,17 +2224,36 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		}
 		else if(lastc)
 		{
-			mac_copy(mp,&lastc,1);
+			char mb[8];
+			mb[0] = lastc;
+			len = 1;
+#if SHOPT_MULTIBYTE
+			if(lastw)
+				len = mbconv(mb, lastw);
+			lastw = 0;
+#endif /* SHOPT_MULTIBYTE */
 			lastc = 0;
+			mac_copy(mp,mb,len);
 		}
 		newlines = nextnewlines;
 		if(++c < bufsize)
 			str[c] = 0;
 		else
 		{
-			ssize_t len = 1;
+			len = 1;
 
 			/* can't write past buffer so save last character */
+#if SHOPT_MULTIBYTE
+			if ((lc->flags & LC_utf8)==0 && (len = mbsize(str))>1)
+			{
+				len = mb2wc(lastw,str,len);
+				if (len < 0)
+				{
+					lastw = 0;
+					len = 1;
+				}
+			}
+#endif /* SHOPT_MULTIBYTE */
 			c -= len;
 			lastc = str[c];
 			str[c] = 0;
@@ -2246,8 +2274,16 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	}
 	if(lastc)
 	{
-		mac_copy(mp,&lastc,1);
+		char mb[8];
+		mb[0] = lastc;
+		len = 1;
+#if SHOPT_MULTIBYTE
+		if(lastw)
+			len = mbconv(mb, lastw);
+		lastw = 0;
+#endif /* SHOPT_MULTIBYTE */
 		lastc = 0;
+		mac_copy(mp,mb,len);
 	}
 	sfclose(sp);
 	return;

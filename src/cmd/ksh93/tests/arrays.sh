@@ -525,6 +525,7 @@ typeset -m 'a[0]=a[1]'
 typeset -m 'a[1]=j'
 [[ ${a[@]} == 'bb aa cc' ]] || err_exit 'moving associative array elements not working'
 unset a j
+[[ $(typeset -p a) ]] && err_exit 'unset associative array after typeset -m not working'
 
 z=(a b c)
 unset x
@@ -688,5 +689,12 @@ ar+=( 4 )
 ar+=( 5 6  )
 exp=$'(\n\t4\n\t5\n\t6\n)'
 [[ $(print -v ar) == "$exp" ]] || err_exit 'print -v not working for integer arrays'
+
+unset ar b
+IFS=$'\n' read -rd '' -A ar <<< $'a\nb\nc\nd\ne\nf'
+b=(a b c d e f '')
+[[ $(print -v ar) == "$(print -v b)" ]] || err_exit 'read -d"" with IFS=\n not working'
+
+$SHELL 2> /dev/null -c 'a=(foo bar); [[ $(typeset -a) == *"a=("*")"* ]]' || err_exit '"typeset -a" not working' 
 
 exit $((Errors<125?Errors:125))

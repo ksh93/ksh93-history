@@ -1736,7 +1736,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 		}
 		else
 		{
-			if(ap->cur=nv_search("0",ap->header.table,0))
+			if(ap->header.nelem==0 && (ap->cur=nv_search("0",ap->header.table,0)))
 				nv_associative(np,(char*)0,NV_ADELETE);
 			dtclose(ap->header.table);
 		}

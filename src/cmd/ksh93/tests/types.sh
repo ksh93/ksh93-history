@@ -804,4 +804,30 @@ exp='(
 )'
 [[ $got == "$exp" ]] || err_exit "expansion of variable containing a type that contains an index array of types not correct."
 
+exp='typeset -T Job_t
+typeset -T Schedule_t
+typeset -T Ub_t
+typeset -T Job_t=(
+	typeset schedule
+)
+typeset -T Schedule_t=(
+	typeset -A job
+)
+typeset -T Ub_t=(
+	Schedule_t -A schedule
+	Job_t -A job
+)'
+got=$($SHELL << EOF
+$exp
+typeset -T
+EOF)
+[[ $got == "$exp" ]] || err_exit 'typeset -T not displaying types correctly'
+
+typeset -T Apar_t=(typeset name)
+typeset -T Child_t=(Apar_t apar )
+Child_t A=( apar=( name=IV01111))
+Child_t C=( apar=( name=IV09557))
+[[ ${A.apar.name} == IV01111 ]] || err_exit "A.apar.name is ${A.apar.name} should be IV01111"
+[[ ${A.apar.name} == "${C.apar.name}" ]] && err_exit 'string fields in nested typed not working correctly'
+
 exit $((Errors<125?Errors:125))

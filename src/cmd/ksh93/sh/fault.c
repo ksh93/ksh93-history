@@ -467,7 +467,7 @@ void	sh_chktrap(Shell_t* shp)
 				cursig = sig;
  				sh_trap(shp,trap,0);
 #ifdef _lib_sigaction
-				if(shp->siginfo[sig])
+				if(shp->siginfo[sig] && sig!=SIGCHLD)
 					free(shp->siginfo[sig]);
 				shp->siginfo[sig] = 0;
 #endif
@@ -492,7 +492,7 @@ void sh_exit_20120720(Shell_t *shp,register int xno)
 	if(pp && pp->mode>1)
 		cursig = -1;
 #ifdef SIGTSTP
-	if(shp->trapnote&SH_SIGTSTP)
+	if((shp->trapnote&SH_SIGTSTP) && job.jobcontrol)
 	{
 		/* ^Z detected by the shell */
 		shp->trapnote = 0;

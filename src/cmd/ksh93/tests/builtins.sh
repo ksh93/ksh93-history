@@ -621,6 +621,11 @@ cd "$tmp"
 > foobar
 CDPATH= $SHELL 2> /dev/null -c 'cd foobar' && err_exit "cd to a regular file should fail"
 
+cd "$tmp"
+mkdir foo .bar
+cd foo
+cd ../.bar 2> /dev/null || err_exit 'cd ../.bar when ../.bar exists should not fail' 
+
 $SHELL +E -i <<- \! && err_exit 'interactive shell should not exit 0 after false'
 	false
 	exit
@@ -688,8 +693,7 @@ got=$(
 { $SHELL -c 'kill %' ;} 2> /dev/null
 [[ $? == 1 ]] || err_exit "'kill %' has wrong exit status"
 
-got=$(printf %s\\n {a..f} | IFS=$'\n' read -rd '' -A a; typeset -p a)
-exp=$'typeset -a a=($\'a\\nb\\nc\\nd\\ne\\nf\\n\')'
-[[ $got == "$exp" ]] || err_exit "exp=$exp" "got=$got"
+printf '\\\000' | read -r -d ''
+[[ $REPLY == $'\\' ]] || err_exit "read -r -d'' ignores -r"
 
 exit $((Errors<125?Errors:125))

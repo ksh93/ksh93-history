@@ -103,7 +103,7 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		if(opt_info.arg && *opt_info.arg!='\n')
 		{
 			char *cp = opt_info.arg;
-			flags &= ~((1<<D_FLAG+1)-1);
+			flags &= ((1<<D_FLAG+1)-1);
 			flags |= (mbchar(cp)<< D_FLAG+1) | (1<<D_FLAG);
 		}
 		break;
@@ -309,7 +309,10 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			shp->ifstable[delim] = S_NL;
 		if(delim!='\n')
 		{
-			shp->ifstable['\n'] = 0;
+			if(ifs && strchr(ifs,'\n'))
+				shp->ifstable['\n'] = S_DELIM;
+			else
+				shp->ifstable['\n'] = 0;
 			nv_putval(mp, ifs, NV_RDONLY);
 		}
 		shp->ifstable[0] = S_EOF;

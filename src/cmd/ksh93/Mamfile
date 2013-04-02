@@ -961,6 +961,10 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done lex.o generated
 make macro.o
 make sh/macro.c
+make ${PACKAGE_ast_INCLUDE}/lc.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/lc.h dontcare
 prev include/streval.h implicit
 prev include/national.h implicit
 prev include/path.h implicit
@@ -976,7 +980,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COSHELL -DSHOPT_OPTIMIZE -DSHOPT_FIXEDARRAY -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_PFSH -D_BLD_shell -D_API_ast=20121001 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_SUID_EXEC -DSHOPT_KIA -DSHOPT_DYNAMIC -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COSHELL -DSHOPT_OPTIMIZE -DSHOPT_FIXEDARRAY -DSHOPT_FILESCAN -D_API_ast=20121001 -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_PFSH -D_BLD_shell -DERROR_CONTEXT_T=Error_context_t -DSHOPT_SUID_EXEC -DSHOPT_KIA -DSHOPT_DYNAMIC -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c

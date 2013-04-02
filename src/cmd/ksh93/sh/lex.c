@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -268,6 +268,7 @@ Lex_t *sh_lexopen(Lex_t *lp, Shell_t *shp, int mode)
 	{
 		lp = (Lex_t*)newof(0,Lex_t,1,0);
 		lp->sh = shp;
+		shp->lexsize = sizeof(Lex_t);
 	}
 	fcnotify(lex_advance,lp);
 	lp->lex.intest = lp->lex.incase = lp->lex.skipword = lp->lexd.warn = 0;

@@ -27,7 +27,13 @@ void _STUB_vmmapopen(){}
 
 #include	"vmhdr.h"
 
-#if !_PACKAGE_ast
+#if _PACKAGE_ast
+
+#undef  major
+#undef  minor
+#undef  makedev
+
+#else
 
 #include	<sys/types.h>
 #include	<string.h>

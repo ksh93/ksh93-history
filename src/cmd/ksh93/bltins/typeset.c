@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1452,7 +1452,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 		tp->scanmask |= NV_UTOL|NV_LTOU;
 	if(root==tp->sh->bltin_tree)
 		tp->scanmask |= BLT_DISABLE;
-	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag);
+	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag&~NV_IARRAY);
 	argv = tp->argnam  = (char**)stkalloc(tp->sh->stk,(namec+1)*sizeof(char*));
 	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag&~NV_IARRAY);
 	if(mbcoll())

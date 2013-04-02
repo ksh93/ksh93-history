@@ -3,7 +3,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2012-09-11
+# @(#)make.probe (AT&T Research) 2013-03-20
 #
 # C probe for make
 #
@@ -33,6 +33,7 @@ probe_lib_append="/usr/lib/pa1.1"
 probe_lib_all_undef="-all -notall -all -none -Bwhole-archive -Bno-whole-archive -whole-archive -no-whole-archive -Wl,-whole-archive -Wl,-no-whole-archive -all_load '' -Wl,-zallextract -Wl,-zdefaultextract +forceload +noforceload"
 probe_lib_multiple="-Wl,-zmuldefs"
 probe_libdir="shlib lib"
+probe_nm_nmflags="-Xany"
 probe_nmflags="'' -p -B"
 probe_optimize="-O"
 probe_pic="-Kpic -KPIC -fpic -fPIC -pic -PIC +z +Z"
@@ -146,6 +147,7 @@ lib_undef=
 libpath=
 libpp=
 makeoptions=
+nm_nmflags=
 nmedit=
 nmflags=
 no_protect=
@@ -523,13 +525,26 @@ case $plusplus in
 esac
 
 if	$cc -c pic.$src
-then	eval set x $probe_nmflags
+then	eval set x $probe_nm_nmflags
 	while	:
 	do	shift
 		case $# in
 		0)	break ;;
 		esac
-		case `$nm $1 pic.$obj | grep -c '[0123456789][ 	][ 	]*T[ 	][ 	]*[_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]'` in
+		case `$nm $1 pic.$obj | grep -c '[ 	]T[ 	]'` in
+		0)	;;
+		*)	nm_nmflags=$1
+			break
+			;;
+		esac
+	done
+	eval set x $probe_nmflags
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		case `$nm $nm_nmflags $1 pic.$obj | grep -c '[0123456789][ 	][ 	]*T[ 	][ 	]*[_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]'` in
 		0)	;;
 		*)	nmflags=$1
 			break
@@ -537,7 +552,7 @@ then	eval set x $probe_nmflags
 		esac
 	done
 	case $# in
-	0)	case `$nm -gh pic.$obj | grep -c '|\.*[TtDdBbC][EeAaSsOo][XxTtSsMm]'` in
+	0)	case `$nm $nm_nmflags -gh pic.$obj | grep -c '|\.*[TtDdBbC][EeAaSsOo][XxTtSsMm]'` in
 		0)	;;
 		*)	nmflags=-gh
 			nmedit="-e '/\.*[TtDdBbC][EeAaSsOo][XxTtSsMm]/!d' -e 's/[| 	].*//'"
@@ -775,7 +790,7 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 		eval set x x $probe_lib_all_undef
 		rm -f xxx$dll
 		if	$dld $shared -o xxx$dll libxxx.$lib && test -r xxx$dll
-		then	if	$nm $nmflags xxx$dll | grep ShareD
+		then	if	$nm $nm_nmflags $nmflags xxx$dll | grep ShareD
 			then	lib_dll=OPTION
 				set x x
 			fi
@@ -788,7 +803,7 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 			esac
 			rm -f xxx$dll
 			if	$dld $shared -o xxx$dll $1 libxxx.$lib $2 && test -r xxx$dll
-			then	if	$nm $nmflags xxx$dll | grep ShareD
+			then	if	$nm $nm_nmflags $nmflags xxx$dll | grep ShareD
 				then	lib_dll=option
 					lib_all=$1
 					lib_undef=$2
@@ -797,7 +812,7 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 			fi
 			case $2 in
 			?*)	if	$dld $shared -o xxx$dll $1 libxxx.$lib && test -r xxx$dll
-				then	if	$nm $nmflags xxx$dll | grep ShareD
+				then	if	$nm $nm_nmflags $nmflags xxx$dll | grep ShareD
 					then	lib_dll=option
 						lib_all=$1
 						break
@@ -824,7 +839,7 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 					rm -f xxx$dll
 					if	$dld $shared -o xxx$dll prefix.$obj $lib_all libxxx.$lib $2 libyyy.$lib && test -r xxx$dll
 					then	rm -f t
-						$nm $nmflags xxx$dll > t
+						$nm $nm_nmflags $nmflags xxx$dll > t
 						case `grep -c ShareD t`:`grep -c NotalL t` in
 						0:*)	;;
 						*:0)	lib_undef=$2
@@ -850,7 +865,7 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 						rm -f xxx$dll
 						if	$dld $shared -o xxx$dll prefix.$obj $lib_all $1 libxxx.$lib libyyy.$lib && test -r xxx$dll
 						then	rm -f t
-							$nm $nmflags xxx$dll > t
+							$nm $nm_nmflags $nmflags xxx$dll > t
 							case `grep -c ShareD t` in
 							0)	;;
 							*)	lib_all="$lib_all $1"
@@ -1528,7 +1543,7 @@ then	eval set x $probe_symprefix
 		case $# in
 		0)	break ;;
 		esac
-		if	$nm $nmflags prefix.$obj | grep -c ${1}prefix >/dev/null
+		if	$nm $nm_nmflags $nmflags prefix.$obj | grep -c ${1}prefix >/dev/null
 		then	symprefix=$1
 			break
 		fi
@@ -2100,6 +2115,7 @@ CC_LIB_ALL=$lib_all
 CC_LIB_UNDEF=$lib_undef
 CC_MAKE_OPTIONS=$makeoptions
 CC_NM=$nm
+CC_NM_NMFLAGS=$nm_nmflags
 CC_NMEDIT=$nmedit
 CC_NMFLAGS=$nmflags
 CC_NOPROTECT=$no_protect
@@ -2205,6 +2221,7 @@ echo CC.LIB.ALL = $CC_LIB_ALL
 echo CC.LIB.UNDEF = $CC_LIB_UNDEF
 echo CC.MAKE.OPTIONS = $CC_MAKE_OPTIONS
 echo CC.NM = $CC_NM
+echo CC.NM.NMFLAGS = $CC_NM_NMFLAGS
 case $CC_NMEDIT in
 ?*)	CC_NMEDIT=" $CC_NMEDIT" ;;
 esac

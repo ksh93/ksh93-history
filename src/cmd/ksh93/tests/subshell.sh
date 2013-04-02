@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -640,5 +640,12 @@ fun()
 	print -u2 stderr=$foo
 }
 [[ `fun 2>&1` == 'stdout=foostderr=foo' ]] || err_exit 'nested command substitution with 2>&1 not working'
+
+mkdir $tmp/bin$$
+print 'print foo' > $tmp/bin$$/foo
+chmod +x  $tmp/bin$$/foo
+: $(type foo)
+: ${ PATH=$tmp/bin$$:$PATH;}
+[[ $(whence foo) == "$tmp/bin$$/foo" ]] || err_exit '${...PATH=...} does not preserve PATH bindings'
 
 exit $((Errors<125?Errors:125))

@@ -554,6 +554,8 @@ static Namval_t *create_type(Namval_t *np,const char *name,int flag,Namfun_t *fp
 	else for(i=0; i < dp->numnodes; i++)
 	{
 		nq = nv_namptr(dp->nodes,i);
+		if(!nq->nvname)
+			continue;
 		if((n==0||memcmp(name,nq->nvname,n)==0) && nq->nvname[n]==0)
 		{
 			while(nv_isref(nq))
@@ -631,15 +633,20 @@ static void put_type(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 static Namval_t *next_type(register Namval_t* np, Dt_t *root,Namfun_t *fp)
 {
 	Namtype_t	*dp = (Namtype_t*)fp;
+	Namarr_t	*ap;
 	if(!root)
 	{
-		Namarr_t	*ap = nv_arrayptr(np);
-		if(ap && (ap->flags&ARRAY_UNDEF))
+		if((ap=nv_arrayptr(np)) && ap->nelem && (ap->flags&ARRAY_UNDEF))
 			nv_putsub(np,(char*)0,0,ARRAY_SCAN);
 		dp->current = 0;
 	}
 	else if(++dp->current>=dp->numnodes)
-		return(0);
+	{
+		if((ap = nv_arrayptr(dp->parent)) && !ap->fun && (ap->flags&ARRAY_SCAN) && nv_nextsub(dp->parent))
+			dp->current = 0;
+		else
+			return(0);
+	}
 	return(nv_namptr(dp->nodes,dp->current));
 }
 
@@ -1169,6 +1176,8 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 						memcpy((char*)nq->nvalue.cp,nr->nvalue.cp,dsize);
 						nv_onattr(nq,NV_NOFREE);
 					}
+					else if(nr->nvalue.cp == Empty)
+						nq->nvalue.cp = Empty;
 					else
 						nq->nvalue.cp = strdup(nr->nvalue.cp);
 					nv_disc(nq, &pp->childfun.fun, NV_LAST);

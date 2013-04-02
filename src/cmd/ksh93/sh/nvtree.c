@@ -286,6 +286,13 @@ char *nv_dirnext(void *dir)
 	register char *cp;
 	Namfun_t *nfp;
 	Namval_t *nq;
+	Namarr_t *ap = dp->table?nv_arrayptr(dp->table):0;
+	int dot=-1,xdot,flags;
+	if(ap && !ap->fun && nv_type(dp->table) && (ap->flags&ARRAY_SCAN))
+	{
+		dot = nv_aindex(dp->table);
+		flags = ap->flags;
+	}
 	while(1)
 	{
 		if(!shp && dp->hp)
@@ -295,7 +302,7 @@ char *nv_dirnext(void *dir)
 #if 0
 			char *sptr;
 #endif
-			if(nv_isarray(np))
+			if(ap=nv_arrayptr(np))
 				nv_putsub(np,(char*)0, 0,ARRAY_UNDEF);
 			dp->hp = nextnode(dp);
 			if(nv_isnull(np) && !nv_isarray(np) && !nv_isattr(np,NV_INTEGER))
@@ -309,7 +316,15 @@ char *nv_dirnext(void *dir)
 			}
 #endif
 			shp->last_table = dp->table;
+			if(dot>=0)
+			{
+				xdot = nv_aindex(dp->table);
+				nv_putsub(dp->table,(char*)0,dot,flags);
+			}
 			cp = nv_name(np);
+			if(dot>=0)
+				nv_putsub(dp->table,(char*)0,xdot,xdot<dot?0:flags);
+
 #if 0
 			if(dp->table && dp->otable && !nv_isattr(dp->table,NV_MINIMAL))
 				dp->table->nvenv = sptr;
@@ -864,6 +879,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 	register Sfio_t *outfile = wp->out;
 	register int r;
 	Shell_t *shp = wp->shp;
+	Namarr_t	*ap;
+	Namval_t	*np,*tp;
 	size_t	m,l;
 	if(n==0)
 		m = strlen(prefix);
@@ -900,7 +917,6 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			{
 				if(outfile)
 				{
-					Namval_t *np,*tp;
 					*nextcp = 0;
 					np=nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL|wp->noscope);
 					if(!np || (nv_isarray(np) && (!(tp=nv_opensub(np)) || !nv_isvtree(tp))))
@@ -908,9 +924,11 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 						*nextcp = '.';
 						continue;
 					}
+					if(*cp!='[' && (tp = nv_type(np)) && (ap=nv_arrayptr(np)) && !ap->fun)
+						continue;
 					if(wp->indent>=0)
 						sfnputc(outfile,'\t',wp->indent);
-					if(*cp!='[' && (tp = nv_type(np)))
+					if(*cp!='[' && tp)
 					{
 						char *sp;
 						if(sp = strrchr(tp->nvname,'.'))
