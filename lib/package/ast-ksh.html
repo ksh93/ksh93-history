@@ -213,14 +213,29 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-13-04-02  --- Release ksh93v- ---
+13-04-08 +ksh now sets .sh.sig.pid and .sh.sig.status for CHLD traps.  The 
+	  .sh.sig.status can be one of exited, killed, dumped, stopped or
+	  continued.
+13-04-08 +The CHLD trap is now triggered with STOP and CONT signals.
+13-04-05  A bug in which a command with one or more &gt;(...) process substitution
+	  arguments did not wait for all &gt;(...) to complete before running the
+	  next command has been fixed.
+13-04-04  A bug in which monitor mode was not working for scripts has been
+	  fixed.
+13-04-04  A bug in which an unset variable error with set -u on did not
+	  terminate the current script has been fixed.
+13-04-03  The shell now uses mmap() on systems that suppport it for
+	  command substitution.
+13-04-03 +Functions that are used in brace group command substitution ${ ... }
+	  can assign the result to .sh.value instead of writing to standard
+	  out with the same result, but faster.
 13-04-02  A bug in the handling of string files in a type that is a member
 	  of another type has been fixed/
 13-04-02  A bug in cd ../.foobar, where ../.foobar exists, has been fixed.
 13-03-29  A bug in which read -r -d delim ignored -r has been fixed.
 13-03-28  A bug in which the KEYBD trap did not work correctly lines that
 	  are continued  has been fixed.
-13-03-28  read with line delimiter 0 and field separater did not split on
+13-03-28  read with line delimiter 0 and field separator did not split on
 	  ' and has been fixed.
 13-03-28  A bug in which "typeset -a" could cause a core dump has been fixed.
 13-03-27 +The variable .sh.sig containing siginfo information is no set during
@@ -272,7 +287,7 @@ All recorded changes follow.
 	  replacement has been used instead.  
 13-02-20  Fixed two bugs related to reading compound variables with
 	  read -C that contain sub-elemects that are type variables.
-13-02-19  Fixed a bug introdueced on 13-01-17 when adding the feauture of
+13-02-19  Fixed a bug introduced on 13-01-17 when adding the feature of
 	  allowing math functions to pass arrays as arguments.
 13-02-13  A bug in which hitting interrupt with reading from a terminal
 	  sent the interrupt to the current process rather than the current
@@ -385,7 +400,7 @@ All recorded changes follow.
 	  correctly has been fixed.
 12-08-31  A bug that could cause a core dump after typeset -m var=.sh.match has
 	  been fixed.
-12-08-30  For an assocative array A, $((A&#0091;sub&#0093;)) no longer cause subscript sub
+12-08-30  For an associative array A, $((A&#0091;sub&#0093;)) no longer cause subscript sub
 	  to be created.
 12-08-29  A scoping error in setting the scope for a reference when the
 	  reference contained subscripts containing a variable from a different
@@ -407,7 +422,7 @@ All recorded changes follow.
 	  been fixed.
 12-08-21  A bug in which a compound variable defined in a type could not
 	  have elements added to it has been fixed.
-12-08-20  A bug in which creating a two dimemsional associatve array could
+12-08-20  A bug in which creating a two dimemsional associative array could
 	  add an extra 0 element to the second subscript has been fixed.
 12-08-20  typeset -H foo no longer unsets foo when foo has been exported to
 	  the shell.
@@ -481,7 +496,7 @@ All recorded changes follow.
 	  could core dump has been fixed.
 12-06-06  A bug in which unset of an associative array of compound variables
 	  did not completely unset the variable has been fixed.
-12-06-06  A bug in which exporting left or right justfied fields could loose
+12-06-06  A bug in which exporting left or right justified fields could loose
 	  the field width has been fixed.
 12-06-06  A bug on Solaris11 in which &gt;; did not work for /dev/null was fixed.
 12-06-05  A race condition which occured when stopping a builtin command
@@ -494,14 +509,14 @@ All recorded changes follow.
 	  directory if they are killed or stopped.
 12-06-04  A bug in handling \&nbsp;in read has been fixed.
 12-05-31  Use getrlimit64/setrlimit64 on systems that support it.
-12-05-31  Fix 64 bit big-endian arithmentic bug that mishandled nan and inf.
+12-05-31  Fix 64 bit big-endian arithmetic bug that mishandled nan and inf.
 12-05-31  Handle ECONNRESET like EPIPE.
 12-05-31  Change .paths parse to use only the last BUILTIN_LIB from the top
 	  and treat BUILTIN_LIB value as a ':' separated list of lib names.
 12-05-29  Fix BUILTIN_LIB binding bug that ignored subsequent lookups.
 12-05-29  shtests: --nocompile omits the compile test and --compile does only
 	  the compile test.
-12-05-25  A command subsitution containing a here-document that itself contains
+12-05-25  A command substitution containing a here-document that itself contains
 	  a here-document no longer hangs.
 12-05-24  When the redirection operatory &gt;; is directed to a symlink, it now
 	  overwrites the file named by the link rather than the link.
@@ -562,7 +577,7 @@ All recorded changes follow.
 	  string when i was a valid subscript and j was &lt;=0 rather than
 	  generating nothing has been fixed.
 12-04-17  A bug in which read -d delim from a terminal did not respond to
-	  interrupt and did not termrinate when the delimiter was entered
+	  interrupt and did not terminate when the delimiter was entered
 	  has been fixed.
 12-04-17  A bug in which a directory in PATH containing a .paths file that
 	  contains a line with FPATH=dir, where dir does not exist could
@@ -580,7 +595,7 @@ All recorded changes follow.
 12-04-09  A bug in which the leading 0 was stripped from $x, when $x contained
 	  a heximadecimal constant inside an arithmetic expression inside
 	  a for or while loop.
-12-04-06  Modified namespaces to hand variabes FPATH, PATH, and OPTIND that
+12-04-06  Modified namespaces to hand variables FPATH, PATH, and OPTIND that
 	  are defined in name spaces appropriately.  This also fixed OPTIND
 	  and OPTARG processing for functions.
 12-04-04  A bug in which cd .. fails when the current directory has been
@@ -668,7 +683,7 @@ All recorded changes follow.
 	  that caused a core dump has been fixed.
 12-02-08  A bug in which .sh.fun disciplines could be cleared after a
 	  function completes has been fixed.
-12-02-08  A bug in job control in which the foregroup process group was not
+12-02-08  A bug in job control in which the foreground process group was not
 	  set correctly after restarting a stopped pipeline has been fixed.
 12-02-07  A bug in which numbers with leading zeros could be treated as
 	  octal constants outside of ((...)) has been fixed.
@@ -686,7 +701,7 @@ All recorded changes follow.
 12-01-19  A memory leak which occured for a nested command subtiution has been
 	  fixed.
 12-01-17  A bug in which typeset -u PS1 could enable the uppercase attribute
-	  for some other variables, for exampe, HISTFILE has been fixed.
+	  for some other variables, for example, HISTFILE has been fixed.
 12-01-16  A bug in which .sh.match was not correct after a substring match when
 	  the replacement string contained a substring match has been fixed.
 12-01-12 +Files that are sourced from profile files are now read and executed
@@ -703,8 +718,8 @@ All recorded changes follow.
 	  arr was not unset before the assignment has been fixed. 
 11-12-20  A number of code changes were made based on the results of errors
 	  indicated by static code analysis.
-11-12-13  In vi edit mode a lteral &lt;TAB&gt; can now be entered by preceding it
-	  with a backshash.
+11-12-13  In vi edit mode a literal &lt;TAB&gt; can now be entered by preceding it
+	  with a backslash.
 11-12-13  When tab is entered for completion after a ' or ", the ' and "
 	  characters are no longer deleted.
 11-12-07  A bug in which a program in the current direcotry with a . in the
@@ -722,7 +737,7 @@ All recorded changes follow.
 	  quote argument in a form suitable for a field in a .csv format file.
 11-12-02 +A -S option was added to read to be able to read .csv format files.
 11-11-28  A bug in which redirection of standard error in a function called from
-	  command substitution caused standard error to be lost has ben fixed.
+	  command substitution caused standard error to be lost has been fixed.
 11-11-21  &#0091;&#0091; (-n foo) &#0093;&#0093; no longer requires a space before (.
 11-11-11  The readonly attribute for a variable now applies to compound
 	  assignments to that variable.
@@ -778,7 +793,7 @@ All recorded changes follow.
 	  jobs to complete has been fixed.
 11-06-09  A bug which caused the options.sh regression test to fail on OS390
 	  Linux has been fixed.  The bug could also have affected other systems.
-11-06-07 +A number of changes to support the still undocuments namespace option
+11-06-07 +A number of changes to support the still undocumented namespace option
 	  have been added.
 11-06-06  A bug in which command substitution of eval would hang when it  had
 	  standard error redirected to standard output has been fixed.
@@ -864,7 +879,7 @@ All recorded changes follow.
 11-03-04 +The tilde expansion on windows has been modified to handle user
 	  names of the form domain/user so that ~domain/user now expands
 	  to the home directory of that domain user.
-11-03-03  A bug in which the width of the prompt was calculated incorectly
+11-03-03  A bug in which the width of the prompt was calculated incorrectly
 	  which cause the wrong line length for edit commands has been fixed.
 11-03-02  A bug in which a global variables set from within a function inside
 	  a subshell can leave side effects in parent shell has been fixed.
@@ -879,7 +894,7 @@ All recorded changes follow.
 	  references defined and the script creates name references of the
 	  same name.
 11-02-21  The shell now fails with a syntax error when a here-document in a
-	  command substition is not completed before the closing ), for
+	  command substitution is not completed before the closing ), for
 	  example, $( foobar &lt;&lt;! )
 		here_doc
 	  !.
@@ -907,7 +922,7 @@ All recorded changes follow.
 	  variables when the same array was referenced on the left and the
 	  right hand side with different indices has been fixed.
 11-01-10  A bug in which the output of time was lost when { time...;} 2&gt;&amp;1
-	  occurred inside command substition has been fixed.
+	  occurred inside command substitution has been fixed.
 11-01-07  &#0091;&#0091; -v sh.match&#0091;i&#0093; &#0093;&#0093; was returning false when sh.match&#0091;i&#0093; was set.
 11-01-05  Added and modified warning messages with sh -n.
 11-01-02  Fixed bugs with typeset -l/-u/-M and arrays.
@@ -982,7 +997,7 @@ All recorded changes follow.
 	  when the type is initialized has been fixed.
 10-11-12  The sequences \&lt; and \&gt; are now preserved after patterns containing
 	  ~(E) in ${var/pattern/string} expansions.
-10-11-11  A bug in typeset -m when the variables were compound arrary instances
+10-11-11  A bug in typeset -m when the variables were compound array instances
 	  has been fixed.
 10-11-10  A bug in output of a compound variable with types containing types
 	  has been fixed.
@@ -5397,6 +5412,8 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+13-04-03 grep.c: fix --highlight to highlight all matches on each line
+13-04-03 grep.c: add -o, --only-matching to list matching parts, each part on a separate line
 13-02-14 Makefile: add { cmdext.h cmdlist.h } force rebuild -- must do this better
 13-02-07 grep.c: drop b_pgrep() but retain p*grep argv&#0091;0&#0093; check
 12-12-12 mktemp.c: fix doc literal &#0091;...&#0093; =&gt; &#0091;...&#0093;&#0093;
@@ -5888,7 +5905,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>April 02, 2013</TD>
+<TD align=right>April 09, 2013</TD>
 </TR>
 </TABLE>
 <P>

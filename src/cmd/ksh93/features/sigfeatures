@@ -36,9 +36,11 @@ cat{
 	#    endif /* _lib_sigsetmask */
 	#endif /* _lib_sigprocmask */
 	#ifndef CLD_EXITED
-	#   define CLD_EXITED	1
-	#   define CLD_KILLED	2
-	#   define CLD_DUMPED	3
+	#   define CLD_EXITED		1
+	#   define CLD_KILLED		2
+	#   define CLD_DUMPED		3
+	#   define CLD_STOPPED		4
+	#   define CLD_CONTINUED	5
 	#endif
 	#if _mem_si_value_sigval_int_siginfo_t
 	#   define sival_int	sigval_int

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -103,6 +103,7 @@ struct jobs
 	pid_t		mypid;		/* process id of shell */
 	pid_t		mypgid;		/* process group id of shell */
 	pid_t		mytgid;		/* terminal group id of shell */
+	pid_t		lastpost;	/* last job posted */
 	int		curjobid;
 	unsigned int	in_critical;	/* >0 => in critical region */
 	int		savesig;	/* active signal */

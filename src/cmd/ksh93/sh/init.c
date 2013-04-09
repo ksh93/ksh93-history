@@ -283,7 +283,7 @@ done:
 static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shell_t *shp = sh_ptr(np);
-	void 	*histopen = shp->gd->hist_ptr;
+	void 	*histopen = shp?shp->gd->hist_ptr:NULL;
 	char	*cp;
 	if(val && histopen)
 	{
@@ -2067,8 +2067,13 @@ static void stat_init(Shell_t *shp)
 			np->nvalue.cp = "exited";
 		else if(sip->si_code==CLD_DUMPED)
 			np->nvalue.cp = "dumped";
-		else
+		else if(sip->si_code==CLD_KILLED)
 			np->nvalue.cp = "killed";
+		else if(sip->si_code==CLD_STOPPED)
+			np->nvalue.cp = "stopped";
+		else
+			np->nvalue.cp = "continued";
+		nv_onattr(np,NV_NOFREE);
 	}
 	else
 	{

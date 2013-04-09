@@ -151,6 +151,7 @@ struct Ufunction
 #define BLT_DCL		(NV_LJUST)		/* declaration command */
 #define BLT_NOSFIO	(NV_IMPORT)		/* doesn't use sfio */
 #define NV_OPTGET	(NV_BINARY)		/* function calls getopts */
+#define NV_SHVALUE	(NV_TABLE)		/* function assigns .sh.value */
 #define nv_isref(n)	(nv_isattr((n),NV_REF|NV_TAGGED|NV_FUNCT)==NV_REF)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN|NV_INTEGER)==NV_BLTIN)
 #define is_afunction(n)	(nv_isattr(n,NV_FUNCTION|NV_REF)==NV_FUNCTION)

@@ -491,6 +491,8 @@ void sh_exit_20120720(Shell_t *shp,register int xno)
 		shp->exitval |= (sig=shp->lastsig);
 	if(pp && pp->mode>1)
 		cursig = -1;
+	if(shp->procsub)
+		*shp->procsub = 0;
 #ifdef SIGTSTP
 	if((shp->trapnote&SH_SIGTSTP) && job.jobcontrol)
 	{
@@ -563,7 +565,11 @@ void sh_exit_20120720(Shell_t *shp,register int xno)
 #undef sh_exit
 void sh_exit(register int xno)
 {
-	sh_exit_20120720(sh_getinterp(),xno);
+	Shell_t *shp = sh_getinterp();
+	register struct checkpt *pp = (struct checkpt*)shp->jmplist;
+	if(pp->mode == SH_JMPIO && xno!=ERROR_NOEXEC)
+		pp->mode = SH_JMPERREXIT;
+	sh_exit_20120720(shp,xno);
 }
 
 static void array_notify(Namval_t *np, void *data)

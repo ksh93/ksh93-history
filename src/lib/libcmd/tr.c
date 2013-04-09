@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tr (AT&T Research) 2012-11-12 $\n]"
+"[-?\n@(#)$Id: tr (AT&T Research) 2013-04-05 $\n]"
 USAGE_LICENSE
 "[+NAME?tr - translate, squeeze, and/or delete characters]"
 "[+DESCRIPTION?\btr\b copies the standard input to the standard output "
@@ -55,21 +55,21 @@ USAGE_LICENSE
         "[+\\E?escape]"
         "[+c1-c2?all characters from \ac1\a to \ac2\a in ascending order]"
         "[+[c1-c2]]?same as \ac1-c2\a if both \asets\a use this form]"
-        "[+[[c*]]]]?in \aset2\a, copies of \ac\a until length of \aset1\a]"
-        "[+[[c*n]]]]?\an\a copies of \ac\a]"
-        "[+[[::alnum::]]]]?all letters and digits]"
-        "[+[[::alpha::]]]]?all letters]"
-        "[+[[::blank::]]]]?all horizontal whitespace]"
-        "[+[[::cntrl::]]]]?all control characters]"
-        "[+[[::digit::]]]]?all digits]"
-        "[+[[::graph::]]]]?all printable characters, not including space]"
-        "[+[[::lower::]]]]?all lower case letters]"
-        "[+[[::print::]]]]?all printable characters, including space]"
-        "[+[[::punct::]]]]?all punctuation characters]"
-        "[+[[::space::]]]]?all horizontal or vertical whitespace]"
-        "[+[[::upper::]]]]?all upper case letters]"
-        "[+[[::xdigit::]]]]?all hexadecimal digits]"
-        "[+[[=c=]]]]?all characters which are equivalent to \ac\a]"
+        "[+[c*]]?in \aset2\a, copies of \ac\a until length of \aset1\a]"
+        "[+[c*n]]?\an\a copies of \ac\a]"
+        "[+[::alnum::]]?all letters and digits]"
+        "[+[::alpha::]]?all letters]"
+        "[+[::blank::]]?all horizontal whitespace]"
+        "[+[::cntrl::]]?all control characters]"
+        "[+[::digit::]]?all digits]"
+        "[+[::graph::]]?all printable characters, not including space]"
+        "[+[::lower::]]?all lower case letters]"
+        "[+[::print::]]?all printable characters, including space]"
+        "[+[::punct::]]?all punctuation characters]"
+        "[+[::space::]]?all horizontal or vertical whitespace]"
+        "[+[::upper::]]?all upper case letters]"
+        "[+[::xdigit::]]?all hexadecimal digits]"
+        "[+[=c=]]]]?all characters which are equivalent to \ac\a]"
     "}"
 "[+?Translation occurs if \b-d\b is not given and both \aset1\a and "
     "\aset2\a appear. \b-t\b may be used only when translating. \aset2\a is "
@@ -254,7 +254,7 @@ nextchar(register Tr_t* tr)
 			if ((q = regcollate((char*)tr->next, (char**)&e, buf, sizeof(buf), &wc)) >= 0)
 			{
 				tr->next = e;
-				c = q ? buf[0] : 0;
+				c = q > 1 ? wc : q ? buf[0] : 0;
 				break;
 			}
 			/*FALLTHROUGH*/

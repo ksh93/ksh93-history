@@ -2827,6 +2827,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				nv_onattr(np,NV_FTMP);
 			if(type&FOPTGET)
 				nv_onattr(np,NV_OPTGET);
+			if(type&FSHVALUE)
+				nv_onattr(np,NV_SHVALUE);
 			break;
 		    }
 
@@ -2920,6 +2922,15 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				exitset(shp);
 			break;
 		    }
+		}
+		if(shp->procsub)
+		{
+			pid_t pid, *procsub;
+			int exitval = shp->exitval;
+			for(procsub=shp->procsub;pid=*procsub;procsub++)
+				job_wait(pid);
+			*shp->procsub = 0;
+			shp->exitval = exitval;
 		}
 		if(shp->trapnote || (shp->exitval && sh_isstate(shp,SH_ERREXIT)) &&
 			t && echeck) 
@@ -3584,7 +3595,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	static int	savetype;
 	static int	savejobid;
 	struct checkpt	*buffp = (struct checkpt*)stkalloc(shp->stk,sizeof(struct checkpt));
-	int		otype=0, jmpval,jobfork=0;
+	int		otype=0, jmpval,jobfork=0, lineno=shp->st.firstline;
 	volatile int	jobwasset=0, scope=0, sigwasset=0;
 	char		**arge, *path;
 	volatile pid_t	grp = 0;
@@ -3795,6 +3806,8 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 			goto fail;
 		}
 		arge = sh_envgen(shp);
+		/* restore firstline in case LINENO was exported */
+		shp->st.firstline = lineno;
 		shp->exitval = 0;
 #ifdef SIGTSTP
 		if(job.jobcontrol)

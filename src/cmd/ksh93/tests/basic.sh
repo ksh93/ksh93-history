@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -343,6 +343,19 @@ then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'proc
 	cat '$tmp/scriptx 2>> /dev/null) == line1 ]] || err_exit '>() process substitution fails in for loop'
 	[[ $({ $SHELL -c 'cat <(for i in x y z; do print $i; done)';} 2> /dev/null) == $'x\ny\nz' ]] ||
 		err_exit 'process substitution of compound commands not working'
+
+	builtin tee 2> /dev/null
+	for tee in "$(whence tee)" "$(whence -p tee)"
+	do	print xxx > $tmp/file
+		$tee  >(sleep 1;cat > $tmp/file) <<< "hello" > /dev/null
+		[[ $(< $tmp/file) != hello ]] && err_exit "process substitution does not wait for >() to complete with $tee"
+		print yyy > $tmp/file2
+		$tee >(cat > $tmp/file) >(sleep 1;cat > $tmp/file2) <<< "hello" > /dev/null
+		[[ $(< $tmp/file2) != hello ]] && err_exit "process substitution does not wait for second of two >() to complete with $tee"
+		print xxx > $tmp/file
+		$tee  >(sleep 1;cat > $tmp/file) >(cat > $tmp/file2) <<< "hello" > /dev/null
+		[[ $(< $tmp/file) != hello ]] && err_exit "process substitution does not wait for first of two >() to complete with $tee"
+	done
 fi
 [[ $($SHELL -r 'command -p :' 2>&1) == *restricted* ]]  || err_exit 'command -p not restricted'
 print cat >  $tmp/scriptx

@@ -41,6 +41,7 @@
 #include	"builtins.h"
 #include	"test.h"
 #include	"history.h"
+#include	"variables.h"
 
 #define HERE_MEM	SF_BUFSIZE	/* size of here-docs kept in memory */
 
@@ -1467,6 +1468,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			*settail = argp;
 			settail = &(argp->argnxt.ap);
 			lexp->assignok = (flag&SH_ASSIGN)?SH_ASSIGN:1;
+			if(memcmp(argp->argval,".sh.value",9)==0)
+				opt_get |= FSHVALUE;
 			if(assignment)
 			{
 				struct argnod *ap=argp;

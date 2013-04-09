@@ -2079,6 +2079,28 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			fcrestore(&save);
 			return;
 		}
+		else if(type==2 && t && (t->tre.tretyp&COMMSK)==0 && t->com.comarg)
+		{
+			Namval_t *np;
+			str = NULL;
+			if(!(t->com.comtyp&COMSCAN))
+			{
+				struct dolnod *ap = (struct dolnod*)t->com.comarg;
+				str = ap->dolval[ap->dolbot];
+			}
+			else if(t->com.comarg->argflag&ARG_RAW)
+				str = t->com.comarg->argval;
+			if(str && (np=nv_search(str,mp->shp->fun_tree,0)) && is_afunction(np) && nv_isattr(np,NV_SHVALUE))
+			{
+				_nv_unset(SH_VALNOD,NV_RDONLY);
+				if(sh_exec(mp->shp,t,SH_ERREXIT)==0 && (str=nv_getval(SH_VALNOD)))
+				{
+					stkset(stkp,savptr,savtop);
+					mac_copy(mp,str,len=strlen(str));
+				}
+				return;
+			}
+		}
 	}
 	else
 	{
@@ -2167,10 +2189,9 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			mp->shp->spid = 0;
 		mp->shp->pipepid = 0;
 	}
-	sfsetbuf(sp,(void*)sp,0);
-	bufsize = sfvalue(sp);
 	/* read command substitution output and put on stack or here-doc */
 	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
+	sfset(sp, SF_WRITE|SF_PUBLIC|SF_SHARE,0);
 	sh_offstate(mp->shp,SH_INTERACTIVE);
 	if((foff = sfseek(sp,(Sfoff_t)0,SEEK_END)) > 0)
 	{
@@ -2179,6 +2200,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		stkseek(stkp,soff+foff+64);
 		stkseek(stkp,soff);
 	}
+	if(foff > IOBSIZE)
+		sfsetbuf(sp,NULL,SF_UNBOUND);
 	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c=bufsize=sfvalue(sp))>0)
 	{
 #if SHOPT_CRNL

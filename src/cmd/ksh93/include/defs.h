@@ -181,6 +181,8 @@ struct shared
 	pid_t		spid; 		/* subshell process id */ \
 	pid_t		pipepid; \
 	pid_t		outpipepid; \
+	pid_t		*procsub;	/* pids for >() argument */ \
+	int		nprocsub;	/* number of pids in procsub */ \
 	int		topfd; \
 	int		errorfd; \
 	int		savesig; \

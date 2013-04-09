@@ -21,7 +21,7 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: grep (AT&T Research) 2013-05-07 $\n]"
+"[-?\n@(#)$Id: grep (AT&T Research) 2013-04-03 $\n]"
 USAGE_LICENSE
 "[--plugin?ksh]"
 "[+NAME?grep - search lines in files for matching patterns]"
@@ -86,6 +86,8 @@ USAGE_LICENSE
 "[n:number|line-number?Prefix each matched line with its line number.]"
 "[N:name?Set the standard input file name prefix to "
     "\aname\a.]:[name:=empty]"
+"[o:only-matching?Print only the non-empty matching parts of matching lines, "
+    "each part on a separate line.]"
 "[p:strict|pedantic?Enable strict \apattern\a interpretation with diagnostics.]"
 "[q:quiet|silent?Do not print matching lines.]"
 "[r|R:recursive?Recursively process all files in each named directory. "
@@ -199,6 +201,7 @@ struct State_s				/* program state		*/
 	unsigned char	count;		/* count number of hits		*/
 	unsigned char	label;		/* all patterns labelled	*/
 	unsigned char	match;		/* match sense			*/
+	unsigned char	only;		/* only print matching parts	*/
 	unsigned char	query;		/* return status but no output	*/
 	unsigned char	number;		/* line numbers			*/
 	unsigned char	prefix;		/* print file prefix		*/
@@ -419,37 +422,48 @@ compile(State_t* state)
 	return r;
 }
 
-static void
-highlight(Sfio_t* sp, const char* s, int n, int so, int eo)
+static int
+hit(State_t* state, const char* prefix, int line, const char* s, size_t len)
 {
 	static const char	bold[] =	{CC_esc,'[','1','m'};
 	static const char	normal[] =	{CC_esc,'[','0','m'};
 
-	sfwrite(sp, s, so);
-	sfwrite(sp, bold, sizeof(bold));
-	sfwrite(sp, s + so, eo - so);
-	sfwrite(sp, normal, sizeof(normal));
-	sfwrite(sp, s + eo, n - eo);
-}
-
-static int
-hit(State_t* state, const char* prefix, int line, const char* s, size_t len)
-{
 	state->hit->hits++;
 	if (state->query || state->list)
 		return -1;
 	if (!state->count)
 	{
+	another:
 		if (state->prefix)
 			sfprintf(sfstdout, "%s:", prefix);
 		if (state->number && line)
 			sfprintf(sfstdout, "%d:", line);
 		if (state->label)
 			sfprintf(sfstdout, "%s:", state->hit->string);
-		if (state->pos)
-			highlight(sfstdout, s, len + 1, state->pos[0].rm_so, state->pos[0].rm_eo);
-		else
+		if (!state->pos)
 			sfwrite(sfstdout, s, len + 1);
+		else if (state->only)
+		{
+			sfwrite(sfstdout, s + state->pos[0].rm_so, state->pos[0].rm_eo - state->pos[0].rm_so);
+			sfputc(sfstdout, '\n');
+			s += state->pos[0].rm_eo;
+			if ((len -= state->pos[0].rm_eo) && !regnexec(&state->re, s, len, state->posnum, state->pos, 0))
+				goto another;
+		}
+		else
+		{
+			do
+			{
+				sfwrite(sfstdout, s, state->pos[0].rm_so);
+				sfwrite(sfstdout, bold, sizeof(bold));
+				sfwrite(sfstdout, s + state->pos[0].rm_so, state->pos[0].rm_eo - state->pos[0].rm_so);
+				sfwrite(sfstdout, normal, sizeof(normal));
+				s += state->pos[0].rm_eo;
+				if (!(len -= state->pos[0].rm_eo))
+					break;
+			} while (!regnexec(&state->re, s, len, state->posnum, state->pos, 0));
+			sfwrite(sfstdout, s, len + 1);
+		}
 	}
 	return 0;
 }
@@ -826,6 +840,10 @@ grep(char* id, int options, int argc, char** argv, Shbltin_t* context)
 			break;
 		case 'n':
 			state.number = 1;
+			break;
+		case 'o':
+			state.only = 1;
+			state.options &= ~(REG_FIRST|REG_NOSUB);
 			break;
 		case 'p':
 			state.options &= ~REG_LENIENT;

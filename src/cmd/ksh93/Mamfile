@@ -713,6 +713,7 @@ make sh/args.c
 prev include/io.h implicit
 prev include/shlex.h implicit
 prev FEATURE/poll implicit
+prev include/jobs.h implicit
 prev include/edit.h implicit
 prev include/terminal.h implicit
 prev include/builtins.h implicit
@@ -721,7 +722,7 @@ prev include/defs.h implicit
 done sh/args.c
 meta args.o %.c>%.o sh/args.c args
 prev sh/args.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_API_ast=20121001 -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_EDPREDICT -DSHOPT_POLL -DSHOPT_DYNAMIC -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -c sh/args.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_API_ast=20121001 -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_COSHELL -DSHOPT_EDPREDICT -DSHOPT_POLL -DSHOPT_DYNAMIC -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -c sh/args.c
 done args.o generated
 make array.o
 make sh/array.c
@@ -1012,6 +1013,7 @@ done nvtree.o generated
 make parse.o
 make sh/parse.c
 prev include/path.h implicit
+prev include/variables.h implicit
 prev include/test.h implicit
 prev include/builtins.h implicit
 prev include/history.h implicit
@@ -1023,7 +1025,7 @@ prev include/defs.h implicit
 done sh/parse.c
 meta parse.o %.c>%.o sh/parse.c parse
 prev sh/parse.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_STATS -DSHOPT_PFSH -D_API_ast=20121001 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -DSHOPT_MULTIBYTE -DSHOPT_KIA -DSHOPT_POLL -DSHOPT_DYNAMIC -DKSHELL -c sh/parse.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_STATS -DSHOPT_PFSH -D_API_ast=20121001 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -DSHOPT_MULTIBYTE -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_POLL -DKSHELL -c sh/parse.c
 done parse.o generated
 make path.o
 make sh/path.c

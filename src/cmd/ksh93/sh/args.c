@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -32,6 +32,7 @@
 #include	"builtins.h"
 #include	"terminal.h"
 #include	"edit.h"
+#include	"jobs.h"
 #include	"FEATURE/poll"
 #if SHOPT_KIA
 #   include	"shlex.h"
@@ -53,6 +54,7 @@
 #define PRINT		2
 
 static	char		*null;
+static  pid_t		*procsub;
 
 /* The following order is determined by sh_optset */
 static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxBCGEl" HFLAG;
@@ -713,6 +715,7 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 			return(ap->dolval+ap->dolbot);
 		}
 		shp->lastpath = 0;
+		procsub = shp->procsub;
 		*nargs = 0;
 		if(ac)
 		{
@@ -733,6 +736,8 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 			}
 			argp = arghead;
 		}
+		if(procsub)
+			*procsub = 0;
 	}
 	{
 		register char	**comargn;
@@ -778,8 +783,9 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 {
 	/* argument of the form <(cmd) or >(cmd) */
 	register struct argnod *ap;
-	int monitor, fd, pv[3];
+	int nn, monitor, fd, pv[3];
 	int subshell = shp->subshell;
+	pid_t pid0;
 	ap = (struct argnod*)stkseek(shp->stk,ARGVAL);
 	ap->argflag |= ARG_MAKE;
 	ap->argflag &= ~ARG_RAW;
@@ -809,6 +815,17 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 #endif /* SPAWN_cwd */
 		fcntl(pv[fd],F_SETFD,0);
 	shp->fdstatus[pv[fd]] &= ~IOCLEX;
+	pid0=shp->procsub?*shp->procsub:0; 
+	if(!shp->procsub)
+		shp->procsub = procsub = (pid_t*)malloc((shp->nprocsub=4)*sizeof(pid_t));
+	else if((nn=procsub-shp->procsub) >= shp->nprocsub)
+	{
+		shp->nprocsub += 3;
+		shp->procsub = (pid_t*)realloc(shp->procsub,shp->nprocsub*sizeof(pid_t));
+		procsub = shp->procsub + nn;
+	}
+	if(pid0)
+		*shp->procsub = 0;
 	if(fd)
 	{
 		shp->inpipe = pv;
@@ -819,6 +836,9 @@ struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
 		shp->outpipe = pv;
 		sh_exec(shp,(Shnode_t*)argp->argchn.ap,(int)sh_isstate(shp,SH_ERREXIT));
 	}
+	if(pid0)
+		*shp->procsub = pid0;
+	*procsub++ = job.lastpost;
 	shp->subshell = subshell;
 	if(monitor)
 		sh_onstate(shp,SH_MONITOR);

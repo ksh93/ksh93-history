@@ -413,10 +413,10 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		{
 			buff.mode = SH_JMPEXIT;
 			sh_onoption(shp,SH_TRACKALL);
-			sh_offoption(shp,SH_MONITOR);
 		}
 		sh_offstate(shp,SH_INTERACTIVE);
-		sh_offstate(shp,SH_MONITOR);
+		if(sh_isoption(shp,SH_MONITOR))
+			sh_onstate(shp,SH_MONITOR);
 		sh_offstate(shp,SH_HISTORY);
 		sh_offoption(shp,SH_HISTORY);
 	}

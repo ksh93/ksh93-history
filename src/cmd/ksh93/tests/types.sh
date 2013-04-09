@@ -19,6 +19,7 @@
 ########################################################################
 function err_exit
 {
+set -x
 	print -u2 -n "\t"
 	print -u2 -r ${Command}[$1]: "${@:2}"
 	(( Errors+=1 ))
@@ -142,7 +143,7 @@ Y_t z
 unset xx yy
 typeset -T xx=(typeset yy=zz)
 xx=yy
-{ typeset -T xx=(typeset yy=zz) ;} 2>/dev/null && err_exit 'type redefinition should fail'
+( typeset -T xx=(typeset yy=zz) ) 2>/dev/null && err_exit 'type redefinition should fail'
 $SHELL 2> /dev/null <<- +++ || err_exit 'typedef with only f(){} fails'
 	typeset -T X_t=(
 		f()

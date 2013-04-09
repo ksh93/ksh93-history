@@ -450,12 +450,33 @@ bool job_reap(register int sig)
 		flags |= WNOHANG;
 		job.waitsafe++;
 		jp = 0;
+		pw = job_bypid(pid);
 #ifdef _lib_sigaction
 		Siginfo.si_signo = SIGCHLD;
 		Siginfo.si_pid = pid;
 		Siginfo.si_uid = shp->gd->userid;
 		Siginfo.si_code = CLD_EXITED;
-		if (WIFSIGNALED(wstat))
+		Siginfo.si_value.sival_int = 0;
+		if( WIFSTOPPED(wstat) || WIFCONTINUED(wstat) )
+		{
+			if(WIFSTOPPED(wstat))
+			{
+				Siginfo.si_code = CLD_STOPPED;
+				Siginfo.si_value.sival_int = WSTOPSIG(wstat);
+			}
+			else if (WIFCONTINUED(wstat))
+				Siginfo.si_code = CLD_CONTINUED;
+			if(shp->st.trapcom[SIGCHLD])
+			{
+				pid_t bckpid = shp->bckpid;
+				shp->bckpid = pid;
+				shp->sigflag[SIGCHLD] |= SH_SIGTRAP;
+				sh_setsiginfo(&Siginfo);
+		                sh_trap(shp,shp->st.trapcom[SIGCHLD],0);
+				shp->bckpid = bckpid;
+			}
+		}
+		else if (WIFSIGNALED(wstat))
 		{
 			Siginfo.si_value.sival_int = WTERMSIG(wstat);
 			Siginfo.si_code = WTERMCORE(wstat)?CLD_DUMPED:CLD_KILLED;
@@ -464,7 +485,7 @@ bool job_reap(register int sig)
 			Siginfo.si_value.sival_int = WEXITSTATUS(wstat);
 #endif /* _lib_sigaction */
 		lastpid = pid;
-		if(!(pw=job_bypid(pid)))
+		if(!pw)
 		{
 #ifdef DEBUG
 			sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d unknown job pid=%d pw=%x\n",__LINE__,getpid(),job.in_critical,pid,pw);
@@ -1350,6 +1371,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 		return(0);
 	}
 	job_lock();
+	job.lastpost = pid;
 	if(join==1)
 	{
 		join = 0;

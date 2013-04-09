@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -296,7 +296,7 @@ $SHELL -c 'exec 3>; /dev/null'  2> /dev/null && err_exit '>; with exec should be
 $SHELL -c ': 3>; /dev/null'  2> /dev/null || err_exit '>; not working with at all'
 print hello > $tmp/1
 if	! $SHELL -c "false >; $tmp/1"  2> /dev/null
-then	let 1;[[ $(<$tmp/1) == hello ]] || err_exit '>; not preserving file on failure'
+then	[[ $(<$tmp/1) == hello ]] || err_exit '>; not preserving file on failure'
 fi
 if	! $SHELL -c "sed -e 's/hello/hello world/' $tmp/1" >; $tmp/1  2> /dev/null
 then	[[ $(<$tmp/1) == 'hello world' ]] || err_exit '>; not updating file on success'
@@ -472,6 +472,9 @@ print hello there world > $tmp/foobar
 print hello there world > $tmp/foobar
 $SHELL -c "sed  -e 's/there //' $tmp/foobar  >; $tmp/foobar"
 [[ $(<$tmp/foobar) == 'hello world' ]] || err_exit '>; redirection not working with -c on a simple command'
+
+chmod -w $tmp/foobar
+(: >; $tmp/foobar) 2> /dev/null && '>; should fail for a file without write permission'
 
 rm -f "$tmp/junk"
 for	(( i=1; i < 50; i++ ))
