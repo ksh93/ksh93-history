@@ -571,13 +571,7 @@ bool job_reap(register int sig)
 			{
 				job.numbjob--;
 				if(shp->st.trapcom[SIGCHLD])
-				{
-					shp->sigflag[SIGCHLD] |= SH_SIGTRAP;
-					if(sig==0)
-						job_chldtrap(shp,shp->st.trapcom[SIGCHLD],0);
-					else
-						shp->trapnote |= SH_SIGTRAP;
-				}
+					job_chldtrap(shp,shp->st.trapcom[SIGCHLD],0);
 				else
 					pw->p_flag &= ~P_BG;
 			}
@@ -1000,7 +994,7 @@ int job_walk(Shell_t *shp,Sfio_t *file,int (*fun)(struct process*,int),int arg,c
 			}
 			by_number = 1;
 		}
-		if((*fun)(pw,arg))
+		if(!pw || (*fun)(pw,arg))
 			r = 2;
 		by_number = 0;
 	}
@@ -1154,12 +1148,14 @@ int job_kill(register struct process *pw,register int sig)
 #endif
 #if _lib_sigqueue
 	union sigval sig_val;
+#else
+	int sig_val = 0;
+#endif
 	if(pw==0)
 		goto error;
 	shp = pw->p_shp;
+#if _lib_sigqueue
 	sig_val.sival_ptr = shp->sigmsg;
-#else
-	int sig_val = 0;
 #endif
 	sig &= ~JOB_QFLAG;
 #ifdef SIGTSTP

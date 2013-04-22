@@ -19,6 +19,7 @@
 ***********************************************************************/
 #pragma prototyped
 #include	<shell.h>
+#include	"name.h"
 
 static const char enum_usage[] =
 "[-?@(#)$Id: enum (AT&T Research) 2008-01-08 $\n]"

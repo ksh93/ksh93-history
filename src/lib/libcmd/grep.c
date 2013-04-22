@@ -21,7 +21,7 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: grep (AT&T Research) 2013-04-03 $\n]"
+"[-?\n@(#)$Id: grep (AT&T Research) 2013-04-22 $\n]"
 USAGE_LICENSE
 "[--plugin?ksh]"
 "[+NAME?grep - search lines in files for matching patterns]"
@@ -119,6 +119,7 @@ USAGE_LICENSE
 #include <fts.h>
 #include <regex.h>
 #include <vmalloc.h>
+#include <context.h>
 
 #ifndef EISDIR
 #define EISDIR		(-1)
@@ -423,8 +424,10 @@ compile(State_t* state)
 }
 
 static int
-hit(State_t* state, const char* prefix, int line, const char* s, size_t len)
+hit(State_t* state, const char* prefix, int sep, int line, const char* s, size_t len)
 {
+	regmatch_t*		pos;
+
 	static const char	bold[] =	{CC_esc,'[','1','m'};
 	static const char	normal[] =	{CC_esc,'[','0','m'};
 
@@ -434,13 +437,19 @@ hit(State_t* state, const char* prefix, int line, const char* s, size_t len)
 	if (!state->count)
 	{
 	another:
+		if ((pos = state->pos) && (state->before || state->after) && (regnexec(&state->re, s, len, state->posnum, state->pos, 0) == 0) != state->match)
+		{
+			if (state->only)
+				return 0;
+			pos = 0;
+		}
 		if (state->prefix)
-			sfprintf(sfstdout, "%s:", prefix);
+			sfprintf(sfstdout, "%s%c", prefix, sep);
 		if (state->number && line)
-			sfprintf(sfstdout, "%d:", line);
+			sfprintf(sfstdout, "%d%c", line, sep);
 		if (state->label)
-			sfprintf(sfstdout, "%s:", state->hit->string);
-		if (!state->pos)
+			sfprintf(sfstdout, "%s%c", state->hit->string, sep);
+		if (!pos)
 			sfwrite(sfstdout, s, len + 1);
 		else if (state->only)
 		{
@@ -471,7 +480,15 @@ hit(State_t* state, const char* prefix, int line, const char* s, size_t len)
 static int
 record(void* handle, const char* s, size_t len)
 {
-	return hit((State_t*)handle, error_info.file, 0, s, len);
+	return hit((State_t*)handle, error_info.file, ':', 0, s, len);
+}
+
+static int
+list(Context_line_t* lp, int show, int group, void* handle)
+{
+	if (group)
+		sfputr(sfstdout, "--", '\n');
+	return hit((State_t*)handle, error_info.file, show ? ':' : '-', lp->line, lp->data, lp->size - 1);
 }
 
 static int
@@ -496,7 +513,28 @@ execute(State_t* state, Sfio_t* input, char* name, Shbltin_t* context)
 	error_info.file = name;
 	line = error_info.line;
 	error_info.line = 0;
-	if (state->byline)
+	if (state->before || state->after)
+	{
+		Context_t*	cp;
+		Context_line_t*	lp;
+		char*		s;
+		ssize_t		n;
+
+		if (!(cp = context_open(input, state->before, state->after, list, state)))
+			error(3, "context_open() failed");
+		while (lp = context_line(cp))
+		{
+			if ((result = regnexec(&state->re, lp->data, lp->size - 1, state->posnum, state->pos, 0)) && result != REG_NOMATCH)
+			{
+				regfatal(&state->re, 2, result);
+				goto bad;
+			}
+			if ((result == 0) == state->match)
+				context_show(cp);
+		}
+		context_close(cp);
+	}
+	else if (state->byline)
 	{
 		for (;;)
 		{
@@ -525,7 +563,7 @@ execute(State_t* state, Sfio_t* input, char* name, Shbltin_t* context)
 				regfatal(&state->re, 2, result);
 				goto bad;
 			}
-			if ((result == 0) == state->match && hit(state, name, error_info.line, s, len) < 0)
+			if ((result == 0) == state->match && hit(state, name, ':', error_info.line, s, len) < 0)
 				break;
 		}
 	}
@@ -923,7 +961,8 @@ grep(char* id, int options, int argc, char** argv, Shbltin_t* context)
 	sfset(sfstdout, SF_LINE, 1);
 	if (!argv[0])
 	{
-		state.prefix = h ? 1 : 0;
+		if (state.prefix != 1)
+			state.prefix = h ? 1 : 0;
 		if (r = execute(&state, sfstdin, h, context))
 			goto done;
 	}

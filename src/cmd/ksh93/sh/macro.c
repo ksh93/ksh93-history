@@ -81,6 +81,7 @@ typedef struct  _mac_
 	char		arrayok;	/* $x[] ok for arrays */
 	char		subcopy;	/* set when copying subscript */
 	char		macsub;		/* set to 1 when running mac_substitute */
+	char		maccase;	/* set to 1 when expanding case pattern */
 	int		dotdot;		/* set for .. in subscript */
 	void		*nvwalk;	/* for name space walking*/
 } Mac_t;
@@ -230,6 +231,7 @@ int sh_macexpand(Shell_t* shp, register struct argnod *argp, struct argnod **arg
 	{
 		mp->split = 0;
 		mp->pattern = ((flag&ARG_EXP)!=0);
+		mp->maccase = ((flag&ARG_CASE)!=0);
 		stkseek(stkp,0);
 	}
 	else
@@ -2509,6 +2511,19 @@ static void mac_copy(register Mac_t *mp,register const char *str, register size_
 			}
 			if(mp->shp->ifstable[ESCAPE]==S_ESC)
 				mp->shp->ifstable[ESCAPE] = 0;
+		}
+	}
+	else if(mp->pattern==1 && mp->maccase)
+	{
+		while(1)
+		{
+			c = 0;
+			str = cp;
+			while(size-->0 && (c= *cp++)!='\\');
+			sfwrite(stkp,str,cp-str);
+			if(c!='\\')
+				break;
+			sfputc(stkp,c);
 		}
 	}
 	else

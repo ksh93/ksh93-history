@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -85,6 +85,7 @@ extern void 	sh_iosave(Shell_t *, int,int,char*);
 extern bool 	sh_iovalidfd(Shell_t*, int);
 extern bool 	sh_inuse(Shell_t*, int);
 extern void 	sh_iounsave(Shell_t*);
+extern void	sh_iounpipe(Shell_t*);
 extern int	sh_chkopen(const char*);
 extern int	sh_ioaccess(int,int);
 extern int	sh_devtofd(const char*);

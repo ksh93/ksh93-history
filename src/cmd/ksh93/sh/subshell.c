@@ -172,7 +172,7 @@ void sh_subfork(void)
 {
 	register struct subshell *sp = subshell_data;
 	Shell_t	*shp = sp->shp;
-	int	curenv = shp->curenv;
+	int	curenv = shp->curenv, comsub=shp->comsub;
 	pid_t pid;
 	char *trap = shp->st.trapcom[0];
 	if(trap)
@@ -205,7 +205,7 @@ void sh_subfork(void)
 		shp->comsub = 0;
 		SH_SUBSHELLNOD->nvalue.s = 0;
 		sp->subpid=0;
-		shp->st.trapcom[0] = trap;
+		shp->st.trapcom[0] = (comsub==2?NULL:trap);
 		shp->savesig = 0;
 	}
 }
@@ -761,7 +761,6 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		fchdir(shp->pwdfd);
 	}
 	shp->subshare = sp->subshare;
-	shp->comsub = sp->comsub;
 	shp->subdup = sp->subdup;
 #if SHOPT_COSHELL
 	shp->coshell = sp->coshell;
@@ -795,7 +794,12 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	if(nsig>0)
 		kill(getpid(),nsig);
 	if(sp->subpid)
+	{
 		job_wait(sp->subpid);
+		if(comsub>1)
+			sh_iounpipe(shp);
+	}
+	shp->comsub = sp->comsub;
 	if(comsub && iop && sp->pipefd<0)
 		sfseek(iop,(off_t)0,SEEK_SET);
 	if(shp->trapnote)

@@ -1,3 +1,19 @@
+13-04-18  --- Release ksh93v- ---
+13-04-18  Fix a bug with process substitution on systems that don't support
+	  /dev/fd.
+13-04-18  Added serialization to processing of CHLD traps.
+13-04-17  A bug in arithmetic in which x[i].foo in a loop would not be
+	  re-evalued when subscript i changed value has been fixed.
+13-04-15  Fixed a couple of problems with regression tests.
+13-04-15  ksh now waits for background jobs started in functions contained
+	  in command substitution.
+13-04-11  Made code changes based on warning from the "clang" tool.
+13-04-11  Fixed two core dumps on some architectures related to uninitialzed
+	  data.
+13-04-10  ksh now waits for background jobs started in $() and ${...;} to
+	  complete as it did in ksh93u+.
+13-04-10  A bug in which x=\\x; case x in $x) echo yes;; *) echo no; esac
+	  printed yes has been fixed.  It should print no.
 13-04-08 +ksh now sets .sh.sig.pid and .sh.sig.status for CHLD traps.  The 
 	  .sh.sig.status can be one of exited, killed, dumped, stopped or
 	  continued.

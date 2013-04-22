@@ -1,3 +1,4 @@
+13-04-18 comp/iconv.c: fix some truly rotten code in iconv_move() -- how did it work at all?
 13-04-01 misc/spawnvex.c: fix omitted SPAWN_frame case that caused EINVAL
 13-03-11 sfio/sfflsbuf.c: memcpy() => memmove() ouch
 13-03-11 path/pathfind.c: type=="" => type=0

@@ -241,7 +241,7 @@ struct pollflagnamemap
 	const char *name;
 };
 
-const
+static const
 struct pollflagnamemap pfnm[]=
 {
 	{ POLLIN,	"pollin"	},

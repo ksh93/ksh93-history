@@ -356,6 +356,11 @@ then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'proc
 		$tee  >(sleep 1;cat > $tmp/file) >(cat > $tmp/file2) <<< "hello" > /dev/null
 		[[ $(< $tmp/file) != hello ]] && err_exit "process substitution does not wait for first of two >() to complete with $tee"
 	done
+	if	[[ $(print <(print foo) & sleep .5; kill $!) == /dev/fd* ]]
+	then	exp='/dev/fd/+(\d) v=bam /dev/fd/+(\d)'
+		got=$( print <(print foo) v=bam <(print bar))
+		[[ $got == $exp ]] ||  err_exit 'assignments after command substitution not treated as arguments'
+	fi
 fi
 [[ $($SHELL -r 'command -p :' 2>&1) == *restricted* ]]  || err_exit 'command -p not restricted'
 print cat >  $tmp/scriptx
@@ -424,7 +429,15 @@ unset foo
 foo=$(false) > /dev/null && err_exit 'failed command substitution with redirection not returning false'
 expected=foreback
 got=`print -n fore; (sleep 2;print back)&`
-[[ $got == $expected ]] || err_exit "command substitution background process output error -- got '$got', expected '$expected'"
+[[ $got == $expected ]] || err_exit "\`\`command substitution background process output error -- got '$got', expected '$expected'"
+got=$(print -n fore; (sleep 2;print back)&)
+[[ $got == $expected ]] || err_exit "\$() command substitution background process output error -- got '$got', expected '$expected'"
+got=${ print -n fore; (sleep 2;print back)& }
+[[ $got == $expected ]] || err_exit "\${} command substitution background process output error -- got '$got', expected '$expected'"
+function abc { sleep 2; print back; }
+function abcd { abc & }
+got=$(print -n fore;abcd)
+[[ $got == $expected ]] || err_exit "\$() command substitution background with function process output error -- got '$got', expected '$expected'"
 
 binfalse=$(whence -p false)
 for false in false $binfalse
@@ -526,9 +539,5 @@ $SHELL -c 'kill -0 123456789123456789123456789' 2> /dev/null && err_exit 'kill n
 $SHELL -xc '$(LD_LIBRARY_PATH=$LD_LIBRARY_PATH exec $SHELL -c :)' > /dev/null 2>&1  || err_exit "ksh -xc '(name=value exec ksh)' fails with err=$?"
 
 $SHELL 2> /dev/null -c $'for i;\ndo :;done' || err_exit 'for i ; <newline> not vaid'
-
-exp='/dev/fd/+(\d) v=bam /dev/fd/+(\d)'
-got=$( print <(print foo) v=bam <(print bar))
-[[ $got == $exp ]] ||  err_exit 'assignments after command substitution not treated as arguments'
 
 exit $((Errors<125?Errors:125))

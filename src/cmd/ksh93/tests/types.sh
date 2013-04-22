@@ -771,7 +771,6 @@ got=$($SHELL <<- \EOF
 	ub.job[$j].command[1].parm='parm-21,parm-22,parm-23'
 	ub.job[$j].command[1].input[INPUT]=input-2
 	ub.job[$j].command[1].output[OUTPUT]=output-2
-	print -r "$ub" > ~/junk
 	print -r "$ub"
 EOF)
 exp='(

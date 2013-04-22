@@ -24,7 +24,7 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c \
 	mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c \
 	rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c \
-	vmstate.c wc.c revlib.c wclib.c sumlib.o \
+	vmstate.c wc.c revlib.c wclib.c sumlib.o context.c \
 	fts_fix.c lib.c \
 	grep.c xargs.c iconv.c \
 	od.c tr.c \

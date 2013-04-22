@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2011 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -51,6 +51,7 @@ typeset -T Box_t=(
 	float x=3
 )
 
+integer i
 for ((i=0; i < n; i++))
 do
 Box_t b=(name=box1)
@@ -105,7 +106,7 @@ typeset -T Cube_t=(
 	}
 	len()
 	{
-		print -r $((sqrt(_.x*_.x + _.y*_.y + _.z*_.z)))
+		print -r -- $((sqrt(_.x*_.x + _.y*_.y + _.z*_.z)))
 		(( _.count++))
 	}
 	float x=8

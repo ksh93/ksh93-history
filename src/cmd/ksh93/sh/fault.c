@@ -125,8 +125,11 @@ if(sig==SIGBUS)
 			shp->sigflag[sig] |= SH_SIGTRAP;
 			if(!shp->siginfo)
 				shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
-			shp->siginfo[sig] = malloc(sizeof(siginfo_t));
-			memcpy(shp->siginfo[sig],info,sizeof(siginfo_t));
+			if(info)
+			{
+				shp->siginfo[sig] = malloc(sizeof(siginfo_t));
+				memcpy(shp->siginfo[sig],info,sizeof(siginfo_t));
+			}
 		}
 		return;
 	}

@@ -186,4 +186,17 @@ EOF
 	done
 } <  $tmpfile
 
+typeset -A finished
+function sighandler_chld
+{
+	[[ ${finished[${.sh.sig.pid}]} ]] && { err_exit "${.sh.sig.pid} already finished and reaped"; trap '' CHLD;}
+	finished[${.sh.sig.pid}]=1
+}
+trap 'sighandler_chld' CHLD
+integer i 
+for (( i=0 ; i < 512 ; i++ ))
+do	sleep 0.1 &
+done
+wait
+
 exit $((Errors<125?Errors:125))

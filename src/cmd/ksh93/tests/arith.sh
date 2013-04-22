@@ -816,4 +816,11 @@ z=([zero]=9.2 [one]=2  [two]=3 [three]=6.4 [four]=5)
 
 $SHELL -c 'for ((i = 0; i < 1023; i++)); do eval a$i=a$((i+1));done;a1023=999;print $((a0))' > /dev/null 2>&1 || err_exit 'arithmetic recursive evaluation too deep'
 
+integer count=0 i
+compound -a x=( (pid=1) (pid=2) )
+for	((i=0; i < 2; i++))
+do	(( x[i].pid == x[0].pid )) && ((count++))
+done
+(( count==1 )) || err_exit 'x[i].pid==x[0].pid should be true only once'
+	
 exit $((Errors<125?Errors:125))

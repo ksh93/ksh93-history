@@ -39,6 +39,7 @@
 typedef Sfdouble_t (*Math_f)(Sfdouble_t, ...);
 
 extern const Namdisc_t	ENUM_disc;
+static bool		Varsubscript;
 static Sfdouble_t	NaN, Inf, Fun;
 static Namval_t Infnod =
 {
@@ -336,6 +337,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				}
 				*str = 0;
 				cp = (char*)*ptr;
+				Varsubscript = false;
 				if ((cp[0] == 'i' || cp[0] == 'I') && (cp[1] == 'n' || cp[1] == 'N') && (cp[2] == 'f' || cp[2] == 'F') && cp[3] == 0)
 				{
 					Inf = strtold("Inf", NiL);
@@ -352,8 +354,9 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					np->nvshell = shp;
 					nv_onattr(np,NV_NOFREE|NV_LDOUBLE|NV_RDONLY);
 				}
-				else if(!(np = nv_open(*ptr,root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|dot)))
+				else if(!(np = nv_open(*ptr,root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|dot)) || Varsubscript)
 				{
+					np = 0;
 					lvalue->value = (char*)*ptr;
 					lvalue->flag =  str-lvalue->value;
 				}
@@ -549,7 +552,10 @@ Sfdouble_t sh_strnum_20120720(Shell_t *shp,register const char *str, char** ptr,
 	if(*last || errno)
 	{
 		if(!last || *last!='.' || last[1]!='.')
+		{
 			d = strval(shp,str,&last,arith,mode);
+			Varsubscript = true;
+		}
 		if(!ptr && *last && mode>0)
 			errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*last,str);
 	}

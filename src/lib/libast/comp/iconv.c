@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -32,7 +32,7 @@
 #include <ast.h>
 #include <dirent.h>
 
-#define DEBUG_TRACE		0
+#define DEBUG_TRACE		-1
 #define _ICONV_LIST_PRIVATE_
 
 #include <ccode.h>
@@ -176,7 +176,7 @@ _win_codeset(const char* name)
 	char		tmp[128];
 
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _win_codeset name=%s", __LINE__, name);
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_codeset name=%s\n", error_info.id, error_info.trace, __LINE__, name);
 #endif
 	if (name == name_native)
 		return CP_ACP;
@@ -239,14 +239,14 @@ static _ast_iconv_t
 _win_iconv_open(register Conv_t* cc, const char* t, const char* f)
 {
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _win_iconv_open f=%s t=%s\n", __LINE__, f, t);
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv_open f=%s t=%s\n", error_info.id, error_info.trace, __LINE__, f, t);
 #endif
 	if ((cc->from.index = _win_codeset(f)) < 0)
 		return (_ast_iconv_t)(-1);
 	if ((cc->to.index = _win_codeset(t)) < 0)
 		return (_ast_iconv_t)(-1);
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _win_iconv_open f=0x%04x t=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv_open f=0x%04x t=0x%04x\n", error_info.id, error_info.trace, __LINE__, cc->from.index, cc->to.index);
 #endif
 	return (_ast_iconv_t)cc;
 }
@@ -269,7 +269,7 @@ _win_iconv(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 	LPWSTR	ub;
 
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _win_iconv from=0x%04x to=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv from=0x%04x to=0x%04x\n", error_info.id, error_info.trace, __LINE__, cc->from.index, cc->to.index);
 #endif
 	if (cc->from.index == cc->to.index || cc->from.index != CP_UCS2 && cc->to.index == 0)
 	{
@@ -386,10 +386,7 @@ error(DEBUG_TRACE, "AHA#%d _win_iconv from=0x%04x to=0x%04x\n", __LINE__, cc->fr
 				if (!(tz = WideCharToMultiByte(cc->to.index, 0, (LPCWSTR)ub, fz, *tb, tz, 0, 0)))
 					goto nope;
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _win_iconv *fn=%u fz=%u[%u] *tn=%u tz=%u\n", __LINE__, *fn, fz, fz * sizeof(WCHAR), *tn, tz);
-#endif
-#if 0
-				fz *= sizeof(WCHAR);
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv *fn=%u fz=%u[%u] *tn=%u tz=%u\n", error_info.id, error_info.trace, __LINE__, *fn, fz, fz * sizeof(WCHAR), *tn, tz);
 #endif
 			}
 			if (ub != (LPWSTR)*fb)
@@ -442,12 +439,12 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 	n = 0;
 	cp = ccmaplist(NiL);
 #if DEBUG_TRACE
-if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name m=\"%s\"\n", error_info.id, error_info.trace, __LINE__, m);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name m=\"%s\"\n", error_info.id, error_info.trace, __LINE__, m);
 #endif
 	for (;;)
 	{
 #if DEBUG_TRACE
-if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name n=%d bp=%p cp=%p ccode=%d name=\"%s\"\n", error_info.id, error_info.trace, __LINE__, n, bp, cp, cp->ccode, cp->name);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name n=%d bp=%p cp=%p ccode=%d name=\"%s\"\n", error_info.id, error_info.trace, __LINE__, n, bp, cp, cp->ccode, cp->name);
 #endif
 		if (strgrpmatch(m, cp->match, sub, elementsof(sub) / 2, STR_MAXIMAL|STR_LEFT|STR_ICASE))
 		{
@@ -506,7 +503,7 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast
 		}
 		*b = 0;
 #if DEBUG_TRACE
-if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, cp->ccode, o);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, cp->ccode, o);
 #endif
 		return cp->ccode;
 	}
@@ -518,7 +515,7 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast
 	}
 	*b = 0;
 #if DEBUG_TRACE
-if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, CC_ICONV, o);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, CC_ICONV, o);
 #endif
 	return CC_ICONV;
 }
@@ -1055,7 +1052,7 @@ _ast_iconv_open(const char* t, const char* f)
 	char			to[64];
 
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s t=%s\n", __LINE__, f, t);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_open f=%s t=%s\n", error_info.id, error_info.trace, __LINE__, f, t);
 #endif
 	if (!t || !*t || *t == '-' && !*(t + 1) || !strcasecmp(t, name_local) || !strcasecmp(t, name_native))
 		t = name_native;
@@ -1071,7 +1068,7 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s t=%s\n", __LINE__, f, t);
 	fc = _ast_iconv_name(f, fr, sizeof(fr));
 	tc = _ast_iconv_name(t, to, sizeof(to));
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f, fr, fc, t, to, tc);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", error_info.id, error_info.trace, __LINE__, f, fr, fc, t, to, tc);
 #endif
 	if (fc != CC_ICONV && fc == tc || streq(fr, to))
 		return (iconv_t)(0);
@@ -1375,7 +1372,7 @@ _ast_iconv_write(_ast_iconv_t cd, Sfio_t* op, char** fb, size_t* fn, Iconv_disc_
 		}
 		ts = tb;
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d iconv_write ts=%p tn=%d", __LINE__, ts, tn);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_write ts=%p tn=%d\n", error_info.id, error_info.trace, __LINE__, ts, tn);
 		for (;;)
 #else
 		while (*fn > 0 && _ast_iconv(cd, fb, fn, &ts, &tn) == (size_t)(-1))
@@ -1383,9 +1380,9 @@ error(DEBUG_TRACE, "AHA#%d iconv_write ts=%p tn=%d", __LINE__, ts, tn);
 		{
 #if DEBUG_TRACE
 			ssize_t	_r;
-error(DEBUG_TRACE, "AHA#%d iconv_write %d => %d `%-.*s'", __LINE__, *fn, tn, *fn, *fb);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_write %d => %d `%-.*s'\n", error_info.id, error_info.trace, __LINE__, *fn, tn, *fn, *fb);
 			_r = _ast_iconv(cd, fb, fn, &ts, &tn);
-error(DEBUG_TRACE, "AHA#%d iconv_write %d => %d [%d]", __LINE__, *fn, tn, _r);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_write %d => %d [%d]\n",error_info.id, error_info.trace,  __LINE__, *fn, tn, _r);
 			if (_r != (size_t)(-1) || !fn)
 				break;
 #endif
@@ -1419,7 +1416,7 @@ error(DEBUG_TRACE, "AHA#%d iconv_write %d => %d [%d]", __LINE__, *fn, tn, _r);
 			break;
 		}
 #if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d iconv_write %d", __LINE__, ts - tb);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_write %d\n", error_info.id, error_info.trace, __LINE__, ts - tb);
 #endif
 		sfwrite(op, tb, ts - tb);
 		r += ts - tb;
@@ -1441,19 +1438,26 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, Iconv_disc_t*
 	char*			tb;
 	char*			ts;
 	size_t*			e;
-	size_t			fe;
 	size_t			fn;
 	size_t			fo;
 	size_t			ft;
 	size_t			tn;
+	size_t			to;
 	size_t			i;
+	size_t			j;
 	ssize_t			r = 0;
-	int			ok = 1;
+	int			ff;
+	int			fl;
+	int			tf;
+	int			tl;
 	int			locked;
 	Iconv_disc_t		compat;
 	Iconv_checksig_f	checksig = 0;
 	void*			handle = 0;
 
+#if DEBUG_TRACE
+	error(DEBUG_TRACE-1, "AHA#%d iconv_move", __LINE__);
+#endif
 	/*
 	 * the old api had optional size_t* instead of Iconv_disc_t*
 	 */
@@ -1474,96 +1478,157 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, Iconv_disc_t*
 		}
 	}
 	tb = 0;
-	fe = OK;
+	ts = 0;
+	tn = 0;
+	tf = 1;
+	tl = 0;
+	fb = 0;
 	ft = 0;
-	fn = n;
-	do
+	fn = 0;
+	ff = 1;
+	fl = 0;
+	for (;;)
 	{
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move ff=%d fn=%I*d fl=%d tf=%d tn=%I*d tl=%d\n", error_info.id, error_info.trace, __LINE__, ff, sizeof(fn), fn, fl, tf, sizeof(tn), tn, tl);
+#endif
 		if (checksig && (*checksig)(handle))
 		{
 			r = -1;
 			break;
 		}
-		if (n != SF_UNBOUND)
-			n = -((ssize_t)(n & (((size_t)(~0))>>1)));
-		if ((!(fb = (char*)sfreserve(ip, n, locked = SF_LOCKR)) || !(fo = sfvalue(ip))) &&
-		    (!(fb = (char*)sfreserve(ip, n, locked = 0)) || !(fo = sfvalue(ip))))
-			break;
-		fs = fb;
-		fn = fo;
-		if (!(tb = (char*)sfreserve(op, SF_UNBOUND, SF_WRITE|SF_LOCKR)))
+		if (ff || !fn)
 		{
-			if (!r)
-				r = -1;
-			break;
-		}
-		ts = tb;
-		tn = sfvalue(op);
-		while (fn > 0 && _ast_iconv(cd, &fs, &fn, &ts, &tn) == (size_t)(-1))
-		{
-			switch (errno)
+			ff = 0;
+			if (fb)
 			{
-			case E2BIG:
+				i = fs - fb;
+				if (locked)
+					sfread(ip, fb, i);
+				else
+					for (j = fn; --j >= i;)
+						sfungetc(ip, fb[j]);
+			}
+			if (n != SF_UNBOUND)
+				n = -((ssize_t)(n & (((size_t)(~0))>>1)));
+			if ((!(fb = (char*)sfreserve(ip, n == SF_UNBOUND ? (-fn - 1) : n, locked = SF_LOCKR)) || !(fo = sfvalue(ip))) &&
+			    (!(fb = (char*)sfreserve(ip, n == SF_UNBOUND ? (-fn - 1) : n, locked = 0)) || !(fo = sfvalue(ip))))
+			{
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move count=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(fn), n == SF_UNBOUND ? (-fn - 1) : n);
+#endif
 				break;
-			case EINVAL:
-				if (fe == ft + (fo - fn))
+			}
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move count=%I*d fn=%I*d fo=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(fn), n == SF_UNBOUND ? (-fn - 1) : n, sizeof(fn), fn, sizeof(fo), fo);
+#endif
+			if (fn == fo)
+			{
+				if (fl)
+					break;
+				fl = 1;
+			}
+			else
+				fn = fo;
+			fs = fb;
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fl=%d fb=%p fn=%I*d\n", error_info.id, error_info.trace, __LINE__, fl, fb, sizeof(fn), fn);
+#endif
+		}
+		if (tf || !tn)
+		{
+			tf = 0;
+			if (tb)
+			{
+				i = ts - tb;
+				sfwrite(op, tb, i);
+				r += i;
+			}
+			if (!(tb = (char*)sfreserve(op, -tn - 1, SF_WRITE|SF_LOCKR)) || !(to = sfvalue(op)))
+			{
+				if (!r)
+					r = -1;
+				tb = 0;
+				break;
+			}
+			ts = tb;
+			if (tn == to)
+			{
+				if (tl)
+					break;
+				tl = 1;
+			}
+			else
+				tn = to;
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move tl=%d tb=%p tn=%I*d\n", error_info.id, error_info.trace, __LINE__, tl, tb, sizeof(tn), tn);
+#endif
+		}
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move r=%I*d fl=%d fs=%p fn=%I*d tl=%d ts=%p tn=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(r), r, fl, fs, sizeof(fn), fn, tl, ts, sizeof(tn), tn);
+#endif
+		if (_ast_iconv(cd, &fs, &fn, &ts, &tn) == (size_t)(-1))
+		{
+#if DEBUG_TRACE
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fl=%d fs=%p fn=%I*d tl=%d ts=%p tn=%I*d errno=%d\n", error_info.id, error_info.trace, __LINE__, fl, fs, sizeof(fn), fn, tl, ts, sizeof(tn), tn, errno);
+#endif
+			if (errno == E2BIG)
+			{
+				if (tl)
+					break;
+				tf = 1;
+			}
+			else if (errno == EINVAL)
+			{
+				if (fl)
 				{
-					fe = OK;
 					if (disc->errorf)
 						(*disc->errorf)(NiL, disc, ERROR_SYSTEM|2, "incomplete multibyte sequence at offset %I*u", sizeof(ft), ft + (fo - fn));
 					goto bad;
 				}
-				fe = ft;
-				break;
-			default:
+				ff = 1;
+			}
+			else
+			{
 				if (disc->errorf)
 					(*disc->errorf)(NiL, disc, ERROR_SYSTEM|2, "invalid multibyte sequence at offset %I*u", sizeof(ft), ft + (fo - fn));
 			bad:
 				disc->errors++;
-				if (!(disc->flags & ICONV_FATAL))
+				if (disc->flags & ICONV_FATAL)
+					break;
+				if (!(disc->flags & ICONV_OMIT) && tn > 0)
 				{
-					if (!(disc->flags & ICONV_OMIT) && tn > 0)
-					{
-						*ts++ = (disc->fill >= 0) ? disc->fill : *fs;
-						tn--;
-					}
-					fs++;
-					fn--;
-					continue;
+					*ts++ = (disc->fill >= 0) ? disc->fill : *fs;
+					tn--;
 				}
-				ok = 0;
-				break;
+				fs++;
+				fn--;
 			}
-			break;
 		}
-		sfwrite(op, tb, ts - tb);
-		r += ts - tb;
-		ts = tb;
-		if (locked)
-			sfread(ip, fb, fs - fb);
-		else
-			for (i = fn; --i >= (fs - fb);)
-				sfungetc(ip, fb[i]);
-		if (n != SF_UNBOUND)
+		if (i = fs - fb)
 		{
-			if (n <= (fs - fb))
-				break;
-			n -= fs - fb;
+			if (n != SF_UNBOUND)
+			{
+				if (n <= i)
+					break;
+				n -= i;
+			}
+			ft += i;
 		}
-		ft += (fs - fb);
-		if (fn == fo)
-			fn++;
-	} while (ok);
-	if (fb && locked)
-		sfread(ip, fb, 0);
+	}
+	if (fb)
+	{
+		if (locked)
+			sfread(ip, fb, i);
+		else
+			for (j = fn; --j >= i;)
+				sfungetc(ip, fb[j]);
+	}
 	if (tb)
 	{
-		sfwrite(op, tb, 0);
-		if (ts > tb)
-		{
-			sfwrite(op, tb, ts - tb);
-			r += ts - tb;
-		}
+		i = ts - tb;
+		sfwrite(op, tb, i);
+		r += i;
 	}
 	if (e)
 		*e = disc->errors;

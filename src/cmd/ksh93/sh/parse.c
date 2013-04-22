@@ -1768,6 +1768,7 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
 	lexp->digits=0;
 	iop=(struct ionod*) stkalloc(stkp,sizeof(struct ionod));
 	iop->iodelim = 0;
+	iop->iosize = 0;
 	if(token=sh_lex(lexp))
 	{
 		if(token==RPAREN && (iof&IOLSEEK) && lexp->comsub) 

@@ -115,7 +115,6 @@ static int io_usevex(struct ionod *iop)
  * temp file.
  */
 static int      subpipe[3],subdup,tsetio,usepipe;
-static void iounpipe(Shell_t*);
 
 static bool iousepipe(Shell_t *shp)
 {
@@ -123,11 +122,17 @@ static bool iousepipe(Shell_t *shp)
 	if(usepipe)
 	{
 		usepipe++;
-		iounpipe(shp);
+		sh_iounpipe(shp);
 	}
 	if(sh_rpipe(subpipe) < 0)
 		return(false);
 	usepipe++;
+	if(shp->comsub!=1)
+	{
+		subpipe[2] = sh_fcntl(subpipe[1],F_DUPFD,10);
+		sh_close(subpipe[1]);
+		return(true);
+	}
 	subpipe[2] = sh_fcntl(fd,F_dupfd_cloexec,10);
 	shp->fdstatus[subpipe[2]] = shp->fdstatus[1];
 	while(close(fd)<0 && errno==EINTR)
@@ -147,15 +152,23 @@ static bool iousepipe(Shell_t *shp)
 	return(true);
 }
 
-static void iounpipe(Shell_t *shp)
+void sh_iounpipe(Shell_t *shp)
 {
 	int fd=sffileno(sfstdout),n,err=errno;
 	char buff[SF_BUFSIZE];
+	if(!usepipe)
+		return;
+	--usepipe;
+	if(shp->comsub>1)
+	{
+		sh_close(subpipe[2]);
+		while(read(subpipe[0],buff,sizeof(buff))>0);
+		goto done;
+	}
 	while(close(fd)<0 && errno==EINTR)
 		errno = err;
 	fcntl(subpipe[2], F_DUPFD, fd);
 	shp->fdstatus[1] = shp->fdstatus[subpipe[2]];
-	--usepipe;
 	if(subdup) for(n=0; n < 10; n++)
 	{
 		if(subdup&(1<<n))
@@ -187,6 +200,7 @@ static void iounpipe(Shell_t *shp)
 		else if(errno!=EINTR)
 			break;
 	}
+done:
 	sh_close(subpipe[0]);
 	subpipe[0] = -1;
 	tsetio = 0;
@@ -667,7 +681,7 @@ static void unset_instance(Namval_t *nq, Namval_t *node, struct Namref *nr,long 
 }
 
 #if SHOPT_COSHELL
-uintmax_t	coused;
+static uintmax_t	coused;
 /*
  * print out function definition
  */
@@ -1585,10 +1599,14 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			if(shp->subshell)
 			{
 				sh_subtmpfile(shp);
-				if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK))
-					unpipe = iousepipe(shp);
 				if((type&(FAMP|TFORK))==(FAMP|TFORK))
-					sh_subfork();
+				{
+					if(shp->comsub && !(shp->fdstatus[1]&IONOSEEK))
+					{
+						unpipe = iousepipe(shp);
+						sh_subfork();
+					}
+				}
 			}
 			no_fork = !ntflag && !(type&(FAMP|FPOU)) && !shp->subshell &&
 			    !(shp->st.trapcom[SIGINT] && *shp->st.trapcom[SIGINT]) &&
@@ -1665,7 +1683,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				if(parent<0)
 				{
 					if(shp->comsub==1 && usepipe && unpipe)
-						iounpipe(shp);
+						sh_iounpipe(shp);
 					break;
 				}
 #else
@@ -1682,7 +1700,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				if(parent<0)
 				{
 					if(shp->comsub==1 && usepipe && unpipe)
-						iounpipe(shp);
+						sh_iounpipe(shp);
 					break;
 				}
 #else
@@ -1729,7 +1747,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						sh_vexrestore(shp,vexi);
 #endif
 					if(usepipe && tsetio &&  subdup)
-						iounpipe(shp);
+						sh_iounpipe(shp);
 					if(!sh_isoption(shp,SH_MONITOR))
 					{
 						shp->trapnote &= ~SH_SIGIGNORE;
@@ -1925,7 +1943,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			jmpval = sigsetjmp(buffp->buff,0);
 			if(jmpval==0)
 			{
-				if(shp->comsub==1)
+				if(shp->comsub)
 					tsetio = 1;
 				sh_redirect(shp,t->fork.forkio,execflg);
 				(t->fork.forktre)->tre.tretyp |= t->tre.tretyp&FSHOWME;
@@ -1957,7 +1975,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						shp->exitval = type;
 				}
 				if(shp->comsub==1 && usepipe && unpipe)
-					iounpipe(shp);
+					sh_iounpipe(shp);
 				shp->pipepid = 0;
 				shp->st.ioset = 0;
 				if(simple && was_errexit)
@@ -2558,7 +2576,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					register char *s;
 					if(rex->argflag&ARG_MAC)
 					{
-						s = sh_macpat(shp,rex,OPTIMIZE|ARG_EXP);
+						s = sh_macpat(shp,rex,OPTIMIZE|ARG_EXP|ARG_CASE);
 						while(*s=='\\' && s[1]==0)
 							s+=2;
 					}
@@ -2923,7 +2941,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			break;
 		    }
 		}
-		if(shp->procsub)
+		if(shp->procsub && *shp->procsub)
 		{
 			pid_t pid, *procsub;
 			int exitval = shp->exitval;
@@ -3161,7 +3179,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 #endif
 				if(shp->topfd > restorefd)
 					sh_iorestore(shp,restorefd,0);
-				iounpipe(shp);
+				sh_iounpipe(shp);
 			}
 		}
 		return(parent);
@@ -3322,8 +3340,7 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	struct funenv fun;
 	char *fname = nv_getval(SH_FUNNAMENOD);
 	struct Level	*lp =(struct Level*)(SH_LEVELNOD->nvfun);
-	int		level, pipepid=shp->pipepid, comsub=shp->comsub;
-	shp->comsub = 0;
+	int		level, pipepid=shp->pipepid;
 	shp->pipepid = 0;
 	sh_stats(STAT_FUNCT);
 	if(!lp->hdr.disc)
@@ -3366,7 +3383,6 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	lp->maxlevel = level;
 	SH_LEVELNOD->nvalue.s = lp->maxlevel;
 	shp->last_root = nv_dict(DOTSHNOD);
-	shp->comsub = comsub;
 #if 0
 	nv_putval(SH_FUNNAMENOD,shp->st.funname,NV_NOFREE);
 #else

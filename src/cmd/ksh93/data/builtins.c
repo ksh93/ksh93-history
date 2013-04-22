@@ -1798,7 +1798,9 @@ USAGE_LICENSE
 "}"
 "[+SEE ALSO?\bchmod\b(1)]"
 ;
-const char sh_optuniverse[]	= " [name]";
+#ifdef _cmd_universe
+   const char sh_optuniverse[]	= " [name]";
+#endif /* _cmd_universe */
 const char sh_optunset[] =
 "[-1c?\n@(#)$Id: unset (AT&T Research) 1999-07-07 $\n]"
 USAGE_LICENSE

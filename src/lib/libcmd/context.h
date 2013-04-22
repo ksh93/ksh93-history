@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,7 +14,38 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
+*                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
 *                                                                      *
 ***********************************************************************/
-#define SH_RELEASE	"93v- 2013-04-18"
+#ifndef _CONTEXT_H
+#define _CONTEXT_H		1
+
+#include <ast.h>
+
+typedef struct Context_line_s
+{
+	char*		data;
+	size_t		size;
+	uintmax_t	line;
+#ifdef _CONTEXT_LINE_PRIVATE_
+	_CONTEXT_LINE_PRIVATE_
+#endif
+} Context_line_t;
+
+typedef int (*Context_list_f)(Context_line_t*, int, int, void*);
+
+typedef struct Context_s
+{
+	void*		handle;
+#ifdef _CONTEXT_PRIVATE_
+	_CONTEXT_PRIVATE_
+#endif
+} Context_t;
+
+extern Context_t*	context_open(Sfio_t*, size_t, size_t, Context_list_f, void*);
+extern Context_line_t*	context_line(Context_t*);
+extern int		context_show(Context_t*);
+extern int		context_close(Context_t*);
+
+#endif

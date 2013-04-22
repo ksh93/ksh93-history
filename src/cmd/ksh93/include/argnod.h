@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -127,6 +127,7 @@ struct argnod
 #define ARG_NOGLOB	0x400	/* no file name expansion */
 #define ARG_LET		0x800	/* processing let command arguments */
 #define ARG_ARRAYOK	0x1000	/* $x[sub] ==> ${x[sub]} */
+#define ARG_CASE	0x2000  /* expanding case patterns */
 
 extern struct dolnod	*sh_argcreate(char*[]);
 extern char 		*sh_argdolminus(void*);

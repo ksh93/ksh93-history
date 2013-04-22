@@ -72,7 +72,7 @@ struct printmap
 	const char	*description;
 };
 
-const struct printmap  Pmap[] =
+static const struct printmap  Pmap[] =
 {
 	3,	"csv",	"q+",	"Equivalent to %#q",
 	4,	"html",	"H",	"Equivalent to %H",

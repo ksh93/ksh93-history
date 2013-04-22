@@ -1477,7 +1477,7 @@ typedef struct _field_
 	int	offset;
 } Fields_t;
 
-Fields_t foo[]=
+static Fields_t foo[]=
 {
 	FIELD(dev,),
 	FIELD(ino,),
