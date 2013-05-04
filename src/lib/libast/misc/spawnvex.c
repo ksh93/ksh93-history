@@ -520,7 +520,7 @@ spawnvex_add(Spawnvex_t* vex, intmax_t op, intmax_t arg, Spawnvex_f callback, vo
 			return -1;
 		}
 	}
-	switch (op)
+	switch ((int)op)
 	{
 	case SPAWN_frame:
 		arg = vex->frame;

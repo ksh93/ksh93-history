@@ -685,6 +685,12 @@ test_read_type_crash
 test_read_C_into_array
 test_read_C_special_shell_keywords
 
+compound -a sar
+printf $'( i=1 )\n(i=2)' | while read -C sar[nsar++]
+do : 
+done
+exp='typeset -C -a sar=((i=1) (i=2))'
+[[ $(typeset -p sar) == "$exp" ]] || err_exit 'read -C foo[x++] not working'
 
 # tests done
 exit $((Errors<125?Errors:125))

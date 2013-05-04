@@ -22,7 +22,7 @@
 #include	"name.h"
 
 static const char enum_usage[] =
-"[-?@(#)$Id: enum (AT&T Research) 2008-01-08 $\n]"
+"[-?@(#)$Id: enum (AT&T Research) 2013-04-29 $\n]"
 USAGE_LICENSE
 "[+NAME?enum - create an enumeration type]"
 "[+DESCRIPTION?\benum\b is a declaration command that creates an enumeration "
@@ -31,7 +31,7 @@ USAGE_LICENSE
 "[+?If the list of \avalue\as is omitted, then \atypename\a must name an "
     "indexed array variable with at least two elements.]" 
 "[i:ignorecase?The values are case insensitive.]"
-"[p?Writes the enums to standard output.  If \typename\a is omitted then all "
+"[p?Writes the enums to standard output.  If \atypename\a is omitted then all "
 	"\benum\bs are written.]"
 "\n"
 "\n\atypename\a[\b=(\b \avalue\a ... \b)\b]\n"
@@ -92,8 +92,8 @@ USAGE_LICENSE
 struct Enum
 {
 	Namfun_t	hdr;
-	short		nelem;
-	short		iflag;
+	int64_t		nelem;
+	bool		iflag;
 	const char	*values[1];
 };
 
@@ -221,8 +221,9 @@ static int enum_create(int argc, char** argv, Shbltin_t *context)
 int b_enum(int argc, char** argv, Shbltin_t *context)
 #endif
 {
-	int			pflag=0,i,n,iflag = 0;
-	ssize_t			sz;
+	bool			pflag=false, iflag=false;
+	int			i,n;
+	ssize_t			sz = -1;
 	Namval_t		*np, *tp;
 	Namarr_t		*ap;
 	char			*cp,*sp;
@@ -239,10 +240,10 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 		switch (optget(argv, enum_usage))
 		{
 		case 'p':
-			pflag = 'p';
+			pflag = true;
 			continue;
 		case 'i':
-			iflag = 'i';
+			iflag = true;
 			continue;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);

@@ -195,6 +195,8 @@ extern Namarr_t 	*nv_arrayptr(Namval_t*);
 extern bool		nv_arrayisset(Namval_t*, Namarr_t*);
 extern bool		nv_arraysettype(Namval_t*, Namval_t*,const char*,int);
 extern int		nv_aimax(Namval_t*);
+extern union Value	*nv_aivec(Namval_t*, unsigned char**);
+extern int		nv_aipack(Namarr_t*);
 extern bool		nv_atypeindex(Namval_t*, const char*);
 extern bool		nv_setnotify(Namval_t*,char **);
 extern bool		nv_unsetnotify(Namval_t*,char **);

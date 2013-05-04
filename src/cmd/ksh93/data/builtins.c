@@ -1461,7 +1461,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bset\b(1), \bbuiltin\b(1)]"
 ;
 const char sh_optset[] =
-"+[-1c?\n@(#)$Id: set (AT&T Research) 1999-09-28 $\n]"
+"+[-1c?\n@(#)$Id: set (AT&T Research) 2013-04-25 $\n]"
 USAGE_LICENSE
 "[+NAME?set - set/unset options and positional parameters]"
 "[+DESCRIPTION?\bset\b sets or unsets options and positional parameters.  "
@@ -1485,6 +1485,11 @@ USAGE_LICENSE
 "[A]:[name?Assign the arguments sequentially to the array named by \aname\a "
 	"starting at subscript 0 rather than to the positional parameters.]"
 "\fabc\f"
+"[K:keys]:[keylist?When used with \b-s\b and \b-A\b and without \aarg\a, it "
+	"specifes the sorting paramaters.  For compound arrays and for arrays "
+	"of types it consists of a comma separated list of keys. Each key can "
+	"be followed by \b:n\b for numerical sort and/or \b:r\b for reverse "
+	"order.  The \b:n\b and/or \b:r\b can be used for arrays of elements.]"
 "[06:default?Restore all non-command line options to the default settings.]"
 "[07:state?List the current option state in the form of a \bset\b command "
 	"that can be executed to restore the state.]"

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -817,10 +817,13 @@ static void* vm_realloc_hook(void* ptr, size_t size, const void* caller)
 
 static void vm_initialize_hook(void)
 {
-	__free_hook = vm_free_hook;
-	__malloc_hook = vm_malloc_hook;
-	__memalign_hook = vm_memalign_hook;
-	__realloc_hook = vm_realloc_hook;
+	if (!getenv("_AST_NO_MALLOC_HOOK"))
+	{
+		__free_hook = vm_free_hook;
+		__malloc_hook = vm_malloc_hook;
+		__memalign_hook = vm_memalign_hook;
+		__realloc_hook = vm_realloc_hook;
+	}
 }
 
 typeof (__malloc_initialize_hook) __malloc_initialize_hook = vm_initialize_hook;

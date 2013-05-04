@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -550,7 +550,7 @@ static int	path_opentype(Shell_t *shp,const char *name, register Pathcomp_t *pp,
 			oldpp = oldpp->next;
 		if(fun && (!oldpp || !(oldpp->flags&PATH_FPATH)))
 			continue;
-		if((fd = open(path_relative(shp,stkptr(shp->stk,PATH_OFFSET)),O_RDONLY|O_cloexec,0)) >= 0)
+		if((fd = sh_open(path_relative(shp,stkptr(shp->stk,PATH_OFFSET)),O_RDONLY|O_cloexec,0)) >= 0)
 		{
 			if(fstat(fd,&statb)<0 || S_ISDIR(statb.st_mode))
 			{

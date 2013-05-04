@@ -316,6 +316,8 @@ char *nv_dirnext(void *dir)
 			}
 #endif
 			shp->last_table = dp->table;
+			if(!dp->table)
+				dot = -1;
 			if(dot>=0)
 			{
 				xdot = nv_aindex(dp->table);
@@ -608,7 +610,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	Namval_t	*mp;
 	Namarr_t	*ap = nv_arrayptr(np);
 	int		scan,tabs=0,c,more,associative = 0;
-	int		saveI = Indent;
+	int		saveI = Indent, dot=-1;
 	Indent = indent;
 	if(ap)
 	{
@@ -631,6 +633,11 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	mp = nv_opensub(np);
 	while(1)
 	{
+		if(mp && mp->nvalue.cp==Empty && !mp->nvfun)
+		{
+			more = nv_nextsub(np);
+			goto skip;
+		}
 		if(mp && special && nv_isvtree(mp) && !nv_isarray(mp))
 		{
 			if(!nv_nextsub(np))
@@ -672,7 +679,11 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 				nv_onattr(mp,NV_EXPORT);
 			nv_onattr(mp,NV_TABLE);
 		}
+		if(ap)
+			dot = nv_aindex(np);
 		ep = nv_getval(mp?mp:np);
+		if(dot>=0)
+			nv_putsub(np,NULL,dot,0);
 		if(ep==Empty && !(ap && ap->fixed))
 			ep = 0;
 		xp = 0;
@@ -994,6 +1005,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			}
 			else
 			{
+				if(n && *cp &&  cp[-1]!='.' && cp[-1]!='[')
+					break;
 				outval(cp,arg,wp);
 				if(wp->array)
 				{
@@ -1092,6 +1105,8 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 			sfputr(shp->stk,xpname,-1);
 			sfputr(shp->stk,cp+len,0);
 			shp->var_tree = save_tree;
+			if(!shp->prev_root)
+				shp->prev_root = shp->var_tree;
 			mq = nv_open(stkptr(shp->stk,0),shp->prev_root,NV_VARNAME|NV_NOASSIGN|NV_NOFAIL);
 			shp->var_tree = dp;
 			if(nq && mq)

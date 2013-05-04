@@ -32,8 +32,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make ast
 make libast.a archive
@@ -7351,7 +7351,6 @@ make misc/magic.tab
 done misc/magic.tab
 exec - test '' = 'misc/magic.tab' || ${STDCMP} 2>/dev/null -s misc/magic.tab ${INSTALLROOT}/lib/file/magic || { ${STDMV} ${INSTALLROOT}/lib/file/magic ${INSTALLROOT}/lib/file/magic.old 2>/dev/null || true; ${STDCP} misc/magic.tab ${INSTALLROOT}/lib/file/magic ;}
 done ${INSTALLROOT}/lib/file/magic generated
-make ${INSTALLROOT}/include/ast/fmtmsg.h
 prev comp/fmtmsg.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
@@ -7370,9 +7369,6 @@ exec - fi
 exec - }
 exec - ;;
 exec - esac
-prev ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/ast/fmtmsg.h generated
-make ${INSTALLROOT}/include/ast/libgen.h
 prev comp/libgen.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
@@ -7391,9 +7387,6 @@ exec - fi
 exec - }
 exec - ;;
 exec - esac
-prev ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/ast/libgen.h generated
-make ${INSTALLROOT}/include/ast/syslog.h
 prev comp/syslog.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
@@ -7412,9 +7405,6 @@ exec - fi
 exec - }
 exec - ;;
 exec - esac
-prev ast_namval.h implicit
-prev ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/ast/syslog.h generated
 done install virtual
 make test
 done test dontcare virtual

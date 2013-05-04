@@ -93,6 +93,38 @@ All recorded changes follow.
 
 :::::::: ksh93 ::::::::
 
+13-05-02  --- Release ksh93v- ---
+13-05-02  Fixed another typeset -m but form moving types containing compound
+	  variables.
+13-05-02  Fixed another typeset -m bug for moving a compound variable contained
+	  in a type variable.
+13-05-01  Fixed two bugs additional bugs related to typeset -m for compound
+	  variables.
+13-05-01 +Increased to maximum number of enumeration elements from 32K to
+	  2G.
+13-04-30  A bug in which typeset -m did not preserve attributes has been fixed.
+13-04-30  A bug with with read -C var when var contained index array subscripts
+	  that caused side effects on evaluation has been fixed.
+13-04-29  A bug in defining and using multi-dimensional types and enums has
+	  been fixed.
+13-04-25  A bug which caused iffe to fail on some systems has been fixed.
+13-04-25 +The -K option has been added to set to sort indexed arrays of
+	  compound elements based on a list of keys.
+13-04-18  Fixed a bug with process substitution on systems that don't support
+	  /dev/fd.
+13-04-18  Added serialization to processing of CHLD traps.
+13-04-17  A bug in arithmetic in which x[i].foo in a loop would not be
+	  re-evalued when subscript i changed value has been fixed.
+13-04-15  Fixed a couple of problems with regression tests.
+13-04-15  ksh now waits for background jobs started in functions contained
+	  in command substitution.
+13-04-11  Made code changes based on warning from the "clang" tool.
+13-04-11  Fixed two core dumps on some architectures related to uninitialzed
+	  data.
+13-04-10  ksh now waits for background jobs started in $() and ${...;} to
+	  complete as it did in ksh93u+.
+13-04-10  A bug in which x=\\x; case x in $x) echo yes;; *) echo no; esac
+	  printed yes has been fixed.  It should print no.
 13-04-08 +ksh now sets .sh.sig.pid and .sh.sig.status for CHLD traps.  The 
 	  .sh.sig.status can be one of exited, killed, dumped, stopped or
 	  continued.
@@ -3449,6 +3481,7 @@ All recorded changes follow.
 
 :::::::: libast ::::::::
 
+13-04-18 comp/iconv.c: fix some truly rotten code in iconv_move() -- how did it work at all?
 13-04-01 misc/spawnvex.c: fix omitted SPAWN_frame case that caused EINVAL
 13-03-11 sfio/sfflsbuf.c: memcpy() => memmove() ouch
 13-03-11 path/pathfind.c: type=="" => type=0
@@ -5283,6 +5316,7 @@ All recorded changes follow.
 
 :::::::: libcmd ::::::::
 
+13-04-22 grep.c: add first draft of context.c to handle -C
 13-04-03 grep.c: fix --highlight to highlight all matches on each line
 13-04-03 grep.c: add -o, --only-matching to list matching parts, each part on a separate line
 13-02-14 Makefile: add { cmdext.h cmdlist.h } force rebuild -- must do this better

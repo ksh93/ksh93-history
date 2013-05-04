@@ -1524,7 +1524,6 @@ skip:
 						nv_putsub(np,(char*)0,nv_aindex(np),ARRAY_ADD);
 						np = nv_opensub(np);
 						ap->flags &= ~ARRAY_TREE;
-						ap->nelem -= 1;
 					}
 				}
 				_nv_unset(np,NV_EXPORT);
@@ -3299,15 +3298,13 @@ bool nv_rename(register Namval_t *np, int flags)
 		free((void*)cp);
 		return(true);
 	}
-	shp->prev_table = shp->last_table;
+	if((shp->prev_table = shp->last_table) && nv_isvtree(nr))
+		shp->prev_table = 0;
 	shp->prev_root = shp->last_root;
+	if(shp->last_root== shp->var_base)
+		shp->prev_root = shp->var_tree;
 	shp->last_table = last_table;
 	shp->last_root = last_root;
-	if(flags&NV_MOVE)
-	{
-		if(arraynp && !nv_isattr(np,NV_MINIMAL) && (mp=(Namval_t*)np->nvenv) && (ap=nv_arrayptr(mp)) && !ap->fun)
-			ap->nelem++;
-	}
 	if((nv_arrayptr(nr) && !arraynr) || nv_isvtree(nr))
 	{
 		if(ap=nv_arrayptr(np))
@@ -3350,13 +3347,20 @@ bool nv_rename(register Namval_t *np, int flags)
 	}
 	else
 	{
-		nv_putval(np,nv_getval(nr),0);
 		if(flags&NV_MOVE)
 		{
 			if(!nv_isattr(nr,NV_MINIMAL) && (mp=(Namval_t*)(nr->nvenv)) && (ap=nv_arrayptr(mp)))
 				ap->nelem--;
-			_nv_unset(nr,0);
+			if(!nv_isarray(np) && !nv_isarray(nr))
+				nv_clone(nr,np,flags&NV_MOVE);
+			else
+			{
+				nv_putval(np,nv_getval(nr),0);
+				_nv_unset(nr,0);
+			}
 		}
+		else
+			nv_putval(np,nv_getval(nr),0);
 	}
 	return(true);
 }

@@ -233,6 +233,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 	char			inquote = 0;
 	struct	checkpt		buff;
 	Edit_t			*ep = (struct edit*)shp->gd->ed_context;
+	Namval_t		*nq = 0;
 	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd,fd)))
 		return(1);
 	sh_stats(STAT_READS);
@@ -263,6 +264,8 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		else if(flags&C_FLAG)
 		{
 			char *sp =  np->nvenv;
+			if(strchr(name,'['))
+				nq = np;
 			delim = -1;
 			nv_unset(np);
 			if(!nv_isattr(np,NV_MINIMAL))
@@ -327,7 +330,11 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 	{
 		if(nfp->disc && nfp->disc->readf)
 		{
-			Namval_t *mp = nv_open(name,shp->var_tree,oflags|NV_NOREF);
+			Namval_t *mp;
+			if(nq)
+				mp = nq;
+			else
+				mp = nv_open(name,shp->var_tree,oflags|NV_NOREF);
 			if((c=(*nfp->disc->readf)(mp,iop,delim,nfp))>=0)
 				return(c);
 		}

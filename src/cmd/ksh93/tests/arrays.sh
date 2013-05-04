@@ -697,4 +697,17 @@ b=(a b c d e f '')
 
 $SHELL 2> /dev/null -c 'a=(foo bar); [[ $(typeset -a) == *"a=("*")"* ]]' || err_exit '"typeset -a" not working' 
 
+ar=(9 11 6 3.5 22)
+set -s -A ar
+[[ $(typeset -p ar) == *'(11 22 3.5 6 9)' ]] || err_exit 'set -s -A ar failed'
+set -s -Aar -K:n
+[[ $(typeset -p ar) == *'(3.5 6 9 11 22)' ]] || err_exit 'set -s -A -Kn ar failed'
+set -s -Aar -K:r
+[[ $(typeset -p ar) == *'(9 6 3.5 22 11)' ]] || err_exit 'set -s -A -Kr ar failed'
+set -s -Aar -K:nr
+[[ $(typeset -p ar) == *'(22 11 9 6 3.5)' ]] || err_exit 'set -s -A -Knr ar failed'
+unset ar[3]
+set -s -Aar
+[[ $(typeset -p ar) == *'(11 22 3.5 9)' ]] || err_exit 'set -s -A ar failed with elemet 3 deleted'
+
 exit $((Errors<125?Errors:125))

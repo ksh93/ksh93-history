@@ -356,7 +356,7 @@ then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'proc
 		$tee  >(sleep 1;cat > $tmp/file) >(cat > $tmp/file2) <<< "hello" > /dev/null
 		[[ $(< $tmp/file) != hello ]] && err_exit "process substitution does not wait for first of two >() to complete with $tee"
 	done
-	if	[[ $(print <(print foo) & sleep .5; kill $!) == /dev/fd* ]]
+	if	[[ $(print <(print foo) & sleep .5; kill $! 2>/dev/null) == /dev/fd* ]]
 	then	exp='/dev/fd/+(\d) v=bam /dev/fd/+(\d)'
 		got=$( print <(print foo) v=bam <(print bar))
 		[[ $got == $exp ]] ||  err_exit 'assignments after command substitution not treated as arguments'

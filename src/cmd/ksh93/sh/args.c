@@ -90,6 +90,116 @@ typedef struct _arg_
 static int 		arg_expand(Shell_t*,struct argnod*,struct argnod**,int);
 static void 		sh_argset(Arg_t*, char *[]);
 
+#define SORT_numeric	01
+#define SORT_reverse	02
+struct Node
+{
+	union	Value 	vp;
+	int		index;
+	unsigned char	bits;
+	Namval_t	*nodes[1];
+};
+
+struct Sort
+{
+	Shell_t		*shp;
+	Namval_t	*np;
+	union Value	*vp;
+	Dt_t		*root;
+	int		cur;
+	int		nelem;
+	char		*flags;
+	char		*name;
+	struct Node	*nodes;
+	struct Node	**nptrs;
+	char		*keys[1];
+};
+
+static struct Sort *Sp;
+
+static int arraysort(const char *s1, const char *s2)
+{
+	struct Sort *sp = Sp;
+	Shell_t	*shp = sp->shp;
+	int r=0, cur=sp->cur;
+	Namval_t *np1, *np2;
+	Namfun_t	fun;
+	char		*cp;
+	memset(&fun,0,sizeof(Namfun_t));
+	if(!(np1 = ((struct Node*)s1)->nodes[sp->cur]))
+	{
+		sfprintf(shp->strbuf,"%s[%i].%s%c",sp->name,((struct Node*)s1)->index,sp->keys[sp->cur],0);
+		cp = sfstruse(shp->strbuf);
+		np1 = nv_create(cp,sp->root,NV_VARNAME|NV_NOFAIL|NV_NOADD|NV_NOSCOPE,&fun);
+		((struct Node*)s1)->nodes[sp->cur] = np1;
+	}
+	if(!(np2 = ((struct Node*)s2)->nodes[sp->cur]))
+	{
+		sfprintf( shp->strbuf,"%s[%i].%s%c",sp->name,((struct Node*)s2)->index,sp->keys[sp->cur],0);
+		cp = sfstruse(shp->strbuf);
+		np2 = nv_create(cp,sp->root,NV_VARNAME|NV_NOFAIL|NV_NOADD|NV_NOSCOPE,&fun);
+		((struct Node*)s2)->nodes[sp->cur] = np2;
+	}
+	if(sp->flags[sp->cur]&SORT_numeric)
+	{
+		Sfdouble_t d1 = np1?nv_getnum(np1):0;
+		Sfdouble_t d2 = np2?nv_getnum(np2):0;
+		if(d2<d1)
+			r = 1;
+		else if(d2>d1)
+			r = -1;
+	}
+	else if(np1 && np2)
+	{
+		char *sp1 = nv_getval(np1);
+		char *sp2 = nv_getval(np2);
+		r = strcoll(sp1,sp2);
+		
+	}
+	else if(np1)
+		r = 1;
+	else if(np2)
+		r = -1;
+	if(sp->flags[sp->cur]&SORT_reverse)
+		r = -r;
+	if(r==0 && sp->keys[++sp->cur])
+		r = arraysort(s1,s2);
+	sp->cur = cur;
+	return(r);
+}
+
+static int alphasort(const char *s1, const char *s2)
+{
+	struct Sort	*sp = Sp;
+	int		r = 0;
+	char		*sp1, *sp2;
+	nv_putsub(sp->np, NULL,((struct Node*)s1)->index,0);
+	sp1 = nv_getval(sp->np);
+	nv_putsub(sp->np, NULL,((struct Node*)s2)->index,0);
+	sp2 = nv_getval(sp->np);
+	r = strcoll(sp1,sp2);
+	if(sp->flags[0]&SORT_reverse)
+		r = -r;
+	return(r);
+}
+
+static int numsort(const char *s1, const char *s2)
+{
+	struct Sort	*sp = Sp;
+	Sfdouble_t	d1,d2;
+	int		r=0;
+	nv_putsub(sp->np, NULL,((struct Node*)s1)->index,0);
+	d1 = nv_getnum(sp->np);
+	nv_putsub(sp->np, NULL,((struct Node*)s2)->index,0);
+	d2 = nv_getnum(sp->np);
+	if(d2<d1)
+		r = 1;
+	else if(d2>d1)
+		r = -1;
+	if(sp->flags[0]&SORT_reverse)
+		r = -r;
+	return(r);
+}
 
 /* ======== option handling	======== */
 
@@ -141,7 +251,8 @@ int sh_argopts(int argc,register char *argv[], void *context)
 	int setflag=0, action=0, trace=(int)sh_isoption(shp,SH_XTRACE);
 	Namval_t *np = NIL(Namval_t*);
 	const char *cp;
-	int verbose,f;
+	char *keylist=0;
+	int verbose,f,unsetnp=0;
 	Optdisc_t disc;
 	newflags=shp->options;
 	memset(&disc, 0, sizeof(disc));
@@ -162,7 +273,10 @@ int sh_argopts(int argc,register char *argv[], void *context)
 	 	    case 'A':
 			np = nv_open(opt_info.arg,shp->var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
 			if(f)
-				nv_unset(np);
+				unsetnp=1;
+			continue;
+	 	    case 'K':
+			keylist = opt_info.arg;
 			continue;
 #if SHOPT_BASH
 		    case 'O':	/* shopt options, only in bash mode */
@@ -326,13 +440,122 @@ int sh_argopts(int argc,register char *argv[], void *context)
 	{
 		if(action==SORT)
 		{
+			int	(*sortfn)(const char*,const char*) = strcoll;
+			Namarr_t	*arp;
+			union Value	*args;
+			unsigned char	*bits;
 			if(argc>0)
-				strsort(argv,argc,strcoll);
+				strsort(argv,argc,sortfn);
+			else if(np && (arp=nv_arrayptr(np)) && (args = nv_aivec(np,&bits)))
+			{
+				struct Sort	*sp;
+				char		*cp;
+				int		i, c, keys=0;
+				size_t		nodesize;
+				if(keylist)
+				{
+					for(cp=keylist;c= *cp; cp++)
+					{
+						if(c==',')
+							keys++;
+					}
+					keys++;
+				}
+				else
+					keylist = Empty;
+				arp->nelem = nv_aipack(arp);;
+				cp = nv_name(np);
+				c = strlen(cp);
+				nodesize = sizeof(struct Node)+(keys-1)*sizeof(Namval_t*);
+				sp = (struct Sort*)malloc(sizeof(struct Sort)+strlen(keylist)+(sizeof(char*)+1)*keys+(arp->nelem+1)*(nodesize+sizeof(void*))+c+3);
+				sp->shp = shp;
+				sp->np = np;
+				if(!(sp->root = shp->last_root))
+					sp->root = shp->var_tree;
+				sp->vp = args;
+				sp->cur = 0;
+				sp->nodes = (struct Node*)&sp->keys[keys+2];
+				memset(sp->nodes, 0, arp->nelem*nodesize);
+				sp->nptrs = (struct Node**)((char*)sp->nodes+arp->nelem*nodesize);
+				sp->flags = (char*)&sp->nptrs[arp->nelem+1];
+				memset(sp->flags,0,keys+1);
+				sp->name = sp->flags + keys+1;
+				memcpy(sp->name,cp,c+1);
+				sp->keys[0] = sp->name+c+1;
+				strcpy(sp->keys[0],keylist);
+				cp = (char*)sp->nodes;
+				for(c=0; c < arp->nelem; c++)
+				{
+					if(keylist!=Empty && *keylist!=':')
+					{
+						((struct Node*)cp)->index = strtol(args[c].np->nvname,NULL,10);
+						((struct Node*)cp)->bits = bits[c];
+					}
+					else
+						((struct Node*)cp)->index = c;
+					((struct Node*)cp)->vp = args[c];
+					sp->nptrs[c] = (struct Node*)cp;
+					cp += nodesize;
+				}
+				if(!(cp = sp->keys[0]))
+					cp = keylist;
+				for(keys=0;c= *cp; cp++)
+				{
+					if(c==',')
+					{
+						*cp++ = 0;
+						sp->keys[++keys] = cp;
+						sp->flags[keys] = 0;
+					}
+					else if(c==':')
+					{
+					again:
+						*cp++ = 0;
+						if((c= *cp) == 'r')
+						{
+							sp->flags[keys] |= SORT_reverse; 
+							c = cp[1];
+						}
+						else if(c=='n')
+						{
+							sp->flags[keys] |= SORT_numeric; 
+							c = cp[1];
+						}
+						if(c=='n' || c=='r')
+							goto again;
+						 
+					}
+				}
+				sp->keys[++keys] = 0;
+				Sp = sp;
+				if(sp->keys[0] && *sp->keys[0])
+					sortfn = arraysort;
+				else if(sp->flags[0]&SORT_numeric)
+					sortfn = numsort;
+				else
+					sortfn = alphasort;
+				strsort((char**)sp->nptrs,arp->nelem,sortfn);
+				cp = (char*)sp->nodes;
+				for(c=0; c < arp->nelem; c++)
+				{
+					i = (char*)sp->nptrs[c]-(char*)&sp->nodes[0];
+					if(i/nodesize !=c)
+					{
+						args[c] = ((struct Node*)(cp+i))->vp;
+						bits[c] = ((struct Node*)(cp+i))->bits;
+					}
+				}
+				free(sp);
+				nv_close(np);
+				np = 0;
+			}
 			else
-				strsort(shp->st.dolv+1,shp->st.dolc,strcoll);
+				strsort(shp->st.dolv+1,shp->st.dolc,sortfn);
 		}
 		if(np)
 		{
+			if(unsetnp)
+				nv_unset(np);
 			nv_setvec(np,0,argc,argv);
 			nv_close(np);
 		}

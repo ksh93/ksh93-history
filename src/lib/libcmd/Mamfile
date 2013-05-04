@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make cmd
 make libcmd.a archive
@@ -103,9 +103,8 @@ make FEATURE/symlink implicit
 meta FEATURE/symlink features/%>FEATURE/% features/symlink symlink
 make features/symlink
 done features/symlink
-bind -lutil
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/symlink
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/symlink
 done FEATURE/symlink generated
 make fts_fix.h implicit
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
@@ -297,7 +296,7 @@ make FEATURE/sockets implicit
 meta FEATURE/sockets features/%>FEATURE/% features/sockets sockets
 make features/sockets
 done features/sockets
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/sockets
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/sockets
 done FEATURE/sockets generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -325,7 +324,7 @@ make FEATURE/ids implicit
 meta FEATURE/ids features/%>FEATURE/% features/ids ids
 make features/ids
 done features/ids
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/ids
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/ids
 done FEATURE/ids generated
 prev cmd.h implicit
 done id.c
@@ -421,7 +420,7 @@ make FEATURE/utsname implicit
 meta FEATURE/utsname features/%>FEATURE/% features/utsname utsname
 make features/utsname
 done features/utsname
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libutil} ${mam_libast} : run features/utsname
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} : run features/utsname
 done FEATURE/utsname generated
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmd.h implicit
@@ -532,7 +531,7 @@ exec - -e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - -e 's/^b_//' \
 exec - -e 's/(.*//' \
 exec - -e 's/.*/extern int	b_&(int, char**, Shbltin_t*);/' \
-exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c context.c fts_fix.c lib.c grep.c xargs.c iconv.c od.c tr.c |
+exec - ${PACKAGEROOT}/src/lib/libcmd/cmdinit.c ${PACKAGEROOT}/src/lib/libcmd/basename.c ${PACKAGEROOT}/src/lib/libcmd/cat.c ${PACKAGEROOT}/src/lib/libcmd/chgrp.c ${PACKAGEROOT}/src/lib/libcmd/chmod.c ${PACKAGEROOT}/src/lib/libcmd/chown.c ${PACKAGEROOT}/src/lib/libcmd/cksum.c ${PACKAGEROOT}/src/lib/libcmd/cmp.c ${PACKAGEROOT}/src/lib/libcmd/comm.c ${PACKAGEROOT}/src/lib/libcmd/cp.c ${PACKAGEROOT}/src/lib/libcmd/cut.c ${PACKAGEROOT}/src/lib/libcmd/dirname.c ${PACKAGEROOT}/src/lib/libcmd/date.c ${PACKAGEROOT}/src/lib/libcmd/expr.c ${PACKAGEROOT}/src/lib/libcmd/fds.c ${PACKAGEROOT}/src/lib/libcmd/fmt.c ${PACKAGEROOT}/src/lib/libcmd/fold.c ${PACKAGEROOT}/src/lib/libcmd/getconf.c ${PACKAGEROOT}/src/lib/libcmd/head.c ${PACKAGEROOT}/src/lib/libcmd/id.c ${PACKAGEROOT}/src/lib/libcmd/join.c ${PACKAGEROOT}/src/lib/libcmd/ln.c ${PACKAGEROOT}/src/lib/libcmd/logname.c ${PACKAGEROOT}/src/lib/libcmd/md5sum.c ${PACKAGEROOT}/src/lib/libcmd/mkdir.c ${PACKAGEROOT}/src/lib/libcmd/mkfifo.c ${PACKAGEROOT}/src/lib/libcmd/mktemp.c ${PACKAGEROOT}/src/lib/libcmd/mv.c ${PACKAGEROOT}/src/lib/libcmd/paste.c ${PACKAGEROOT}/src/lib/libcmd/pathchk.c ${PACKAGEROOT}/src/lib/libcmd/pids.c ${PACKAGEROOT}/src/lib/libcmd/rev.c ${PACKAGEROOT}/src/lib/libcmd/rm.c ${PACKAGEROOT}/src/lib/libcmd/rmdir.c ${PACKAGEROOT}/src/lib/libcmd/stty.c ${PACKAGEROOT}/src/lib/libcmd/sum.c ${PACKAGEROOT}/src/lib/libcmd/sync.c ${PACKAGEROOT}/src/lib/libcmd/tail.c ${PACKAGEROOT}/src/lib/libcmd/tee.c ${PACKAGEROOT}/src/lib/libcmd/tty.c ${PACKAGEROOT}/src/lib/libcmd/uname.c ${PACKAGEROOT}/src/lib/libcmd/uniq.c ${PACKAGEROOT}/src/lib/libcmd/vmstate.c ${PACKAGEROOT}/src/lib/libcmd/wc.c ${PACKAGEROOT}/src/lib/libcmd/revlib.c ${PACKAGEROOT}/src/lib/libcmd/wclib.c ${PACKAGEROOT}/src/lib/libcmd/context.c ${PACKAGEROOT}/src/lib/libcmd/fts_fix.c ${PACKAGEROOT}/src/lib/libcmd/lib.c ${PACKAGEROOT}/src/lib/libcmd/grep.c ${PACKAGEROOT}/src/lib/libcmd/xargs.c ${PACKAGEROOT}/src/lib/libcmd/iconv.c ${PACKAGEROOT}/src/lib/libcmd/od.c ${PACKAGEROOT}/src/lib/libcmd/tr.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -999,7 +998,7 @@ exec - set ` sed \
 exec - -e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - -e 's/^b_//' \
 exec - -e 's/(.*//' \
-exec - cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c context.c fts_fix.c lib.c grep.c xargs.c iconv.c od.c tr.c |
+exec - ${PACKAGEROOT}/src/lib/libcmd/cmdinit.c ${PACKAGEROOT}/src/lib/libcmd/basename.c ${PACKAGEROOT}/src/lib/libcmd/cat.c ${PACKAGEROOT}/src/lib/libcmd/chgrp.c ${PACKAGEROOT}/src/lib/libcmd/chmod.c ${PACKAGEROOT}/src/lib/libcmd/chown.c ${PACKAGEROOT}/src/lib/libcmd/cksum.c ${PACKAGEROOT}/src/lib/libcmd/cmp.c ${PACKAGEROOT}/src/lib/libcmd/comm.c ${PACKAGEROOT}/src/lib/libcmd/cp.c ${PACKAGEROOT}/src/lib/libcmd/cut.c ${PACKAGEROOT}/src/lib/libcmd/dirname.c ${PACKAGEROOT}/src/lib/libcmd/date.c ${PACKAGEROOT}/src/lib/libcmd/expr.c ${PACKAGEROOT}/src/lib/libcmd/fds.c ${PACKAGEROOT}/src/lib/libcmd/fmt.c ${PACKAGEROOT}/src/lib/libcmd/fold.c ${PACKAGEROOT}/src/lib/libcmd/getconf.c ${PACKAGEROOT}/src/lib/libcmd/head.c ${PACKAGEROOT}/src/lib/libcmd/id.c ${PACKAGEROOT}/src/lib/libcmd/join.c ${PACKAGEROOT}/src/lib/libcmd/ln.c ${PACKAGEROOT}/src/lib/libcmd/logname.c ${PACKAGEROOT}/src/lib/libcmd/md5sum.c ${PACKAGEROOT}/src/lib/libcmd/mkdir.c ${PACKAGEROOT}/src/lib/libcmd/mkfifo.c ${PACKAGEROOT}/src/lib/libcmd/mktemp.c ${PACKAGEROOT}/src/lib/libcmd/mv.c ${PACKAGEROOT}/src/lib/libcmd/paste.c ${PACKAGEROOT}/src/lib/libcmd/pathchk.c ${PACKAGEROOT}/src/lib/libcmd/pids.c ${PACKAGEROOT}/src/lib/libcmd/rev.c ${PACKAGEROOT}/src/lib/libcmd/rm.c ${PACKAGEROOT}/src/lib/libcmd/rmdir.c ${PACKAGEROOT}/src/lib/libcmd/stty.c ${PACKAGEROOT}/src/lib/libcmd/sum.c ${PACKAGEROOT}/src/lib/libcmd/sync.c ${PACKAGEROOT}/src/lib/libcmd/tail.c ${PACKAGEROOT}/src/lib/libcmd/tee.c ${PACKAGEROOT}/src/lib/libcmd/tty.c ${PACKAGEROOT}/src/lib/libcmd/uname.c ${PACKAGEROOT}/src/lib/libcmd/uniq.c ${PACKAGEROOT}/src/lib/libcmd/vmstate.c ${PACKAGEROOT}/src/lib/libcmd/wc.c ${PACKAGEROOT}/src/lib/libcmd/revlib.c ${PACKAGEROOT}/src/lib/libcmd/wclib.c ${PACKAGEROOT}/src/lib/libcmd/context.c ${PACKAGEROOT}/src/lib/libcmd/fts_fix.c ${PACKAGEROOT}/src/lib/libcmd/lib.c ${PACKAGEROOT}/src/lib/libcmd/grep.c ${PACKAGEROOT}/src/lib/libcmd/xargs.c ${PACKAGEROOT}/src/lib/libcmd/iconv.c ${PACKAGEROOT}/src/lib/libcmd/od.c ${PACKAGEROOT}/src/lib/libcmd/tr.c |
 exec - sort -u
 exec - `
 exec - for cmd

@@ -6,6 +6,7 @@ lib	pathnative,pathposix,uwin_path,uwin_unpath,fts_notify
 lib	memcntl sys/mman.h
 lib	getexecuser,free_execattr exec_attr.h -lsecdb
 lib	openat,fstatat,pipe2,accept4
+lib	floorl = floor
 typ	_Decimal64
 typ	_Decimal128
 

@@ -1,5 +1,21 @@
-13-04-18  --- Release ksh93v- ---
-13-04-18  Fix a bug with process substitution on systems that don't support
+13-05-02  --- Release ksh93v- ---
+13-05-02  Fixed another typeset -m but form moving types containing compound
+	  variables.
+13-05-02  Fixed another typeset -m bug for moving a compound variable contained
+	  in a type variable.
+13-05-01  Fixed two bugs additional bugs related to typeset -m for compound
+	  variables.
+13-05-01 +Increased to maximum number of enumeration elements from 32K to
+	  2G.
+13-04-30  A bug in which typeset -m did not preserve attributes has been fixed.
+13-04-30  A bug with with read -C var when var contained index array subscripts
+	  that caused side effects on evaluation has been fixed.
+13-04-29  A bug in defining and using multi-dimensional types and enums has
+	  been fixed.
+13-04-25  A bug which caused iffe to fail on some systems has been fixed.
+13-04-25 +The -K option has been added to set to sort indexed arrays of
+	  compound elements based on a list of keys.
+13-04-18  Fixed a bug with process substitution on systems that don't support
 	  /dev/fd.
 13-04-18  Added serialization to processing of CHLD traps.
 13-04-17  A bug in arithmetic in which x[i].foo in a loop would not be

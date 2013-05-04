@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -42,6 +42,7 @@
 # Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
+# Contributed by Roland Mainz <roland.mainz@nrubsig.org>
 
 #
 # This test checks whether "typeset -m" correctly moves local variables
@@ -77,7 +78,6 @@ function f1
 	node.one="hello"
 	node.two="world"
 	# move local note into the array
-false
 	typeset -m tr.subtree["a_node"]=node
 	return 0
 }
@@ -161,4 +161,84 @@ then	if	[[ $(kill -l $exitval) == SEGV ]]
 	else	err_exit 'typeset -m "c.board[1][i]=el" gives wrong value'
 	fi
 fi
+
+compound c=(
+	compound -a ar=(
+		( float i=4 )
+		( float i=7 )
+		( float i=2 )
+		( float i=1 )
+		( float i=24 )
+		( float i=-1 )
+	)
+)
+
+function sortar
+{
+	nameref ar=$1
+	integer  i i_max=${#ar[@]}
+	bool swapped=true
+	while $swapped
+	do	swapped=false
+		for (( i=1 ; i < i_max ; i++ ))
+		do	if	(( ar[i].i > ar[i-1].i ))
+			then	typeset -m "tmp=ar[i-1]"
+				typeset -m "ar[i-1]=ar[i]"
+				typeset -m "ar[i]=tmp"
+				swapped=true
+			fi
+		done
+	done
+	return 0
+}
+sortar c.ar
+exp='typeset -C -a c.ar=((typeset -l -E i=24) (typeset -l -E i=7) (typeset -l -E i=4) (typeset -l -E i=2) (typeset -l -E i=1) (typeset -l -E i=-1))'
+[[ $(typeset -p c.ar) == "$exp" ]] || err_exit 'sorting compound arrays with typeset -m failed'
+
+typeset -T objstack_t=(
+	compound -a st
+	integer st_n=0
+	function pushobj
+	{
+		nameref obj=$1
+		typeset -m "_.st[$((_.st_n++))].obj=obj"
+	}
+	function popobj
+	{
+		nameref obj=$1
+		(( --_.st_n ))
+		typeset -m obj="_.st[$((_.st_n))].obj"
+	}
+)
+compound c
+objstack_t c.ost
+compound foo=( integer val=5 )
+c.ost.pushobj foo
+compound res
+c.ost.popobj res.a
+exp='typeset -C res.a=(typeset -l -i val=5)'
+[[ $(typeset -p res.a) == "$exp" ]] || err_exit 'typeset -m for compound variable in a type not working' 
+
+$SHELL 2> /dev/null <<- \EOF || err_exit "typeset -m for type terminates with exitval=$?"
+typeset -T printfish_t=(
+	        typeset fname
+		unset() { :;}
+	)
+	function createfish_t
+	{
+	        nameref ret=$1
+	        typeset fishname="$2"
+	        printfish_t f
+	        f.fname="$fishname"
+		typeset -m 'ret=f'
+	}
+	compound c
+	compound -a c.cx
+	compound c.cx[4][9].ca
+	createfish_t c.cx[4][9].ca.shark 'coelacanth'
+	createfish_t c.cx[4][9].ca.horse 'horse'
+	exp='typeset -C -a c.cx=(typeset -a [4]=([9]=(ca=(printfish_t horse=(fname=horse;)printfish_t shark=(fname=coelacanth)))) )'
+	[[ $(typeset -p c.cx) == "$exp" ]] || err_exit 'typeset -m for types not working'
+EOF
+
 exit $((Errors<125?Errors:125))

@@ -1678,6 +1678,38 @@ int nv_arraynsub(register Namarr_t* ap)
 	return(array_elem(ap));
 }
 
+union Value *nv_aivec(register Namval_t* np, unsigned char **bitp)
+{
+	struct index_array *ap = (struct index_array*)nv_arrayptr(np);
+	if(!ap || ap->header.fun || ap->header.fixed)
+		return(0);
+	if(bitp)
+		*bitp = ap->bits;
+	return(ap->val);
+}
+
+int nv_aipack(register Namarr_t* arp)
+{
+	struct index_array *ap = (struct index_array*)arp;
+	int i, j;
+	if(!ap || ap->header.fun || ap->header.fixed)
+		return(-1);
+	for(i=j=0; i < ap->maxi; i++)
+	{
+		if(ap->val[i].np)
+		{
+			ap->bits[j] = ap->bits[i];
+			ap->val[j++] = ap->val[i];
+		}
+	}
+	for(i=j; i < ap->maxi; i++)
+	{
+		ap->val[i].np = 0;
+		ap->bits[i] = 0;
+	}
+	return(ap->header.nelem = j);
+}
+
 int nv_aimax(register Namval_t* np)
 {
 	struct index_array *ap = (struct index_array*)nv_arrayptr(np);
@@ -1884,6 +1916,4 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long size)
 {
 	return(nv_putsub_20120720(np,sp,size&ARRAY_MASK,size&~ARRAY_MASK));
 }
-
-
 

@@ -407,6 +407,7 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 	if(flags&NV_MOVE)
 	{
 		pp->np = mp;
+		pp->parent = mp;
 		pp->childfun.ptype = pp;
 		return(fp);
 	}
@@ -1400,7 +1401,11 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 		ap->hdr.type = tp;
 		do
 		{
-			nv_arraysettype(np, tp, nv_getsub(np),flags);
+			Namval_t *mp = nv_opensub(np);
+			if(mp && nv_isarray(mp))
+				nv_settype(mp,tp,flags);
+			else
+				nv_arraysettype(np, tp, nv_getsub(np),flags);
 		}
 		while(nv_nextsub(np));
 	}

@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make ksh
 make pmain.o
@@ -80,9 +80,7 @@ bind -ldll
 bind -lcoshell
 bind -lcmd
 bind -last
-bind -lm dontcare
-bind -lnsl dontcare
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/externs
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/externs
 done FEATURE/externs generated
 make include/shell.h implicit
 make shellapi.h implicit
@@ -90,7 +88,7 @@ make FEATURE/shellapi
 meta FEATURE/shellapi features/%>FEATURE/% features/shellapi shellapi
 make features/shellapi
 done features/shellapi
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/shellapi
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/shellapi
 done FEATURE/shellapi generated
 exec - cmp 2>/dev/null -s FEATURE/shellapi shellapi.h || { rm -f shellapi.h; silent test -d . || mkdir .; cp FEATURE/shellapi shellapi.h; }
 done shellapi.h dontcare generated
@@ -202,7 +200,7 @@ make FEATURE/nvapi
 meta FEATURE/nvapi features/%>FEATURE/% features/nvapi nvapi
 make features/nvapi
 done features/nvapi
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/nvapi
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/nvapi
 done FEATURE/nvapi generated
 exec - cmp 2>/dev/null -s FEATURE/nvapi nvapi.h || { rm -f nvapi.h; silent test -d . || mkdir .; cp FEATURE/nvapi nvapi.h; }
 done nvapi.h dontcare generated
@@ -235,7 +233,7 @@ make FEATURE/time implicit
 meta FEATURE/time features/%>FEATURE/% features/time time
 make features/time
 done features/time
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/time
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/time
 make ${PACKAGE_ast_INCLUDE}/times.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_time.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_time.h dontcare
@@ -250,7 +248,7 @@ make FEATURE/dynamic implicit
 meta FEATURE/dynamic features/%>FEATURE/% features/dynamic dynamic
 make features/dynamic
 done features/dynamic
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/dynamic
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/dynamic
 make ${PACKAGE_ast_INCLUDE}/fs3d.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -261,7 +259,7 @@ make FEATURE/options implicit
 meta FEATURE/options features/%>FEATURE/% features/options options
 make features/options
 done features/options
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/options
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/options
 done FEATURE/options dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/option.h implicit
 done include/builtins.h
@@ -284,13 +282,13 @@ make FEATURE/sigfeatures implicit
 meta FEATURE/sigfeatures features/%>FEATURE/% features/sigfeatures sigfeatures
 make features/sigfeatures
 done features/sigfeatures
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/sigfeatures
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/sigfeatures
 done FEATURE/sigfeatures dontcare generated
 make FEATURE/setjmp implicit
 meta FEATURE/setjmp features/%>FEATURE/% features/setjmp setjmp
 make features/setjmp
 done features/setjmp
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/setjmp
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/setjmp
 done FEATURE/setjmp dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
@@ -326,7 +324,7 @@ prev include/name.h implicit
 make include/path.h implicit
 make FEATURE/acct implicit
 meta FEATURE/acct >FEATURE/% acct
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : def acct
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : def acct
 done FEATURE/acct dontcare generated
 prev include/defs.h implicit
 prev include/nval.h implicit
@@ -405,7 +403,7 @@ make FEATURE/ttys implicit
 meta FEATURE/ttys features/%>FEATURE/% features/ttys ttys
 make features/ttys
 done features/ttys
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/ttys
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/ttys
 done FEATURE/ttys dontcare generated
 done include/terminal.h dontcare
 prev FEATURE/setjmp implicit
@@ -414,7 +412,7 @@ make FEATURE/locale implicit
 meta FEATURE/locale features/%>FEATURE/% features/locale locale
 make features/locale
 done features/locale
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/locale
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/locale
 done FEATURE/locale dontcare generated
 prev FEATURE/options implicit
 done include/edit.h dontcare
@@ -527,7 +525,7 @@ make FEATURE/poll implicit
 meta FEATURE/poll features/%>FEATURE/% features/poll poll
 make features/poll
 done features/poll
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/poll
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/poll
 done FEATURE/poll generated
 prev FEATURE/time implicit
 prev include/builtins.h implicit
@@ -589,7 +587,7 @@ make FEATURE/rlimits implicit
 meta FEATURE/rlimits features/%>FEATURE/% features/rlimits rlimits
 make features/rlimits
 done features/rlimits
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/rlimits
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/rlimits
 done FEATURE/rlimits dontcare generated
 prev FEATURE/time implicit
 done include/ulimit.h
@@ -646,11 +644,11 @@ done nc.h dontcare virtual
 prev FEATURE/externs implicit
 make FEATURE/execargs implicit
 meta FEATURE/execargs >FEATURE/% execargs
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : def execargs
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : def execargs
 done FEATURE/execargs generated
 make FEATURE/pstat implicit
 meta FEATURE/pstat >FEATURE/% pstat
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : def pstat
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : def pstat
 done FEATURE/pstat generated
 prev FEATURE/time implicit
 make include/timeout.h implicit
@@ -773,7 +771,7 @@ make FEATURE/cmds implicit
 meta FEATURE/cmds features/%>FEATURE/% features/cmds cmds
 make features/cmds
 done features/cmds
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/cmds
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/cmds
 done FEATURE/cmds generated
 prev FEATURE/time implicit
 prev FEATURE/options implicit
@@ -852,7 +850,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/fcin.c
 meta fcin.o %.c>%.o sh/fcin.c fcin
 prev sh/fcin.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_API_ast=20121001 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/fcin.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_API_ast=20121001 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/fcin.c
 done fcin.o generated
 make history.o
 make edit/history.c
@@ -1173,7 +1171,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/env.c
 meta env.o %.c>%.o sh/env.c env
 prev sh/env.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -D_API_ast=20121001 -D_PACKAGE_ast -c sh/env.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_API_ast=20121001 -D_PACKAGE_ast -c sh/env.c
 done env.o generated
 make hexpand.o
 make edit/hexpand.c
@@ -1219,7 +1217,7 @@ make features/math.sh
 make data/math.tab implicit
 done data/math.tab
 done features/math.sh dontcare
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl} : run features/math.sh data/math.tab
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} : run features/math.sh ${PACKAGEROOT}/src/cmd/ksh93/data/math.tab
 make ${PACKAGE_ast_INCLUDE}/ast_standards.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_standards.h dontcare
 done FEATURE/math generated
@@ -1376,8 +1374,9 @@ bind -lshell
 prev +ljobs
 prev +li
 prev ${mam_libsocket}
+prev ${mam_libnsl}
 prev ${mam_libsecdb}
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o ksh pmain.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o ksh pmain.o ${mam_libshell} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1398,10 +1397,11 @@ prev libshell.a archive
 prev +ljobs
 prev +li
 prev ${mam_libsocket}
+prev ${mam_libnsl}
 prev ${mam_libsecdb}
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o shcomp shcomp.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o shcomp shcomp.o ${mam_libshell} ${mam_libast}
 done shcomp generated
 make suid_exec
 make suid_exec.o
@@ -1422,9 +1422,10 @@ done suid_exec.o generated
 prev +ljobs
 prev +li
 prev ${mam_libsocket}
+prev ${mam_libnsl}
 prev ${mam_libsecdb}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libnsl} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libast}
 done suid_exec generated
 make shell
 prev libshell.a archive
@@ -1575,7 +1576,7 @@ make tests/shtests
 done tests/shtests
 exec - silent cmp 2>/dev/null -s ${INSTALLROOT}/bin/ksh ksh 2>/dev/null ||
 exec - echo "make install to run the tests on the latest ksh" >&2
-exec - cd ${PACKAGEROOT}/src/cmd/ksh93/tests
+exec - cd
 exec - SHELL=${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh shtests
 done test.ksh virtual
 done test dontcare virtual

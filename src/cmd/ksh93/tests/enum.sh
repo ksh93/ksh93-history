@@ -83,6 +83,16 @@ myvar_c=foo
 enum _XX=(foo bar)
 [[ ${!myvar_*} ==  myvar_c ]] || err_exit '${!myvar_*} does not expand after enum'
 
+enum matrix=( neg null pos )
+exp='matrix -a container=(typeset -a [3]=([1]=neg) typeset -a [4]=([4]=pos) )'
+matrix -a container=( [3][1]=neg [4][4]=pos) 2> /dev/null
+[[ $(typeset -p container) == "$exp" ]] || err_exit 'multi-dimensional arrays of enums not working'
 
+exp='typeset -C -a b=(typeset -a [50]=([51]=(_Bool v=true)) )'
+compound -a a=( [40][41]=( bool v ) )
+(( a[40][41].v=1 )) 
+compound -a b
+typeset -m "b[50][51].v=a[40][41].v"
+[[ $(typeset -p b) == "$exp" ]] || err_exit 'typeset -m does not preserve enum'
 
 exit $((Errors<125?Errors:125))

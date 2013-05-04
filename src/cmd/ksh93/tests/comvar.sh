@@ -696,4 +696,27 @@ a=(foo=bar)
 a[0].foo=bam
 [[ ${a[0].foo} == "${a.foo}" ]] || err_exit 'a[0].foo should be equal to a.foo after assignment to a[0].foo'
 
+exp='typeset -C c=(typeset -l -E y1=2.34)'
+float y1=2.34
+compound c
+typeset -m c.y1=y1
+[[ $(typeset -p c) == "$exp" ]] || err_exit 'typeset -m not preserving attributes'
+
+compound -a ar=( ( float i=4 ) ( float i=7 ) ( float i=2 ) ( float i=1 ) ( float i=24 ) ( float i=-1 ) )
+set -s -Aar -Ki:n
+exp='typeset -C -a ar=((typeset -l -E i=-1) (typeset -l -E i=1) (typeset -l -E i=2) (typeset -l -E i=4) (typeset -l -E i=7) (typeset -l -E i=24))'
+[[ $(typeset -p ar) == "$exp" ]] || err_exit 'set -s -Aar -Ki:n for compound variable float array failed'
+compound -a ar=( (i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
+set -s -Aar -Ki:n
+[[ $(typeset -p ar) == "${exp//typeset -l -E /}" ]] || err_exit 'set -s -Aar -Ki:n for compound var
+iable array failed'
+set -s -Aar -Ki:nr
+exp='typeset -C -a ar=((i=24) (i=7) (i=4) (i=2) (i=1) (i=-1))'
+[[ $(typeset -p ar) == "$exp" ]] || err_exit 'set -s -Aar -Ki:nr for compound variable float array failed'
+compound -a ar=( (i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
+unset ar[2]
+set -s -Aar -Ki
+exp='typeset -C -a ar=((i=-1) (i=1) (i=24) (i=4) (i=7))'
+[[ $(typeset -p ar) == "$exp" ]]|| err_exit 'sparse array not sorting correctly'
+
 exit $((Errors<125?Errors:125))

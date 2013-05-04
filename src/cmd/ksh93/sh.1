@@ -3090,6 +3090,19 @@ Assigning a floating point number to a
 variable whose type is an integer causes the fractional
 part to be truncated.
 .PP
+.SS Array Sorting.
+The \fB\-s\fP option of the \fBset\fP built-in command can be used to sort
+its arguments or to sort indexed arrays, indexed arrays of compound
+variables, and indexed arrays of types
+(see "Type Variables" section below).
+By default the sort order is defined by the current locale.
+For compound variables and for types, the \fB\-K\fP option for
+\fBset\fP can be followed by a comma separated list of sub-fields to
+sort on.  Each field can be followed by a \fB:\fP and the letter \fBn\fP
+for numerical sorting and/or \fBr\fP for reverse sorting.
+For an plain indexed array the the \fB\-K\fP option can be followed by
+\fB:n\fP and  \fB:r\fP for numerical or reverse sorting.
+.PP
 .SS Prompting.
 When used interactively,
 the shell prompts with the value of
@@ -6858,14 +6871,17 @@ script,
 then it behaves the same as
 .BR exit .
 .TP
-\(dg \f3set\fP \*(OK \f3\(+-BCGabefhkmnoprstuvx\fP \*(CK \*(OK \f3\(+-o\fP \*(OK \f2option\^\fP \*(CK \*(CK .\|.\|. \*(OK \f3\(+-A\fP \f2vname\^\fP \*(CK  \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\(dg \f3set\fP \*(OK \f3\(+-BCGabefhkmnoprstuvx\fP \*(CK \*(OK \f3\(+-o\fP \*(OK \f2option\^\fP \*(CK \*(CK .\|.\|. \*(OK \f3\(+-A\fP \f2vname\^\fP \*(CK  \*(OK \f3\-K\fP \f2keylist\^\fP \*(CK \*(OK \f2arg\^\fP .\|.\|. \*(CK
 The options for this command have meaning as follows:
 .RS
 .PD 0
 .TP 8
 .B \-A
 Array assignment.
-Unset the variable
+If
+.I arg\^
+is specified,
+unset the variable
 .I vname
 and assign values sequentially from the
 .I arg\^
@@ -6900,6 +6916,14 @@ when used for file name generation.
 If followed by a
 .B /
 only directories and sub-directories are matched.
+.TP 8
+.B \-K
+When no arguments are specified, it is used along with
+.B \-s
+to specify the sort fields and sort options for sorting an array.
+(See "Array Sorting" above for the description of the
+.I keylist\^
+option.) 
 .TP 8
 .B \-a
 All subsequent variables that are defined are automatically exported.
@@ -7108,7 +7132,10 @@ once set.
 .TP 8
 .B \-s
 Sort the positional parameters lexicographically.
+When used with
+.B \-A
 .TP 8
+sorts the elements of the array.
 .B \-t
 (Obsolete).  Exit after reading and executing one command.
 .TP 8
