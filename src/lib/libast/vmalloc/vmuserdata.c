@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,54 +16,47 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
-#if defined(_UWIN) && defined(_BLD_ast)
-
-void _STUB_vmwalk(){}
-
-#else
-
 #include	"vmhdr.h"
 
-/*	Walks all segments created in region(s)
+/*	Get a location in region to store values
 **
-**	Written by Kiem-Phong Vo, kpv@research.att.com (02/08/96)
+**	Written by Kiem-Phong Vo, phongvo@gmail.com
 */
 
 #if __STD_C
-int vmwalk(Vmalloc_t* vm, int(*segf)(Vmalloc_t*, Void_t*, size_t, Vmdisc_t*, Void_t*), Void_t* handle )
+Void_t* vmuserdata(Vmalloc_t* vm, unsigned int dtid, ssize_t size)
 #else
-int vmwalk(vm, segf, handle)
+Void_t* vmuserdata(vm, dtid, size)
 Vmalloc_t*	vm;
-int(*		segf)(/* Vmalloc_t*, Void_t*, size_t, Vmdisc_t*, Void_t* */);
-Void_t*		handle;
+unsigned int	dtid;	/* ID of the requested data	*/
+ssize_t		size;	/* size of requested memory	*/
 #endif
-{	
-	reg Seg_t	*seg;
-	reg int		rv = 0;
+{
+	unsigned int	key;
+	Vmuser_t	*u;
+	Vmdata_t	*vmdt = vm->data;
 
-	if(!vm)
-	{	_vmlock(NIL(Vmalloc_t*), 1);
-		for(vm = Vmheap; vm; vm = vm->next)
-		{	SETLOCK(vm, 0);
-			for(seg = vm->data->seg; seg; seg = seg->next)
-				if((rv = (*segf)(vm, seg->addr, seg->extent, vm->disc, handle)) < 0 )
-					break;
-			CLRLOCK(vm, 0);
-		}
-		_vmlock(NIL(Vmalloc_t*), 0);
-	}
-	else
-	{	SETLOCK(vm, 0);
-		for(seg = vm->data->seg; seg; seg = seg->next)
-			if((rv = (*segf)(vm, seg->addr, seg->extent, vm->disc, handle)) < 0 )
-				break;
-		CLRLOCK(vm, 0);
+	key = asothreadid();
+	asolock(&vmdt->ulck, key, ASO_LOCK);
+
+	for(u = vmdt->user; u; u = u->next)
+		if(u->dtid == dtid) /* found the entry matching key */
+			break;
+
+	if(!u && size > 0 && /* try making a new entry */
+	   (u = KPVALLOC(vm, sizeof(Vmuser_t) + size, vm->meth.allocf)) )
+	{	memset((Void_t*)(u+1), 0, size);
+		u->dtid = dtid;
+		u->size = size;
+		u->data = (Void_t*)(u+1);
+		u->next = vmdt->user;
+		vmdt->user = u;
 	}
 
-	return rv;
+	asolock(&vmdt->ulck, key, ASO_UNLOCK);
+
+	return u ? u->data : NIL(Void_t*);
 }
-
-#endif

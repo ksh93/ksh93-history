@@ -790,6 +790,8 @@ but can be unset or redefined:
 .TP
 .B "autoload=\(fmtypeset \-fu\(fm"
 .TP
+.B "bool=\(fm_Bool\(fm"
+.TP
 .B "command=\(fmcommand  \(fm"
 .TP
 .B "compound=\(fmtypeset \-C\(fm"
@@ -5971,6 +5973,22 @@ least two elements and the values are taken from this array variable.
 If
 .B -i
 is specified the values are case insensitive.
+.sp .5
+When an enumeration variable is used in arithmetic expression, its value
+is the index into the array that defined it starting from index 0.
+Enumeration strings can be used in an arithmetic expression when comparing
+against an enumeration variable.
+.sp .5
+The enum
+.B _Bool
+is created with values
+.B true
+and
+.BR false .
+The predefined alias
+.B bool
+is defined as
+.BR _Bool .
 .TP
 \(dg \f3eval\fP \*(OK \f2arg\^\fP .\|.\|. \*(CK
 The arguments are read as input
@@ -7344,7 +7362,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSfblmnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK   \*(OK \f3\+-M  \*(OK \f2mapname\fP \*(CK \*(CK \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSfblmnprstux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK   \*(OK \f3\+-M  \*(OK \f2mapname\fP \*(CK \*(CK \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -7601,7 +7619,7 @@ Used with
 .B \-E
 or
 .BR \-F ,
-to indicate long integer, or long float.
+to indicate long integer, or long double.
 Otherwise, all upper-case characters are
 converted to lower-case.
 The upper-case option,
@@ -7643,6 +7661,14 @@ are marked
 readonly and these
 names cannot be changed
 by subsequent assignment.
+.TP
+.B \-s
+Used with
+.BR \-i ,
+.B \-E
+or
+.BR \-F ,
+to indicate short integer, or float.
 .TP
 .B \-t
 Tags the variables.

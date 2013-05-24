@@ -1,3 +1,8 @@
+13-05-22 string/fmtbuf.c: add thread-safe logic
+13-05-21 misc/optget.c: add the D "DATA" section
+13-05-09 { aso cdt vmalloc } kpv sync
+13-05-05 include/ast.h: _AST_PROFILE_NEWOF for debugging newof() vs oldof()
+13-05-01 misc/spawnvex.c: some cc's don't like switch(intmax_t)
 13-04-18 comp/iconv.c: fix some truly rotten code in iconv_move() -- how did it work at all?
 13-04-01 misc/spawnvex.c: fix omitted SPAWN_frame case that caused EINVAL
 13-03-11 sfio/sfflsbuf.c: memcpy() => memmove() ouch

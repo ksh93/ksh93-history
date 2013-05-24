@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -673,5 +673,8 @@ level=$($SHELL -c $'$SHELL -c \'print -r "$SHLVL"\'')
 
 $SHELL -c 'unset .sh' 2> /dev/null
 [[ $? == 1 ]] || err_exit 'unset .sh should return 1'
+
+x=$($SHELL -c 'foo=bar foobar=fbar; print -r -- ${!foo*}')
+[[ $x == 'foo '* ]] || err_exit 'foo not included in ${!foo*}' 
 
 exit $((Errors<125?Errors:125))

@@ -106,6 +106,18 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 		 * $ redirect {n}</etc ; cd /dev/fd/$n # works on most
 		 * platforms.
 		 */
+		if(*path=='/' && memcmp(path,"/dev/fd/",8)==0 && isdigit(path[8]))
+		{
+			char	*p = (char*)path+8;
+			fd = strtol(p,&p,10);
+			if(*p=='/' || *p==0)
+			{
+				while(*p=='/')
+					p++;
+				path = *p?(const char*)p:0;
+				dir = fd;
+			}
+		}
 		EINTR_REPEAT((fd = openat(dir, path, O_RDONLY|O_NONBLOCK|O_cloexec)) < 0);
 #   ifdef O_SEARCH
 		if((fd < 0) && (errno == EACCES))

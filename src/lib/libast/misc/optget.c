@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -521,6 +521,9 @@ secname(char* section)
 		{
 		case 'C':
 			s = "COMPATIBILITY ";
+			break;
+		case 'D':
+			s = "DATA ";
 			break;
 		case 'I':
 			s = "MAINFRAME ";

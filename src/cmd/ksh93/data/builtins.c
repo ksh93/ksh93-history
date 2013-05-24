@@ -76,6 +76,7 @@ const struct shtable3 shtab_builtins[] =
 	"export",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(readonly),
 	".",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(dot_cmd),
 	"return",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
+	"enum",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(enum),
 #if SHOPT_BASH
 	"local",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(typeset),
 #endif
@@ -84,7 +85,6 @@ const struct shtable3 shtab_builtins[] =
 #endif	/* _bin_newgrp || _usr_bin_newgrp */
 	"alias",	NV_BLTIN|BLT_SPC,		bltin(alias),
 	"hash",		NV_BLTIN|BLT_SPC,		bltin(alias),
-	"enum",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(enum),
 	"eval",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_EXIT,bltin(eval),
 	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
 	"fc",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
@@ -1619,7 +1619,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttypeset[] =
-"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2010-12-08 $\n]"
+"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2013-05-21 $\n]"
 USAGE_LICENSE
 "[+NAME?\f?\f - declare or display variables with attributes]"
 "[+DESCRIPTION?Without the \b-f\b option, \b\f?\f\b sets, unsets, "
@@ -1657,20 +1657,19 @@ USAGE_LICENSE
 "[+?\b\f?\f\b is built-in to the shell as a declaration command so that "
 	"field splitting and pathname expansion are not performed on "
 	"the arguments.  Tilde expansion occurs on \avalue\a.]"
-#if 1
 "[a]:?[type?Indexed array.  This is the default. If \b[\b\atype\a\b]]\b is "
     "specified, each subscript is interpreted as a value of type \atype\a.]"
-#else
-"[a?Indexed array. this is the default.]"
-#endif
 "[b?Each \aname\a may contain binary data.  Its value is the mime "
 	"base64 encoding of the data. It can be used with \b-Z\b, "
 	"to specify fixed sized fields.]"
+"[c?Copy.  The value is the name of a variable whose value will be "
+	"copied to \aname\a.  The orignal variable will be unchanged.  Cannot "
+	"be used with any other options.]"
 "[f?Each of the options and \aname\as refers to a function.]"
 "[i]#?[base:=10?An integer. \abase\a represents the arithmetic base "
 	"from 2 to 64.]"
 "[l?Without \b-i\b, sets character mapping to \btolower\b. When used "
-	"with \b-i\b, \b-E\b, or \b-F\b indicates long variant.]"
+	"with \b-i\b, \b-E\b, \b-F\b, or  \b-X\b indicates long variant.]"
 "[m?Move.  The value is the name of a variable whose value will be "
 	"moved to \aname\a.  The orignal variable will be unset.  Cannot be "
 	"used with any other options.]"
@@ -1681,7 +1680,8 @@ USAGE_LICENSE
 	"shell to recreate the attributes for variables.]"
 "[r?Enables readonly.  Once enabled it cannot be disabled.  See "
 	"\breadonly\b(1).]"
-"[s?Used with \b-i\b to restrict integer size to short.]"
+"[s?Used with \b-i\b to restrict integer size to short integer or with "
+	"\b-E\b ,\b-F\b, or \b-X\b to represent a float.]"
 "[t?When used with \b-f\b, enables tracing for each of the specified "
 	"functions.  Otherwise, \b-t\b is a user defined attribute and "
 	"has no meaning to the shell.]"

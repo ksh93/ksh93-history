@@ -648,4 +648,18 @@ chmod +x  $tmp/bin$$/foo
 : ${ PATH=$tmp/bin$$:$PATH;}
 [[ $(whence foo) == "$tmp/bin$$/foo" ]] || err_exit '${...PATH=...} does not preserve PATH bindings'
 
+> $tmp/log
+function A
+{
+	trap 'print TRAP A >> $tmp/log' EXIT
+	print >&2
+}
+function B
+{
+	trap 'print TRAP B >> $tmp/log' EXIT
+	A
+}
+x=${ ( B ) ; }
+[[ $(<$tmp/log) ==  *'TRAP A'*'TRAP B'* ]] || err_exit 'trap A and trap B not both executed'
+
 exit $((Errors<125?Errors:125))

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -438,6 +438,9 @@ main()
 	printf("#undef	mstats\n");
 	printf("#define mstats		_ast_mstats\n");
 #endif
+	printf("#undef	posix_memalign\n");
+	printf("#define posix_memalign	_ast_posix_memalign\n");
+	printf("extern int		posix_memalign(void**, size_t, size_t);\n");
 #if _lib_pvalloc
 	printf("#undef	pvalloc\n");
 	printf("#define pvalloc		_ast_pvalloc\n");

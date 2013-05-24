@@ -79,7 +79,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	{
 		int offset;
 		/* do binding to node now */
-		int c = cp[flag];
+		int d = cp[flag];
 		cp[flag] = 0;
 		if((!(np = nv_open(cp,shp->var_tree,assign|NV_VARNAME|NV_NOADD|NV_NOFAIL)) || nv_isnull(np)) && sh_macfun(shp,cp, offset = stktell(shp->stk)))
 		{
@@ -87,12 +87,12 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			FunNode.nvalue.ldp = &Fun;
 			FunNode.nvshell = shp;
 			nv_onattr(&FunNode,NV_NOFREE|NV_LDOUBLE|NV_RDONLY);
-			cp[flag] = c;
+			cp[flag] = d;
 			return(&FunNode);
 		}
 		if(!np && assign)
 			np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
-		cp[flag] = c;
+		cp[flag] = d;
 		if(!np)
 			return(0);
 		root = shp->last_root;
@@ -278,15 +278,15 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				int off=stktell(shp->stk);
 				int fsize = str- (char*)(*ptr);
 				const struct mathtab *tp;
-				Namval_t	*np;
+				Namval_t	*nq;
 				c = **ptr;
 				lvalue->fun = 0;
 				sfprintf(shp->stk,".sh.math.%.*s%c",fsize,*ptr,0);
 				stkseek(shp->stk,off);
-				if(np=nv_search(stkptr(shp->stk,off),shp->fun_tree,0))
+				if(nq=nv_search(stkptr(shp->stk,off),shp->fun_tree,0))
 				{
-						lvalue->nargs = -np->nvalue.rp->argc;
-						lvalue->fun = (Math_f)np;
+						lvalue->nargs = -nq->nvalue.rp->argc;
+						lvalue->fun = (Math_f)nq;
 						break;
 				}
 				if(fsize<=(sizeof(tp->fname)-2))
@@ -477,7 +477,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				return(r=nv_getnum(&node));
 		}
 		lvalue->eflag = 0;
-		if(((lvalue->emode&2) || lvalue->level>1 || sh_isoption(shp,SH_NOUNSET)) && nv_isnull(np) && !nv_isattr(np,NV_INTEGER))
+		if(((lvalue->emode&2) || lvalue->level>1 || (lvalue->nextop!=A_STORE && sh_isoption(shp,SH_NOUNSET))) && nv_isnull(np) && !nv_isattr(np,NV_INTEGER))
 		{
 			*ptr = nv_name(np);
 		skip:

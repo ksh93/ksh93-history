@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,46 +16,47 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
-#if defined(_UWIN) && defined(_BLD_ast)
+#include "asohdr.h"
 
-void _STUB_vmregion(){}
+/*
+ * construct a non-zero thread-specific ID without the high-bit
+ */
 
-#else
+__thread unsigned int	_AsoThreadId;	/* thread local ID		*/
 
-#include	"vmhdr.h"
+static unsigned int	_AsoThreadCount = 0; /* known thread count	*/
+static unsigned int	_AsoKey = 0;	/* key to construct thread ids	*/
 
-/*	Return the containing region of an allocated piece of memory.
-**	Beware: this only works with Vmbest, Vmdebug and Vmprofile.
-**
-**	10/31/2009: Add handling of shared/persistent memory regions.
-**
-**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
-*/
-#if __STD_C
-Vmalloc_t* vmregion(Void_t* addr)
-#else
-Vmalloc_t* vmregion(addr)
-Void_t*	addr;
-#endif
+#define HIGHBIT		(~((~((unsigned int)0)) >> 1) )
+#define PRIME		17109811
+#define HALFINT		(sizeof(int)*8/2)
+
+unsigned int
+_asothreadid(void)
 {
-	Vmalloc_t	*vm;
-	Vmdata_t	*vd;
+	unsigned int	hash;
 
-	if(!addr)
-		return NIL(Vmalloc_t*);
+	if(_AsoKey == 0) /* use process-id (usually < 16-bits) */
+	{	_AsoKey = (unsigned int)getpid();
 
-	vd = SEG(BLOCK(addr))->vmdt;
+		/* hashing low bytes to help spread the ids out */
+		hash = ((_AsoKey >> 16)&0xff) + 31;
+		hash = hash*PRIME + ((_AsoKey >>  8)&0xff) + 31;
+		hash = hash*PRIME + ((_AsoKey >>  0)&0xff) + 31;
 
-	_vmlock(NIL(Vmalloc_t*), 1);
-	for(vm = Vmheap; vm; vm = vm->next)
-		if(vm->data == vd)
-			break;
-	_vmlock(NIL(Vmalloc_t*), 0);
+		/* key is pid in high bits + hash in low bits */
+		_AsoKey = ((_AsoKey & ((1<<HALFINT)-1)) << HALFINT) | (hash & 07777);
+		_AsoKey = _AsoKey == 0 ? 0xabcd0000 : _AsoKey; /* _AsoKey must != 0 */
+	}
 
-	return vm;
+	if(_AsoThreadId == 0) /* if thread-specific ID has not been defined yet */
+	{	if((_AsoThreadId = _AsoKey + asoaddint(&_AsoThreadCount,1)) == 0 )
+			_AsoThreadId = _AsoKey; /* too many threads were generated! */
+		_AsoThreadId &= ~HIGHBIT; 
+	}
+
+	return _AsoThreadId;
 }
-
-#endif

@@ -1,4 +1,45 @@
-13-05-02  --- Release ksh93v- ---
+13-05-22  --- Release ksh93v- ---
+13-05-22 +Added -c option to typeset which is similar to typeset -m except
+	  that the variable is copied rather than moved.  This is experimental
+	  and there are known bugs.  If it can't be made reliable it will
+	  not be added.
+13-05-20  Fixed a bug in which running script < file, where script did
+	  reads generated output the the terminal in error has been fixed.
+13-05-20  Updated documentation for typeset -s and typeset -l for integer
+	  and floating point types.
+13-05-17  A bug in the ${b[i}} when b is an enumeration variable whose
+	  value corresponds to the 0'th element.
+13-05-17  A bug in which set -o nounset caused ((boold=true)) to fail has
+	  been fixed.
+13-05-16  A bug in which a nameref to a compound sub-variable that does
+	  not exit failed when called from a function with static variables
+	  has been fixed.
+13-05-15 +The set -s -Aarray sort option added on 13-04-25 now works for
+	  sorting an indexed array of type instances.
+13-05-15  A bug in which ${!foo*} did not contain foo when $foo exists
+	  has been fixed.
+13-05-15  typeset -m foo=bar now generates an error when set -o nounset is
+	  on and variable bar is unset.
+13-05-14  A bug in which bar was not empty after typeset -m foo=bar has
+	  been fixed.
+13-05-13  A bug in which the exit trap could be executed twice with ${...;}
+	  has been fixed.
+13-05-10  Added more documentation with enum --man.
+13-05-10  With print -v for with nested compound variables, the output contains
+	  typeset -C for sub-variabes that are compound assignments.
+13-05-10  Reduced the number of warning when running gcc with -Wshadow option.
+13-05-09  Updated man page to mention _Bool enumeration and bool preset alias.
+13-05-08  Modified the code to that CHLD traps are delayed when a trap from
+	  another signal is being modified.
+13-05-08  Added a ksh -n options that suggests that x=$((expr)) be replaced by
+	  ((x=expr))>
+13-05-07  A bug in which typeset -p and print -v did not display elements that
+	  were compound variables without any sub-variables has been fixed.
+13-05-06  Fixed a bug with typeset -m when varaible is a name reference to
+	  a local variable from a calling function.
+13-05-06  A bug in which shcomp failed to compile some scrips that defined
+	  enums has been fixed.
+13-05-03  Fixed a bug with typeset -m a[i]=a[j] when a is a numeric array type.
 13-05-02  Fixed another typeset -m but form moving types containing compound
 	  variables.
 13-05-02  Fixed another typeset -m bug for moving a compound variable contained

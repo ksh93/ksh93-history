@@ -557,7 +557,7 @@ typeset -T b_t=(
 compound b
 compound -a b.ca 
 b_t b.ca[4].b
-exp='typeset -C b=(typeset -C -a ca=( [4]=(b_t b=(a_t b=(a=hello))));)'
+exp='typeset -C b=(typeset -C -a ca=( [4]=(b_t b=(a_t b=(a=hello)))))'
 got=$(typeset -p b)
 [[ $got == "$exp" ]] || err_exit 'typeset -p of nested type not correct'
 
@@ -598,7 +598,7 @@ $SHELL << \EOF
 			 compound p=( hello=world )
 			 c.b.binsert p 1 $i
 		done
-		exp='typeset -C c=(board_t b=(typeset -C -a board_y=( [1]=(typeset -a board_x=( [0]=(field=(hello=world;))[1]=(field=(hello=world)));));))'
+		exp='typeset -C c=(board_t b=(typeset -C -a board_y=( [1]=(typeset -a board_x=( [0]=(field=(hello=world;););[1]=(field=(hello=world)))))))'
 		[[ $(typeset -p c) == "$exp" ]] || exit 1
 	}
 	main

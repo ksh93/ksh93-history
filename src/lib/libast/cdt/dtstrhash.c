@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,24 +16,17 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #include	"dthdr.h"
 
 /* Hashing a string into an unsigned integer.
 ** This is the FNV (Fowler-Noll-Vo) hash function.
-** Written by Kiem-Phong Vo (01/10/2012)
+** Written by Kiem-Phong Vo, phongvo@gmail.com (01/10/2012)
 */
 
-#if __STD_C
-uint dtstrhash(uint h, Void_t* args, ssize_t n)
-#else
-uint dtstrhash(h,args,n)
-uint	h;
-Void_t*	args;
-ssize_t	n;
-#endif
+uint dtstrhash(uint h, char* args, int n)
 {
 	unsigned char	*s = (unsigned char*)args;
 
@@ -47,13 +40,14 @@ ssize_t	n;
 	h = (h == 0 || h == ~0) ? FNV_OFFSET : h;
 	if(n <= 0) /* see discipline key definition for == 0 */
 	{	for(; *s != 0; ++s )
-			h = (h ^ s[0]) * FNV_PRIME;
+			h = ((h ^ s[0]) * FNV_PRIME) ^ (h >> (_ast_sizeof_int-1)*8);
 	}
 	else
 	{	unsigned char	*ends;
 		for(ends = s+n; s < ends; ++s)
-			h = (h ^ s[0]) * FNV_PRIME;
+			h = ((h ^ s[0]) * FNV_PRIME) ^ (h >> (_ast_sizeof_int-1)*8);
 	}
 
 	return h;
 }
+

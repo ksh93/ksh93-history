@@ -1195,7 +1195,6 @@ retry1:
 		mp->shp->argaddr = 0;
 		if(type)
 		{
-			register int d;
 			while((d=fcget()),isadigit(d))
 				c = 10*c + (d-'0');
 			fcseek(-1);
@@ -1224,7 +1223,6 @@ retry1:
 		offset = stktell(stkp);
 		do
 		{
-			register int d;
 			np = 0;
 			do
 			{
@@ -1519,7 +1517,12 @@ retry1:
 				dolmax = (int)strlen(id);
 				dolg = -1;
 				nextname(mp,id,0);
-				v = nextname(mp,id,dolmax);
+#if 1
+				if(nv_open(id,mp->shp->var_tree,NV_NOREF|NV_NOADD|NV_VARNAME|NV_NOFAIL))
+					v = id;
+				else
+#endif
+					v = nextname(mp,id,dolmax);
 			}
 		}
 		else if(type==M_SUBNAME)
@@ -1602,7 +1605,7 @@ retry1:
 					type = fcget();
 					if(type=='%' || type=='#')
 					{
-						int d = fcmbget(&LEN);
+						d=fcmbget(&LEN);
 						fcseek(-LEN);
 						if(d=='(')
 							type = 0;
@@ -1793,10 +1796,10 @@ retry1:
 retry2:
 	if(v && (!nulflg || *v ) && c!='+')
 	{
-		register int d = (mode=='@'?' ':mp->ifs);
 		int match[2*(MATCH_MAX+1)],index;
 		int nmatch, nmatch_prev, vsize_last, tsize;
 		char *vlast=NULL,*oldv;
+		d = (mode=='@'?' ':mp->ifs);
 		while(1)
 		{
 			if(!v)

@@ -393,7 +393,7 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 		}
 	}
 	np->nvalue.cp = up->cp;
-	if(!up->cp)
+	if(!up->cp && (np->nvflag&NV_INT16)!=NV_INT16)
 	{
 		char *xp = nv_setdisc(np,"get",np,(Namfun_t*)np);
 		if(flag!=ARRAY_ASSIGN)
@@ -443,10 +443,13 @@ bool nv_arraysettype(Namval_t *np, Namval_t *tp, const char *sub, int flags)
 			nv_offattr(nq,NV_RDONLY);
 		if(!nv_isattr(tp,NV_BINARY))
 		{
+			char *prefix = shp->prefix;
 			if(xtrace)
 				sh_offoption(shp,SH_XTRACE);
 			ap->flags &= ~ARRAY_SCAN;
+			shp->prefix = 0;
 			sh_eval(shp,sh_sfeval(av),0);
+			shp->prefix = prefix;
 			ap->flags |= ARRAY_SCAN;
 			free((void*)av[0]);
 			if(xtrace)
@@ -1204,7 +1207,6 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long size,int flags)
 	{
 		if(sp && sp!=Empty)
 		{
-			Shell_t	*shp = sh_ptr(np);
 			if(ap && ap->xp && !strmatch(sp,"+([0-9])"))
 			{
 				Namval_t *mp = nv_namptr(ap->xp,0);

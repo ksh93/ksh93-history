@@ -205,7 +205,7 @@ void sh_subfork(void)
 		shp->comsub = 0;
 		SH_SUBSHELLNOD->nvalue.s = 0;
 		sp->subpid=0;
-		shp->st.trapcom[0] = (comsub==2?NULL:trap);
+		shp->st.trapcom[0] = trap;
 		shp->savesig = 0;
 	}
 }
@@ -612,6 +612,7 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 	sh_popcontext(shp,&buff);
 	if(shp->subshell==0)	/* must be child process */
 	{
+		shp->st.trapcom[0] = 0;
 		subshell_data = sp->prev;
 		if(jmpval==SH_JMPSCRIPT)
 			siglongjmp(*shp->jmplist,jmpval);

@@ -250,7 +250,7 @@ int sh_argopts(int argc,register char *argv[], void *context)
 	Shopt_t		newflags;
 	int setflag=0, action=0, trace=(int)sh_isoption(shp,SH_XTRACE);
 	Namval_t *np = NIL(Namval_t*);
-	const char *cp;
+	const char *sp;
 	char *keylist=0;
 	int verbose,f,unsetnp=0;
 	Optdisc_t disc;
@@ -383,8 +383,8 @@ int sh_argopts(int argc,register char *argv[], void *context)
 #endif /* SHOPT_REGRESS */
 		    skip:
 		    default:
-			if(cp=strchr(optksh,n))
-				o = flagval[cp-optksh];
+			if(sp=strchr(optksh,n))
+				o = flagval[sp-optksh];
 			break;
 		    case ':':
 			if(opt_info.name[0]=='-'&&opt_info.name[1]=='-')
@@ -422,7 +422,7 @@ int sh_argopts(int argc,register char *argv[], void *context)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage(NIL(char*)));
 	/* check for '-' or '+' argument */
-	if((cp=argv[opt_info.index]) && cp[1]==0 && (*cp=='+' || *cp=='-') &&
+	if((sp=argv[opt_info.index]) && sp[1]==0 && (*sp=='+' || *sp=='-') &&
 		strcmp(argv[opt_info.index-1],"--"))
 	{
 		opt_info.index++;
@@ -559,7 +559,7 @@ int sh_argopts(int argc,register char *argv[], void *context)
 			nv_setvec(np,0,argc,argv);
 			nv_close(np);
 		}
-		else if(argc>0 || ((cp=argv[-1]) && strcmp(cp,"--")==0))
+		else if(argc>0 || ((sp=argv[-1]) && strcmp(sp,"--")==0))
 			sh_argset(ap,argv-1);
 	}
 	else if(is_option(&newflags,SH_CFLAG))

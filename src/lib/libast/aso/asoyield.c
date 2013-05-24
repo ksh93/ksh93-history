@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,48 +16,33 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
+
+#include "asohdr.h"
+
 #if defined(_UWIN) && defined(_BLD_ast)
 
-void _STUB_vmdcheap(){}
+NoN(asolock)
 
 #else
 
-#include	"vmhdr.h"
+#include "FEATURE/sched"
 
-/*	A discipline to get memory from the heap.
-**
-**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
-*/
-#if __STD_C
-static Void_t* heapmem(Vmalloc_t* vm, Void_t* caddr,
-			size_t csize, size_t nsize,
-			Vmdisc_t* disc)
-#else
-static Void_t* heapmem(vm, caddr, csize, nsize, disc)
-Vmalloc_t*	vm;	/* region doing allocation from 	*/
-Void_t*		caddr;	/* current low address			*/
-size_t		csize;	/* current size				*/
-size_t		nsize;	/* new size				*/
-Vmdisc_t*	disc;	/* discipline structure			*/
+#if _hdr_sched
+#include <sched.h>
 #endif
+
+int
+asoyield(void)
 {
-	if(csize == 0 && nsize == 0)
-		return NIL(Void_t*);
-	else if(csize == 0)
-		return vmalloc(Vmheap,nsize);
-	else if(nsize == 0)
-		return vmfree(Vmheap,caddr) >= 0 ? caddr : NIL(Void_t*);
-	else	return vmresize(Vmheap,caddr,nsize,0);
-}
-
-static Vmdisc_t _Vmdcheap = { heapmem, NIL(Vmexcept_f), 0 };
-__DEFINE__(Vmdisc_t*,Vmdcheap,&_Vmdcheap);
-
-#ifdef NoF
-NoF(vmdcheap)
+#if _lib_sched_yield
+	return sched_yield();
+#else
+	return asospinrest();
 #endif
+}
 
 #endif

@@ -95,4 +95,19 @@ compound -a b
 typeset -m "b[50][51].v=a[40][41].v"
 [[ $(typeset -p b) == "$exp" ]] || err_exit 'typeset -m does not preserve enum'
 
+enum bb=( ya ba )
+compound c=( bb -a ar=([4][5]=ba ) )
+exp='typeset -C c=(bb -a ar=(typeset -a [4]=([5]=ba) );)'
+[[ $(typeset -p c) == "$exp" ]] ||  err_exit 'compound variable contained command array of enums not working'
+
+(
+	set -o nounset
+	bool bl
+	(( bl=true )) 2> /dev/null
+) || err_exit 'set -o nounset causes ((bool=true)) to fail'
+
+bool  -a bl
+(( bl[4]=false))
+[[ ${bl[4]} == false ]] || err_exit "setting enum array element to 0 doesn't expand to enumeration value"
+
 exit $((Errors<125?Errors:125))

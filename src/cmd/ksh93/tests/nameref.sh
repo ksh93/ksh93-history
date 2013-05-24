@@ -707,4 +707,18 @@ val=$(
 )
 [[ $val == 123 ]] || err_exit 'optimization bug with for loops with references'
 
+function setref
+{
+	nameref obj=$1
+	obj=foo
+}
+function foo
+{
+	typeset -S static
+	compound v
+	setref v.s 2> /dev/null
+	[[ ${v.s} == foo ]] || err_exit  'nameref to v.s cannot failed when called from function with static variables ans v.s does not exist'
+}
+foo
+
 exit $((Errors<125?Errors:125))

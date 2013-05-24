@@ -1135,7 +1135,10 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					{
 					addsub:
 						sp = cp;
-						if(!(nq = nv_opensub(np)))
+						nq = 0;
+						if(ap && nv_type(np))
+							nq = nv_search(sub,ap->table,0);
+						if(!nq && !(nq = nv_opensub(np)))
 						{
 							Namarr_t *ap = nv_arrayptr(np);
 							if(!sub && (flags&NV_NOADD))
@@ -1527,8 +1530,10 @@ skip:
 					}
 				}
 				_nv_unset(np,NV_EXPORT);
+				np->nvalue.cp = strdup(cp);
 			}
-			nv_putval(np, cp, c);
+			else
+				nv_putval(np, cp, c);
 			if(isref)
 			{
 				if(nv_search((char*)np,shp->var_base,HASH_BUCKET))
@@ -2525,9 +2530,11 @@ void	_nv_unset(register Namval_t *np,int flags)
 		/* This function contains disc */
 		if(!nv_local)
 		{
+			Dt_t *last_root = shp->last_root;
 			nv_local=1;
 			nv_putv(np,NIL(char*),flags,np->nvfun);
 			nv_local=0;
+			shp->last_root = last_root;
 			return;
 		}
 		/* called from disc, assign the actual value */
@@ -3213,6 +3220,23 @@ static char *lastdot(char *cp, int eq, void *context)
 	return(eq?0:ep);
 }
 
+#if NVCACHE
+/* purge all entries whose name is of the form name.* */
+static void cache_purge(const char *name)
+{
+	register int		c;
+	size_t			len=strlen(name);
+	struct Cache_entry	*xp;
+	for(c=0,xp=nvcache.entries ; c < NVCACHE; xp= &nvcache.entries[++c])
+	{
+		if(xp->len <= len || xp->name[len]!='.')
+			continue;
+		if(memcmp(name,xp->name,len)==0)
+			xp->root = 0;
+	}
+}
+#endif
+
 bool nv_rename(register Namval_t *np, int flags)
 {
 	Shell_t			*shp = sh_ptr(np);
@@ -3233,16 +3257,23 @@ bool nv_rename(register Namval_t *np, int flags)
 		nvenv = np->nvenv;
 	if(nvenv || (cp = nv_name(np)) && nv_isarray(np) && cp[strlen(cp)-1] == ']')
 		arraynp = 1;
-	if(!(cp=nv_getval(np)))
+	mp = nv_isarray(np)?nv_opensub(np):0;
+	if(flags&NV_MOVE)
 	{
-		if(flags&NV_MOVE)
+		if(!(cp=(char*)(mp?mp:np)->nvalue.cp))
+		{
 			errormsg(SH_DICT,ERROR_exit(1),e_varname,"");
-		return(false);
+			return(false);
+		}
+		(mp?mp:np)->nvalue.cp = 0;
 	}
+	else
+		if(!(cp=nv_getval(np)))
+			return(false);
 	if(lastdot(cp,0,(void*)shp) && nv_isattr(np,NV_MINIMAL))
 		errormsg(SH_DICT,ERROR_exit(1),e_varname,nv_name(np));
 	arraynr = cp[strlen(cp)-1] == ']';
-	if(nv_isarray(np) && !(mp=nv_opensub(np)))
+	if(nv_isarray(np) && !mp)
 		index=nv_aindex(np);
 	shp->prefix = 0;
 	if(!hp)
@@ -3261,12 +3292,16 @@ bool nv_rename(register Namval_t *np, int flags)
 	if(!nr)
 		nr= nv_open(cp, hp, flags|NV_NOREF|((flags&NV_MOVE)?0:NV_NOFAIL));
 	shp->prefix = prefix;
+	if(sh_isoption(shp,SH_NOUNSET)  && (!nr || nv_isnull(nr)))
+		errormsg(SH_DICT,ERROR_exit(1),e_notset,cp);
 	if(!nr)
 	{
 		if(!nv_isvtree(np))
 			_nv_unset(np,0);
 		return(false);
 	}
+	if(flags&NV_MOVE)
+		free(cp);
 	if(!mp && index>=0 && nv_isvtree(nr))
 	{
 		sfprintf(shp->strbuf,"%s[%d]%c",nv_name(np),index,0);
@@ -3301,8 +3336,6 @@ bool nv_rename(register Namval_t *np, int flags)
 	if((shp->prev_table = shp->last_table) && nv_isvtree(nr))
 		shp->prev_table = 0;
 	shp->prev_root = shp->last_root;
-	if(shp->last_root== shp->var_base)
-		shp->prev_root = shp->var_tree;
 	shp->last_table = last_table;
 	shp->last_root = last_root;
 	if((nv_arrayptr(nr) && !arraynr) || nv_isvtree(nr))
@@ -3333,7 +3366,12 @@ bool nv_rename(register Namval_t *np, int flags)
 			sh_setmatch(shp,0,0,0,0,0);
 		}
 		else
+		{
 			nv_clone(nr,mp,(flags&NV_MOVE)|NV_COMVAR);
+#if NVCACHE
+			cache_purge(nv_name(nr));
+#endif
+		}
 		mp->nvenv = nvenv;
 		if(flags&NV_MOVE)
 		{
@@ -3400,7 +3438,21 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 	if(nq)
 		hp = shp->last_root;
 	else
+	{
+		char *xp;
+		if(hp  && (xp = strchr(cp,'.')))
+		{
+			*xp = 0;
+			nr = nv_open(cp,hp,flags|NV_NOSCOPE|NV_NOADD|NV_NOFAIL);
+			*xp = '.';
+			if(nr && nv_isvtree(nr) && (nr = nv_open(cp,hp,flags|NV_NOSCOPE|NV_NOFAIL)))
+				nq = nr;
+			else
+				nr = 0;
+		
+		}
 		hp = hp?(openmatch?openmatch:shp->var_base):shp->var_tree;
+	}
 	if(nr==np) 
 	{
 		if(shp->namespace && nv_dict(shp->namespace)==hp)

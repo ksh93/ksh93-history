@@ -16,34 +16,21 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #if defined(_UWIN) && defined(_BLD_ast)
 
-void _STUB_vmmapopen(){}
+void _STUB_vmdcshare(){}
 
 #else
 
 #include	"vmhdr.h"
-
-#if _PACKAGE_ast
-
-#undef  major
-#undef  minor
-#undef  makedev
-
-#else
-
 #include	<sys/types.h>
 #include	<string.h>
 #if _hdr_unistd
 #include	<unistd.h>
 #endif
-
-#endif
-
-#undef	ALIGN	/* some sys/param.h define this */
 
 #include	<sys/mman.h>	/* mmap() headers	*/
 #include	<sys/file.h>
@@ -53,34 +40,30 @@ void _STUB_vmmapopen(){}
 #include	<sys/shm.h>	/* shm headers		*/
 #include	<sys/ipc.h>
 
-#undef	ALIGN
-#define ALIGN	sizeof(struct _align_s)
-
-/* Create a region to allocate based on mmap() or shmget().
-** Both ways provide for share memory allocation.
-** mmap() also allows for allocating persistent data.
+/* Create a discipline to allocate based on mmap() or shmget().
+** Both ways can be used for allocating shared memory across processes.
+** However, mmap() also allows for allocating persistent memory.
 **
-** Written by Kiem-Phong Vo (kpv@research.att.com)
+** Written by Kiem-Phong Vo, phongvo@gmail.com
 */
 
-#define MM_INIT		001	/* initialization mode	*/
-
-#define MM_RELEASE	010	/* release share mem	*/
-#define MM_CLEANUP	020	/* clean up resources	*/
-
 /* magic word signaling region is being initialized */
-#define MM_LETMEDOIT	((unsigned int)(('N'<<24) | ('B'<<16) | ('&'<<8) | ('I')) )
+#define MM_JUST4US	((unsigned int)(('P'<<24) | ('N'<<16) | ('B'<<8) | ('I')) ) /* 1347306057 */
 
 /* magic word signaling file/segment is ready */
-#define	MM_MAGIC	((unsigned int)(('P'<<24) | ('&'<<16) | ('N'<<8) | ('8')) )
+#define	MM_MAGIC	((unsigned int)(('P'<<24) | ('&'<<16) | ('N'<<8) | ('8')) ) /* 1344687672 */
 
 /* default mimimum region size */
 #define MM_MINSIZE	(64*_Vmpagesize)
 
+/* flags for actions on region closing */
+#define MM_DETACH	01	/* detach all attached memory	*/
+#define MM_REMOVE	02	/* remove files/segments	*/
+
 /* macros to get the data section and size */
-#define MMHEAD(file)	ROUND(sizeof(Mmvm_t)+strlen(file), ALIGN)
-#define MMDATA(mmvm)	((Vmuchar_t*)(mmvm)->base + MMHEAD(mmvm->file))
-#define MMSIZE(mmvm)	((mmvm)->size - MMHEAD(mmvm->file))
+#define MMHEAD(name)	ROUND(sizeof(Mmvm_t)+strlen(name), ALIGN)
+#define MMDATA(mmvm)	((Vmuchar_t*)(mmvm)->base + MMHEAD(mmvm->name))
+#define MMSIZE(mmvm)	((mmvm)->size - MMHEAD(mmvm->name))
 
 #ifdef S_IRUSR
 #define FILE_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
@@ -88,32 +71,27 @@ void _STUB_vmmapopen(){}
 #define FILE_MODE	0644
 #endif
 
-/* to store key/value pairs for application */
-typedef struct _mmuser_s	Mmuser_t;
-struct _mmuser_s
-{	Mmuser_t*	next;	/* link list		*/
-	int		key;	/* identifying key	*/
-	Void_t*		val;	/* associated value	*/
-};
-
 typedef struct _mmvm_s
 {	unsigned int	magic;	/* magic bytes		*/
 	Void_t*		base;	/* address to map to	*/
 	ssize_t		size;	/* total data size	*/
 	ssize_t		busy;	/* amount in use	*/
-	Mmuser_t*	user;	/* stored (key,val)'s	*/
+	key_t		shmkey;	/* shared segment's key	*/
+	int		shmid;	/* shared segment's ID	*/
 	int		proj;	/* project number	*/
-	char		file[1];/* file name		*/
+	char		name[1];/* file or shm name	*/
 } Mmvm_t;
 
 typedef struct _mmdisc_s
 {	Vmdisc_t	disc;	/* Vmalloc discipline	*/
-	int		flag;	/* various modes	*/
+	int		init;	/* initializing state	*/
+	int		mode;	/* closing modes	*/
 	Mmvm_t*		mmvm;	/* shared memory data	*/
-	ssize_t		size;	/* desired file size	*/
-	int		shmid;	/* ID of the shared mem	*/
+	ssize_t		size;	/* desired memory size	*/
+	key_t		shmkey;	/* shared segment's key	*/
+	int		shmid;	/* shared segment's ID	*/
 	int		proj;	/* shm project ID 	*/
-	char		file[1];/* backing store/ftok()	*/
+	char		name[1];/* backing store/strID	*/
 } Mmdisc_t;
 
 #if DEBUG
@@ -125,7 +103,7 @@ int _vmmdump(Vmalloc_t* vm, int fd)
 	Mmdisc_t	*mmdc = (Mmdisc_t*)vm->disc;
 
 	fd = fd < 0 ? 2 : fd;
-	sprintf(mesg, "File: %s\n", mmdc->file ); write(fd, mesg, strlen(mesg));
+	sprintf(mesg, "File: %s\n", mmdc->name ); write(fd, mesg, strlen(mesg));
 	sprintf(mesg, "Project: %10d\n", mmdc->proj); write(fd, mesg, strlen(mesg));
 	sprintf(mesg, "Memory:  %#010lx\n", mmdc->mmvm); write(fd, mesg, strlen(mesg));
 	sprintf(mesg, "Size:    %10d\n", mmdc->size); write(fd, mesg, strlen(mesg));
@@ -140,6 +118,27 @@ int _vmmdump(Vmalloc_t* vm, int fd)
 }
 #endif /*DEBUG*/
 
+/* make a key from a string and a project number -- this is like ftok() */
+static key_t mmkey(char* str, int proj)
+{
+	unsigned int	hash;
+	key_t		key;
+
+	/* Fowler-Knoll-Vo hash function */
+#if _ast_sizeof_int == 8 /* 64-bit hash */
+#define	FNV_PRIME	((1<<40) + (1<<8) + 0xb3)
+#define FNV_OFFSET	14695981039346656037
+#else /* 32-bit hash */
+#define	FNV_PRIME	((1<<24) + (1<<8) + 0x93)
+#define FNV_OFFSET	2166136261
+#endif
+	for(hash = FNV_OFFSET; *str; ++str)
+		hash = (hash ^ str[0]) * FNV_PRIME;
+	hash = (hash ^ proj) * FNV_PRIME; /* hash project number */
+
+	return (key = (key_t)hash) <= 0 ? -key : key;
+}
+
 /* fix the mapped address for a region */
 static Mmvm_t* mmfix(Mmvm_t* mmvm, Mmdisc_t* mmdc, int fd)
 {
@@ -147,7 +146,7 @@ static Mmvm_t* mmfix(Mmvm_t* mmvm, Mmdisc_t* mmdc, int fd)
 	ssize_t	size = mmvm->size;
 
 	if(base != (Void_t*)mmvm) /* mmvm is not right yet */
-	{	/**/ASSERT(!base || (base && (VLONG(base)%_Vmpagesize) == 0) );
+	{	/**/DEBUG_ASSERT(!base || (base && (VMLONG(base)%_Vmpagesize) == 0) );
 		if(mmdc->proj < 0)
 		{	munmap((Void_t*)mmvm, size); 
 			mmvm = (Mmvm_t*)mmap(base, size, (PROT_READ|PROT_WRITE),
@@ -168,9 +167,8 @@ static Mmvm_t* mmfix(Mmvm_t* mmvm, Mmdisc_t* mmdc, int fd)
 static int mminit(Mmdisc_t* mmdc)
 {
 	Void_t		*base;
-	int		try, k;
+	int		try;
 	int		fd = -1;
-	key_t		key = -1;
 	ssize_t		extent, size = 0;
 	Mmvm_t		*mmvm = NIL(Mmvm_t*);
 	int		rv = -1;
@@ -181,88 +179,125 @@ static int mminit(Mmdisc_t* mmdc)
 	/* fixed size region so make it reasonably large */
 	if((size = mmdc->size) < MM_MINSIZE )
 		size =  MM_MINSIZE;
-	size += MMHEAD(mmdc->file) + ALIGN;
+	size += MMHEAD(mmdc->name) + ALIGN;
 	size  = ROUND(size, _Vmpagesize);
-
-	/* this op can happen simultaneously in different processes */
-	if((fd = open(mmdc->file, O_RDWR|O_CREAT, FILE_MODE)) < 0)
-		return -1;
 
 	/* get/create the initial segment of data */
 	if(mmdc->proj < 0 ) /* proj < 0 means doing mmap() */
-	{	/* Note that the location being written to is always zero! */
-		if((extent = (ssize_t)lseek(fd, (off_t)0, SEEK_END)) < 0)
+	{	/* this can be done in multiple processes */
+		if((fd = open(mmdc->name, O_RDWR|O_CREAT, FILE_MODE)) < 0)
+		{	/**/DEBUG_MESSAGE("vmdcshare: open() failed");
 			goto done;
+		}
+
+		/* Note that the location being written to is always zero! */
+		if((extent = (ssize_t)lseek(fd, (off_t)0, SEEK_END)) < 0)
+		{	/**/DEBUG_MESSAGE("vmdcshare: lseek() to get file size failed");
+			goto done;
+		}
+
 		if(extent < size) /* make the file size large enough */
-			if(lseek(fd, (off_t)size, 0) != (off_t)size || write(fd, "", 1) != 1 )
+		{	if(lseek(fd, (off_t)size, 0) != (off_t)size || write(fd, "", 1) != 1 )
+			{	/**/DEBUG_MESSAGE("vmdcshare: attempt to extend file failed");
 				goto done;
+			}
+		}
 
 		/* map the file into memory */
 		mmvm = (Mmvm_t*)mmap(NIL(Void_t*), size, (PROT_READ|PROT_WRITE),
 		 		     MAP_SHARED, fd, (off_t)0 );
+		if(!mmvm || mmvm == (Mmvm_t*)(-1) ) /* initial mapping failed */
+		{	/**/DEBUG_MESSAGE("vmdcshare: mmap() failed");
+			goto done;
+		}
 	}
 	else 
 	{	/* make the key and get/create an id for the share mem segment */
-		if((key = ftok(mmdc->file, mmdc->proj)) < 0 )
+		if((mmdc->shmkey = mmkey(mmdc->name, mmdc->proj)) < 0 )
 			goto done;
-		if((mmdc->shmid = shmget(key, size, IPC_CREAT|FILE_MODE)) < 0 )
+		if((mmdc->shmid = shmget(mmdc->shmkey, size, IPC_CREAT|FILE_MODE)) < 0 )
+		{	/**/DEBUG_MESSAGE("vmdcshare: shmget() failed");
 			goto done;
+		}
 
 		/* map the data segment into memory */
 		mmvm = (Mmvm_t*)shmat(mmdc->shmid, NIL(Void_t*), 0);
+		if(!mmvm || mmvm == (Mmvm_t*)(-1) ) /* initial mapping failed */
+		{	/**/DEBUG_MESSAGE("vmdcshare: attempt to attach memory failed");
+			shmctl(mmdc->shmid, IPC_RMID, 0);
+			goto done;
+		}
 	}
 
-	if(!mmvm || mmvm == (Mmvm_t*)(-1) ) /* initial mapping failed */
-		goto done;
-
 	/* all processes compete for the chore to initialize data */
-	if(asocasint(&mmvm->magic, 0, MM_LETMEDOIT) == 0 ) /* lucky winner: us! */
-	{	if(!(base = vmmaddress(size)) ) /* get a suitable base for the map */
-			base = (Void_t*)mmvm;
-		mmdc->flag |= MM_INIT;
+	if(asocasint(&mmvm->magic, 0, MM_JUST4US) == 0 ) /* lucky winner: us! */
+	{	if((base = vmmaddress(size)) != NIL(Void_t*))
+		{	mmvm->base = base; /* this will be the base of the map */
+			mmvm->size = size;
+		}
+		if(!base || !(mmvm = mmfix(mmvm, mmdc, fd)) )
+		{	/* remove any resource just created */
+			if(mmdc->proj >= 0) 
+				shmctl(mmdc->shmid, IPC_RMID, 0);	
+			else	unlink(mmdc->name);
+			goto done;
+		}
+
+		mmdc->init = 1; 
 		mmvm->base = base;
 		mmvm->size = size;
 		mmvm->busy = 0;
+		mmvm->shmkey = mmdc->shmkey;
+		mmvm->shmid = mmdc->shmid;
 		mmvm->proj = mmdc->proj;
-		strcpy(mmvm->file, mmdc->file);
+		strcpy(mmvm->name, mmdc->name);
 		if(mmdc->proj < 0 ) /* flush to file */
-			msync((Void_t*)mmvm, MMHEAD(mmvm->file), MS_SYNC);
+			msync((Void_t*)mmvm, MMHEAD(mmvm->name), MS_SYNC);
 
-		if(mmvm->base != (Void_t*)mmvm) /* not yet at the right address */
-			if(!(mmvm = mmfix(mmvm, mmdc, fd)) )
-				goto done;
 		rv = 0; /* success, return this value to indicate a new map */
 	}
 	else /* wait for someone else to finish initialization */
-	{	/**/ASSERT(!(mmdc->flag&MM_INIT));
-		if(mmvm->magic != MM_LETMEDOIT && mmvm->magic != MM_MAGIC)
+	{	/**/DEBUG_ASSERT(mmdc->init == 0);
+		if(mmvm->magic != MM_JUST4US && mmvm->magic != MM_MAGIC)
+		{	/**/DEBUG_MESSAGE("vmdcshare: bad magic numbers");
 			goto done;
+		}
 
-		for(try = 0, k = 0;; ASOLOOP(k) ) /* waiting */
-		{	if(asocasint(&mmvm->magic, MM_MAGIC, MM_MAGIC) == MM_MAGIC )
+		for(try = 0;; asospinrest() ) /* wait for region completion */
+		{	if(asogetint(&mmvm->magic) == MM_MAGIC )
 				break;
 			else if((try += 1) <= 0 ) /* too many tries */
+			{	/**/DEBUG_MESSAGE("vmdcshare: waiting time exhausted");
 				goto done;
+			}
 		}
 
 		/* mapped the wrong memory */
-		if(mmvm->proj != mmdc->proj || strcmp(mmvm->file, mmdc->file) != 0 )
+		if(mmvm->proj != mmdc->proj || strcmp(mmvm->name, mmdc->name) != 0 )
+		{	/**/DEBUG_MESSAGE("vmdcshare: wrong initialization parameters");
 			goto done;
+		}
 
 		if(mmvm->base != (Void_t*)mmvm) /* not yet at the right address */
-			if(!(mmvm = mmfix(mmvm, mmdc, fd)) )
+		{	if(!(mmvm = mmfix(mmvm, mmdc, fd)) )
+			{	/**/DEBUG_MESSAGE("vmdcshare: Can't fix address");
 				goto done;
+			}
+		}
+
 		rv = 1; /* success, return this value to indicate a finished map */
 	}
 
-done:	(void)close(fd);
+done:	if(fd >= 0)
+		(void)close(fd);
 
 	if(rv >= 0 ) /* successful construction of region */
-	{	/**/ASSERT(mmvm && mmvm != (Mmvm_t*)(-1));
+	{	/**/DEBUG_ASSERT(mmvm && mmvm != (Mmvm_t*)(-1));
 		mmdc->mmvm = mmvm;
 	}
 	else if(mmvm && mmvm != (Mmvm_t*)(-1)) /* error, remove map */
-	{	if(mmdc->proj < 0)
+	{	/**/DEBUG_MESSAGE("vmdcshare: error during opening region");
+		if(mmdc->proj < 0)
 			(void)munmap((Void_t*)mmvm, size);
 		else	(void)shmdt((Void_t*)mmvm);
 	}
@@ -285,19 +320,19 @@ Mmdisc_t*	mmdc;
 
 	if(mmdc->proj < 0 )
 	{	(void)msync(mmvm->base, mmvm->size, MS_ASYNC);
-		if(mmdc->flag&MM_RELEASE)
+		if(mmdc->mode&MM_DETACH)
 		{	if(mmvm->base )
 				(void)munmap(mmvm->base, mmvm->size);
 		}
-		if(mmdc->flag&MM_CLEANUP)
-			(void)unlink(mmdc->file);
+		if(mmdc->mode&MM_REMOVE)
+			(void)unlink(mmdc->name);
 	}
 	else 
-	{	if(mmdc->flag&MM_RELEASE)
+	{	if(mmdc->mode&MM_DETACH)
 		{	if(mmvm->base )
 				(void)shmdt(mmvm->base);
 		}
-		if(mmdc->flag&MM_CLEANUP)
+		if(mmdc->mode&MM_REMOVE)
 		{	if(mmdc->shmid >= 0 )
 				(void)shmctl(mmdc->shmid, IPC_RMID, &shmds);
 		}
@@ -353,7 +388,6 @@ Vmdisc_t*	disc;
 #endif
 {
 	int		rv;
-	Void_t		*base;
 	Mmdisc_t	*mmdc = (Mmdisc_t*)disc;
 
 	if(type == VM_OPEN)
@@ -361,13 +395,13 @@ Vmdisc_t*	disc;
 		{	if((rv = mminit(mmdc)) < 0 ) /* initialization failed */
 				return -1;
 			else if(rv == 0) /* just started a new map */
-			{	/**/ASSERT(mmdc->flag&MM_INIT);
-				/**/ASSERT(mmdc->mmvm->magic == MM_LETMEDOIT);
+			{	/**/DEBUG_ASSERT(mmdc->init == 1);
+				/**/DEBUG_ASSERT(mmdc->mmvm->magic == MM_JUST4US);
 				return 0;
 			}
 			else /* an existing map was reconstructed */
-			{	/**/ASSERT(!(mmdc->flag&MM_INIT));
-				/**/ASSERT(mmdc->mmvm->magic == MM_MAGIC);
+			{	/**/DEBUG_ASSERT(mmdc->init == 0);
+				/**/DEBUG_ASSERT(mmdc->mmvm->magic == MM_MAGIC);
 				*((Void_t**)data) = MMDATA(mmdc->mmvm);
 				return 1;
 			}
@@ -375,13 +409,13 @@ Vmdisc_t*	disc;
 		else	return 0;
 	}
 	else if(type == VM_ENDOPEN) /* at end of vmopen() */
-	{	if(mmdc->flag&MM_INIT) /* this is the initializing process! */
-		{	/**/ASSERT(mmdc->mmvm->magic == MM_LETMEDOIT);
-			asocasint(&mmdc->mmvm->magic, MM_LETMEDOIT, MM_MAGIC);
+	{	if(mmdc->init) /* this is the initializing process! */
+		{	/**/DEBUG_ASSERT(mmdc->mmvm->magic == MM_JUST4US);
+			asocasint(&mmdc->mmvm->magic, MM_JUST4US, MM_MAGIC);
 
 			if(mmdc->proj < 0) /* sync data to file now */
-				msync((Void_t*)mmdc->mmvm, MMHEAD(mmdc->file), MS_SYNC);
-		} /**/ASSERT(mmdc->mmvm->magic == MM_MAGIC);
+				msync((Void_t*)mmdc->mmvm, MMHEAD(mmdc->name), MS_SYNC);
+		} /**/DEBUG_ASSERT(mmdc->mmvm->magic == MM_MAGIC);
 		return 0;
 	}
 	else if(type == VM_CLOSE)
@@ -391,136 +425,57 @@ Vmdisc_t*	disc;
 		(void)vmfree(Vmheap, mmdc);
 		return 0; /* all done */
 	}
+	else if(type == VM_DISC)
+		return -1;
 	else	return 0;
 }
 
 #if __STD_C
-Vmalloc_t* vmmopen(char* file, int proj, ssize_t size )
+Vmdisc_t* vmdcshare(char* name, int proj, ssize_t size, int mode )
 #else
-Vmalloc_t* vmmopen(file, proj, size )
-char*		file;	/* file for key or data backing */
-int		proj;	/* project ID, < 0 doing mmap	*/
-ssize_t		size;	/* desired size for mem segment	*/
+Vmdisc_t* vmdcshare(name, proj, size, mode )
+char*		name;	/* key or file persistent store		*/
+int		proj;	/* project ID, < 0 for doing mmap	*/
+ssize_t		size;	/* desired size for memory segment	*/
+int		mode;	/*  1: keep memory segments		*/
+			/*  0: release memory segments		*/
+			/* -1: like 0 plus removing files/shms	*/
 #endif
 {
-	Vmalloc_t	*vm;
 	Mmdisc_t	*mmdc;
 
 	GETPAGESIZE(_Vmpagesize);
 
-	if(!file || !file[0] )
-		return NIL(Vmalloc_t*);
+	if(!name || !name[0] )
+	{	/**/DEBUG_MESSAGE("vmdcshare: store name not given");
+		return NIL(Vmdisc_t*);
+	}
+	if(size <= 0 )
+	{	/**/DEBUG_MESSAGE("vmdcshare: store size <= 0");
+		return NIL(Vmdisc_t*);
+	}
 
 	/* create discipline structure for getting memory from mmap */
-	if(!(mmdc = vmalloc(Vmheap, sizeof(Mmdisc_t)+strlen(file))) )
-		return NIL(Vmalloc_t*);
+	if(!(mmdc = vmalloc(Vmheap, sizeof(Mmdisc_t)+strlen(name))) )
+	{	/**/DEBUG_MESSAGE("vmdcshare: failed to allocate discipline ");
+		return NIL(Vmdisc_t*);
+	}
+
 	memset(mmdc, 0, sizeof(Mmdisc_t));
 	mmdc->disc.memoryf = mmgetmem;
 	mmdc->disc.exceptf = mmexcept;
-	mmdc->disc.round   = _Vmpagesize; /* round request to this size */
+	mmdc->disc.round   = (size/4) > VM_INCREMENT ? VM_INCREMENT : size/4;
+	mmdc->disc.round   = ROUND(mmdc->disc.round, _Vmpagesize);
 	mmdc->mmvm = NIL(Mmvm_t*);
 	mmdc->size = size;
+	mmdc->shmkey = -1;
 	mmdc->shmid = -1;
-	mmdc->flag = 0;
+	mmdc->init = 0;
+	mmdc->mode = mode > 0 ? 0 : mode == 0 ? MM_DETACH : (MM_DETACH|MM_REMOVE);
 	mmdc->proj = proj;
-	strcpy(mmdc->file, file);
+	strcpy(mmdc->name, name);
 
-	/* now open the Vmalloc_t handle to return to application */
-	if(!(vm = vmopen(&mmdc->disc, Vmbest, VM_SHARE)) )
-	{	(void)mmend(mmdc);
-		(void)vmfree(Vmheap, mmdc);
-		return NIL(Vmalloc_t*);
-	}
-	else
-	{	/**/ASSERT(mmdc->mmvm && mmdc->mmvm->magic == MM_MAGIC);
-		return vm;
-	}
-}
-
-/* to store (key,value) data in the map */
-#if __STD_C
-Void_t* vmmvalue(Vmalloc_t* vm, int key, Void_t* val, int oper)
-#else
-Void_t* vmmvalue(vm, key, val, oper)
-Vmalloc_t*	vm;	/* a region based on vmmapopen	*/
-int		key;	/* key of data to be set	*/
-Void_t*		val;	/* data to be set		*/
-int		oper;	/* operation type		*/
-#endif
-{
-	Mmuser_t	*u;
-	Mmdisc_t	*mmdc = (Mmdisc_t*)vm->disc;
-	Mmvm_t		*mmvm = mmdc->mmvm;
-
-	/* check to see if operation is well-defined */
-	if(oper != VM_MMGET && oper != VM_MMSET && oper != VM_MMADD)
-		return NIL(Void_t*);
-
-	SETLOCK(vm, 0);
-
-	/* find the key */
-	for(u = mmvm->user; u; u = u->next)
-		if(u->key == key)
-			break;
-
-	if(!u && (oper == VM_MMSET || oper == VM_MMADD) )
-	{	if((u = KPVALLOC(vm, sizeof(Mmuser_t), vm->meth.allocf)) )
-		{	u->val  = NIL(Void_t*);
-			u->key  = key;
-			u->next = mmvm->user;
-			mmvm->user = u;
-		}
-	}
-
-	if(u) /* update data and set value to return */
-	{	if(oper == VM_MMSET)
-			u->val = val;
-		else if(oper == VM_MMADD)
-			u->val = (Void_t*)((long)(u->val) + (long)(val));
-		val = u->val;
-	}
-	else	val = NIL(Void_t*);
-
-	CLRLOCK(vm, 0);
-
-	return val;
-}
-
-void vmmrelease(Vmalloc_t* vm, int type)
-{
-	Mmdisc_t	*mmdc = (Mmdisc_t*)vm->disc;
-
-	mmdc->flag |= MM_RELEASE;
-	if(type > 0)
-		mmdc->flag |= MM_CLEANUP;
-}
-
-/* suggest an address usable for mapping memory */
-Void_t* vmmaddress(size_t size)
-{
-#if !defined(_map_min) || !defined(_map_max) || !defined(_map_dir)
-	return NIL(Void_t*);
-#else
-	Void_t			*avail;
-	static Vmuchar_t	*min = (Vmuchar_t*)_map_min;
-	static Vmuchar_t	*max = (Vmuchar_t*)_map_max;
-
-	GETPAGESIZE(_Vmpagesize);
-	size = ROUND(size, _Vmpagesize);
-
-	if(_map_dir == 0 || (min+size) > max)
-		avail = NIL(Void_t*);
-	else if(_map_dir > 0)
-	{	avail = (Void_t*)min;
-		min += size;
-	}
-	else 
-	{	max -= size;
-		avail = (Void_t*)max;
-	}
-
-	return avail;
-#endif
+	return (Vmdisc_t*)mmdc;
 }
 
 #endif

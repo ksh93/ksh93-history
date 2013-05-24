@@ -675,7 +675,7 @@ x=([0]=3 [1]=6 [2]=12)
 (( x[2] == 4 )) || err_exit '(( x[2] /= x[0])) fails for associative array'
 
 got=$($SHELL 2> /dev/null -c 'compound -a x;compound -a x[0].y; integer -a x[0].y[0].z; (( x[0].y[0].z[2]=3 )); typeset -p x')
-exp='typeset -C -a x=((typeset -C -a y=( [0]=(typeset -a -l -i z=([2]=3);));))'
+exp='typeset -C -a x=((typeset -C -a y=( [0]=(typeset -a -l -i z=([2]=3);))))'
 [[ $got == "$exp" ]] || err_exit '(( x[0].y[0].z[2]=3 )) not working'
 
 unset x

@@ -194,24 +194,46 @@ static struct back_save	bck;
 
 typedef int (*Waitevent_f)(int,long,int);
 
-void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
+static void setsiginfo(Shell_t *shp,siginfo_t* info, struct process *pw)
+{
+	info->si_signo = SIGCHLD;
+	info->si_uid = shp->gd->userid;
+	info->si_pid = pw->p_pid;
+	info->si_code = CLD_EXITED;
+	info->si_value.sival_int = 0;
+	if(WIFSTOPPED(pw->p_wstat))
+	{
+		info->si_code = CLD_STOPPED;
+		info->si_value.sival_int = WSTOPSIG(pw->p_wstat);
+	}
+	else if (WIFCONTINUED(pw->p_wstat))
+		info->si_code = CLD_CONTINUED;
+	else if (WIFSIGNALED(pw->p_wstat))
+	{
+		info->si_value.sival_int = WTERMSIG(pw->p_wstat);
+		info->si_code = WTERMCORE(pw->p_wstat)?CLD_DUMPED:CLD_KILLED;
+	}
+	else 
+		info->si_value.sival_int = WEXITSTATUS(pw->p_wstat);
+	sh_setsiginfo(info);
+}
+
+void job_chldtrap(Shell_t *shp, const char *trap, int lock)
 {
 	register struct process *pw,*pwnext;
 	pid_t bckpid;
-	int oldexit,trapnote;
-	job_lock();
-	shp->sigflag[SIGCHLD] &= ~SH_SIGTRAP;
+	int oldexit,trapnote,sorc;
 	trapnote = shp->trapnote;
-	shp->trapnote = 0;
-#ifdef _lib_sigaction
-	sh_setsiginfo(&Siginfo);
-#endif /* _lib_sigaction */
+	job_lock();
 	for(pw=job.pwlist;pw;pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
-		if((pw->p_flag&(P_BG|P_DONE)) != (P_BG|P_DONE))
+		sorc = WIFSTOPPED(pw->p_wstat) || WIFCONTINUED(pw->p_wstat);
+		if((pw->p_flag&(P_BG|P_DONE)) != (P_BG|P_DONE) && !sorc)
 			continue;
-		pw->p_flag &= ~P_BG;
+		setsiginfo(shp,&Siginfo,pw);
+		if(!sorc)
+			pw->p_flag &= ~P_BG;
 		bckpid = shp->bckpid;
 		oldexit = shp->savexit;
 		shp->bckpid = pw->p_pid;
@@ -219,8 +241,12 @@ void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
 		if(pw->p_flag&P_SIGNALLED)
 			shp->savexit |= SH_EXITSIG;
 		sh_trap(shp,trap,0);
-		if(pw->p_pid==bckpid && unpost)
-			job_unpost(shp,pw,0);
+		if(!sorc)
+		{
+			job.numbjob--;
+			if(pw->p_pid==bckpid)
+				job_unpost(shp,pw,0);
+		}
 		shp->savexit = oldexit;
 		shp->bckpid = bckpid;
 	}
@@ -379,9 +405,19 @@ bool job_reap(register int sig)
 #endif /* SHOPT_COSHELL */
 	if (vmbusy())
 	{
+		char*	s;
+
 		errormsg(SH_DICT,ERROR_warn(0),"vmbusy() inside job_reap() -- should not happen");
-		if (getenv("_AST_KSH_VMBUSY_ABORT"))
-			abort();
+		if (s = getenv("_AST_KSH_VMBUSY"))
+			switch (*s)
+			{
+			case 'a':
+				abort();
+				break;
+			case 'p':
+				pause();
+				break;
+			}
 	}
 #ifdef DEBUG
 	if(sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d signal=%d\n",__LINE__,getpid(),job.in_critical,sig) <=0)
@@ -450,39 +486,11 @@ bool job_reap(register int sig)
 		flags |= WNOHANG;
 		job.waitsafe++;
 		jp = 0;
-		pw = job_bypid(pid);
+		if(pw = job_bypid(pid))
+			pw->p_wstat = wstat;
 #ifdef _lib_sigaction
-		Siginfo.si_signo = SIGCHLD;
-		Siginfo.si_pid = pid;
-		Siginfo.si_uid = shp->gd->userid;
-		Siginfo.si_code = CLD_EXITED;
-		Siginfo.si_value.sival_int = 0;
-		if( WIFSTOPPED(wstat) || WIFCONTINUED(wstat) )
-		{
-			if(WIFSTOPPED(wstat))
-			{
-				Siginfo.si_code = CLD_STOPPED;
-				Siginfo.si_value.sival_int = WSTOPSIG(wstat);
-			}
-			else if (WIFCONTINUED(wstat))
-				Siginfo.si_code = CLD_CONTINUED;
-			if(shp->st.trapcom[SIGCHLD])
-			{
-				pid_t bckpid = shp->bckpid;
-				shp->bckpid = pid;
-				shp->sigflag[SIGCHLD] |= SH_SIGTRAP;
-				sh_setsiginfo(&Siginfo);
-		                sh_trap(shp,shp->st.trapcom[SIGCHLD],0);
-				shp->bckpid = bckpid;
-			}
-		}
-		else if (WIFSIGNALED(wstat))
-		{
-			Siginfo.si_value.sival_int = WTERMSIG(wstat);
-			Siginfo.si_code = WTERMCORE(wstat)?CLD_DUMPED:CLD_KILLED;
-		}
-		else
-			Siginfo.si_value.sival_int = WEXITSTATUS(wstat);
+		if(shp->st.trapcom[SIGCHLD] && (WIFSTOPPED(wstat) || WIFCONTINUED(wstat)))
+			shp->sigflag[SIGCHLD] |= SH_SIGTRAP;
 #endif /* _lib_sigaction */
 		lastpid = pid;
 		if(!pw)
@@ -496,6 +504,7 @@ bool job_reap(register int sig)
 			pw->p_exit = 0;
 			pw->p_pgrp = 0;
 			pw->p_exitmin = 0;
+			pw->p_wstat = wstat;
 			if(job.toclear)
 				job_clear(shp);
 			jp = jobsave_create(pid);
@@ -569,11 +578,13 @@ bool job_reap(register int sig)
 			}
 			if((pw->p_flag&P_DONE) && (pw->p_flag&P_BG))
 			{
-				job.numbjob--;
 				if(shp->st.trapcom[SIGCHLD])
-					job_chldtrap(shp,shp->st.trapcom[SIGCHLD],0);
+					shp->sigflag[SIGCHLD] =  SH_SIGTRAP;
 				else
+				{
+					job.numbjob--;
 					pw->p_flag &= ~P_BG;
+				}
 			}
 			if(pw->p_pgrp==0)
 				pw->p_flag &= ~P_NOTIFY;
@@ -613,8 +624,16 @@ bool job_reap(register int sig)
 		job_unpost(shp,pw,1);
 		sfsync(sfstderr);
 	}
+	shp->trapnote |= (shp->sigflag[SIGCHLD]&SH_SIGTRAP);
 	if(sig)
 		signal(sig, job_waitsafe);
+	else if(shp->trapnote&SH_SIGTRAP)
+	{
+		int c = job.in_critical;
+		job.in_critical = 0;
+		job_chldtrap(shp,shp->st.trapcom[SIGCHLD],1);
+		job.in_critical = c;
+	}
 	return(nochild);
 }
 
@@ -1680,10 +1699,10 @@ bool	job_wait(register pid_t pid)
 			break;
 		if(shp->sigflag[SIGALRM]&SH_SIGTRAP)
 			sh_timetraps(shp);
-		if((intr && shp->trapnote) || (pid==1 && !intr))
+		if((intr && (shp->trapnote&SH_SIGTRAP)) || (pid==1 && !intr))
 			break;
 	}
-	if(intr && shp->trapnote)
+	if(intr && (shp->trapnote&SH_SIGTRAP))
 		shp->exitval = 1;
 	pwfg = 0;
 	job_unlock();

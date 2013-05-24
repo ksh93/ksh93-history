@@ -52,7 +52,8 @@ struct tdata
 	char    	*tname;
 	char		*help;
 	short     	aflag;
-	short     	pflag;
+	bool     	pflag;
+	bool     	cflag;
 	int     	argnum;
 	int     	scanmask;
 	Dt_t 		*scanroot;
@@ -212,7 +213,7 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 	const char	*optstring = sh_opttypeset;
 	Namdecl_t 	*ntp = (Namdecl_t*)context->ptr;
 	Dt_t		*troot;
-	int		isfloat=0, shortint=0, sflag=0;
+	bool		isfloat=false, isshort=false, sflag=false;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
 	tdata.sh = context->shp;
@@ -255,7 +256,7 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 			case 'X':
 				if(!opt_info.arg || (tdata.argnum = opt_info.num) <0)
 					tdata.argnum = (n=='X'?2*sizeof(Sfdouble_t):10);
-				isfloat = 1;
+				isfloat = true;
 				if(n=='E')
 				{
 					flag &= ~NV_HEXFLOAT;
@@ -270,6 +271,8 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 			case 'b':
 				flag |= NV_BINARY;
 				break;
+			case 'c':
+				tdata.cflag=true;
 			case 'm':
 				flag |= NV_MOVE;
 				break;
@@ -322,20 +325,20 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 				break;
 			case 'p':
 				tdata.prefix = argv[0];
-				tdata.pflag = 1;
+				tdata.pflag = true;
 				flag &= ~NV_ASSIGN;
 				break;
 			case 'r':
 				flag |= NV_RDONLY;
 				break;
 			case 'S':
-				sflag=1;
+				sflag=true;
 				break;
 			case 'h':
 				tdata.help = opt_info.arg;
 				break;
 			case 's':
-				shortint=1;
+				isshort=true;
 				break;
 			case 't':
 				flag |= NV_TAGGED;
@@ -382,7 +385,7 @@ endargs:
 	if(sflag && troot==tdata.sh->fun_tree)
 	{
 		/* static function */
-		sflag = 0;
+		sflag = false;
 		flag |= NV_STATICF;
 	}
 	if(error_info.errors)
@@ -391,7 +394,7 @@ endargs:
 		errormsg(SH_DICT,ERROR_exit(2),"option argument cannot be greater than %d",SHRT_MAX);
 	if(isfloat)
 		flag |= NV_DOUBLE;
-	if(shortint)
+	if(isshort)
 	{
 		flag &= ~NV_LONG;
 		flag |= NV_SHORT|NV_INTEGER;
@@ -717,6 +720,8 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 			}
 			if(flag&NV_MOVE)
 			{
+				if(tp->cflag)
+					flag &= ~NV_MOVE;
 				nv_rename(np, flag);
 				nv_close(np);
 				continue;

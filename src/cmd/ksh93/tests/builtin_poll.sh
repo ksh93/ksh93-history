@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -201,7 +201,7 @@ function test_sparse_array1
 
 		out.stderr="${ { out.stdout="${ print 'IN' | ${SHELL} -o nounset -c "${tst.script[*]}" ; (( out.res=$? )) ; }" ; } 2>&1 ; }"
 
-		[[ "${out.stdout}" == ${expected_output_pattern}	]] || err_exit "${testname}: Expected stdout to match ${ printf '%q\n' "${expected_output_pattern}" ; }, got ${ printf '%q\n' "${out.stdout}" ; }"
+		[[ "${out.stdout//typeset -C/}" == ${expected_output_pattern}	]] || err_exit "${testname}: Expected stdout to match ${ printf '%q\n' "${expected_output_pattern}" ; }, got ${ printf '%q\n' "${out.stdout}" ; }"
 		[[ "${out.stderr}" == ''				]] || err_exit "${testname}: Expected empty stderr, got ${ printf '%q\n' "${out.stderr}" ; }"
 		(( out.res == 0 )) || err_exit "${testname}: Unexpected exit code ${out.res}"
 	done

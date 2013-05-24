@@ -484,11 +484,11 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 						nv_putsub(nq,cp,0,ARRAY_ADD|ARRAY_NOSCOPE);
 						if(array_assoc(ap))
 						{
-							Namval_t *mp = (Namval_t*)((*ap->fun)(nr,NIL(char*),NV_ACURRENT));
+							Namval_t *mr = (Namval_t*)((*ap->fun)(nr,NIL(char*),NV_ACURRENT));
 							Namval_t *mq = (Namval_t*)((*ap->fun)(nq,NIL(char*),NV_ACURRENT));
-							nv_clone(mp,mq,NV_MOVE);
+							nv_clone(mr,mq,NV_MOVE);
 							ap->nelem--;
-							nv_delete(mp,ap->table,0);
+							nv_delete(mr,ap->table,0);
 						}
 						else
 						{
@@ -612,7 +612,6 @@ static void put_type(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 	if(!val)
 	{
 		Namtype_t	*dp = (Namtype_t*)fp;
-		Namval_t	*nq;
 		Namarr_t	*ap;
 		int		i;
 		if(nv_isarray(np) && (ap=nv_arrayptr(np)) && ap->nelem>0)
@@ -666,7 +665,7 @@ static Namfun_t *clone_inttype(Namval_t* np, Namval_t *mp, int flags, Namfun_t *
 	return(pp);
 }
 
-static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *fp)
+static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *od)
 {
 	Shell_t	*shp = sh_getinterp();
 	char		*cp,**help,buffer[256];
@@ -676,7 +675,7 @@ static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *fp)
 	size_t		n;
 	Sfio_t		*sp;
 	
-	np = *(Namval_t**)(fp+1);
+	np = *(Namval_t**)(od+1);
 	sfputr(shp->stk,NV_CLASS,'.');
 	sfputr(shp->stk,np->nvname,0);
 	np = nv_open(cp=stkptr(shp->stk,offset), shp->var_tree, NV_NOADD|NV_VARNAME);
@@ -1079,7 +1078,7 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 		}
 		if(qp)
 		{
-			Nambfun_t	*bp;
+			Nambfun_t	*bfp;
 			dp = (Namtype_t*)nv_hasdisc(nv_type(np), &type_disc);
 			memcpy(pp->nodes,dp->nodes,dp->numnodes*NV_MINSZ);
 			offset = nv_size(np);
@@ -1104,12 +1103,12 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 					}
 				}
 			}
-			if(bp=(Nambfun_t*)nv_hasdisc(np,nv_discfun(NV_DCADD)))
+			if(bfp=(Nambfun_t*)nv_hasdisc(np,nv_discfun(NV_DCADD)))
 			{
-				for(j=0; j < bp->num; j++)
+				for(j=0; j < bfp->num; j++)
 				{
-					pp->names[nd++] = (char*)bp->bnames[j];
-					mnodes[j] = bp->bltins[j];
+					pp->names[nd++] = (char*)bfp->bnames[j];
+					mnodes[j] = bfp->bltins[j];
 				}
 			}
 			qp = 0;
@@ -1195,7 +1194,7 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 			}
 			while((i+1) < numnodes && (cname=&nodes[i+1]->nvname[m]) && memcmp(cname,&np->nvname[m],n)==0 && cname[n]=='.')
 			{
-				int j=kfirst;
+				j=kfirst;
 				nv_unset(np);
 				nv_delete(np,root,0);
 				np = nodes[++i];

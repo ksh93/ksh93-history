@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,15 +16,15 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #include	"dthdr.h"
-static char*     Version = "\n@(#)$Id: cdt (AT&T Labs - Research) 2011-11-11 $\0\n";
+static char*     Version = "\n@(#)$Id: cdt (AT&T Labs - Research) 2013-05-01 $\0\n";
 
 /* 	Make a new dictionary
 **
-**	Written by Kiem-Phong Vo (5/25/96)
+**	Written by Kiem-Phong Vo, phongvo@gmail.com (5/25/96)
 */
 
 /* map operation bits from the 2005 version to the current version */

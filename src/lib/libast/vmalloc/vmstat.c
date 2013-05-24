@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #if defined(_UWIN) && defined(_BLD_ast)
@@ -27,9 +27,9 @@ void _STUB_vmstat(){}
 
 #include	"vmhdr.h"
 
-/*	Get statistics from a region.
+/*	Get statistics of a region.
 **
-**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, phongvo@gmail.com, 01/16/94, 03/31/2012.
 */
 
 #if __STD_C
@@ -40,105 +40,81 @@ Vmalloc_t*	vm;
 Vmstat_t*	st;
 #endif
 {
-	size_t		s;
-	Seg_t		*seg;
-	Block_t		*b, *endb;
-	Vmdata_t	*vd;
-	Void_t		*d;
+	Seg_t	*seg;
+	char	*bufp;
+	ssize_t	z, p;
+	int	rv;
 
-	if(!st) /* just checking lock state of region */
-		return (vm ? vm : Vmregion)->data->lock;
+	if(!st)
+		return _vmheapbusy();
+	if(!vm) /* getting stats for Vmregion */
+	{	if(_vmheapinit(Vmheap) != Vmheap) /* initialize heap if not done yet */
+			return -1;
+		vm = Vmregion;
+	}
 
 	memset(st, 0, sizeof(Vmstat_t));
-
-	if(!vm)
-	{	/* getting data for malloc */
-#if ( !_std_malloc || !_BLD_ast ) && !_AST_std_malloc
-		extern int	_mallocstat(Vmstat_t*);
-		return _mallocstat(st);
-#else
-		return -1;
-#endif
-	}
-
-	SETLOCK(vm, 0);
-
-	st->n_busy = st->n_free = 0;
-	st->s_busy = st->s_free = st->m_busy = st->m_free = 0;
-	st->n_seg = 0;
-	st->extent = 0;
-
-	vd = vm->data;
-	st->mode = vd->mode;
-	s = 0;
-	if(vd->mode&VM_MTLAST)
-		st->n_busy = 0;
-	else if((vd->mode&VM_MTPOOL) && (s = vd->pool) > 0)
-	{	s = ROUND(s,ALIGN);
-		for(b = vd->free; b; b = SEGLINK(b))
-			st->n_free += 1;
-	}
-
-	for(seg = vd->seg; seg; seg = seg->next)
+	for(seg = vm->data->seg; seg; seg = seg->next)
 	{	st->n_seg += 1;
-		st->extent += seg->extent;
+		st->extent += seg->size;
+	}
+	if((rv = (*vm->meth.statf)(vm, st, 0)) >= 0 )
+	{	
+		bufp = st->mesg;
+		bufp = (*_Vmstrcpy)(bufp, "region(size", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->extent),-1), ',');
 
-		b = SEGBLOCK(seg);
-		endb = BLOCK(seg->baddr);
+		bufp = (*_Vmstrcpy)(bufp, "segs", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_seg),-1), ',');
 
-		if(vd->mode&(VM_MTDEBUG|VM_MTBEST|VM_MTPROFILE))
-		{	while(b < endb)
-			{	s = SIZE(b)&~BITS;
-				if(ISJUNK(SIZE(b)) || !ISBUSY(SIZE(b)))
-				{	if(s > st->m_free)
-						st->m_free = s;
-					st->s_free += s;
-					st->n_free += 1;
-				}
-				else	/* get the real size */
-				{	d = DATA(b);
-					if(vd->mode&VM_MTDEBUG)
-						s = DBSIZE(DB2DEBUG(d));
-					else if(vd->mode&VM_MTPROFILE)
-						s = PFSIZE(d);
-					if(s > st->m_busy)
-						st->m_busy = s;
-					st->s_busy += s;
-					st->n_busy += 1;
-				}
+		bufp = (*_Vmstrcpy)(bufp, "packs", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_pack),-1), ',');
 
-				b = (Block_t*)((Vmuchar_t*)DATA(b) + (SIZE(b)&~BITS) );
-			}
-			/**/ASSERT(st->extent >= (st->s_busy + st->s_free));
-		}
-		else if(vd->mode&VM_MTLAST)
-		{	if((s = seg->free ? (SIZE(seg->free) + sizeof(Head_t)) : 0) > 0)
-			{	st->s_free += s;
-				st->n_free += 1;
-			}
-			if((s = ((char*)endb - (char*)b) - s) > 0)
-			{	st->s_busy += s;
-				st->n_busy += 1;
-			}
-		}
-		else if((vd->mode&VM_MTPOOL) && s > 0)
-		{	if(seg->free)
-				st->n_free += (SIZE(seg->free)+sizeof(Head_t))/s;
-			st->n_busy += ((seg->baddr - (Vmuchar_t*)b) - sizeof(Head_t))/s;
-		}
+		bufp = (*_Vmstrcpy)(bufp, "\n\t\tbusy(n", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_busy),-1), ',');
+
+		bufp = (*_Vmstrcpy)(bufp, "size", '=');
+		z = st->s_busy;
+		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->s_busy),-1), '[');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
+		bufp = (*_Vmstrcpy)(bufp, "]", ',');
+
+		bufp = (*_Vmstrcpy)(bufp, "size+head", '=');
+		z = st->s_busy + st->n_busy*sizeof(Head_t);
+		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(z),-1), '[');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
+		bufp = (*_Vmstrcpy)(bufp, "]", ')');
+
+		bufp = (*_Vmstrcpy)(bufp, "\n\t\tfree(n", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_free),-1), ',');
+
+		bufp = (*_Vmstrcpy)(bufp, "size", '=');
+		z = st->s_free;
+		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->s_free),-1), '[');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
+		bufp = (*_Vmstrcpy)(bufp, "]", ',');
+
+		bufp = (*_Vmstrcpy)(bufp, "size+head", '=');
+		z = st->s_free + st->n_free*sizeof(Head_t);
+		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(z),-1), '[');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
+		bufp = (*_Vmstrcpy)(bufp, "]", ')');
+
+		bufp = (*_Vmstrcpy)(bufp, "\n\t\tcache(n", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_cache),-1), ',');
+		bufp = (*_Vmstrcpy)(bufp, "size", '=');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->s_cache),-1), ')');
+
+		*bufp = 0;
+
+		st->mode = vm->data->mode;
 	}
 
-	if((vd->mode&VM_MTPOOL) && s > 0)
-	{	st->n_busy -= st->n_free;
-		if(st->n_busy > 0)
-			st->s_busy = (st->m_busy = vd->pool)*st->n_busy;
-		if(st->n_free > 0)
-			st->s_free = (st->m_free = vd->pool)*st->n_free;
-	}
-
-	CLRLOCK(vm, 0);
-
-	return 0;
+	return rv;
 }
 
 #endif

@@ -3,7 +3,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2013-03-20
+# @(#)make.probe (AT&T Research) 2013-05-17
 #
 # C probe for make
 #
@@ -1893,13 +1893,16 @@ int lib(int** def, int** ref, int** ext)
 		} &&
 		$dld $shared -o libgbl.dll lib.o
 	then	x=`./cmd.exe ./libgbl.dll`
-		case $x in
-		?*)	dialect="$dialect EXPORT=$x" ;;
-		esac
-	else	case $sd:$hosttype in
+	else	x=
+	fi
+	case $x in
+	?*)	dialect="$dialect EXPORT=$x"
+		;;
+	*)	case $sd:$hosttype in
 		.dll:*win*)	dialect="$dialect EXPORT=DLL" ;;
 		esac
-	fi
+		;;
+	esac
 	;;
 esac
 

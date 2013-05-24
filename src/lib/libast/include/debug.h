@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -48,8 +48,9 @@
 #define DEBUG_TALLY(c,n,v)	((c) ? ((n) += (v)) : (n))
 #define DEBUG_INCREASE(n)	((n) += 1)
 #define DEBUG_DECREASE(n)	((n) -= 1)
-#define DEBUG_DECLARE(t,v)	t v
+#define DEBUG_DECLARE(t,v)	t v;
 #define DEBUG_SET(n,v)		((n) = (v))
+#define DEBUG_MESSAGE(m)	sfprintf(sfstderr,"%s:%d: %s\n",__FILE__,__LINE__,m)
 #define DEBUG_PRINT(fd,s,v)	do {char _b[1024];write(fd,_b,sfsprintf(_b,sizeof(_b),s,v));} while(0)
 #define DEBUG_WRITE(fd,d,n)	write((fd),(d),(n))
 #define DEBUG_TEMP(temp)	(temp) /* debugging stuff that should be removed */
@@ -73,6 +74,7 @@
 #define DEBUG_DECREASE(n)
 #define DEBUG_DECLARE(t,v)
 #define DEBUG_SET(n,v)
+#define DEBUG_MESSAGE(s)
 #define DEBUG_PRINT(fd,s,v)
 #define DEBUG_WRITE(fd,d,n)
 #define DEBUG_TEMP(x)

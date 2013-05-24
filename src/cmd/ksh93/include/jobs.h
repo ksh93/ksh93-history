@@ -33,6 +33,14 @@
 #   include	<signal.h>
 #endif /* !SIGINT */
 #include	"FEATURE/options"
+#include	"FEATURE/externs"
+#if	_hdr_aso
+#   include	<aso.h>
+#else
+#   define ASO_LOCK	1
+#   define ASO_UNLOCK	2
+#   define asolock(a,b,c)
+#endif /* _hdr_aso */
 
 #if SHOPT_COSHELL
 #   include	<coshell.h>
@@ -80,6 +88,7 @@ struct process
 	Cojob_t		*p_cojob;	/* coshell job */
 #endif /* SHOPT_COSHELL */
 	int		*p_exitval;	/* place to store the exitval */
+	int		p_wstat;
 	pid_t		p_pid;		/* process id */
 	pid_t		p_pgrp;		/* process group */
 	pid_t		p_fgrp;		/* process group when stopped */
@@ -110,6 +119,7 @@ struct jobs
 	int		numpost;	/* number of posted jobs */
 	int		numbjob;	/* number of background jobs */
 	short		fd;		/* tty descriptor number */
+	short		maxjob;		/* must reap after maxjob if > 0 */
 #ifdef JOBS
 	int		suspend;	/* suspend character */
 	int		linedisc;	/* line dicipline */
@@ -118,6 +128,7 @@ struct jobs
 	char		waitsafe;	/* wait will not block */
 	char		waitall;	/* wait for all jobs in pipe */
 	char		toclear;	/* job table needs clearing */
+	int		asol;		/* used for asolock */
 	unsigned char	*freejobs;	/* free jobs numbers */
 #if SHOPT_COSHELL
 	struct cosh	*colist;	/* coshell job list */
@@ -136,27 +147,31 @@ extern struct jobs job;
 #ifdef JOBS
 
 #if !_std_malloc
-#include <vmalloc.h>
-#ifdef vmlocked
-#define vmbusy()	vmlocked(Vmregion)
-#else
-#if VMALLOC_VERSION >= 20070911L
-#define vmbusy()	(vmstat(0,0)!=0)
-#endif
-#endif
+#   include <vmalloc.h>
+#   ifdef vmlocked
+#	define vmbusy()	vmlocked(Vmregion)
+#   else
+#	if VMALLOC_VERSION >= 20130509L
+#	    define vmbusy()	(vmstat(Vmregion,0)!=0)
+#	else
+#	    if VMALLOC_VERSION >= 20070911L
+#		define vmbusy()	(vmstat(0,0)!=0)
+#	    endif
+#	endif
+#   endif
 #endif
 #ifndef vmbusy
-#define vmbusy()	0
+#   define vmbusy()	0
 #endif
 
 #define job_lock()	(job.in_critical++)
 #define job_unlock()	\
 	do { \
-		int	sig; \
-		if (!--job.in_critical && (sig = job.savesig)) \
+		int	_sig; \
+		if (!--job.in_critical && (_sig = job.savesig)) \
 		{ \
 			if (!job.in_critical++ && !vmbusy()) \
-				job_reap(sig); \
+				job_reap(_sig); \
 			job.in_critical--; \
 		} \
 	} while(0)

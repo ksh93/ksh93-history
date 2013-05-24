@@ -201,6 +201,13 @@ static void check_typedef(Lex_t *lp,struct comnod *tp)
 		{
 			if(!(ap->argflag&ARG_RAW) || memcmp(ap->argval,"--",2))
 				break;
+			if(lp->intypeset==2)
+			{
+				if(*ap->argval=='-')
+					continue;
+				else
+					break;
+			}
 			if(sh_isoption(lp->sh,SH_NOEXEC))
 				typeset_order(ap->argval,tp->comline);
 			if(memcmp(ap->argval,"-T",2)==0)
@@ -220,6 +227,12 @@ static void check_typedef(Lex_t *lp,struct comnod *tp)
 		char **argv = dp->dolval + dp->dolbot+1;
 		while((cp= *argv++) && memcmp(cp,"--",2))
 		{
+			if(lp->intypeset==2)
+			{
+				if(*cp=='-')
+					continue;
+				break;
+			}
 			if(sh_isoption(lp->sh,SH_NOEXEC))
 				typeset_order(cp,tp->comline);
 			if(memcmp(cp,"-T",2)==0)
@@ -235,7 +248,7 @@ static void check_typedef(Lex_t *lp,struct comnod *tp)
 	if(cp)
 	{
 		Namval_t	*mp=(Namval_t*)tp->comnamp ,*bp;
-		bp = sh_addbuiltin(lp->sh,cp, (Shbltin_f)mp->nvalue.bfp, (void*)0);
+		bp = sh_addbuiltin(lp->sh,cp, b_typeset, (void*)0);
 		nv_onattr(bp,nv_isattr(mp,NV_PUBLIC));
 	}
 }
@@ -1102,7 +1115,11 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int type)
 		if((n=skipnl(lexp,0)) || array)
 		{
 			if(n==RPAREN)
+			{
+				if(fcgetc(n)!=';' && n>0)
+					fcseek(-LEN);
 				break;
+			}
 			if(array ||  n!=FUNCTSYM)
 				sh_syntax(lexp);
 		}
@@ -1512,6 +1529,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 						assignment = 1+(*argp->argval=='a');
 						if(np==SYSTYPESET)
 							lexp->intypeset = 1;
+						else if(np==SYSENUM)
+							lexp->intypeset = 2;
 						key_on = 1;
 					}
 					else if(np==SYSCOMMAND)
@@ -1532,6 +1551,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 		}
 	retry:
 		tok = sh_lex(lexp);
+		if(tok==';' && was_assign)
+			tok = '\n';
 		if(was_assign && check_array(lexp))
 			type  = NV_ARRAY;
 		if(tok==0 && procsub && (lexp->arg->argflag&ARG_ASSIGN))

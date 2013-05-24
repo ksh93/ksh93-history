@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -242,6 +242,10 @@ typedef int (*Ast_confdisc_f)(const char*, const char*, const char*);
 typedef int (*Strcmp_context_f)(const char*, const char*, void*);
 typedef int (*Strcmp_f)(const char*, const char*);
 
+#ifndef _VMALLOC_H
+struct Vmdisc_s;
+#endif
+
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
@@ -289,6 +293,7 @@ extern char*		fmtuid(int);
 extern char*		fmtversion(unsigned long);
 extern void*		memdup(const void*, size_t);
 extern void		memfatal(void);
+extern int		memfatal_20130509(struct Vmdisc_s*);
 extern unsigned int	memhash(const void*, int);
 extern unsigned long	memsum(const void*, int, unsigned long);
 extern char*		pathaccess(char*, const char*, const char*, const char*, int);
@@ -378,21 +383,7 @@ extern int		wc2utf8(char*, uint32_t);
 extern char**		environ;
 #endif
 
-/*
- * really handy malloc()/free() (__FILE__,__LINE__,__FUNCTION__) tracing
- * make with VMDEBUG==1 or debug=1 or CCFLAGS=$(CC.DEBUG)
- * VMDEBUG==0 disables
- * at runtime export VMALLOC_OPTIONS per vmalloc.3
- * to list originating call locations
- */
-
-#if !_std_malloc && !defined(VMFL) && !defined(_VMHDR_H) && \
-	(VMDEBUG || !defined(VMDEBUG) && _BLD_DEBUG)
-
-#define VMFL	1
-#include <vmalloc.h>
-
-#endif
+#include <ast_debug.h>
 
 #include <ast_api.h>
 

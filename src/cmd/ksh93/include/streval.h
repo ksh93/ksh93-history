@@ -82,6 +82,7 @@ struct lval
 	short		emode;
 	short		level;
 	short		elen;
+	char		nextop;
 	char		eflag;
 	char		userfn;
 	char		isfloat;

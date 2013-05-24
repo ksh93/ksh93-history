@@ -507,8 +507,8 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 /* Trap for IFS assignment and invalidates state table */
 static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	register struct ifs *ip = (struct ifs*)fp;
-	ip->ifsnp = 0;
+	register struct ifs *ifsp = (struct ifs*)fp;
+	ifsp->ifsnp = 0;
 	if(!val)
 	{
 		fp = nv_stack(np, NIL(Namfun_t*));
@@ -534,14 +534,14 @@ static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp
  */
 static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 {
-	register struct ifs *ip = (struct ifs*)fp;
+	register struct ifs *ifsp = (struct ifs*)fp;
 	register char *cp, *value;
 	register int c,n;
 	register Shell_t *shp = sh_ptr(np);
 	value = nv_getv(np,fp);
-	if(np!=ip->ifsnp)
+	if(np!=ifsp->ifsnp)
 	{
-		ip->ifsnp = np;
+		ifsp->ifsnp = np;
 		memset(shp->ifstable,0,(1<<CHAR_BIT));
 		if(cp=value)
 		{
@@ -2364,7 +2364,7 @@ static void env_init(Shell_t *shp)
 		if(np!=SHLVL && nv_isattr(np,NV_IMPORT|NV_EXPORT))
 		{
 			int flag = *(unsigned char*)cp-' ';
-			int size = *(unsigned char*)(cp+1)-' ';
+			size = *(unsigned char*)(cp+1)-' ';
 			if((flag&NV_INTEGER) && size==0)
 			{
 				/* check for floating*/

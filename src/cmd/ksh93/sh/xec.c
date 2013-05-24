@@ -704,20 +704,20 @@ static void *sh_coinit(Shell_t *shp,char **argv)
 {
 	struct cosh	*csp = job.colist;
 	const char 	*name = argv?argv[0]:0;
-	int  		id, open=1;
+	int  		id, xopen=1;
 	if(!name)
 		return(0);
 	if(*name=='-')
 	{
 		name++;
-		open=0;
+		xopen=0;
 	}
 	nv_open(name,shp->var_tree,NV_IDENT|NV_NOADD);
 	while(csp)
 	{
 		if(strcmp(name,csp->name)==0)
 		{
-			if(open)
+			if(xopen)
 			{
 				coattr(csp->coshell,argv[1]);
 				return((void*)csp);
@@ -727,7 +727,7 @@ static void *sh_coinit(Shell_t *shp,char **argv)
 		}
 		csp = csp->next;
 	}
-	if(!open)
+	if(!xopen)
 		errormsg(SH_DICT,ERROR_exit(1),"%s: unknown namespace",name);
 	environ[0][2]=0;
 	csp = newof(0,struct cosh,1,strlen(name)+1);
@@ -1035,10 +1035,10 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					sh_redirect(shp,io,0);
 				if(!np || !is_abuiltin(np) || *np->nvname=='/' || np==SYSCD)
 				{
-					char **argv, *cp;
-					for(argv=com+1; cp= *argv; argv++)
+					char **argv, *sp;
+					for(argv=com+1; sp= *argv; argv++)
 					{
-						if(cp && *cp && *cp!='-')
+						if(sp && *sp && *sp!='-')
 							sh_coaddfile(shp,*argv);
 					}
 					break;
@@ -1540,7 +1540,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 #if SHOPT_NAMESPACE
 						if(*np->nvname=='.')
 						{
-							char *ep,*cp = np->nvname+1;
+							char *ep;
+							cp = np->nvname+1;
 							if(memcmp(cp,"sh.type.",8)==0)
 								cp += 8;
 							if(ep = strchr(cp,'.'))
@@ -1629,10 +1630,9 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				job.parent=parent=0;
 			else
 			{
-				int maxjob;
-				if(((type&(FAMP|FINT)) == (FAMP|FINT)) && (maxjob=nv_getnum(JOBMAXNOD))>0)
+				if(((type&(FAMP|FINT))==(FAMP|FINT)) && (job.maxjob=nv_getnum(JOBMAXNOD))>0)
 				{
-					while(job.numbjob >= maxjob)
+					while(job.numbjob >= job.maxjob)
 					{
 						job_lock();
 						job_reap(0);
@@ -2258,7 +2258,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			int flag = errorflg|OPTIMIZE_FLAG;
 			struct dolnod	*argsav=0;
 			struct comnod	*tp;
-			char *cp, *trap, *nullptr = 0;
+			char *trap, *nullptr = 0;
 			int nameref, refresh=1;
 			char *av[5];
 #if SHOPT_COSHELL
@@ -2689,8 +2689,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			register Namval_t *np=0;
 			register struct slnod *slp;
 			register char *fname = ((struct functnod*)t)->functnam;
-			register char *cp = strrchr(fname,'.');
 			register Namval_t *npv=0,*mp;
+			cp = strrchr(fname,'.');
 #if SHOPT_COSHELL
 			if(shp->inpool)
 			{
@@ -2704,12 +2704,12 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				Dt_t *root;
 				Namval_t *oldnspace = shp->namespace;
 				int offset = stktell(stkp);
-				int	flags=NV_NOASSIGN|NV_NOARRAY|NV_VARNAME;
+				int	flag=NV_NOASSIGN|NV_NOARRAY|NV_VARNAME;
 				if(cp)
 					errormsg(SH_DICT,ERROR_exit(1),e_ident,fname);
 				sfputc(stkp,'.');
 				sfputr(stkp,fname,0);
-				np = nv_open(stkptr(stkp,offset),shp->var_tree,flags);
+				np = nv_open(stkptr(stkp,offset),shp->var_tree,flag);
 				offset = stktell(stkp);
 				if(nv_istable(np))
 					root = nv_dict(np);
@@ -2722,7 +2722,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					dtview(root,shp->var_base);
 				}
 				oldnspace = enter_namespace(shp,np);
-				sh_exec(shp,t->for_.fortre,flags|sh_state(SH_ERREXIT));
+				sh_exec(shp,t->for_.fortre,flag|sh_state(SH_ERREXIT));
 				enter_namespace(shp,oldnspace);
 				break;
 			}
@@ -2774,7 +2774,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				stkclose(slp->slptr);
 				if(rp->sdict)
 				{
-					Namval_t *mp, *nq;
+					Namval_t *nq;
 					shp->last_root = rp->sdict;
 					for(mp=(Namval_t*)dtfirst(rp->sdict);mp;mp=nq)
 					{
@@ -4042,14 +4042,14 @@ int sh_funscope_20120720(Shell_t *shp,int argn, char *argv[],int(*fun)(void*),vo
 			r= (*fun)(arg);
 		else
 		{
-			char		**arg = shp->st.real_fun->argv;
+			char		**args = shp->st.real_fun->argv;
 			Namval_t	*np, *nq, **nref;
 			if(nref=fp->nref)
 			{
 				shp->last_root = 0;
-				for(r=0; arg[r]; r++)
+				for(r=0; args[r]; r++)
 				{
-					np = nv_search(arg[r],shp->var_tree,HASH_NOSCOPE|NV_ADD);
+					np = nv_search(args[r],shp->var_tree,HASH_NOSCOPE|NV_ADD);
 					if(np && (nq=*nref++))
 					{
 						np->nvalue.nrp = newof(0,struct Namref,1,0);

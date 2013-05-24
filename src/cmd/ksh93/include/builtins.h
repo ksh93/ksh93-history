@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -41,8 +41,9 @@
 #define SYSEXPORT	(shgd->bltin_cmds+13)
 #define SYSDOT		(shgd->bltin_cmds+14)
 #define SYSRETURN	(shgd->bltin_cmds+15)
+#define SYSENUM		(shgd->bltin_cmds+16)
 #if SHOPT_BASH
-#   define SYSLOCAL	(shgd->bltin_cmds+16)
+#   define SYSLOCAL	(shgd->bltin_cmds+17)
 #else
 #   define SYSLOCAL	0
 #endif

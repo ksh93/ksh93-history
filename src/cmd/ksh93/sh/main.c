@@ -241,11 +241,22 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 				sh_source(shp, iop, e_suidprofile);
 		}
 		/* add enum type _Bool */
-		if(i=sh_isoption(shp,SH_XTRACE))
+		i=0;
+		if(sh_isoption(shp,SH_XTRACE))
+		{
+			i = 1;
 			sh_offoption(shp,SH_XTRACE);
+		}
+		if(sh_isoption(shp,SH_NOEXEC))
+		{
+			i |= 2;
+			sh_offoption(shp,SH_NOEXEC);
+		}
 		sh_trap(shp,"enum _Bool=(false true) ;",0);
-		if(i)
+		if(i&1)
 			sh_onoption(shp,SH_XTRACE);
+		if(i&2)
+			sh_onoption(shp,SH_NOEXEC);
 		shp->st.cmdname = error_info.id = command;
 		sh_offstate(shp,SH_PROFILE);
 		if(rshflag)

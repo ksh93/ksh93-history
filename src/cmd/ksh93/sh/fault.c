@@ -450,17 +450,18 @@ void	sh_chktrap(Shell_t* shp)
 		return;
 	if(shp->sigflag[SIGALRM]&SH_SIGALRM)
 		sh_timetraps(shp);
-	if((shp->sigflag[SIGCHLD]&SH_SIGTRAP) && shp->st.trapcom[SIGCHLD])
-		job_chldtrap(shp,shp->st.trapcom[SIGCHLD],1);
 	while(--sig>=0)
 	{
 		if(sig==cursig)
 			continue;
-		if(sig==SIGCHLD)
-			continue;
 		if(shp->sigflag[sig]&SH_SIGTRAP)
 		{
 			shp->sigflag[sig] &= ~SH_SIGTRAP;
+			if(sig==SIGCHLD)
+			{
+				job_chldtrap(shp,shp->st.trapcom[SIGCHLD],1);
+				continue;
+			}
 			if(trap=shp->st.trapcom[sig])
 			{
 #ifdef _lib_sigaction

@@ -65,6 +65,19 @@ alias err_exit='err_exit $LINENO'
 
 integer Errors=0
 
+function idempotent
+{
+	typeset got var action='typeset -p'
+	[[ $1 == -* ]] && { shift;var=$2=; action='print -v';} 
+	typeset -n exp=$1
+	got=$($SHELL <<- EOF
+		$3
+		$var$exp
+		$action  $2
+	EOF)
+	[[ $got == "$exp" ]] || err_exit "$exp is not idempotent"
+}
+
 ## test start
 typeset -C tree1 tree2
 
@@ -107,6 +120,7 @@ c.ar[4]=( a4=1 )
 typeset -m "c.ar[5]=c.ar[4]"
 exp=$'(\n\ttypeset -C -a ar=(\n\t\t[5]=(\n\t\t\ta4=1\n\t\t)\n\t)\n)'
 [[ $(print -v c) == "$exp" ]] || err_exit 'typeset -m "c.ar[5]=c.ar[4]" not working'
+idempotent -v exp c
 
 typeset -T x_t=( hello=world )
 function m
@@ -194,21 +208,23 @@ function sortar
 sortar c.ar
 exp='typeset -C -a c.ar=((typeset -l -E i=24) (typeset -l -E i=7) (typeset -l -E i=4) (typeset -l -E i=2) (typeset -l -E i=1) (typeset -l -E i=-1))'
 [[ $(typeset -p c.ar) == "$exp" ]] || err_exit 'sorting compound arrays with typeset -m failed'
+idempotent exp c.ar 'typeset -C c'
 
 typeset -T objstack_t=(
-	compound -a st
-	integer st_n=0
-	function pushobj
-	{
-		nameref obj=$1
-		typeset -m "_.st[$((_.st_n++))].obj=obj"
-	}
-	function popobj
-	{
-		nameref obj=$1
-		(( --_.st_n ))
-		typeset -m obj="_.st[$((_.st_n))].obj"
-	}
+        compound -a st
+        integer st_n=0
+        function pushobj
+        {
+                nameref obj=$1
+                typeset -m "_.st[$((_.st_n++))].obj=obj"
+        }
+        function popobj
+        {
+                nameref obj=$1
+                typeset -m "obj=_.st[$((--_.st_n))].obj"
+		s="$(typeset -p _.st[_.st_n].obj)"
+		[[ "$s" == '' ]] || err_exit '_.st[_.st_n].obj should be empty after typeset -m'
+        }
 )
 compound c
 objstack_t c.ost
@@ -218,8 +234,36 @@ compound res
 c.ost.popobj res.a
 exp='typeset -C res.a=(typeset -l -i val=5)'
 [[ $(typeset -p res.a) == "$exp" ]] || err_exit 'typeset -m for compound variable in a type not working' 
+idempotent exp res.a 'typeset -C res'
 
-$SHELL 2> /dev/null <<- \EOF || err_exit "typeset -m for type terminates with exitval=$?"
+unset c
+compound c dummy
+objstack_t c.ost
+compound foo=( integer val=5 )
+typeset -a bar=(  2 3 4 )
+c.ost.pushobj foo
+c.ost.pushobj bar
+c.ost.popobj dummy
+exp='typeset -C c=(objstack_t ost=(typeset -l -i st_n=1;st[0]=(obj=(typeset -l -i val=5))))'
+[[ $(typeset -p c) == "$exp" ]] || err_exit 'typeset -m for types not working'
+idempotent exp c "$(typeset -T)"
+
+unset c
+typeset -p c
+compound c
+objstack_t c.ost
+compound foo=( integer val=5 )
+c.ost.pushobj foo
+compound sc
+objstack_t sc.s
+compound c1=( integer a=1 )
+compound c2=( integer a=2 )
+sc.s.pushobj c1
+sc.s.pushobj c2
+c.ost.pushobj sc
+exp='typeset -C c=(objstack_t ost=(typeset -l -i st_n=2;st[0]=(obj=(typeset -l -i val=5;););st[1]=(obj=(objstack_t s=(typeset -l -i st_n=2;st[0]=(obj=(typeset -l -i a=1;););st[1]=(obj=(typeset -l -i a=2)))))))'
+[[ $(typeset -p c) == "$exp" ]] || err_exit 'typeset -m not working'
+
 typeset -T printfish_t=(
 	        typeset fname
 		unset() { :;}
@@ -237,8 +281,76 @@ typeset -T printfish_t=(
 	compound c.cx[4][9].ca
 	createfish_t c.cx[4][9].ca.shark 'coelacanth'
 	createfish_t c.cx[4][9].ca.horse 'horse'
-	exp='typeset -C -a c.cx=(typeset -a [4]=([9]=(ca=(printfish_t horse=(fname=horse;)printfish_t shark=(fname=coelacanth)))) )'
+	exp='typeset -C -a c.cx=(typeset -a [4]=([9]=(ca=(printfish_t horse=(fname=horse;);printfish_t shark=(fname=coelacanth)))) )'
 	[[ $(typeset -p c.cx) == "$exp" ]] || err_exit 'typeset -m for types not working'
-EOF
+
+typeset -T key_t=( float i)
+compound c=(
+	key_t -a ar=(
+		( i=7 )
+		( i=1 )
+		( i=11 )
+	)
+)
+nameref ar=c.ar
+typeset -m "tmp=ar[1]"
+command typeset -m "ar[1]=ar[2]" 2> /dev/null || err_exit 'typeset -m ar[1]=ar[2] not working when ar is numerical'
+typeset -m "ar[2]=tmp"
+exp='key_t -a c.ar=((typeset -l -E i=7) (typeset -l -E i=11) (typeset -l -E i=1))'
+[[ $(typeset -p c.ar) == "$exp" ]] 2> /dev/null || err_exit 'typeset -m c.ar has wrong value'
+idempotent exp c.ar 'typeset -T key_t=(float i);compound c'
+
+function sortar
+{
+	nameref	ar=$1
+	integer	i i_max=${#ar[@]}
+	bool            swapped=true
+	while	$swapped
+	do	swapped=false
+		for (( i=1 ; i < i_max ; i++ ))
+		do	if ((isnan(ar[i].i) || isgreater(ar[i].i-ar[i-1].i, 0.)
+                                 ))
+			then	typeset -m "tmp=ar[i-1]"
+				typeset -m "ar[i-1]=ar[i]"
+				typeset -m "ar[i]=tmp"
+				swapped=true
+			fi
+		done
+	done
+}
+function main
+{
+	compound c=(
+		compound -a ar=( ( float i=4 ) ( float i=-nan ) ( float i=2 )
+			( float i=-inf )  ( float i=1 ) ( float i=24 )
+			( float i=+inf ) ( float i=-1 ) )
+	)
+	sortar c.ar
+	exp='typeset -C -a c.ar=((typeset -l -E i=-nan) (typeset -l -E i=inf) (typeset -l -E i=24) (typeset -l -E i=4) (typeset -l -E i=2) (typeset -l -E i=1) (typeset -l -E i=-1) (typeset -l -E i=-inf))'
+         [[ $(typeset -p c.ar) == "$exp" ]] || err_exit 'typeset -m not working when passed a reference to an local argument from a calling function'
+	idempotent exp c.ar 'compound c'
+ }
+main
+
+typeset -T X_t=( compound xc )
+compound cc
+X_t cc.a
+compound cc.a.xc
+typeset cc.a.xc.i=5
+X_t cc.b
+typeset -m "cc.b.xc.j=cc.a.xc.i"
+exp='typeset -C cc=(X_t a=(typeset -C xc);X_t b=(xc=(j=5)))'
+[[ $(typeset -p cc) == $exp ]] || err_exit 'typeset -m compound variable embedded in type not working'
+idempotent exp cc 'typeset -T X_t=( typeset -C xc )'
+
+unset d
+compound d=(
+	compound sta=( compound -a st;integer st_numelements=0)
+)
+exp='typeset -C d=(sta=(typeset -C -a st=( [0]=(obj=(typeset -l -i t=3;);););typeset -l -i st_numelements=1))'
+compound foo=( integer t=3 )
+typeset -m "d.sta.st[$((d.sta.st_numelements++))].obj=foo"
+[[ $(typeset -p d) == "$exp" ]] || err_exit 'compound variable not displayed properly'
+idempotent exp d
 
 exit $((Errors<125?Errors:125))

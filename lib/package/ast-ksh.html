@@ -13,19 +13,19 @@ dt	{ float:left; clear:both; }
 dd	{ margin-left:3em; }
 </STYLE>
 </HEAD>
-<BODY bgcolor='#ffffff' >
+<BODY bgcolor=white link=slateblue vlink=teal >
 <TABLE border=0 align=center width=96%>
 <TBODY><TR><TD valign=top align=left>
 <!--INDEX--><!--/INDEX-->
 <P>
-<P><CENTER><H3><A name="ast-ksh package">ast-ksh package</A></H3></CENTER>
+<P><CENTER><FONT color=red><FONT face=courier><H3><A name="ast-ksh package">ast-ksh package</A></H3></FONT></FONT></CENTER>
 The AT&amp;T Software Technology ast-ksh package from AT&amp;T Research
 contains ksh and support libraries. This is the minimal set of
 components needed to build ksh.
 Components in this package:
 <P>
 <P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
-<TABLE align=center border=0 bordercolor='#ffffff' cellpadding=0 cellspacing=0 frame=void rules=none width=99% >
+<TABLE align=center bgcolor=papayawhip border=0 bordercolor=white cellpadding=2 cellspacing=2 width=99% >
 <TBODY>
 <TR><TD align=left>
 <A href="#ksh93">ksh93</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;libast&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;libcoshell&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;libsum</TD></TR>
@@ -46,7 +46,7 @@ A recent
 <A href="#release change log">release change log</A>
 is also included.
 <P>
-<P><HR><CENTER><H3><A name="ksh93">ksh93</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93">ksh93</A></H3></FONT></FONT></CENTER>
 KSH-93 is the most recent version of the KornShell Language
 described in
 "The KornShell Command and Programming Language,"
@@ -187,33 +187,74 @@ Documentation for KSH-93 consists of an "Introduction to KSH-93",
 README file.  In addition, the "New KornShell Command and Programming
 Language," book is available from Prentice Hall.
 
-<NOBR><A href="../man/man1/msggen.html"><STRONG>msggen</STRONG></A>(1)</NOBR>
+<NOBR><A href="/~gsf/man/man1/msggen.html"><STRONG>msggen</STRONG></A>(1)</NOBR>
 is a
-<NOBR><A href="../man/man1/gencat.html"><STRONG>gencat</STRONG></A>(1)</NOBR>
+<NOBR><A href="/~gsf/man/man1/gencat.html"><STRONG>gencat</STRONG></A>(1)</NOBR>
 replacement that generates machine independent binary message
 catalogs that are compatible with the
 <STRONG>ast</STRONG>
-<NOBR><A href="../man/man3/catgets.html"><STRONG>catgets</STRONG></A>(3)</NOBR>
+<NOBR><A href="/~gsf/man/man3/catgets.html"><STRONG>catgets</STRONG></A>(3)</NOBR>
 implementation.
 <STRONG>catgets</STRONG>
 also supports native message catalogs where available.
-<NOBR><A href="../man/man1/msgcvt.html"><STRONG>msgcvt</STRONG></A>(1)</NOBR>
+<NOBR><A href="/~gsf/man/man1/msgcvt.html"><STRONG>msgcvt</STRONG></A>(1)</NOBR>
 and
-<NOBR><A href="../man/man1/msgadmin.html"><STRONG>msgadmin</STRONG></A>(1)</NOBR>
+<NOBR><A href="/~gsf/man/man1/msgadmin.html"><STRONG>msgadmin</STRONG></A>(1)</NOBR>
 are administrative commands that support machine translation
 of C locale message catalogs.
 <P>
-<P><HR><CENTER><H3><A name="release change log">release change log</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="release change log">release change log</A></H3></FONT></FONT></CENTER>
 <PRE>
 
 All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="ksh93 changes">ksh93 changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-13-05-02  --- Release ksh93v- ---
+13-05-22  --- Release ksh93v- ---
+13-05-22 +Added -c option to typeset which is similar to typeset -m except
+	  that the variable is copied rather than moved.  This is experimental
+	  and there are known bugs.  If it can't be made reliable it will
+	  not be added.
+13-05-20  Fixed a bug in which running script &lt; file, where script did
+	  reads generated output the the terminal in error has been fixed.
+13-05-20  Updated documentation for typeset -s and typeset -l for integer
+	  and floating point types.
+13-05-17  A bug in the ${b&#0091;i}} when b is an enumeration variable whose
+	  value corresponds to the 0'th element.
+13-05-17  A bug in which set -o nounset caused ((boold=true)) to fail has
+	  been fixed.
+13-05-16  A bug in which a nameref to a compound sub-variable that does
+	  not exit failed when called from a function with static variables
+	  has been fixed.
+13-05-15 +The set -s -Aarray sort option added on 13-04-25 now works for
+	  sorting an indexed array of type instances.
+13-05-15  A bug in which ${!foo*} did not contain foo when $foo exists
+	  has been fixed.
+13-05-15  typeset -m foo=bar now generates an error when set -o nounset is
+	  on and variable bar is unset.
+13-05-14  A bug in which bar was not empty after typeset -m foo=bar has
+	  been fixed.
+13-05-13  A bug in which the exit trap could be executed twice with ${...;}
+	  has been fixed.
+13-05-10  Added more documentation with enum --man.
+13-05-10  With print -v for with nested compound variables, the output contains
+	  typeset -C for sub-variabes that are compound assignments.
+13-05-10  Reduced the number of warning when running gcc with -Wshadow option.
+13-05-09  Updated man page to mention _Bool enumeration and bool preset alias.
+13-05-08  Modified the code to that CHLD traps are delayed when a trap from
+	  another signal is being modified.
+13-05-08  Added a ksh -n options that suggests that x=$((expr)) be replaced by
+	  ((x=expr))&gt;
+13-05-07  A bug in which typeset -p and print -v did not display elements that
+	  were compound variables without any sub-variables has been fixed.
+13-05-06  Fixed a bug with typeset -m when varaible is a name reference to
+	  a local variable from a calling function.
+13-05-06  A bug in which shcomp failed to compile some scrips that defined
+	  enums has been fixed.
+13-05-03  Fixed a bug with typeset -m a&#0091;i&#0093;=a&#0091;j&#0093; when a is a numeric array type.
 13-05-02  Fixed another typeset -m but form moving types containing compound
 	  variables.
 13-05-02  Fixed another typeset -m bug for moving a compound variable contained
@@ -3583,7 +3624,7 @@ All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="msggen changes">msggen changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="msggen changes">msggen changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
 13-04-01 split src/cmd/msgcc into { src/cmd/msggen src/cmd/msgcc }
@@ -3604,9 +3645,14 @@ All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="libast changes">libast changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+13-05-22 string/fmtbuf.c: add thread-safe logic
+13-05-21 misc/optget.c: add the D "DATA" section
+13-05-09 { aso cdt vmalloc } kpv sync
+13-05-05 include/ast.h: _AST_PROFILE_NEWOF for debugging newof() vs oldof()
+13-05-01 misc/spawnvex.c: some cc's don't like switch(intmax_t)
 13-04-18 comp/iconv.c: fix some truly rotten code in iconv_move() -- how did it work at all?
 13-04-01 misc/spawnvex.c: fix omitted SPAWN_frame case that caused EINVAL
 13-03-11 sfio/sfflsbuf.c: memcpy() =&gt; memmove() ouch
@@ -5442,9 +5488,10 @@ All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="libcmd changes">libcmd changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+13-05-01 vmstate.c: update for new vmalloc snarf
 13-04-22 grep.c: add first draft of context.c to handle -C
 13-04-03 grep.c: fix --highlight to highlight all matches on each line
 13-04-03 grep.c: add -o, --only-matching to list matching parts, each part on a separate line
@@ -5798,7 +5845,7 @@ All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="libcoshell changes">libcoshell changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcoshell changes">libcoshell changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
 12-12-01 coexec.c,cowait.c: fix service fd bugs
@@ -5854,7 +5901,7 @@ All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="libsum changes">libsum changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libsum changes">libsum changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
 12-02-29 sum-sha2.c: bitcount&#0091;&#0093; order reversed to allow a single noalias buffer copy
@@ -5876,7 +5923,7 @@ All recorded changes follow.
 
 </PRE>
 <P>
-<P><HR><CENTER><H3><A name="libdll changes">libdll changes</A></H3></CENTER>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libdll changes">libdll changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
 12-07-25 add debug diagnostics
@@ -5939,7 +5986,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>May 03, 2013</TD>
+<TD align=right>May 24, 2013</TD>
 </TR>
 </TABLE>
 <P>

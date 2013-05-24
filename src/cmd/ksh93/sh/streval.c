@@ -256,6 +256,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			node.isfloat=0;
 			node.level = level;
 			node.nosub = 0;
+			node.nextop = *cp;
 			num = (*ep->fun)(&ptr,&node,VALUE,num);
 			if(node.emode&ARITH_ASSIGNOP)
 			{
@@ -316,6 +317,8 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				}
 
 			}
+			else if(lastval && num==0 && sh_isoption(shp,SH_NOUNSET) && nv_isnull((Namval_t*)lastval)) 
+				arith_error((char*)ERROR_dictionary(e_notset),nv_name((Namval_t*)lastval),3);
 			lastval = 0;
 			c=0;
 			break;

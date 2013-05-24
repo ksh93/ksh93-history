@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #ifndef _SFHDR_H
@@ -432,6 +432,7 @@
 
 
 /* functions for polling readiness of streams */
+#if !_lib_poll
 #if _lib_select
 #undef _lib_poll
 #if _sys_select
@@ -441,7 +442,8 @@
 #if _lib_poll_fd_1 || _lib_poll_fd_2
 #define _lib_poll	1
 #endif
-#endif /*_lib_select_*/
+#endif /*_lib_select*/
+#endif /*_lib_poll*/
 
 #if _lib_poll
 #include	<poll.h>

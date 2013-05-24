@@ -245,7 +245,13 @@ void *nv_diropen(Namval_t *np,const char *name, void *context)
 			if(nv_istable(np))
 				dp->root = nv_dict(np);
 			else
+			{
+				Namarr_t *ap;
+				Namval_t *mp = nv_open(name,shp->var_tree,NV_VARNAME|NV_NOADD|NV_NOFAIL);
+				if(mp && (ap=nv_arrayptr(mp)) && !ap->fun && !ap->flags && (c=nv_aindex(mp))>=0)
+					nv_putsub(np,NULL,c,0);
 				dp->root = (Dt_t*)np;
+			}
 			if(nfp)
 			{
 				dp->nextnode = nfp->disc->nextf;
@@ -333,8 +339,8 @@ char *nv_dirnext(void *dir)
 #endif
 			if(dp->nextnode && !dp->hp && (nq = (Namval_t*)dp->table))
 			{
-				Namarr_t  *ap = nv_arrayptr(nq);
-				if(ap && (ap->flags&ARRAY_SCAN) && nv_nextsub(nq))
+				Namarr_t  *aq = nv_arrayptr(nq);
+				if(aq && (aq->flags&ARRAY_SCAN) && nv_nextsub(nq))
 					dp->hp = (*dp->nextnode)(np,(Dt_t*)0,dp->fun);
 			}
 			shp->last_table = last_table;
@@ -482,7 +488,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 				attr |= (NV_REF|NV_TAGGED);
 			if(typep)
 			{
-				char *cp = typep->nvname;
+				cp = typep->nvname;
 				if(cp = strrchr(cp,'.'))
 					cp++;
 				else
@@ -748,6 +754,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	if(!(np=nv_open(vname,root,mode|NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL|wp->noscope)))
 	{
 		wp->shp->last_table = last_table;
+		wp->flags &= ~NV_COMVAR;
 		return;
 	}
 	if(!wp->out)
@@ -787,8 +794,20 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 				break;
 		}
 		if(!xp)
+		{
+			if(nv_type(np) || !(wp->flags&NV_COMVAR))
+			{
+				wp->flags &= ~NV_COMVAR;
+				return;
+			}
+			if(wp->indent>0)
+				sfnputc(wp->out,'\t',wp->indent);
+			nv_attribute(np,wp->out,"typeset",' ');
+			sfputr(wp->out,name,wp->indent>0?'\n':-1);
 			return;
+		}
 	}
+	wp->flags &= ~NV_COMVAR;
 #if 0
 	if(nv_isnull(np) && !nv_isarray(np) && !nv_isattr(np,NV_INTEGER))
 		return;
@@ -832,6 +851,8 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	}
 	if(isarray==1 && !nq)
 	{
+		if(wp->out->_next[-1]!='=')
+			return;
 		sfputc(wp->out,'(');
 		if(wp->indent>=0)
 			sfputc(wp->out,'\n');
@@ -892,7 +913,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 	Shell_t *shp = wp->shp;
 	Namarr_t	*ap;
 	Namval_t	*np,*tp;
-	size_t	m,l;
+	size_t		m,l;
 	if(n==0)
 		m = strlen(prefix);
 	else if(cp=nextdot(prefix,(void*)shp))
@@ -900,6 +921,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 	else
 		m = strlen(prefix)-1;
 	m++;
+	wp->flags &= ~NV_COMVAR;
 	if(outfile && !wp->array)
 	{
 		sfputc(outfile,'(');
@@ -948,6 +970,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 							sp = tp->nvname;
 						sfputr(outfile,sp,' ');
 					}
+					else if(*cp!='[' && wp->indent>=0 && nv_isvtree(np))
+						nv_attribute(np,outfile,"typeset",' ');;
 					sh_outname(shp,outfile,cp,nextcp-cp);
 					sfputc(outfile,'=');
 					*nextcp = '.';
@@ -967,12 +991,12 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			else if(outfile && !wp->nofollow && argv[1] && memcmp(arg,argv[1],l=strlen(arg))==0 && argv[1][l]=='[')
 			{
 				int	k=1;
-				Namarr_t *ap=0;
-				Namval_t *np = nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|wp->noscope);
+				Namarr_t *aq=0;
+				np = nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|wp->noscope);
 				if(!np)
 					continue;
-				if((wp->array = nv_isarray(np)) && (ap=nv_arrayptr(np)))
-					k = array_elem(ap);
+				if((wp->array = nv_isarray(np)) && (aq=nv_arrayptr(np)))
+					k = array_elem(aq);
 					
 				if(wp->indent>0)
 					sfnputc(outfile,'\t',wp->indent);
@@ -986,7 +1010,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 				}
 				wp->nofollow=1;
 				argv = genvalue(argv,cp,cp-arg ,wp);
-				sfputc(outfile,wp->indent<0?';':'\n');
+				if(wp->indent>0)
+					sfputc(outfile,'\n');
 			}
 			else if(outfile && *cp=='[' && cp[-1]!='.')
 			{
@@ -1007,6 +1032,15 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			{
 				if(n && *cp &&  cp[-1]!='.' && cp[-1]!='[')
 					break;
+				if(outfile && wp->indent<0 && (wp->flags&NV_COMVAR))
+					sfputc(outfile,';');
+				wp->flags |= NV_COMVAR;
+				if(argv[1])
+				{
+					ssize_t r = (cp-argv[0]) + strlen(cp);
+					if(argv[1][r]=='.' && memcmp(argv[0],argv[1],r)==0)
+						wp->flags &= ~NV_COMVAR;
+				}
 				outval(cp,arg,wp);
 				if(wp->array)
 				{
@@ -1023,6 +1057,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 		wp->nofollow = 0;
 	}
 	wp->array = 0;
+	wp->flags &= ~NV_COMVAR;
 	if(outfile)
 	{
 		int c = prefix[m-1];
@@ -1035,6 +1070,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 		if(wp->indent>0)
 			sfnputc(outfile,'\t',--wp->indent);
 		sfputc(outfile,')');
+		if(*argv && n && wp->indent<0)
+			sfputc(outfile,';');
 	}
 	return(--argv);
 }
@@ -1058,12 +1095,14 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 	void *dir;
 	int n=0, noscope=(flags&NV_NOSCOPE);
 	Namarr_t *arp = nv_arrayptr(np);
-	Dt_t	*save_tree = shp->var_tree;
+	Dt_t	*save_tree = shp->var_tree, *last_root;
 	Namval_t	*mp=0;
 	char		*xpname = xp?stkcopy(shp->stk,nv_name(xp)):0;
 	walk.shp = shp;
 	if(xp)
 	{
+		if(!(last_root = shp->last_root))
+			last_root = shp->var_tree;
 		shp->last_root = shp->prev_root;
 		shp->last_table = shp->prev_table;
 	}
@@ -1105,12 +1144,17 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 			sfputr(shp->stk,xpname,-1);
 			sfputr(shp->stk,cp+len,0);
 			shp->var_tree = save_tree;
-			if(!shp->prev_root)
-				shp->prev_root = shp->var_tree;
-			mq = nv_open(stkptr(shp->stk,0),shp->prev_root,NV_VARNAME|NV_NOASSIGN|NV_NOFAIL);
+			mq = nv_open(stkptr(shp->stk,0),last_root,NV_VARNAME|NV_NOASSIGN|NV_NOFAIL);
 			shp->var_tree = dp;
 			if(nq && mq)
 			{
+				register struct nvdir *dp = (struct nvdir*)dir;
+				if(dp->table==nq)
+				{
+					dp = dp->prev; 
+					free(dir);
+					dir = dp;
+				}
 				nv_clone(nq,mq,flags|NV_RAW);
 				if(flags&NV_MOVE)
 					nv_delete(nq,walk.root,0);

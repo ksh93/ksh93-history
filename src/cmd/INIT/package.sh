@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1994-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1994-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -99,7 +99,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2012-11-20 $
+@(#)$Id: package (AT&T Research) 2013-05-17 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -300,7 +300,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
         [+results\b [ \bfailed\b ]] [ \bpath\b ]] [ \bold\b ]] [\bmake\b | \btest\b | \bwrite\b ]]?List
             results and interesting messages captured by the most recent
             \bmake\b (default), \btest\b or \bwrite\b action. \bold\b
-            specifies the previous results, if any (current and previous
+            specifies the previous results, if any (current and previous 9
             results are retained.) \b$HOME/.pkgresults\b, if it exists,
             must contain an \begrep\b(1) expression of result lines to be
             ignored. \bfailed\b lists failures only and \bpath\b lists the
@@ -1121,7 +1121,7 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 	results [ path ] [ old ] [ make | test ]
 		List results and interesting messages captured by the most
 		recent make (default), test or write action. old specifies the
-		previous results, if any (current and previous results are
+		previous results, if any (current and previous 9 results are
 		retained.) $HOME/.pkgresults, if it exists, must contain an
 		egrep(1) expression of result lines to be ignored. failed lists
 		failures only and path lists the results file path only.
@@ -5864,8 +5864,7 @@ cat $j $k
 	then	eval capture nmake $nmakeflags \$makeflags \$noexec install ksh93 $assign
 		case $make$noexec in
 		'')	if	executable ! $KSH
-			then	echo "$command: $action: errors making $KSH" >&2
-				exit 1
+			then	echo "$command: $action: warning: errors making $KSH" >&2
 			fi
 			;;
 		*)	make=echo
@@ -6563,7 +6562,7 @@ results)set '' $target
 			*:test:*/ksh*)	filter=rt ;;
 			esac
 			;;
-		old)	suf=old
+		old)	suf=$suf.*
 			;;
 		on)	case $# in
 			1)	echo $command: $action: $1: host pattern argument expected >&2

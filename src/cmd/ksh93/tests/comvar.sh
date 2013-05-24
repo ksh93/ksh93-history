@@ -25,6 +25,19 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
+function idempotent
+{
+	typeset got var action='typeset -p'
+	[[ $1 == -* ]] && { shift;var=$2=; action='print -v';} 
+	typeset -n exp=$1
+	got=$($SHELL <<- EOF
+		$3
+		$var$exp
+		$action  $2
+	EOF)
+	[[ $got == "$exp" ]] || err_exit "$exp is not idempotent"
+}
+
 #test for compound variables
 Command=${0##*/}
 integer Errors=0
@@ -374,6 +387,7 @@ got=$z
 	got=$(printf %q "$got")
 	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
 }
+idempotent -v exp c
 
 typeset -A record
 record[a]=(
@@ -390,6 +404,7 @@ got=${record[a]}
 	got=$(printf %q "$got")
 	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
 }
+idempotent -v exp c
 
 unset r
 r=(
@@ -406,6 +421,7 @@ got=$r
 	got=$(printf %q "$got")
 	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
 }
+idempotent -v exp c
 
 # array of compund variables
 typeset -C data=(
@@ -459,12 +475,14 @@ typeset -C more_content=(
 mica01[4]+=more_content
 expected=$'typeset -C -a mica01=([4]=(a_string=\'foo bar\';some_stuff=hello))'
 [[ $(typeset -p mica01) == "$expected" ]] || err_exit 'appened to indexed array compound variable not working'
+idempotent  expected mica01
 
 unset x
 compound x=( integer x ; )
 [[ ! -v x.x ]] && err_exit 'x.x should be set'
 expected=$'(\n\ttypeset -l -i x=0\n)'
 [[ $(print -v x) == "$expected" ]] || err_exit "'print -v x' should be $expected"
+idempotent  -v expected c
 
 typeset -C -A hello19=(
 	[19]=(
@@ -478,6 +496,7 @@ typeset -C -A hello19=(
 )
 expected="typeset -C -A hello19=([19]=(one='xone 19';two='xtwo 19') [23]=(one='xone 23';two='xtwo 23'))"
 [[ $(typeset -p hello19) == "$expected" ]] || print -u2 'typeset -p hello19 incorrect'
+idempotent expected hello19
 expected=$'(\n\tone=\'xone 19\'\n\ttwo=\'xtwo 19\'\n) (\n\tone=\'xone 23\'\n\ttwo=\'xtwo 23\'\n)'
 [[ ${hello19[@]} == "$expected" ]] || print -u2 '${hello19[@]} incorrect'
 
@@ -510,11 +529,13 @@ function f1
 f1 tree
 expected=$'(\n\ttypeset -A subtree=(\n\t\t[a_node]=(\n\t\t\tone=hello\n\t\t\ttwo=world\n\t\t)\n\t)\n)'
 [[ $tree == "$expected" ]] ||  err_exit 'move of compound local variable to global variable not working'
+idempotent -v expected subtree
 
 typeset -C -A array
 float array[12].amount=2.9 
 expected='typeset -C -A array=([12]=(typeset -l -E amount=2.9))'
 [[ $(typeset -p array) == "$expected" ]] || err_exit 'typeset with compound  variable with compound variable array not working'
+idempotent  expected array
 
 typeset -T foo_t=(
         function diff
@@ -546,6 +567,7 @@ compound x=(
 ) 
 expected='typeset -C x=(typeset -C -a nodes=([4]=());)'
 [[ $(typeset -p x) == "$expected" ]] || err_exit 'typeset -p with nested compound index array not working'
+idempotent  expected x
 
 unset v
 compound v=(
@@ -555,6 +577,7 @@ compound v=(
 ) 
 expected='typeset -C v=(typeset -A -l -i ar=([aa]=4 [bb]=9);)'
 [[ $(typeset -p v) == "$expected" ]] || err_exit 'attributes for associative arrays embedded in compound variables not working'
+idempotent  expected v
 
 unset x
 compound -a x
@@ -565,17 +588,20 @@ unset x
 z='typeset -a x=(hello (x=12;y=5) world)'
 { eval "$z" ;} 2> /dev/null
 [[ $(typeset -p x) == "$z" ]] || err_exit "compound assignment '$z' not working"
+idempotent  z x
 
 expected='typeset -C -A l=([4]=(typeset -a ar=(1 2 3);b=1))'
 typeset -A -C l
 printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l[4] 
 [[ $(typeset -p l) == "$expected" ]] ||  err_exit 'read -C for associative array of compound variables not working'
+idempotent  expected l
 
 unset x
 compound x=( z="a=b c")
 exp=$'typeset -C x=(z=a\\=\'b c\')'
 got=$(typeset -p x)
 [[ $got == "$exp" ]] || err_exit "typeset -p failed -- expected '$exp', got '$got'"
+idempotent  exp x
 
 x=(typeset -C -a y;float z=2)
 got=$(print -C x)
@@ -599,6 +625,7 @@ unset x
 typeset -C -A x=( [0]=(a=1) [1]=(b=2) )
 expected=$'(\n\t[0]=(\n\t\ta=1\n\t)\n\t[1]=(\n\t\tb=2\n\t)\n)'
 [[ $(print -v x) == "$expected" ]] || err_exit 'print -v not formatting correctly'
+#idempotent expected -v x
 
 compound -a x=( [0]=(a=1) [1]=(b=2) )
 typeset -m "z=x[1]"
@@ -612,6 +639,7 @@ typeset -m "x[1]=x[0]"
 typeset -m "x[0]=z"
 exp='([0]=(b=2) [1]=(a=1))'
 [[ $(print -C x) == "$exp" ]] || err_exit 'typeset -m not working for associative arrays'
+#idempotent -v exp x
 
 unset z r
 z=(a b c)
@@ -625,16 +653,18 @@ compound c
 compound -a c.a=( [1]=( aa=1 ) )
 compound -a c.b=( [2]=( bb=2 ) )
 typeset -m "c.b[9]=c.a[1]"
-exp='typeset -C c=(typeset -C -a a;typeset -C -a b=( [2]=(bb=2;)[9]=(aa=1));)'
+exp='typeset -C c=(typeset -C -a a;typeset -C -a b=( [2]=(bb=2;);[9]=(aa=1)))'
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to another index fails'
+idempotent exp c
 
 unset c
 compound c
 compound -a c.a=( [1]=( aa=1 ) )
 compound -A c.b=( [2]=( bb=2 ) )
 typeset -m "c.b[9]=c.a[1]"
-exp='typeset -C c=(typeset -C -a a;typeset -C -A b=( [2]=(bb=2;)[9]=(aa=1));)'
+exp='typeset -C c=(typeset -C -a a;typeset -C -A b=( [2]=(bb=2;);[9]=(aa=1)))'
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to a compound associative array element fails'
+idempotent exp c
 
 zzz=(
 	foo=(
@@ -672,6 +702,7 @@ do	c.board[1][$i]=(foo=bar)
 done
 exp=$'(\n\ttypeset -C -a board=(\n\t\ttypeset -a [1]=(\n\t\t\t[2]=(\n\t\t\t\tfoo=bar\n\t\t\t)\n\t\t\t[3]=(\n\t\t\t\tfoo=bar\n\t\t\t)\n\t\t)\n\t)\n)'
 [[ "$(print -v c)" == "$exp" ]] || err_exit 'compound variable assignment to two dimensional array not working'
+idempotent -v exp c
 
 unset zz
 zz=()
@@ -685,6 +716,7 @@ exp='typeset -C zz=([2]=def;foo=abc)'
 	exp='typeset -C zz=([2]=def;typeset -i [3]=123;foo=abc)'
 	[[ $(typeset -p zz) == "$exp" ]] || err_exit 'expansion of compound variables with non-identifiers not working in subshells'
 )  3>&2 2> /dev/null || err_exit 'syntax errors expansion of compound variables with non-identifiers'
+#idempotent  exp c
 
 unset xx
 xx=(foo=bar)
@@ -701,22 +733,44 @@ float y1=2.34
 compound c
 typeset -m c.y1=y1
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'typeset -m not preserving attributes'
+idempotent exp c
 
-compound -a ar=( ( float i=4 ) ( float i=7 ) ( float i=2 ) ( float i=1 ) ( float i=24 ) ( float i=-1 ) )
+compound -a ar=(( float i=4 ) ( float i=7 ) ( float i=2 ) ( float i=1 ) ( float i=24 ) ( float i=-1 ) )
 set -s -Aar -Ki:n
 exp='typeset -C -a ar=((typeset -l -E i=-1) (typeset -l -E i=1) (typeset -l -E i=2) (typeset -l -E i=4) (typeset -l -E i=7) (typeset -l -E i=24))'
 [[ $(typeset -p ar) == "$exp" ]] || err_exit 'set -s -Aar -Ki:n for compound variable float array failed'
-compound -a ar=( (i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
+compound -a ar=((i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
 set -s -Aar -Ki:n
 [[ $(typeset -p ar) == "${exp//typeset -l -E /}" ]] || err_exit 'set -s -Aar -Ki:n for compound var
+idempotent exp c
 iable array failed'
 set -s -Aar -Ki:nr
 exp='typeset -C -a ar=((i=24) (i=7) (i=4) (i=2) (i=1) (i=-1))'
 [[ $(typeset -p ar) == "$exp" ]] || err_exit 'set -s -Aar -Ki:nr for compound variable float array failed'
-compound -a ar=( (i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
+#idempotent exp ar
+compound -a ar=((i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
 unset ar[2]
 set -s -Aar -Ki
 exp='typeset -C -a ar=((i=-1) (i=1) (i=24) (i=4) (i=7))'
 [[ $(typeset -p ar) == "$exp" ]]|| err_exit 'sparse array not sorting correctly'
+
+compound  y
+compound  y.x
+compound y.x.ca
+exp='typeset -C y=(x=(typeset -C ca))'
+[[ $(typeset -p y) == "$exp" ]] || err_exit 'compound variable with empty compound variable not displaying correctly'
+idempotent exp y
+
+unset c
+compound c=( compound -a ar=(
+	[4]=(
+		compound b1=( bool pollin='true' )
+		compound b2
+		compound b3=( bool pollin='false' )
+	)
+))
+exp='typeset -C c=(typeset -C -a ar=( [4]=(b1=(_Bool pollin=true;);typeset -C b2;b3=(_Bool pollin=false))))'
+[[ $(typeset -p c) == "$exp" ]] || err_exit 'compound variable with empty and non-empty sub-variables not displaying correctly'
+idempotent exp c
 
 exit $((Errors<125?Errors:125))

@@ -980,6 +980,8 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 				np->nvenv = 0;
 				np->nvflag = NV_EXPORT;
 			}
+			else
+				np->nvflag = 0;
 		}
 		else
 			np->nvflag &= NV_MINIMAL;

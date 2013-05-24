@@ -30,6 +30,12 @@ USAGE_LICENSE
     "array variable \atypename\a.]"
 "[+?If the list of \avalue\as is omitted, then \atypename\a must name an "
     "indexed array variable with at least two elements.]" 
+"[+?When an enumeration variable is used in arithmetic expression, its value "
+	"is the index into the array that defined it starting from index 0. "
+	"Enumeration strings can be used in an arithmetic expression when "
+	"comparing against an enumeration variable.]"
+"[+?The enum \b_Bool\b exists by default with values \btrue\b and \bfalse\b. "
+	"The predefined alias \bbool\b is defined as \b_Bool\b.]"
 "[i:ignorecase?The values are case insensitive.]"
 "[p?Writes the enums to standard output.  If \atypename\a is omitted then all "
 	"\benum\bs are written.]"
@@ -136,7 +142,7 @@ static void put_enum(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	struct Enum 		*ep = (struct Enum*)fp;
 	register const char	*v;
 	unsigned short		i=0, n;
-	if(!val)
+	if(!val && !(flags&NV_INTEGER))
 	{
 		nv_putv(np, val, flags,fp);
 		nv_disc(np,&ep->hdr,NV_POP);

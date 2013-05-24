@@ -1287,7 +1287,16 @@ static int iovex_stream(void *context, uintmax_t origfd, uintmax_t fd2)
 			sh_fcntl(origfd,flag,fd);
 		}
 		shp->sftable[fd] = sporig;
-		shp->fdstatus[fd] = status;
+		
+		if(shp->readscript)
+		{
+			sfsetfd(sporig,-1);
+			sfclose(sporig);
+			sfnew(sporig,NULL,-1,fd,(fd<3?SF_SHARE|SF_PUBLIC:0)|(status&(IOREAD|IOWRITE)));
+			sh_iostream(shp,fd,fd);
+		}
+		else
+			shp->fdstatus[fd] = status;
 		shp->fdstatus[origfd] = IOCLOSE;
 		shp->sftable[origfd] = 0;
 		iovex_stdstream(shp,fd);

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -390,6 +390,7 @@ const char e_lexsyntax3[]	= "syntax error at line %d: duplicate label %s";
 const char e_lexsyntax4[]	= "syntax error at line %d: invalid reference list";
 const char e_lexsyntax5[]	= "syntax error at line %d: `<<%s' here-document not contained within command substitution";
 const char e_lexwarnvar[]	= "line %d: variable expansion makes arithmetic evaluation less efficient";
+const char e_lexarithwarn[]	= "line %d: ((%.*s%s is more efficient than %s";
 const char e_lexlabignore[]	= "line %d: label %s ignored";
 const char e_lexlabunknown[]	= "line %d: %s unknown label";
 const char e_lexobsolete1[]	= "line %d: `...` obsolete, use $(...)";

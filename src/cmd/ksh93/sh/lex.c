@@ -557,7 +557,7 @@ int sh_lex(Lex_t* lp)
 							lp->lexd.docword=1;
 						else if(n==LPAREN)
 						{
-							if(lp->lex.intest)
+							if(lp->lex.intest || lp->comp_assign)
 								return(c);
 							lp->lexd.nest=1;
 							lp->lastline = shp->inlineno;
@@ -1403,7 +1403,15 @@ breakloop:
 	state = lp->arg->argval;
 	lp->comp_assign = assignment;
 	if(assignment)
+	{
 		lp->arg->argflag |= ARG_ASSIGN;
+		if(sh_isoption(shp,SH_NOEXEC))
+		{
+			char *cp = strchr(state,'=');
+			if(cp && memcmp(++cp,"$((",3)==0)
+				errormsg(SH_DICT,ERROR_warn(0),e_lexarithwarn,shp->inlineno,cp-state,state,cp+3,state);
+		}
+	}
 	else if(!lp->lex.skipword)
 		lp->assignok = 0;
 	lp->arg->argchn.cp = 0;

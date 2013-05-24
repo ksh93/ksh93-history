@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -95,6 +95,7 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 #if _lib_utimets || _lib_utimensat
 	struct timespec	ts[2];
 #endif
+#if !_lib_utimets
 #if _lib_utimes
 	struct timeval	am[2];
 #else
@@ -102,6 +103,7 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 	struct utimbuf	am;
 #else
 	time_t		am[2];
+#endif
 #endif
 #endif
 

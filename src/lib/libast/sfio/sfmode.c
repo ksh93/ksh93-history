@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,7 +16,7 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #include	"sfhdr.h"
@@ -258,7 +258,7 @@ reg Sfio_t*	f;	/* stream to close */
 #endif
 {
 	Sfproc_t*	p;
-	int		pid, status;
+	int		status;
 
 	if(!(p = f->proc))
 		return -1;
@@ -279,7 +279,7 @@ reg Sfio_t*	f;	/* stream to close */
 		sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
 #endif
 		status = -1;
-		while ((pid = waitpid(p->pid,&status,0)) == -1 && errno == EINTR)
+		while (waitpid(p->pid,&status,0) == -1 && errno == EINTR)
 			;
 #if _PACKAGE_ast
 		status = status == -1 ?

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 		sh_onoption(shp,SH_DICTIONARY);
 		sh_onoption(shp,SH_NOEXEC);
 	}
+	sh_trap(shp,"enum _Bool=(false true) ;",0);
 	if(nflag)
 		sh_onoption(shp,SH_NOEXEC);
 	if(vflag)

@@ -27,7 +27,7 @@ CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
-HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
+HEADERSRC = ast.h ast_debug.h ast_dir.h ast_getopt.h ast_std.h \
 	ast_namval.h ast_windows.h \
 	ccode.h cdt.h cdtlib.h cmdarg.h debug.h dt.h error.h find.h ftw.h \
 	ftwalk.h fts.h fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h \
@@ -40,7 +40,7 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	$(HEADERSTD)
 
 HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
-	$(ID)_api.h $(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h \
+	$(ID)_api.h $(ID)_aso.h $(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h \
 	$(ID)_fs.h $(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h $(ID)_ndbm.h \
 	$(ID)_param.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h \
 	$(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h $(ID)_sizeof.h \
@@ -144,7 +144,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c regstat.c \
 	/* cdt */ \
 	dthdr.h dtclose.c dtdisc.c dthash.c dtlist.c dtmethod.c dtopen.c \
-	dtstat.c dtstrhash.c dttree.c dtuser.c dtview.c dtwalk.c \
+	dtrehash.c dtstat.c dtstrhash.c dttree.c dtuser.c dtview.c dtwalk.c \
 	dtnew.c dtcomp.c \
 	/* sfio */ \
 	sfhdr.h sfdchdr.h \
@@ -196,12 +196,12 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	conftab.c \
 	$(CC.LD.STATIC) aststatic.c getopt.c getoptl.c $(CC.LD.DYNAMIC) \
 	/* aso */ \
-	aso.c asolock.c asometh.c asorelax.c aso-sem.c aso-fcntl.c \
+	aso.c asoactivecpu.c asolock.c asorelax.c asothreadid.c asoyield.c \
 	/* vmalloc */ \
-	vmalloc.h vmhdr.h vmbest.c vmclear.c vmclose.c vmdcheap.c vmdebug.c \
-	vmdisc.c vmexit.c vmlast.c vmopen.c vmpool.c vmprivate.c vmprofile.c \
-	vmregion.c vmsegment.c vmset.c vmstat.c vmstrdup.c vmtrace.c vmwalk.c \
-	vmmopen.c malloc.c vmgetmem.c \
+	vmalloc.h vmhdr.h malloc.c vmbest.c vmclear.c vmclose.c vmdcderive.c \
+	vmdcshare.c vmdcsystem.c vmdebug.c vmdisc.c vmexit.c vmgetmem.c \
+	vmlast.c vmmaddress.c vmopen.c vmpool.c vmsegment.c vmset.c vmstat.c \
+	vmstrdup.c vmtrace.c vmuserdata.c \
 	/* uwin */ \
 	mathimpl.h rlib.h \
 	a64l.c acosh.c asinh.c atanh.c cbrt.c crypt.c erf.c \
