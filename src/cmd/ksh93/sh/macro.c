@@ -1216,6 +1216,13 @@ retry1:
 		}
 		else
 			v = 0;
+		if(!v && sh_isoption(mp->shp,SH_NOUNSET))
+		{
+			d=fcget();
+			fcseek(-1);
+			if(!strchr(":+-?=",d))
+				errormsg(SH_DICT,ERROR_exit(1),e_notset,ltos(c));
+		}
 		break;
 	    case S_ALP:
 		if(c=='.' && type==0)
@@ -2795,10 +2802,15 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 		}
 		if(fd<0)
 			return(NIL(char*));
-		if (access("/proc/self/fd", X_OK) == 0)
-			sfprintf(shp->stk, "/proc/%ld/fd/%d", (long)getpid(), fd);
-		else
-			sfprintf(shp->stk,"/dev/fd/%d", fd);
+#ifdef _fd_pid_dir_fmt
+		sfprintf(shp->stk, _fd_pid_dir_fmt, (long)getpid(), fd,"","");
+#else
+#   ifdef _fd_self_dir_fmt
+		sfprintf(shp->stk,_fd_pid_dir_fmt,fd,"","");
+#   else
+		sfprintf(shp->stk,"/dev/fd/%d", fd);
+#   endif
+#endif
 		if(vc)
 			spawnvex_add(vc,fd,fd,0,0);
 		return(stkfreeze(shp->stk,1));

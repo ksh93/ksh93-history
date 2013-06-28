@@ -4,6 +4,7 @@
 
 SH := $(PWD:B:/[0-9]*$//:N=ksh*:-ksh)		/* name of the shell program */
 VERSION = 1.1
+API = 20130625					/* >= 20130625 to enable ast syscall intercepts */
 LICENSE = since=1982,author=dgk
 CATALOG = libshell
 ERROR_CONTEXT_T == Error_context_t /* workaround until switch from errorpush()/errorpop() => errorctx() */
@@ -76,7 +77,7 @@ else
 	LIBS_req = +lshell$(RELEASE)
 end
 
-:PACKAGE: ast$(libtype):20121001 coshell:order --clobber=!($(SH))
+:PACKAGE: ast$(libtype):$(API) coshell:order --clobber=!($(SH))
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
@@ -107,13 +108,6 @@ if  CC.HOSTTYPE == "sol([89]|[1-9][0-9]).*"
 	LDFLAGS  += $(CC.LD.LAZY) $(CC.LD.NORECORD)
 end
 
-if "$(-mam:N=static*)"
-	LIBS_opt += -lsocket -lnsl
-elif CC.HOSTTYPE == "sol?([789]|[1-9][0-9]).*"
-	LIBS_opt += +lsocket -lnsl
-elif CC.HOSTTYPE != "sgi.mips*"
-	LIBS_opt += +lsocket +lnsl
-end
 if CC.HOSTTYPE == "linux.sparc*"
 	/* the linux.sparc linker still has some problems */
 	LIBS_opt += -ldll

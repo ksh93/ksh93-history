@@ -617,10 +617,13 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	Namarr_t	*ap = nv_arrayptr(np);
 	int		scan,tabs=0,c,more,associative = 0;
 	int		saveI = Indent, dot=-1;
+	bool 		json = (special&NV_JSON);
+	Shell_t		*shp = (Shell_t*)np->nvshell;
+	special	&= ~NV_JSON;
 	Indent = indent;
 	if(ap)
 	{
-		sfputc(out,'(');
+		sfputc(out,json?'[':'(');
 		if(array_elem(ap)==0)
 			return;
 		if(!(ap->flags&ARRAY_SCAN))
@@ -661,8 +664,10 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 				sfwrite(out,"typeset -a ",11);
 			if(!(fmtq = nv_getsub(np)))
 				break;
-			sfprintf(out,"[%s]",sh_fmtq(fmtq));
-			sfputc(out,'=');
+			if(!json)
+				sfprintf(out,"[%s]=",sh_fmtstr(fmtq,'['));
+			else if(associative)
+				sfprintf(out,"%s: ",sh_fmtj(fmtq));
 		}
 		if(ap && !array_assoc(ap))
 			scan = ap->flags&ARRAY_SCAN;
@@ -672,7 +677,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			if(indent>0)
 				sfnputc(out,'\t',indent);
 			if(nv_arrayptr(mp))
-				sfputc(out,')');
+				sfputc(out,json?']':')');
 			sfputc(out,indent>=0?'\n':' ');
 			if(ap && !array_assoc(ap))
 				ap->flags |= scan;
@@ -706,6 +711,23 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		}
 		if(mp && nv_isvtree(mp))
 			fmtq = ep;
+		else if(json)
+		{
+			if(nv_isattr(np,NV_INTEGER))
+			{
+				Namval_t *tp;
+				if((tp=nv_type(np)) && strcmp(tp->nvname,"_Bool")==0)
+					fmtq = nv_getval(np);
+				else
+				{
+					Sfdouble_t d = nv_getnum(np);
+					sfprintf(shp->strbuf,"%.*Lg",sizeof(d),d);
+					fmtq = sfstruse(shp->strbuf);
+				}
+			}
+			else if(!(fmtq = sh_fmtj(ep)))
+				fmtq = "\"\"";
+		}
 		else if(!ep && !mp && nv_isarray(np))
 			fmtq = " ()";
 		else if(!(fmtq = sh_fmtq(ep)))
@@ -723,7 +745,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		if(ap && !array_assoc(ap))
 			ap->flags |= scan;
 		more = nv_nextsub(np);
-		c = '\n';
+		c = json?',':'\n';
 		if(indent<0)
 		{
 			c = indent < -1?-1:';';
@@ -731,6 +753,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 				c = more?' ':-1;
 		}
 		sfputr(out,fmtq,c);
+		if(json)
+			sfputc(out,'\n');
 		if(xp)
 			*xp = ' ';
 	skip:
@@ -748,6 +772,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	register Namval_t *tp=0, *np, *nq, *last_table=wp->shp->last_table;
         register Namfun_t *fp;
 	int isarray=0, special=0,mode=0;
+	bool json = (wp->flags&NV_JSON);
 	Dt_t *root = wp->root?wp->root:wp->shp->var_base;
 	if(*name!='.' || vname[strlen(vname)-1]==']')
 		mode = NV_ARRAY;
@@ -851,9 +876,12 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	}
 	if(isarray==1 && !nq)
 	{
-		if(wp->out->_next[-1]!='=')
+		int c = json?':':'=';
+		if(wp->out->_next[-1]!=c)
 			return;
-		sfputc(wp->out,'(');
+		if(json)
+			sfputc(wp->out,' ');
+		sfputc(wp->out,json?'[':'(');
 		if(wp->indent>=0)
 			sfputc(wp->out,'\n');
 		return;
@@ -868,7 +896,8 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(*name!='.')
 		{
 			Namarr_t *ap;
-			nv_attribute(np,wp->out,"typeset",'=');
+			if(!json)
+				nv_attribute(np,wp->out,"typeset",'=');
 #if xSHOPT_FIXEDARRAY
 			if((ap=nv_arrayptr(np)) && ap->fixed)
 			{
@@ -878,16 +907,21 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			}
 #endif /* SHOPT_FIXEDARRAY */
 		}
+		if(json)
+			sfputc(wp->out,'"');
 		sh_outname(wp->shp,wp->out,name,-1);
+		if(json)
+			sfwrite(wp->out,"\": ",3);
 		if((np->nvalue.cp && np->nvalue.cp!=Empty) || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)) || nv_isvtree(np))  
-			sfputc(wp->out,(isarray==2?(wp->indent>=0?'\n':';'):'='));
+			if(!json)
+				sfputc(wp->out,(isarray==2?(wp->indent>=0?'\n':';'):'='));
 		if(isarray==2)
 			return;
 	}
 	fp = np->nvfun;
 	if(*name=='.' && !isarray)
 		np->nvfun = 0;
-	nv_outnode(np, wp->out, wp->indent, special);
+	nv_outnode(np, wp->out, wp->indent, special|(wp->flags&NV_JSON));
 	if(*name=='.' && !isarray)
 		np->nvfun = fp;
 	if(isarray && !special)
@@ -895,7 +929,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(wp->indent>0)
 		{
 			sfnputc(wp->out,'\t',wp->indent);
-			sfwrite(wp->out,")\n",2);
+			sfwrite(wp->out,json?"]\n":")\n",2);
 		}
 		else
 			sfwrite(wp->out,");",2);
@@ -914,6 +948,10 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 	Namarr_t	*ap;
 	Namval_t	*np,*tp;
 	size_t		m,l;
+	bool		json = (wp->flags&NV_JSON);
+	bool		array_parent = (wp->flags&NV_ARRAY);
+	char		endchar = json?'}':')';
+	wp->flags &= ~NV_ARRAY;
 	if(n==0)
 		m = strlen(prefix);
 	else if(cp=nextdot(prefix,(void*)shp))
@@ -924,7 +962,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 	wp->flags &= ~NV_COMVAR;
 	if(outfile && !wp->array)
 	{
-		sfputc(outfile,'(');
+		sfputc(outfile,json?'{':'(');
 		if(wp->indent>=0)
 		{
 			wp->indent++;
@@ -961,7 +999,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 						continue;
 					if(wp->indent>=0)
 						sfnputc(outfile,'\t',wp->indent);
-					if(*cp!='[' && tp)
+					if(!json && *cp!='[' && tp)
 					{
 						char *sp;
 						if(sp = strrchr(tp->nvname,'.'))
@@ -971,9 +1009,20 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 						sfputr(outfile,sp,' ');
 					}
 					else if(*cp!='[' && wp->indent>=0 && nv_isvtree(np))
-						nv_attribute(np,outfile,"typeset",' ');;
-					sh_outname(shp,outfile,cp,nextcp-cp);
-					sfputc(outfile,'=');
+					{
+						if(!json)
+							nv_attribute(np,outfile,"typeset",' ');;
+					}
+					if(!array_parent)
+					{
+						if(json)
+							sfputc(outfile,'"');
+						sh_outname(shp,outfile,cp,nextcp-cp);
+						if(json)
+							sfwrite(outfile,"\": ",3);
+						else
+							sfputc(outfile,'=');
+					}
 					*nextcp = '.';
 				}
 				else
@@ -1000,15 +1049,22 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					
 				if(wp->indent>0)
 					sfnputc(outfile,'\t',wp->indent);
-				nv_attribute(np,outfile,"typeset",1);
+				if(json)
+					sfputc(outfile,'"');
+				else
+					nv_attribute(np,outfile,"typeset",1);
 				nv_close(np);
-				sfputr(outfile,arg+m+r+(n?n:0),(k?'=':'\n'));
+				sfputr(outfile,arg+m+r+(n?n:0),(k?(json?'"':'='):'\n'));
+				if(json)
+					sfputc(outfile,':');
 				if(!k)
 				{
 					wp->array=0;
 					continue;
 				}
 				wp->nofollow=1;
+				if(json && aq && !aq->fun)
+					wp->flags |= NV_ARRAY;
 				argv = genvalue(argv,cp,cp-arg ,wp);
 				if(wp->indent>0)
 					sfputc(outfile,'\n');
@@ -1045,7 +1101,11 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 				if(wp->array)
 				{
 					if(wp->indent>=0)
+					{
 						wp->indent++;
+						if(json)
+							endchar = ']';
+					}
 					else
 						sfputc(outfile,' ');
 					wp->array = 0;
@@ -1069,7 +1129,9 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			cp[m-1] = c;
 		if(wp->indent>0)
 			sfnputc(outfile,'\t',--wp->indent);
-		sfputc(outfile,')');
+		sfputc(outfile,endchar);
+		if(json && wp->indent>0)
+			sfputc(outfile,',');
 		if(*argv && n && wp->indent<0)
 			sfputc(outfile,';');
 	}
@@ -1148,16 +1210,18 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 			shp->var_tree = dp;
 			if(nq && mq)
 			{
-				register struct nvdir *dp = (struct nvdir*)dir;
+				register struct nvdir *odir=0,*dp = (struct nvdir*)dir;
 				if(dp->table==nq)
 				{
 					dp = dp->prev; 
-					free(dir);
+					odir = dir;
 					dir = dp;
 				}
 				nv_clone(nq,mq,flags|NV_RAW);
 				if(flags&NV_MOVE)
 					nv_delete(nq,walk.root,0);
+				if(odir)
+					free(odir);
 			}
 			continue;
 		}
@@ -1230,8 +1294,8 @@ char *nv_getvtree(register Namval_t *np, Namfun_t *fp)
 		return(nv_getv(np,fp));
 	if(nv_isattr(np,NV_ARRAY) && !nv_type(np) && nv_arraychild(np,(Namval_t*)0,0)==np)
 		return(nv_getv(np,fp));
-	if(flags = nv_isattr(np,NV_EXPORT))
-		nv_offattr(np,NV_EXPORT);
+	if(flags = nv_isattr(np,NV_EXPORT|NV_TAGGED))
+		nv_offattr(np,NV_EXPORT|NV_TAGGED);
 	if(flags |= nv_isattr(np,NV_TABLE))
 		nv_offattr(np,NV_TABLE);
 	if(dsize && (flags&NV_EXPORT))

@@ -128,6 +128,10 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	int 		i;	/* set for restricted shell */
 	bool		rshflag;	/* set for restricted shell */
 	char *command;
+#ifdef AST_SERIAL_RESTART
+	/* restart all ast_*() intercepted syscalls on EINTR */
+	astserial(AST_SERIAL_RESTART, AST_SERIAL_always);
+#endif
 	free(malloc(64*1024));
 #ifdef _lib_sigvec
 	/* This is to clear mask that may be left on by rlogin */

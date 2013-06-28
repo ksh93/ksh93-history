@@ -357,7 +357,6 @@ done:	asolock(&vm->data->dlck, KEY_DEBUG, ASO_UNLOCK);
 	return (Void_t*)data;
 }
 
-
 #if __STD_C
 static int dbfree(Vmalloc_t* vm, Void_t* data, int local )
 #else
@@ -371,39 +370,61 @@ int		local;
 	int		line;
 	Void_t		*func;
 	Seg_t		*seg;
+	Free_t		*list;
+	Free_t		*item;
 	int		rv = 0;
+
 	VMFLF(vm,file,line,func);
 
 	if(!data)
 		return 0;
 
-	asolock(&vm->data->dlck, KEY_DEBUG, ASO_LOCK);
+	if(asocasint(&vm->data->dlck, 0, KEY_DEBUG))
+	{	/* prepend to delayed free list -- handled by another free() that gets the lock */
+		asospindecl();
+		item = (Free_t*)data;
+		for (asospininit();; asospinnext())
+		{	item->next = list = vm->data->delay;
+			if (asocasptr(&vm->data->delay, list, item) == (void*)list)
+				break;
+		}
+		return 0;
+	}
 
-	/* check to see if memory is from vm */
-	for(seg = vm->data->seg; seg; seg = seg->next)
-		if((Vmuchar_t*)data >= seg->base && (Vmuchar_t*)data < seg->base+seg->size)
+	list = 0;
+	for (;;)
+	{	/* check to see if memory is from vm */
+		for(seg = vm->data->seg; seg; seg = seg->next)
+			if((Vmuchar_t*)data >= seg->base && (Vmuchar_t*)data < seg->base+seg->size)
+				break;
+		if(!seg || DBMARK(data) != DB_MARK)
+		{	dbwarn(vm, data, seg ? 1 : 0, file, line, func, DB_FREE);
+			goto done;
+		}
+
+		if(vm->data->mode&VM_DBCHECK)
+			vmdbcheck(vm);
+
+		if(Dbnwatch > 0)
+			dbwatch(vm,data,file,line,func,DB_FREE);
+
+		if(_Vmtrace)
+		{	vm->file = file; vm->line = line; vm->func = func;
+			(*_Vmtrace)(vm, (Vmuchar_t*)data, NIL(Vmuchar_t*), DBSIZE(data), 0);
+		}
+
+		memset(DB2BEST(data), 0, DBBSIZE(data)); /* clear memory */
+
+		rv |= KPVFREE((vm), (Void_t*)DB2BEST(data), (*Vmbest->freef));
+	done:	
+		if(!list && (rv || !(list = vm->data->delay) || asocasptr(&vm->data->delay, list, NIL(Free_t*)) != list))
 			break;
-	if(!seg || DBMARK(data) != DB_MARK)
-	{	dbwarn(vm, data, seg ? 1 : 0, file, line, func, DB_FREE);
-		goto done;
+		data = (void*)list;
+		list = list->next;
 	}
 
-	if(vm->data->mode&VM_DBCHECK)
-		vmdbcheck(vm);
+ 	asocasint(&vm->data->dlck, KEY_DEBUG, 0);
 
-	if(Dbnwatch > 0)
-		dbwatch(vm,data,file,line,func,DB_FREE);
-
-	if(_Vmtrace)
-	{	vm->file = file; vm->line = line; vm->func = func;
-		(*_Vmtrace)(vm, (Vmuchar_t*)data, NIL(Vmuchar_t*), DBSIZE(data), 0);
-	}
-
-	memset(DB2BEST(data), 0, DBBSIZE(data)); /* clear memory */
-
-	rv = KPVFREE((vm), (Void_t*)DB2BEST(data), (*Vmbest->freef));
-
-done:	asolock(&vm->data->dlck, KEY_DEBUG, ASO_UNLOCK);
 	return rv;
 }
 

@@ -1000,7 +1000,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 #endif /* SHOPT_FIXEDARRAY */
 				if(!np)
 				{
-					if(!nq && *sp=='[' && *cp==0 && cp[-1]==']') 
+					if(!nq && !shp->namref_root && *sp=='[' && *cp==0 && cp[-1]==']') 
 					{
 						/*
 						 * for backward compatibility
@@ -1113,7 +1113,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 							
 						}
 					}
-					else if(c==0 && mode && (n=nv_aindex(np))>0)
+					else if(c==0 && mode && (n=nv_aindex(np))>=0)
 						nv_putsub(np,(char*)0,n,0);
 #if SHOPT_FIXEDARRAY
 					else if(n==0 && !fixed && (c==0 || (c=='[' && !nv_isarray(np))))
@@ -1612,6 +1612,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	}
 	flags &= ~NV_NODISC;
 	nv_local=0;
+	if(nv_isattr(np,NV_NOTSET)==NV_NOTSET)
+		nv_offattr(np,NV_BINARY);
 	if(flags&(NV_NOREF|NV_NOFREE))
 	{
 		if(np->nvalue.cp && np->nvalue.cp!=sp && !nv_isattr(np,NV_NOFREE)) 
@@ -2791,6 +2793,8 @@ char *nv_getval(register Namval_t *np)
 		Sflong_t  ll;
 		if(!up->cp)
 			return("0");
+		if(nv_isattr(np,NV_NOTSET)==NV_NOTSET)
+			return("0");
 		if(nv_isattr (np,NV_DOUBLE)==NV_DOUBLE)
 		{
 			Sfdouble_t ld;
@@ -2912,6 +2916,11 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 	}
      	if(nv_isattr (np, NV_INTEGER))
 	{
+		if(sh_isoption(shp,SH_NOUNSET) && nv_isattr(np,NV_NOTSET)==NV_NOTSET)
+		{
+			int i = nv_aindex(np);
+			errormsg(SH_DICT,ERROR_exit(1),e_notset2,nv_name(np),i);
+		}
 		up= &np->nvalue;
 		if(!up->lp || up->cp==Empty)
 			r = 0;
@@ -3357,13 +3366,22 @@ bool nv_rename(register Namval_t *np, int flags)
 		if(nr==SH_MATCHNOD)
 		{
 			Sfio_t *iop;
+			Dt_t *save_root = shp->var_tree;
+			bool trace = sh_isoption(shp,SH_XTRACE);
 			sfprintf(shp->strbuf,"typeset -a %s=",nv_name(mp));
 			nv_outnode(nr,shp->strbuf,-1,0);
 			sfwrite(shp->strbuf,")\n",2);
 			cp = sfstruse(shp->strbuf);
 			iop = sfopen((Sfio_t*)0,cp,"s");
+			if(trace)
+				sh_offoption(shp,SH_XTRACE);
+			shp->var_tree = last_root;
 			sh_eval(shp,iop,SH_READEVAL);
-			sh_setmatch(shp,0,0,0,0,0);
+			shp->var_tree = save_root;
+			if(trace)
+				sh_onoption(shp,SH_XTRACE);
+			if(flags&NV_MOVE)
+				sh_setmatch(shp,0,0,0,0,0);
 		}
 		else
 		{
@@ -3398,7 +3416,7 @@ bool nv_rename(register Namval_t *np, int flags)
 			}
 		}
 		else
-			nv_putval(np,nv_getval(nr),0);
+			nv_clone(nr,np,NV_COMVAR);
 	}
 	return(true);
 }
@@ -3429,6 +3447,7 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 		errormsg(SH_DICT,ERROR_exit(1),e_badref,nv_name(np));
 	if(hp)
 		hpnext = dtvnext(hp);
+	shp->namref_root = hp;
 	if((nr=nv_open(cp, hp?hp:shp->var_tree, flags|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
 		nq = nr;
 	else if(hpnext && dtvnext(hpnext)==shp->var_base && (nr=nv_open(cp,hpnext,flags|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
@@ -3485,6 +3504,7 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 		if(shp->last_root)
 			hp = shp->last_root;
 	}
+	shp->namref_root = 0;
 	if(shp->last_root == shp->var_tree && root!=shp->var_tree)
 	{
 		_nv_unset(np,NV_RDONLY);
@@ -3789,11 +3809,15 @@ void *nv_context(Namval_t *np)
 	return((void*)np->nvfun);
 }
 
-#define DISABLE /* proto workaround */
-
-int nv_isnull DISABLE (register Namval_t *np)
+int nv_isnull(register Namval_t *np)
 {
-	return(nv_isnull(np));
+	if(np->nvalue.cp)
+		return(0);
+	if(np==IFSNOD)
+		return(1);
+ 	if(!nv_attr(np) || nv_isattr(np,NV_NOTSET)!=NV_NOTSET)
+		return(!np->nvfun || !np->nvfun->disc || !nv_hasget(np));
+	return(0);
 }
 
 #undef nv_setsize
@@ -3801,7 +3825,7 @@ int nv_setsize(register Namval_t *np, int size)
 {
 	int oldsize = nv_size(np);
 	if(size>=0)
-		np->nvsize = size;
+		np->nvsize = size<<1;
 	return(oldsize);
 }
 

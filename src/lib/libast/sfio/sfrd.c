@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -166,8 +166,14 @@ Sfdisc_t*	disc;
 			}
 
 			/* map minimal requirement */
-			if(r > (round = (1 + (n+a)/f->size)*f->size) )
-				r = round;
+			if(_Sfmaxm != (size_t)SF_UNBOUND)
+			{	if(_Sfmaxm)
+				{	if(r > _Sfmaxm)
+						r = _Sfmaxm;
+				}
+				else if(r > (round = (1 + (n+a)/f->size)*f->size) )
+					r = round;
+			}
 
 			if(f->data)
 				SFMUNMAP(f, f->data, f->endb-f->data);

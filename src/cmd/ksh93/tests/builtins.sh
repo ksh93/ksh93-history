@@ -696,4 +696,44 @@ got=$(
 printf '\\\000' | read -r -d ''
 [[ $REPLY == $'\\' ]] || err_exit "read -r -d'' ignores -r"
 
+wait
+unset i
+integer i
+for (( i=0 ; i < 256 ; i++ ))
+do	sleep 2 &
+done
+while ! wait
+do	true
+done
+[[ $(jobs -l) ]] && err_exit 'jobs -l should not have any output'
+
+# tests with cd and ~{fd} 
+pwd=$PWD
+exec {fd}</dev
+if	cd ~{fd}
+then	[[ -r null ]] || err_exit 'cannot find "null" file in /dev'
+else	err_exit 'cannot cd to ~{fd} when fd is /dev'
+fi
+if	cd ~-
+then	[[ $PWD == "$pwd" ]] || err_exit "directory is $PWD, should be $pwd"
+else	err_exit "unable to cd ~- back to $pwd"
+fi
+if	cd /dev/fd/$fd/..
+then	[[ $(pwd -P) == '/' ]] || err_exit 'physical directory should be /'
+else	err_exit  "cd to /dev/fd/$fd/.. failed"
+fi
+pwd=$(pwd -P)
+if	cd bin
+then	[[ -x sh ]] || err_exit 'cannot find executable sh in bin'
+else	err_exit 'cd bin failed'
+fi
+if	cd ~-
+then	[[ $(pwd -P) == "$pwd" ]] || err_exit "directory is $PWD, should be $pwd"
+else	err_exit 'cd ~- failed'
+fi
+if	cd -f $fd
+then	[[ -r null ]] || err_exit 'cannot find "null" file in /dev'
+else	err_exit 'cannot cd to ~{fd} when fd is /dev'
+fi
+
 exit $((Errors<125?Errors:125))

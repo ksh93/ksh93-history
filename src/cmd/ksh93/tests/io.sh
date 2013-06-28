@@ -504,5 +504,6 @@ print hello > $tmp/foo
 redirect {fd}< $tmp
 [[ $(< ~{fd}/foo) == hello ]] 2> /dev/null || err_exit '~{fd}/foo not working'
 [[ $(< ~{$fd}/foo) == hello ]] 2> /dev/null || err_exit "~{$fd}/foo not working"
+{ cd /dev/fd/$fd/ ;} 2> /dev/null || err_exit "Cannot cd to /dev/fd/$fd/"
 
 exit $((Errors<125?Errors:125))

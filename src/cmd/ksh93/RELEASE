@@ -1,4 +1,44 @@
-13-05-22  --- Release ksh93v- ---
+13-06-25  --- Release ksh93v- ---
+13-06-25  ksh93 uses the new ast system call intercepts to restart interrupted 
+	  signals.
+13-06-21  A -f nn option has been added to cd to change to a directory
+	  relative to a file descriptor of an open directory.  cd -f nn
+	  is equivalent to cd ~{nn}.
+13-06-20  A bug in which  ${IFS+abc} did not expand to abc when IFS is
+	  unset has been fixed.
+13-06-18  A bug on some systems with arithmentic expressions containing
+	  x**y has been fixed.
+13-06-13  Changes made for reliable delivery of queued signals.
+13-06-12  The character '@' in an associative array subscript is not quoted
+	  when displayed on output so that it will be a valid subscript on
+	  input.
+13-06-06  In accordance with the standard set -u now causes failures for
+	  unset positional parameres.
+13-06-05  Several changes to handle queued signals have been made.
+13-06-04  A bug with the arithmetic expression $((2**63 / -1)) on some
+	  systems has been fixed.
+13-05-31  Fix a bug in job completion when trying to make a selection after
+	  hitting <TAB> on an empty directory.
+13-05-30  A bug with set -m in a script wich could cause the script to hang
+	  has been fixed.
+13-05-30  Two bugs related to the processing of a nameref foo=$1 where $1
+	  is of the form arr[subscript] where subscript is an arithmetic
+	  expression has been fixed.
+13-05-29  ksh93 now intercepts the LC_TIME variable.
+13-05-29  A bug in which builtin -d date did not delete the date builtin has
+	  been fixed. 
+13-05-29  namespace commands are no longer allowed inside function definitions
+	  and now generate a syntax error.
+13-05-28  Fixed bugs in typeset -c for copying attributes for simple variables.
+13-05-28  Fixed two bug for typeset -c and typeset -m for variable .sh.match.
+13-05-28 +Added -j option to print (and %(json)B format specifier to printf)
+	  which will print a compound shell variable in JSON format.  This is
+	  expermental.  Let me know if I got things wrong.
+13-05-23  A bug for enumeration types in which unset elements of an array
+	  expanded to the default enum name rather than to the empty string
+	  has been fixed
+13-05-23  A bug in which set -u did not fail for unset array elements of
+	  an array of short ints (typeset -is) has been fixed.
 13-05-22 +Added -c option to typeset which is similar to typeset -m except
 	  that the variable is copied rather than moved.  This is experimental
 	  and there are known bugs.  If it can't be made reliable it will

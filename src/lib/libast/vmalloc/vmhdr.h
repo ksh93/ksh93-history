@@ -35,19 +35,12 @@
 #if !_UWIN
 #define getpagesize		______getpagesize
 #define _npt_getpagesize	1
-#define brk			______brk
-#define sbrk			______sbrk
-#define _npt_sbrk		1
 #endif
 
 #include	<ast.h>
 
 #if _npt_getpagesize
 #undef				getpagesize
-#endif
-#if _npt_sbrk
-#undef				brk
-#undef				sbrk
 #endif
 
 #else
@@ -58,7 +51,22 @@
 
 #if !_UWIN
 #define _npt_getpagesize	1
-#define _npt_sbrk		1
+#endif
+
+#ifndef O_cloexec
+#ifdef O_CLOEXEC
+#define O_cloexec		O_CLOEXEC
+#else
+#define O_cloexec		0
+#endif
+#endif
+
+#ifndef F_dupfd_cloexec
+#ifdef F_DUPFD_CLOEXEC
+#define F_dupfd_cloexec		F_DUPFD_CLOEXEC
+#else
+#define F_dupfd_cloexec		F_DUPFD
+#endif
 #endif
 
 #undef free
@@ -112,12 +120,25 @@ typedef struct _seg_s	Seg_t;	/* the type of a raw memory segment	*/
 /* compute a value that is a common multiple of x and y */
 #define MULTIPLE(x,y)	((x)%(y) == 0 ? (x) : (y)%(x) == 0 ? (y) : (y)*(x))
 
-#define VM_check	0x0001	/* detailed check of region integrity	*/
-#define VM_abort	0x0002	/* abort() on assertion failure		*/
-#define VM_pause	0x0004	/* pause() on assertion failure		*/
+/* _Vmassert flags -- 0x0001..0x8000 reserved for test du jour via TEST=0x....	*/
 
-#define VM_break	0x0010	/* try sbrk() block allocator first	*/
-#define VM_keep		0x0020	/* disable free()			*/
+#define VM_test		0x0000ffff	/* any TEST set				*/
+
+#define VM_abort	0x00010000	/* abort() on assertion failure		*/
+#define VM_check_reg	0x00020000	/* enable region integrity checks	*/
+#define VM_check_seg	0x00040000	/* enable segment availability prechecks*/
+#define VM_debug	0x00080000	/* test=debug				*/
+#define VM_keep		0x00100000	/* disable free()			*/
+#define VM_pause	0x00200000	/* pause() on assertion failure		*/
+#define VM_verbose	0x00400000	/* verbose messages to standard error	*/
+
+#define VM_anon		0x01000000	/* MAP_ANON block allocator		*/
+#define VM_break	0x02000000	/* sbrk() block allocator		*/
+#define VM_native	0x04000000	/* native malloc() block allocator	*/
+#define VM_safe		0x08000000	/* safe MAP_ANON emulation of sbrk()	*/
+#define VM_zero		0x10000000	/* /dev/zero block allocator		*/
+
+#define VM_GETMEMORY	(VM_anon|VM_break|VM_native|VM_safe|VM_zero)
 
 #if _UWIN
 #include <ast_windows.h>
@@ -128,8 +149,8 @@ typedef struct _seg_s	Seg_t;	/* the type of a raw memory segment	*/
 #define DEBUG		1
 #endif /*_BLD_DEBUG*/
 #endif /*DEBUG*/
-#if DEBUG
 extern void		_vmmessage _ARG_((const char*, long, const char*, long));
+#if DEBUG
 #define MESSAGE(s)	_vmmessage(__FILE__,__LINE__, (s), 0)
 #define PRINT(s,n)	_vmmessage(__FILE__,__LINE__, (s), (n))
 #define ABORT()		((_Vmassert & VM_abort) )
@@ -166,7 +187,8 @@ extern void		_vmmessage _ARG_((const char*, long, const char*, long));
 #endif
 
 #define VM_PAGESIZE	8192 /* default assumed page size */
-#define GETPAGESIZE(x)	((x) ? (x) : ((x) = _vmpagesize()) )
+#define VMPAGESIZE()	(_Vmpagesize ? _Vmpagesize : _vmpagesize())
+#define VMBOUNDARIES()	(_Vmmemaddr ? 0 : _vmboundaries())
 
 /* get file name and line number recorded in region */
 #define VMFLF(vm,fi,ln,fn)	((fi) = (vm)->file, (vm)->file = NIL(char*), \
@@ -227,7 +249,7 @@ struct _two_s
 #define ALIGN	MULTIPLE(ALIGNAB, sizeof(struct _two_s))
 
 typedef union _word_u
-{	ssize_t		size;	/* to store a size_t	*/
+{	size_t		size;	/* to store a size_t	*/
 	unsigned int	intdt;	/* to store an integer	*/
 	Void_t*		ptrdt;	/* to store a pointer	*/
 } Word_t;
@@ -329,6 +351,12 @@ struct _seg_s /* a segment of raw memory obtained via Vmdisc_t.memoryf */
 	Seg_t*			next;	/* next segment in linked list	*/
 };
 
+struct _free_s /* list of objects locked out by concurrent free() */
+{
+	struct _free_s*	next;
+};
+typedef struct _free_s Free_t;
+
 struct Vmdata_s /* Vmdata_t: common region data */
 {	int			mode;	/* operation modes 		*/
 	unsigned int 		lock;	/* lock for segment management	*/
@@ -340,6 +368,7 @@ struct Vmdata_s /* Vmdata_t: common region data */
 	Vmuser_t*		user;	/* user data identified by key	*/
 	unsigned int 		ulck;	/* lock of user list for update	*/
 	unsigned int		dlck;	/* lock used by Vmdebug		*/
+	Free_t*			delay;	/* delayed free list		*/
 };
 
 typedef struct _vmhold_s	Vmhold_t; /* to hold open regions 	*/
@@ -353,7 +382,7 @@ struct _vmhold_s
 
 /* external symbols for use inside vmalloc only */
 typedef struct _vmextern_s
-{	int			(*vm_seginit)_ARG_((Vmdata_t*, Seg_t*, Vmuchar_t*, ssize_t));
+{	Block_t*		(*vm_seginit)_ARG_((Vmdata_t*, Seg_t*, Vmuchar_t*, ssize_t, int));
 	Block_t*		(*vm_segalloc)_ARG_((Vmalloc_t*, Block_t*, ssize_t, int ));
 	void			(*vm_segfree)_ARG_((Vmalloc_t*, Block_t*));
 	char*			(*vm_strcpy)_ARG_((char*, const char*, int));
@@ -365,10 +394,10 @@ typedef struct _vmextern_s
 	Vmuchar_t*		vm_memmax;   /* address upper abound	*/ 
 	Vmuchar_t*		vm_memaddr;  /* vmmaddress() memory	*/
 	Vmuchar_t*		vm_memsbrk;  /* Vmdcsystem's memory	*/
+	Vmhold_t*		vm_hold;     /* list to hold regions	*/
 	size_t			vm_pagesize; /* OS memory page size	*/
 	unsigned int 		vm_sbrklock; /* lock for sbrkmem	*/
-	Vmhold_t*		vm_hold;     /* list to hold regions	*/
-	int			vm_assert;   /* options for ASSERT() 	*/
+	unsigned int		vm_assert;   /* options for ASSERT() 	*/
 } Vmextern_t;
 
 #define _Vmseginit	(_Vmextern.vm_seginit)
@@ -391,7 +420,9 @@ typedef struct _vmextern_s
 extern Vmalloc_t*	_vmheapinit _ARG_((Vmalloc_t*)); /* initialize Vmheap	*/
 extern int		_vmheapbusy _ARG_((void)); /* initializing Vmheap	*/
 extern ssize_t		_vmpagesize _ARG_((void)); /* get system page size	*/
+extern int		_vmboundaries _ARG_((void)); /* get mem boundaries	*/
 extern Vmalloc_t*	_vmopen _ARG_((Vmalloc_t*, Vmdisc_t*, Vmethod_t*, int));
+extern void		_vmoptions _ARG_((int)); /* VMALLOC_OPTIONS preferences	*/
 
 _BEGIN_EXTERNS_
 
@@ -401,10 +432,6 @@ extern Vmextern_t	_Vmextern;
 
 #if _npt_getpagesize
 extern int		getpagesize _ARG_((void));
-#endif
-#if _npt_sbrk
-extern int		brk _ARG_(( void* ));
-extern Void_t*		sbrk _ARG_(( ssize_t ));
 #endif
 
 #else

@@ -177,6 +177,8 @@ static char* get_enum(register Namval_t* np, Namfun_t *fp)
 	static char buff[6];
 	struct Enum *ep = (struct Enum*)fp;
 	long n = nv_getn(np,fp);
+	if(nv_isattr(np,NV_NOTSET)==NV_NOTSET)
+		return("");
 	if(n < ep->nelem)
 		return((char*)ep->values[n]);
 	sfsprintf(buff,sizeof(buff),"%u%c",n,0);

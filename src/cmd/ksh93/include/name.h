@@ -143,6 +143,7 @@ struct Ufunction
 #define NV_NOALIAS	(NV_NOPRINT|NV_IMPORT)
 #define NV_NOEXPAND	NV_RJUST		/* do not expand alias */
 #define NV_BLTIN	(NV_NOPRINT|NV_EXPORT)
+#define NV_NOTSET	(NV_INTEGER|NV_BINARY)
 #define BLT_ENV		(NV_RDONLY)		/* non-stoppable,
 						 * can modify enviornment */
 #define BLT_DISABLE	(NV_BINARY)		/* bltin disabled */
@@ -152,6 +153,7 @@ struct Ufunction
 #define BLT_NOSFIO	(NV_IMPORT)		/* doesn't use sfio */
 #define NV_OPTGET	(NV_BINARY)		/* function calls getopts */
 #define NV_SHVALUE	(NV_TABLE)		/* function assigns .sh.value */
+#define NV_JSON		(NV_TAGGED)		/* for json formatting */
 #define nv_isref(n)	(nv_isattr((n),NV_REF|NV_TAGGED|NV_FUNCT)==NV_REF)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN|NV_INTEGER)==NV_BLTIN)
 #define is_afunction(n)	(nv_isattr(n,NV_FUNCTION|NV_REF)==NV_FUNCTION)
@@ -177,11 +179,10 @@ struct Ufunction
 
 /* ... etc */
 
-#define nv_setsize(n,s)	((n)->nvsize = (s))
+#define nv_setsize(n,s)	((n)->nvsize = (s)*2)
 #undef nv_size
-#define nv_size(np)	((np)->nvsize)
-#define _nv_hasget(np)  ((np)->nvfun && (np)->nvfun->disc && nv_hasget(np))
-#define nv_isnull(np)	(!(np)->nvalue.cp && (nv_isattr(np,NV_SHORT|NV_INTEGER)!=(NV_SHORT|NV_INTEGER)) && !_nv_hasget(np))
+#define nv_size(np)	((np)->nvsize>>1)
+#define nv_attr(np)	((np)->nvflag&~NV_MINIMAL)
 
 /* ...	for arrays */
 
@@ -242,6 +243,7 @@ extern const char	*nv_discnames[];
 extern const char	e_subscript[];
 extern const char	e_nullset[];
 extern const char	e_notset[];
+extern const char	e_notset2[];
 extern const char	e_noparent[];
 extern const char	e_notelem[];
 extern const char	e_readonly[];

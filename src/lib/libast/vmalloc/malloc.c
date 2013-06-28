@@ -104,18 +104,29 @@ typedef struct ______mstats Mstats_t;
 **	    abort	if Vmregion==Vmdebug then VM_DBABORT is set,
 **			otherwise _BLD_debug enabled assertions abort()
 **			on failure
-**	    break	try sbrk() block allocator first
-**	    check	if library was compiled with _BLD_DEBUG, Vmbest will
-**			check integrity on each allocation call
+**	    check=c	enable check c[,d], prefix c with "no" to disable
+**			    region: vmbest-integrity (on by default _BLD_DEBUG)
+**			    segment: _vmchkmem() anon memory availability checks
+**	    debug	verbose debug trace to stderr
+**	    getmemory=f	enable f[,g] getmemory() functions if supported, all by default
+**			    anon: mmap(MAP_ANON)
+**			    break|sbrk: sbrk()
+**			    native: native malloc()
+**			    safe: safe sbrk() emulation via mmap(MAP_ANON)
+**			    zero: mmap(/dev/zero)
 **	    keep	disable free -- if code works with this enabled then it
 **	    		probably accesses free'd data
 **	    method=m	sets Vmregion=m if not defined, m (Vm prefix optional)
-**			may be one of { best debug }
+**			    best:  best fit
+**			    debug: detailed verification checks 
+**			    last:  only last malloc() value can be freed
 **	    period=n	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug the region is checked every n ops
 **	    start=n	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug region checking starts after n ops
-**	    trace=f	enables tracing to file f
+**	    test=x	enable tests du jour in the range 0x0001..0x8000
+**	    trace=f	enable tracing to file f
+**	    verbose	enable method and dicsipline initialization messages to stderr
 **	    warn=f	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug then warnings printed to file f
 **	    watch=a	sets Vmregion=Vmdebug if not defined, if
@@ -139,116 +150,9 @@ typedef struct ______mstats Mstats_t;
 #define CREAT_MODE	0644
 #endif
 
-#if ( !_std_malloc || !_BLD_ast ) && !_AST_std_malloc
-
-#if !_map_malloc
-
-#undef	calloc
-#undef	cfree
-#undef	free
-#undef	mallinfo
-#undef	malloc
-#undef	mallopt
-#undef	memalign
-#undef	posix_memalign
-#undef	mstats
-#undef	realloc
-#undef	valloc
-
-#if _malloc_hook
-
-#include <malloc.h>
-
-#undef	calloc
-#undef	cfree
-#undef	free
-#undef	malloc
-#undef	memalign
-#undef	posix_memalign
-#undef	realloc
-
-#define calloc		_ast_calloc
-#define cfree		_ast_cfree
-#define free		_ast_free
-#define malloc		_ast_malloc
-#define memalign	_ast_memalign
-#define posix_memalign	_ast_posix_memalign
-#define realloc		_ast_realloc
-
-#endif
-
-#endif
-
-#if _WINIX
-
-#include <ast_windows.h>
-
-#if _UWIN
-
-#define VMRECORD(p)	_vmrecord(p)
-#define VMBLOCK		{ int _vmblock = _sigblock();
-#define VMUNBLOCK	_sigunblock(_vmblock); }
-
-extern int		_sigblock(void);
-extern void		_sigunblock(int);
-extern unsigned long	_record[2048];
-
-__inline Void_t* _vmrecord(Void_t* p)
-{
-	register unsigned long	v = ((unsigned long)p)>>16; 
-
-	_record[v>>5] |= 1<<((v&0x1f));
-	return p;
-}
-
-#else
-
-#define getenv(s)	lcl_getenv(s)
-
-static char*
-lcl_getenv(const char* s)
-{
-	int		n;
-	static char	buf[512];
-
-	if (!(n = GetEnvironmentVariable(s, buf, sizeof(buf))) || n > sizeof(buf))
-		return 0;
-	return buf;
-}
-
-#endif /* _UWIN */
-
-#endif /* _WINIX */
-
-#ifndef VMRECORD
-#define VMRECORD(p)	(p)
-#define VMBLOCK
-#define VMUNBLOCK
-#endif
-
-#if defined(__EXPORT__)
-#define extern		extern __EXPORT__
-#endif
-
 static Vmulong_t	_Vmdbtime = 0;	/* clock counting malloc/free/realloc	*/
 static Vmulong_t	_Vmdbstart = 0;	/* start checking when time passes this	*/
 static Vmulong_t	_Vmdbcheck = 0;	/* check region periodically with this	*/
-
-#define VM_STARTING	1
-#define VM_STARTED	2
-static unsigned int	_Vmstart = 0;	/* calling _vmstart() just once		*/
-#define VMPROLOGUE() \
-	{ if(_Vmstart != VM_STARTED)	_vmstart(); \
-	  if(_Vmdbcheck && Vmregion->meth.meth == VM_MTDEBUG) \
-	  { _Vmdbtime += 1; \
-	    if(_Vmdbtime >= _Vmdbstart && (_Vmdbtime % _Vmdbcheck) == 0 ) \
-		vmset(Vmregion, VM_DBCHECK, 1); \
-	  } \
-	}
-#define VMEPILOGUE() \
-	{ if(_Vmdbcheck && Vmregion->meth.meth == VM_MTDEBUG) \
-		vmset(Vmregion, VM_DBCHECK, 0); \
-	}
 
 #if __STD_C
 static Vmulong_t atou(char** sp)
@@ -346,208 +250,434 @@ char*	file;
 	*next = '\0';
 	file = buf;
 	if (*file == '&' && *(file += 1) || strncmp(file, "/dev/fd/", 8) == 0 && *(file += 8))
-		fd = dup((int)atou(&file));
-	else if (*file)
-#if _PACKAGE_ast
-		fd = open(file, O_WRONLY|O_CREAT|O_TRUNC, CREAT_MODE);
-#else
-		fd = creat(file, CREAT_MODE);
+	{
+		fd = fcntl((int)atou(&file), F_DUPFD_CLOEXEC, 0);
+#if F_DUPFD_CLOEXEC == F_DUPFD
+		if (fd >= 0)
+			SETCLOEXEC(fd);
 #endif
+	}
+	else if (*file)
+	{
+		fd = open(file, O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, CREAT_MODE);
+#if O_CLOEXEC == 0
+		if (fd >= 0)
+			SETCLOEXEC(fd);
+#endif
+	}
 	else
 		return -1;
-#if _PACKAGE_ast
-#ifdef FD_CLOEXEC
-	if (fd >= 0)
-		fcntl(fd, F_SETFD, FD_CLOEXEC);
-#endif
-#endif
 	return fd;
 }
 
-/* initialize runtime options from the VMALLOC_OPTIONS env var */
-static void _vmoptions(char* options)
+/* Initialize runtime options from the VMALLOC_OPTIONS env var.
+** This function is idempotent. Call at least once with boot==1
+** to initialize getmemory preferences (called by _vmstart() and
+** _vmheapinit()) and at least once with boot==2 to initialize heap
+** options (called by _vmstart()), or call with boot==3 to do both.
+*/
+void _vmoptions(int boot)
 {
 	char		*s, *t, *v;
 	Vmulong_t	n;
 	int		fd;
+	int		b;
+	int		c;
 	char		buf[1024];
 	char		*trace = NIL(char*);
 	Vmalloc_t	*vm = NIL(Vmalloc_t*);
 
-	if(!options || !options[0])
+	static char*	options;
+
+	if (boot & 1)
+	{	if (_Vmassert & VM_GETMEMORY)
+			return;
+		options = getenv("VMALLOC_OPTIONS");
+	}
+	else if (!(_Vmassert & VM_GETMEMORY))
 		return;
-
-	/* copy option string to a writable buffer */
-	for(s = &buf[0], v = &buf[sizeof(buf)-1]; s < v; ++s)
-		if((*s = *options++) == 0 )
-			break;
-	*s = 0;
-
-	for(s = buf;; )
-	{	/* skip blanks to option name */
-		while (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n' || *s == ',')
-			s++;
-		if (*(t = s) == 0)
-			break;
-
-		v = NIL(char*);
-		while (*s)
-		{	if (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n' || *s == ',')
-			{	*s++ = 0; /* end of name */
+	if (options && options[0])
+	{	/* copy option string to a writable buffer */
+		for(s = &buf[0], t = options, v = &buf[sizeof(buf)-1]; s < v; ++s)
+			if((*s = *t++) == 0 )
 				break;
-			}
-			else if (!v && *s == '=')
-			{	*s++ = 0; /* end of name */
-				if (*(v = s) == 0)
-					v = NIL(char*);
-			}
-			else	s++;
-		}
-		if (t[0] == 'n' && t[1] == 'o')
-			continue;
-		switch (t[0])
-		{
-		case 'a':
-			switch (t[1])
-			{ case 'b':	/* abort */
-			  case '\0' :
-				if (!vm)
-					vm = vmopen(Vmdcsystem, Vmdebug, 0);
-				if (vm && vm->meth.meth == VM_MTDEBUG)
-					vmset(vm, VM_DBABORT, 1);
-				else	_Vmassert |= VM_abort;
+		*s = 0;
+
+		for(s = buf;; )
+		{	/* skip blanks to option name */
+			while (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n' || *s == ',')
+				s++;
+			if (*(t = s) == 0)
 				break;
+
+			v = NIL(char*);
+			while (*s)
+			{	if (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n' || *s == ',')
+				{	*s++ = 0; /* end of name */
+					break;
+				}
+				else if (!v && *s == '=')
+				{	*s++ = 0; /* end of name */
+					if (*(v = s) == 0)
+						v = NIL(char*);
+				}
+				else	s++;
 			}
-			break;
-		case 'b':		/* break */
-			_Vmassert |= VM_break;
-			break;
-		case 'c':	/* enable expensive integrity test of Vmbest regions */
-			switch (t[1])
-			{ case 'h':	/* check */
-			  case '\0' :
-				_Vmassert |= VM_check;
+			if (t[0] == 'n' && t[1] == 'o')
+				continue;
+			switch (t[0])
+			{
+			case 'a':		/* abort */
+				if (boot & 2)
+				{	if (!vm)
+						vm = vmopen(Vmdcsystem, Vmdebug, 0);
+					if (vm && vm->meth.meth == VM_MTDEBUG)
+						vmset(vm, VM_DBABORT, 1);
+					else	_Vmassert |= VM_abort;
+				}
 				break;
-			}
-			break;
-		case 'k':		/* keep */
-			_Vmassert |= VM_keep;
-			break;
-		case 'm':
-			switch (t[1])
-			{ case 'e':	/* method=<method> */
-			  case '\0' :
-				if (v && !vm)
+			case 'c':		/* address/integrity checks */
+				if ((boot & 2) && v)
+					do
+					{
+						if (v[0] == 'n' && v[1] == 'o')
+						{
+							v += 2;
+							c = 0;
+						}
+						else
+							c = 1;
+						switch (v[0])
+						{
+						case 'r':
+							b = VM_check_reg;
+							break;
+						case 's':
+							b = VM_check_seg;
+							break;
+						default:
+							b = 0;
+							break;
+						}
+						if (c)
+							_Vmassert |= b;
+						else
+							_Vmassert &= ~b;
+					} while ((v = strchr(v, ',')) && ++v);
+				break;
+			case 'd':		/* debug */
+				if (boot & 2)
+					_Vmassert |= VM_debug;
+				break;
+			case 'g':		/* getmemory() preference */
+				if ((boot & 1) && v)
+					do
+					{
+						if (v[0] == 'n' && v[1] == 'o')
+						{
+							v += 2;
+							c = 0;
+						}
+						else
+							c = 1;
+						if (v[0] == 'm' && v[1] == 'm')
+							v++;
+						if (v[0] == 'm' && v[1] == 'a' && v[2] == 'p')
+							v += 3;
+						switch (v[0])
+						{
+						case 'a':
+							b = VM_anon;
+							break;
+						case 'b':
+							b = VM_break;
+							break;
+						case 'm':
+						case 'n':
+							b = VM_native;
+							break;
+						case 's':
+							switch (v[1])
+							{
+							case 'b':
+								b = VM_break;
+								break;
+							default:
+								b = VM_safe;
+								break;
+							}
+							break;
+						case 'z':
+							b = VM_zero;
+							break;
+						default:
+							b = 0;
+							break;
+						}
+						if (c)
+							_Vmassert |= b;
+						else
+							_Vmassert &= ~b;
+					} while ((v = strchr(v, ',')) && ++v);
+				break;
+			case 'k':		/* keep */
+				if (boot & 2)
+					_Vmassert |= VM_keep;
+				break;
+			case 'm':		/* method=<method> */
+				if ((boot & 2) && v && !vm)
 				{
 					if ((v[0] == 'V' || v[0] == 'v') && (v[1] == 'M' || v[1] == 'm'))
 						v += 2;
-					if (strcmp(v, "debug") == 0)
-						vm = vmopen(Vmdcsystem, Vmdebug, 0);
-					else if (strcmp(v, "best") == 0)
+					switch (v[0])
+					{
+					case 'b':
 						vm = Vmheap;
+						break;
+					case 'd':	/* debug */
+						vm = vmopen(Vmdcsystem, Vmdebug, 0);
+						break;
+					case 'l':	/* last */
+						vm = vmopen(Vmdcsystem, Vmlast, 0);
+						break;
+					case 'p':	/* pool */
+						vm = vmopen(Vmdcsystem, Vmpool, 0);
+						break;
+					}
 				}
 				break;
-			}
-			break;
-		case 'p':
-			switch (t[1])
-			{ case 'e':	/* period=<count> */
-			  case '\0' :
-				if (!vm)
-					vm = vmopen(Vmdcsystem, Vmdebug, 0);
-				if (vm && vm->meth.meth == VM_MTDEBUG && v )
-					_Vmdbcheck = atou(&v);
-				break;
-			}
-			break;
-		case 's':
-			switch (t[1])
-			{ case 't':	/* start=<count> */
-			  case '\0' :
-				if (!vm)
-					vm = vmopen(Vmdcsystem, Vmdebug, 0);
-				if (vm && vm->meth.meth == VM_MTDEBUG && v )
-					_Vmdbstart = atou(&v);
-				break;
-			}
-			break;
-		case 't':
-			switch (t[1])
-			{ case 'r':	/* trace=<path> */
-			  case '\0' :
-				trace = v;
-				break;
-			}
-			break;
-		case 'w':
-			if (t[1] == 'a')
-			{	switch (t[2])
+			case 'p':		/* period=<count> */
+				if (boot & 2)
 				{
-				case 'r':	/* warn=<path> */
 					if (!vm)
 						vm = vmopen(Vmdcsystem, Vmdebug, 0);
-					if (vm && vm->meth.meth == VM_MTDEBUG &&
-					    v && (fd = createfile(v)) >= 0 )
-						vmdebug(fd);
-					break;
-				case 't':	/* watch=<addr> */
-					if (!vm)
-						vm = vmopen(Vmdcsystem, Vmdebug, 0);
-					if (vm && vm->meth.meth == VM_MTDEBUG &&
-					    v && (n = atou(&v)) > 0 )
-						vmdbwatch((Void_t*)n);
-					break;
+					if (v && vm && vm->meth.meth == VM_MTDEBUG)
+						_Vmdbcheck = atou(&v);
 				}
+				break;
+			case 's':		/* start=<count> */
+				if (boot & 2)
+				{
+					if (!vm)
+						vm = vmopen(Vmdcsystem, Vmdebug, 0);
+					if (v && vm && vm->meth.meth == VM_MTDEBUG)
+						_Vmdbstart = atou(&v);
+				}
+				break;
+			case 't':		/* test || trace=<path> */
+				if (v)
+				{
+					if ((boot & 1) && t[1] == 'e')	/* test */
+						_Vmassert |= atou(&v) & VM_test;
+					if ((boot & 2) && t[1] == 'r')	/* trace=<path> */
+						trace = v;
+				}
+				break;
+			case 'v':		/* verbose */
+				if (boot & 1)
+					_Vmassert |= VM_verbose;
+				break;
+			case 'w':
+				if ((boot & 2) && t[1] == 'a')
+				{	switch (t[2])
+					{
+					case 'r':	/* warn=<path> */
+						if (!vm)
+							vm = vmopen(Vmdcsystem, Vmdebug, 0);
+						if (vm && vm->meth.meth == VM_MTDEBUG &&
+						    v && (fd = createfile(v)) >= 0 )
+							vmdebug(fd);
+						break;
+					case 't':	/* watch=<addr> */
+						if (!vm)
+							vm = vmopen(Vmdcsystem, Vmdebug, 0);
+						if (vm && vm->meth.meth == VM_MTDEBUG &&
+						    v && (n = atou(&v)) > 0 )
+							vmdbwatch((Void_t*)n);
+						break;
+					}
+				}
+				break;
 			}
-			break;
 		}
-	}
 
-	if (vm) /* slip the new region in to drive malloc/free/realloc */
-	{	if (vm->meth.meth == VM_MTDEBUG && _Vmdbcheck == 0 )
-			_Vmdbcheck = 1;
-		Vmregion = vm;
-	}
+		if (vm) /* slip the new region in to drive malloc/free/realloc */
+		{	if (vm->meth.meth == VM_MTDEBUG && _Vmdbcheck == 0 )
+				_Vmdbcheck = 1;
+			Vmregion = vm;
+		}
 
-	/* enable tracing */
-	if (trace && (fd = createfile(trace)) >= 0)
-		vmtrace(fd);
+		/* enable tracing */
+		if (trace && (fd = createfile(trace)) >= 0)
+			vmtrace(fd);
+	}
+	if ((boot & 1) && !(_Vmassert & VM_GETMEMORY))
+		_Vmassert |= VM_GETMEMORY;
 }
 
-static int _vmstart(void)
+#if ( !_std_malloc || !_BLD_ast ) && !_AST_std_malloc
+
+#if !_map_malloc
+
+#undef	calloc
+#undef	cfree
+#undef	free
+#undef	mallinfo
+#undef	malloc
+#undef	mallopt
+#undef	memalign
+#undef	posix_memalign
+#undef	mstats
+#undef	realloc
+#undef	valloc
+
+#if _malloc_hook
+
+#include <malloc.h>
+
+#undef	calloc
+#undef	cfree
+#undef	free
+#undef	malloc
+#undef	memalign
+#undef	posix_memalign
+#undef	realloc
+
+#define calloc		_ast_calloc
+#define cfree		_ast_cfree
+#define free		_ast_free
+#define malloc		_ast_malloc
+#define memalign	_ast_memalign
+#define posix_memalign	_ast_posix_memalign
+#define realloc		_ast_realloc
+
+#endif
+
+#endif
+
+#if _WINIX
+
+#include <ast_windows.h>
+
+#if _UWIN
+
+#define VMRECORD(p)	_vmrecord(p)
+#define VMBLOCK		{ int _vmblock = _sigblock();
+#define VMUNBLOCK	_sigunblock(_vmblock); }
+
+extern int		_sigblock(void);
+extern void		_sigunblock(int);
+extern unsigned long	_record[2048];
+
+__inline Void_t* _vmrecord(Void_t* p)
+{
+	register unsigned long	v = ((unsigned long)p)>>16; 
+
+	_record[v>>5] |= 1<<((v&0x1f));
+	return p;
+}
+
+#else
+
+#define getenv(s)	lcl_getenv(s)
+
+static char*
+lcl_getenv(const char* s)
+{
+	int		n;
+	static char	buf[512];
+
+	if (!(n = GetEnvironmentVariable(s, buf, sizeof(buf))) || n > sizeof(buf))
+		return 0;
+	return buf;
+}
+
+#endif /* _UWIN */
+
+#endif /* _WINIX */
+
+#ifndef VMRECORD
+#define VMRECORD(p)	(p)
+#define VMBLOCK
+#define VMUNBLOCK
+#endif
+
+#if defined(__EXPORT__)
+#define extern		extern __EXPORT__
+#endif
+
+/* not sure of all the implications -- 0 is conservative for now */
+#define USE_NATIVE	0	/* native free/realloc on non-vmalloc ptrs */
+
+#if USE_NATIVE
+static void*		native_realloc _ARG_((void*, size_t));
+static void		native_free _ARG_((void*));
+#endif
+
+#define VM_STARTING	1
+#define VM_STARTED	2
+static unsigned int	_Vmstart = 0;	/* calling _vmstart() just once		*/
+#define VMPROLOGUE(f) \
+	{ if(_Vmstart != VM_STARTED)	_vmstart(f); \
+	  if(_Vmdbcheck && Vmregion->meth.meth == VM_MTDEBUG) \
+	  { _Vmdbtime += 1; \
+	    if(_Vmdbtime >= _Vmdbstart && (_Vmdbtime % _Vmdbcheck) == 0 ) \
+		vmset(Vmregion, VM_DBCHECK, 1); \
+	  } \
+	}
+#define VMEPILOGUE(f) \
+	{ if(_Vmdbcheck && Vmregion->meth.meth == VM_MTDEBUG) \
+		vmset(Vmregion, VM_DBCHECK, 0); \
+	}
+
+static int _vmstart(int freeing)
 {
 	unsigned int	start;
-	char		*options;
 	char		*file;
 	int		line;
 	Void_t		*func;
 
-	/* do this now in case getenv() calls malloc() */
-	options = getenv("VMALLOC_OPTIONS");
+	_vmoptions(1);
+
+	if (_Vmassert & VM_debug) debug_printf(2, "%s:%d: _Vmstart=%s\n", _Vmstart == 0 ? "UNINITIALIZED" : _Vmstart == VM_STARTING ? "STARTING" : _Vmstart == VM_STARTED ? "STARTED" : "ERROR" );
 
 	/* compete for the right to do initialization */
 	if((start = asocasint(&_Vmstart, 0, VM_STARTING)) == VM_STARTED )
 		return 0;
 	else if(start == VM_STARTING) /* wait until initialization is done */
 	{	asospindecl();
+		int	i = 0;
+
+		/*
+		 * we allow free() to be called by signal handlers and not deadlock
+		 * not so for *alloc()
+		 */
+
 		for(asospininit();; asospinnext())
-			if((start = asogetint(&_Vmstart)) == VM_STARTED)
+		{	if((start = asogetint(&_Vmstart)) == VM_STARTED)
 				return 0;
+			if(freeing && ++i >= 10)
+				return 0;
+		}
 	}
 
 	/* initialize the heap if not done yet */
 	if(_vmheapinit(NIL(Vmalloc_t*)) != Vmheap )
+	{	write(9, "vmalloc: panic: heap initialization error\n", 42);
 		return -1;
+	}
 	/**/DEBUG_ASSERT(Vmheap->data != NIL(Vmdata_t*));
 
 	/* setting options. note that Vmregion may change */
 	VMFLF(Vmregion, file, line, func);
-	_vmoptions(options);
+	_vmoptions(2);
 	Vmregion->file = file; /* reset values for the real call */
 	Vmregion->line = line;
 	Vmregion->func = func;
 
 	asocasint(&_Vmstart, VM_STARTING, VM_STARTED);
+
+	if (_Vmassert & VM_verbose) debug_printf(2, "vmalloc: method=%s\n", Vmregion->meth.meth == VM_MTBEST ? "best" : Vmregion->meth.meth == VM_MTDEBUG ? "debug" : Vmregion->meth.meth == VM_MTLAST ? "last" : Vmregion->meth.meth == VM_MTPOOL ? "pool" : "unknown");
 
 	return 0;
 }
@@ -556,9 +686,9 @@ extern Void_t* calloc(size_t n_obj, size_t s_obj)
 {
 	Void_t		*addr;
 
-	VMPROLOGUE(); 
+	VMPROLOGUE(0); 
 	addr = (*Vmregion->meth.resizef)(Vmregion, NIL(Void_t*), n_obj*s_obj, VM_RSZERO, 0);
-	VMEPILOGUE(); 
+	VMEPILOGUE(0); 
 
 	return VMRECORD(addr);
 }
@@ -567,9 +697,9 @@ extern Void_t* malloc(size_t size)
 {
 	Void_t		*addr;
 
-	VMPROLOGUE();
+	VMPROLOGUE(0);
 	addr = (*Vmregion->meth.allocf)(Vmregion, size, 0);
-	VMEPILOGUE(); 
+	VMEPILOGUE(0); 
 
 	return VMRECORD(addr);
 }
@@ -579,24 +709,20 @@ extern Void_t* realloc(Void_t* data, size_t size)
 	Void_t		*addr;
 	Vmalloc_t	*vm;
 
-	VMPROLOGUE();
+	VMPROLOGUE(0);
 
 	if(!data)
 		return malloc(size);
 	else if((vm = vmregion(data)) )
 		addr = (*vm->meth.resizef)(vm, data, size, VM_RSCOPY|VM_RSMOVE, 0);
 	else /* not our data */
-	{
 #if USE_NATIVE
-#undef	realloc /* let the native realloc() take care of it */
-		extern Void_t*	realloc _ARG_((Void_t*, size_t));
-		addr = realloc(data, size);
+		addr = native_realloc(data, size);
 #else 
 		addr = NIL(Void_t*);
 #endif
-	}
 
-	VMEPILOGUE();
+	VMEPILOGUE(0);
 	return VMRECORD(addr);
 }
 
@@ -604,22 +730,18 @@ extern void free(Void_t* data)
 {
 	Vmalloc_t	*vm;
 
-	VMPROLOGUE();
+	VMPROLOGUE(1);
 
 	if(data && !(_Vmassert & VM_keep))
 	{	if((vm = vmregion(data)) )
 			(void)(*vm->meth.freef)(vm, data, 0);
-		else /* not our data */
-		{
 #if USE_NATIVE
-#undef	free /* let the native free() take care of it */
-			extern void	free _ARG_((Void_t*));
-			free(data);
+		else /* not our data */
+			native_free(data);
 #endif
-		}
 	}
 
-	VMEPILOGUE();
+	VMEPILOGUE(1);
 }
 
 extern void cfree(Void_t* data)
@@ -631,13 +753,13 @@ extern Void_t* memalign(size_t align, size_t size)
 {
 	Void_t		*addr;
 
-	VMPROLOGUE();
+	VMPROLOGUE(0);
 
 	VMBLOCK
 	addr = (*Vmregion->meth.alignf)(Vmregion, size, align, 0);
 	VMUNBLOCK
 
-	VMEPILOGUE();
+	VMEPILOGUE(0);
 
 	return VMRECORD(addr);
 }
@@ -665,12 +787,12 @@ extern Void_t* valloc(size_t size)
 {
 	Void_t	*addr;
 
-	VMPROLOGUE();
+	VMPROLOGUE(0);
 
-	GETPAGESIZE(_Vmpagesize);
+	VMPAGESIZE();
 	addr = memalign(_Vmpagesize, size);
 
-	VMEPILOGUE();
+	VMEPILOGUE(0);
 
 	return VMRECORD(addr);
 }
@@ -679,12 +801,12 @@ extern Void_t* pvalloc(size_t size)
 {
 	Void_t	*addr;
 
-	VMPROLOGUE();
+	VMPROLOGUE(0);
 
-	GETPAGESIZE(_Vmpagesize);
+	VMPAGESIZE();
 	addr = memalign(_Vmpagesize, ROUND(size,_Vmpagesize));
 
-	VMEPILOGUE();
+	VMEPILOGUE(0);
 	return VMRECORD(addr);
 }
 
@@ -731,7 +853,7 @@ extern Void_t* alloca(size_t size)
 	Vmalloc_t	*vm;
 	static Alloca_t* Frame;
 
-	VMPROLOGUE();
+	VMPROLOGUE(0);
 
 	VMFLF(Vmregion,file,line,func); /* save info before freeing frames */
 
@@ -757,7 +879,7 @@ extern Void_t* alloca(size_t size)
 	f->head.head.next = Frame;
 	Frame = f;
 
-	VMEPILOGUE();
+	VMEPILOGUE(0);
 
 	return (Void_t*)f->data;
 }
@@ -765,9 +887,7 @@ extern Void_t* alloca(size_t size)
 
 #if _map_malloc
 
-/* not sure of all the implications -- 0 is conservative for now */
-#define USE_NATIVE	0	/* native free/realloc on non-vmalloc ptrs */
-
+/* _ast_* versions of malloc & friends */
 #else
 
 #if _malloc_hook
@@ -921,8 +1041,8 @@ int	cmd;
 int	value;
 #endif
 {
-	VMPROLOGUE();
-	VMEPILOGUE();
+	VMPROLOGUE(0);
+	VMEPILOGUE(0);
 	return 0;
 }
 #endif /*_lib_mallopt*/
@@ -937,8 +1057,8 @@ extern Mallinfo_t mallinfo()
 	Vmstat_t	sb;
 	Mallinfo_t	mi;
 
-	VMPROLOGUE();
-	VMEPILOGUE();
+	VMPROLOGUE(0);
+	VMEPILOGUE(0);
 
 	memset(&mi,0,sizeof(mi));
 	if(vmstat(Vmregion,&sb) >= 0)
@@ -961,8 +1081,8 @@ extern Mstats_t mstats()
 	Vmstat_t	sb;
 	Mstats_t	ms;
 
-	VMPROLOGUE();
-	VMEPILOGUE();
+	VMPROLOGUE(0);
+	VMEPILOGUE(0);
 
 	memset(&ms,0,sizeof(ms));
 	if(vmstat(Vmregion,&sb) >= 0)
@@ -1113,5 +1233,27 @@ int	v;
 		_Vmassert &= ~VM_keep;
 	return r;
 }
+
+#if USE_NATIVE
+
+#undef	realloc
+
+extern void*	realloc(void*, size_t);
+
+static void*	native_realloc(void* p, size_t n)
+{
+	return realloc(p, n);
+}
+
+#undef	free
+
+extern void	free(void*);
+
+static void	native_free(void* p)
+{
+	free(p);
+}
+
+#endif
 
 #endif /*_UWIN*/

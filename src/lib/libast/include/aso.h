@@ -125,6 +125,17 @@ extern unsigned int		_asothreadid(void);
 #define asomaxsize(p,n)		asomax32((uint32_t volatile*)p,n)
 #endif
 
+#if _ast_sizeof_off_t == 4
+#define asocasoff(p,o,n)	asocas32((uint32_t volatile*)p,o,n)
+#define asogetoff(p)		asoget32((uint32_t volatile*)p)
+#define asoaddoff(p,n)		asoadd32((uint32_t volatile*)p,n)
+#define asosuboff(p,n)		asosub32((uint32_t volatile*)p,n)
+#define asoincoff(p)		asoinc32((uint32_t volatile*)p)
+#define asodecoff(p)		asodec32((uint32_t volatile*)p)
+#define asominoff(p,n)		asomin32((uint32_t volatile*)p,n)
+#define asomaxoff(p,n)		asomax32((uint32_t volatile*)p,n)
+#endif
+
 #ifdef _ast_int8_t
 
 #if _ast_sizeof_int == 8
@@ -158,6 +169,17 @@ extern unsigned int		_asothreadid(void);
 #define asodecsize(p)		asodec64((uint64_t volatile*)p)
 #define asominsize(p,n)		asomin64((uint64_t volatile*)p,n)
 #define asomaxsize(p,n)		asomax64((uint64_t volatile*)p,n)
+#endif
+
+#if _ast_sizeof_off_t == 8
+#define asocasoff(p,o,n)	asocas64((uint64_t volatile*)p,o,n)
+#define asogetoff(p)		asoget64((uint64_t volatile*)p)
+#define asoaddoff(p,n)		asoadd64((uint64_t volatile*)p,n)
+#define asosuboff(p,n)		asosub64((uint64_t volatile*)p,n)
+#define asoincoff(p)		asoinc64((uint64_t volatile*)p)
+#define asodecoff(p)		asodec64((uint64_t volatile*)p)
+#define asominoff(p,n)		asomin64((uint64_t volatile*)p,n)
+#define asomaxoff(p,n)		asomax64((uint64_t volatile*)p,n)
 #endif
 
 #undef	extern

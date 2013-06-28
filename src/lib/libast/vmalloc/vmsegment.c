@@ -81,6 +81,7 @@ static isfree(Vmdata_t* vmdt, Block_t* blk)
 #define DELETE_BLOCK	1	/* delete a specific block		*/
 #define DELETE_ENDB	2	/* delete the end block of a segment	*/
 
+/* lock-less type op for arg on free list */
 static Block_t* _vmfreelist(Vmdata_t* vmdt, Void_t* arg, int type)
 {
 	Block_t	*pb, *bp, *blk;
@@ -88,25 +89,22 @@ static Block_t* _vmfreelist(Vmdata_t* vmdt, Void_t* arg, int type)
 
 	if(type == INSERT_BLOCK)
 	{	blk = (Block_t*)arg;
-		LINK(blk) = bp = vmdt->free;
-		pb = asocasptr(&vmdt->free, bp, blk); /**/DEBUG_ASSERT(pb == bp);
+		do LINK(blk) = bp = vmdt->free; while (asocasptr(&vmdt->free, bp, blk) != bp);
 	}
 	else /* some sort of deletion */
-	{	for(pb = NIL(Block_t*), bp = vmdt->free; bp; pb = bp, bp = LINK(bp) )
-			if((type == DELETE_BLOCK && bp == (Block_t*)arg) ||
-			   (type == DELETE_ENDB && NEXT(bp) == ((Seg_t*)arg)->endb) )
-				break;
-		if(!bp) /* none matches deletion requirement */
-			return NIL(Block_t*);
+	{	do
+		{	for(pb = NIL(Block_t*), bp = vmdt->free; bp; pb = bp, bp = LINK(bp) )
+				if((type == DELETE_BLOCK && bp == (Block_t*)arg) ||
+				   (type == DELETE_ENDB && NEXT(bp) == ((Seg_t*)arg)->endb) )
+					break;
+			if(!bp) /* none matches deletion requirement */
+				return NIL(Block_t*);
 
-		if(!pb) /* bp should be at head of list */
-		{	/**/DEBUG_ASSERT(bp == vmdt->free);
-			blk = asocasptr(&vmdt->free, bp, LINK(bp)); 
-		}
-		else
-		{	/**/DEBUG_ASSERT(LINK(pb) == bp);
-			blk = asocasptr(&LINK(pb), bp, LINK(bp));
-		} /**/DEBUG_ASSERT(blk == bp);
+			if(!pb) /* bp should be at head of list */
+				blk = asocasptr(&vmdt->free, bp, LINK(bp));
+			else
+				blk = asocasptr(&LINK(pb), bp, LINK(bp));
+		} while(blk != bp);
 	}
 
 	return blk;
@@ -179,18 +177,13 @@ Void_t* vmsegfind(Vmalloc_t* vm, Void_t* addr)
 	return NIL(Void_t*);
 }
 
-/* initializing seg with containing region vmdt and actual memory [base,size] */
-static int _vmseginit(Vmdata_t* vmdt, Seg_t* seg, Vmuchar_t* base, ssize_t size)
+/* lock-less seg initialization with containing region vmdt and actual memory [base,size] */
+static Block_t* _vmseginit(Vmdata_t* vmdt, Seg_t* seg, Vmuchar_t* base, ssize_t size, int insert)
 {
 	/**/DEBUG_ASSERT((Vmuchar_t*)seg >= base && (Vmuchar_t*)seg < (base+size) );
 	seg->vmdt = vmdt;
 	seg->base = base;
 	seg->size = size;
-
-	if(!vmdt->segmin || base < vmdt->segmin)
-		vmdt->segmin = base;
-	if(!vmdt->segmax || (base+size) > vmdt->segmax)
-		vmdt->segmax = base+size;
 
 	/* available memory in Seg_t for allocation usage */
 	size = (base+size) - SEGDATA(seg);
@@ -206,14 +199,24 @@ static int _vmseginit(Vmdata_t* vmdt, Seg_t* seg, Vmuchar_t* base, ssize_t size)
 	SEG(seg->endb) = seg;
 	SIZE(seg->endb) = BUSY; /* permanently busy */
 
-	/* update segment list */
-	seg->next = vmdt->seg;
-	asocasptr(&vmdt->seg, vmdt->seg, seg); /**/DEBUG_ASSERT(vmdt->seg == seg);
+	/* update segment boundaries */
+	base = seg->base;
+	while(!vmdt->segmin || base < vmdt->segmin)
+		asocasptr(&vmdt->segmin, vmdt->segmin, base);
+	base += seg->size;
+	while(!vmdt->segmax || base > vmdt->segmax)
+		asocasptr(&vmdt->segmax, vmdt->segmax, base);
 
 	/* add the free block to the free list */
-	_vmfreelist(vmdt, (Void_t*)seg->begb, INSERT_BLOCK);
+	if(insert)
+		_vmfreelist(vmdt, (Void_t*)seg->begb, INSERT_BLOCK);
+	else
+		SIZE(seg->begb) |= BUSY;
 
-	return 0;
+	/* update segment list */
+	do seg->next = vmdt->seg; while(asocasptr(&vmdt->seg, seg->next, seg) != seg->next);
+
+	return seg->begb;
 }
 
 static void _vmsegmerge(Vmdata_t* vmdt, Block_t* blk)
@@ -236,11 +239,12 @@ static void _vmsegmerge(Vmdata_t* vmdt, Block_t* blk)
 static Block_t* _vmsegalloc(Vmalloc_t* vm, Block_t* blk, ssize_t size, int type)
 {
 	unsigned int	key;
+	int		heisus;
 	ssize_t		sz, segsz;
 	Block_t		*np, *endb;
 	Seg_t		*seg;
 	Vmuchar_t	*base;
-	Vmdata_t	*vmdt = (Vmdata_t*)vm->data;
+	Vmdata_t	*vmdt = vm->data;
 	Vmdisc_t	*disc = vm->disc;
 	static size_t	Segunit = 0;
 	/**/DEBUG_COUNT(N_segalloc);
@@ -252,87 +256,101 @@ static Block_t* _vmsegalloc(Vmalloc_t* vm, Block_t* blk, ssize_t size, int type)
 #define RETURN(x)	do {(x); goto re_turn; } while(0)
 	if(Segunit == 0)
 		Segunit = ROUND(8*1024, _Vmpagesize);
-
-	key = asothreadid();
-	asolock(&vmdt->lock, key, ASO_LOCK);
-
 	size = size < Segunit ? Segunit : ROUND(size, Segunit);
 
-	if(blk) /* try extending an existing block in place */
-	{	_vmsegmerge(vmdt, blk); 
-		if(BDSZ(blk) >= size )
-			RETURN(blk);
-		if(NEXT(blk) != ((Seg_t*)SEG(blk))->endb )
+	key = asothreadid();
+	if(vmdt->lock == key)
+	{	heisus = 1; /* we have met the enemy and he is us */
+		if(blk && (type&VM_SEGEXTEND) ) /* no physical extension when he is us */
+		{	if(_Vmassert & VM_debug) debug_printf(2, "%s:%d: VM_SEGEXTEND: %s\n", __FILE__, __LINE__, "we have met the enemy and he is us");
 			RETURN(blk = NIL(Block_t*));
-	}
-	else /* see if anything available for requested size */
-	{	for(blk = vmdt->free; blk; blk = LINK(blk))
-		{	_vmsegmerge(vmdt, blk);
-			if(BDSZ(blk) >= size)
-			{	_vmfreelist(vmdt, (Void_t*)blk, DELETE_BLOCK);
-				RETURN(blk);
-			}
 		}
-	}
-
-	if(!(type&VM_SEGEXTEND) ) /* no physical extension */
-		RETURN(blk = NIL(Block_t*));
-
-	if(blk) 
-	{	seg = SEG(blk);
-		/**/DEBUG_ASSERT((SIZE(blk)&BUSY) && NEXT(blk) == seg->endb);
+		if(_Vmassert & VM_debug) debug_printf(2, "%s:%d: %s\n", __FILE__, __LINE__, "we have met the enemy and he is us");
 	}
 	else
-	{	seg = vmdt->seg; 
-		blk = seg->iffy ? NIL(Block_t*) : _vmfreelist(vmdt, (Void_t*)seg, DELETE_ENDB);
-		/**/DEBUG_ASSERT(!blk || (SEG(blk) == seg && NEXT(blk) == seg->endb));
-	}
+	{	heisus = 0;
+		asolock(&vmdt->lock, key, ASO_LOCK);
 
-	if((sz = blk ? BDSZ(blk) : 0) < size && !seg->iffy ) /* try extending segment */
-	{	/**/DEBUG_ASSERT((blk && SEG(blk) == seg) || (!blk && seg == vmdt->seg) );
+		if(blk) /* try extending an existing block in place */
+		{	_vmsegmerge(vmdt, blk); 
+			if(BDSZ(blk) >= size )
+				RETURN(blk);
+			if(NEXT(blk) != ((Seg_t*)SEG(blk))->endb )
+				RETURN(blk = NIL(Block_t*));
+		}
+		else /* see if anything available for requested size */
+		{	for(blk = vmdt->free; blk; blk = LINK(blk))
+			{	_vmsegmerge(vmdt, blk);
+				if(BDSZ(blk) >= size)
+				{	_vmfreelist(vmdt, (Void_t*)blk, DELETE_BLOCK);
+					RETURN(blk);
+				}
+			}
+		}
 
- 		/* amount of new memory to request */
-		segsz = seg->size + (size - sz) + sizeof(Block_t) + Segunit;
-		segsz = ROUND(segsz, vmdt->incr);
-		if((sz = segsz - seg->size) <= 0 ) /* wrapped around, not good! */
+		if(!(type&VM_SEGEXTEND) ) /* no physical extension */
 			RETURN(blk = NIL(Block_t*));
 
-		/* Be careful with editing the below section of code. It was written to
-		** allow longjmp() while keeping the memory layout consistent.
-		*/
-		seg->iffy = 1; /* a longjmp() below will make seg not further extendible */
-		base = (Vmuchar_t*)(*disc->memoryf)(vm, seg->base, seg->size, segsz, disc);
-		if(base == seg->base) /* successful extension */
-		{	/* keeping segment size right is first priority */
-			seg->size = segsz;
-
-			if(!vmdt->segmin || base < vmdt->segmin)
-				vmdt->segmin = base;
-			if(!vmdt->segmax || (base+segsz) > vmdt->segmax)
-				vmdt->segmax = base+segsz;
-
-			/* Next, construct the new end block. Note that the old end block
-			** is still intact so that a test for next free block that touches
-			** it will continue to fail if an unfortunate longjmp() occurs.
-			*/
-			endb = seg->endb; /* current end block */
-			np = (Block_t*)((Vmuchar_t*)endb + sz); /* new end block */
-			SEG(np) = seg;
-			SIZE(np) = BUSY;
-			seg->endb = np;
-
-			/* now we can construct the new block */
-			if(blk) /* existing block got extended */
-			{	/**/DEBUG_ASSERT(NEXT(blk) == endb);
-				SIZE(blk) += sz;
-			}
-			else /* new allocatable end block */
-			{	blk = endb;
-				SIZE(blk) = sz - sizeof(Head_t);
-			}
-			/**/DEBUG_ASSERT(NEXT(blk) == seg->endb);
+		if(blk) 
+		{	seg = SEG(blk);
+			/**/DEBUG_ASSERT((SIZE(blk)&BUSY) && NEXT(blk) == seg->endb);
 		}
-		seg->iffy = 0; /* segment info is now completed */
+		else
+		{	seg = vmdt->seg; 
+			blk = seg->iffy ? NIL(Block_t*) : _vmfreelist(vmdt, (Void_t*)seg, DELETE_ENDB);
+			/**/DEBUG_ASSERT(!blk || (SEG(blk) == seg && NEXT(blk) == seg->endb));
+		}
+
+		if(asocasint(&seg->iffy, 0, 1) == 0)
+		{	/* a longjmp() below will make seg not further extendible */
+			if((sz = blk ? BDSZ(blk) : 0) < size) /* try extending segment */
+			{	/**/DEBUG_ASSERT((blk && SEG(blk) == seg) || (!blk) );
+
+				/* amount of new memory to request */
+				segsz = seg->size + (size - sz) + sizeof(Block_t) + Segunit;
+				segsz = ROUND(segsz, vmdt->incr);
+				if((sz = segsz - seg->size) <= 0 ) /* wrapped around, not good! */
+				{	seg->iffy = 0;
+					RETURN(blk = NIL(Block_t*));
+				}
+
+				/* Be careful with editing the below section of code. It was written to
+				** allow longjmp() while keeping the memory layout consistent.
+				*/
+				base = (Vmuchar_t*)(*disc->memoryf)(vm, seg->base, seg->size, segsz, disc);
+				if(base == seg->base) /* successful extension */
+				{	/* keeping segment size right is first priority */
+					seg->size = segsz;
+
+					if(!vmdt->segmin || base < vmdt->segmin)
+						vmdt->segmin = base;
+					if(!vmdt->segmax || (base+segsz) > vmdt->segmax)
+						vmdt->segmax = base+segsz;
+
+					/* Next, construct the new end block. Note that the old end block
+					** is still intact so that a test for next free block that touches
+					** it will continue to fail if an unfortunate longjmp() occurs.
+					*/
+					endb = seg->endb; /* current end block */
+					np = (Block_t*)((Vmuchar_t*)endb + sz); /* new end block */
+					SEG(np) = seg;
+					SIZE(np) = BUSY;
+					seg->endb = np;
+
+					/* now we can construct the new block */
+					if(blk) /* existing block got extended */
+					{	/**/DEBUG_ASSERT(NEXT(blk) == endb);
+						SIZE(blk) += sz;
+					}
+					else /* new allocatable end block */
+					{	blk = endb;
+						SIZE(blk) = sz - sizeof(Head_t);
+					}
+					/**/DEBUG_ASSERT(NEXT(blk) == seg->endb);
+				}
+			}
+			seg->iffy = 0; /* segment info is now completed */
+		}
 	}
 
 	if((sz = blk ? BDSZ(blk) : 0) < size ) /* must make a new segment */
@@ -359,9 +377,7 @@ static Block_t* _vmsegalloc(Vmalloc_t* vm, Block_t* blk, ssize_t size, int type)
 		if((sz = (size_t)(VMLONG(base)%ALIGN)) == 0)
 			seg = (Seg_t*)base;
 		else	seg = (Seg_t*)(base + ALIGN-sz);
-		_vmseginit(vmdt, seg, base, segsz);
-
-		blk = _vmfreelist(vmdt, (Void_t*)seg->begb, DELETE_BLOCK); /**/DEBUG_ASSERT(BDSZ(blk) >= size);
+		blk = _vmseginit(vmdt, seg, base, segsz, 0);
 	}
 
 re_turn:
@@ -382,9 +398,11 @@ re_turn:
 		SIZE(blk) |= BUSY; /**/DEBUG_ASSERT(BDSZ(blk) >= Segunit);
 	}
 
-	/**/DEBUG_ASSERT(vmdt->lock == key);
-	asolock(&vmdt->lock, key, ASO_UNLOCK);
-	/**/DEBUG_ASSERT(vmdt->lock != key);
+	if(heisus == 0)
+	{	/**/DEBUG_ASSERT(vmdt->lock == key);
+		asolock(&vmdt->lock, key, ASO_UNLOCK);
+		/**/DEBUG_ASSERT(vmdt->lock != key);
+	}
 
 	return blk;
 }
@@ -488,7 +506,7 @@ Vmextern_t	_Vmextern =
 	0,									/* _Vmpagesize	*/
 	0,									/* _Vmsbrklock	*/
 	0,									/* _Vmhold	*/
-	0									/* _Vmassert	*/
+	VM_check_seg								/* _Vmassert	*/
 };
 
 #endif

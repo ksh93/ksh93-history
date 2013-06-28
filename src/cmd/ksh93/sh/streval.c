@@ -359,8 +359,18 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			num *= sp[-1];
 			break;
 		    case A_POW:
-			num = pow(sp[-1],num);
+		    {
+			extern Math_f sh_mathstdfun(const char*,size_t,short*); 
+			static Math_2f_f powfn; 
+			if(!powfn)
+			{
+				powfn = (Math_2f_f)sh_mathstdfun("pow", 3, NULL);
+				if(!powfn)
+					powfn = (Math_2f_f)pow;
+			}
+			num = powfn(sp[-1],num);
 			break;
+		    }
 		    case A_MOD:
 			if(!(Sflong_t)num)
 				arith_error(e_divzero,ep->expr,ep->emode);
@@ -375,7 +385,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				num = sp[-1]/num;
 				type = 1;
 			}
-			else if((Sfulong_t)(num)==0)
+			else if((Sfulong_t)(num<0?-num:num)==0)
 				arith_error(e_divzero,ep->expr,ep->emode);
 			else if(type==2 || tp[-1]==2)
 				num = U2F((Sfulong_t)(sp[-1]) / (Sfulong_t)(num));

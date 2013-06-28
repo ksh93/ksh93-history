@@ -22,19 +22,33 @@
 #include	"vmhdr.h"
 
 /* The below implements the discipline Vmdcsystem and the heap region Vmheap.
-** There are 5 alternative ways to get raw memory:
-**	win32, sbrk, mmap_anon, mmap_zero and reusing the native malloc
+** There are 6 alternative ways to get raw memory:
+**	win32, sbrk, safe_sbrk, mmap_anon, mmap_zero and reusing the native malloc
 **
 ** Written by Kiem-Phong Vo, phongvo@gmail.com, 03/31/2012
 */
 
 #define FD_INIT		(-1)		/* uninitialized file desc	*/
 
-typedef struct _memdisc_s
+typedef struct Memdisc_s
 {	Vmdisc_t	disc;
 	int		fd;
 	off_t		offset;
 } Memdisc_t;
+
+#define STR(x)		#x
+#define XTR(x)		STR(x)
+
+#define GETMEMCHK(vm,caddr,csize,nsize,disc) \
+	/**/DEBUG_ASSERT(csize > 0 || nsize > 0); \
+	if((csize > 0 && !caddr) || (csize == 0 && nsize == 0)) \
+		return NIL(Void_t*)
+
+#define GETMEMUSE(getmem,disc) \
+	if(_Vmassert & VM_verbose) debug_printf(2,"vmalloc: getmemory=%s\n",XTR(getmem)); \
+	(disc)->memoryf = _Vmemoryf = (getmem)
+
+static Vmemory_f	_Vmemoryf = 0;
 
 #if _std_malloc
 #undef	_mem_mmap_anon
@@ -52,7 +66,7 @@ typedef struct _memdisc_s
 #if _mem_mmap_anon || _mem_mmap_zero /* may get space using mmap */
 #include		<sys/mman.h>
 #ifndef MAP_ANON
-#ifdef MAP_ANONYMOUS
+#ifdef	MAP_ANONYMOUS
 #define	MAP_ANON	MAP_ANONYMOUS
 #else
 #define MAP_ANON	0
@@ -67,8 +81,9 @@ typedef struct _memdisc_s
 #include	<windows.h>
 #endif
 
-static Void_t* win32mem(Void_t* caddr, size_t csize, size_t nsize)
-{	/**/DEBUG_ASSERT(csize > 0 || nsize > 0);
+static Void_t* win32mem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
+{	
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(csize == 0)
 	{	caddr = (Void_t*)VirtualAlloc(0,nsize,MEM_COMMIT,PAGE_READWRITE);
 		return caddr;
@@ -81,20 +96,51 @@ static Void_t* win32mem(Void_t* caddr, size_t csize, size_t nsize)
 }
 #endif /* _mem_win32 */
 
-#if _mem_mmap_anon || _mem_sbrk /* getting space via mmap(MAP_ANON) or brk/sbrk */
-
-/* The below provides concurrency-safe memory allocation via either sbrk()
-** or mmap-anonymous. The former may be unsafe due to code external to
-** Vmalloc that may also use sbrk().
+#if _mem_sbrk /* getting space via sbrk() */
+/*
+** this may be unsafe due to code external to Vmalloc that may also use sbrk()
 */
-static Void_t* mmapanonmem(Void_t* caddr, size_t csize, size_t nsize, int usesbrk )
+static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
 {
-	Vmuchar_t	*newm;
+	Vmuchar_t*	newm;
 	unsigned int	key;
 
-	if(usesbrk)
-		_Vmmemsbrk = NIL(Vmuchar_t*);
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
+	if((csize%_Vmpagesize) != 0)
+		return NIL(Void_t*); /* bad call! */
+	else if((nsize = ROUND(nsize, _Vmpagesize)) == csize )
+		return caddr; /* nothing to do */
+	else if(nsize < csize) /* no memory reduction */
+		return NIL(Void_t*);
 
+	key = asothreadid(); /**/DEBUG_ASSERT(key > 0);
+	asolock(&_Vmsbrklock, key, ASO_LOCK);
+
+	nsize -= csize; /* amount of new memory needed */
+
+	if(csize > 0 && (newm = sbrk(0)) != ((Vmuchar_t*)caddr + csize) )
+		newm = NIL(Void_t*); /* non-contiguous memory */
+	else if(!(newm = sbrk(nsize)) || newm == (Vmuchar_t*)(-1) )
+		newm = NIL(Void_t*); /* sbrk() failed */
+	else if(csize > 0 && newm != ((Vmuchar_t*)caddr + csize + nsize) )
+		newm = NIL(Void_t*); /* non-contiguous memory again */
+
+	asolock(&_Vmsbrklock, key, ASO_UNLOCK);
+
+	return (newm && caddr) ? caddr : newm;
+}
+#endif /* _mem_sbrk */
+
+#if _mem_mmap_anon /* getting space via mmap(MAP_ANON) emulation of sbrk() */
+/*
+** concurrency-safe memory allocation via mmap-anonymous providing an emulation of sbrk()
+*/
+static Void_t* safebrkmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
+{
+	Vmuchar_t*	newm;
+	unsigned int	key;
+
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if((csize%_Vmpagesize) != 0)
 		return NIL(Void_t*); /* bad call! */
 	else if((nsize = ROUND(nsize, _Vmpagesize)) == csize )
@@ -108,8 +154,8 @@ static Void_t* mmapanonmem(Void_t* caddr, size_t csize, size_t nsize, int usesbr
 	newm = NIL(Vmuchar_t*);
 	nsize -= csize; /* amount of new memory needed */
 
-#if _mem_mmap_anon
-	if(!usesbrk && !newm && _Vmmemsbrk && _Vmmemsbrk < _Vmmemmax)
+	VMBOUNDARIES();
+	if(_Vmmemsbrk && _Vmmemsbrk < _Vmmemmax)
 	{	if(_Vmchkmem) /* mmap must use MAP_FIXED (eg, solaris) */
 		{	for(;;) /* search for a mappable address */
 			{	newm = (*_Vmchkmem)(_Vmmemsbrk, nsize) ? _Vmmemsbrk : NIL(Vmuchar_t*);
@@ -132,24 +178,10 @@ static Void_t* mmapanonmem(Void_t* caddr, size_t csize, size_t nsize, int usesbr
 			newm = NIL(Void_t*);
 		else if(csize > 0 && newm != ((Vmuchar_t*)caddr+csize)) /* new memory is not contiguous */
 		{	munmap((Void_t*)newm, nsize); /* remove it and wait for a call for new memory */
-			newm = (Vmuchar_t*)(-1); /* error state -- so that sbrk() will be avoided */
+			newm = NIL(Void_t*);
 		}
 		else	_Vmmemsbrk = newm+nsize;
 	}
-#endif /*_mem_mmap_anon*/
-
-#if _mem_sbrk
-	if(usesbrk)
-	{	if(!newm)
-		{	if(csize > 0 && (newm = sbrk(0)) != ((Vmuchar_t*)caddr + csize) )
-				newm = (Vmuchar_t*)(-1); /* non-contiguous memory */
-			else if(!(newm = sbrk(nsize)) || newm == (Vmuchar_t*)(-1) )
-				newm = (Vmuchar_t*)(-1); /* sbrk() failed */
-			else if(csize > 0 && newm != ((Vmuchar_t*)caddr + csize) )
-				newm = (Vmuchar_t*)(-1); /* non-contiguous memory again */
-		}
-	}
-#endif /*_mem_sbrk*/
 
 	if(newm == (Vmuchar_t*)(-1) )
 		newm = NIL(Vmuchar_t*);
@@ -158,7 +190,26 @@ static Void_t* mmapanonmem(Void_t* caddr, size_t csize, size_t nsize, int usesbr
 
 	return (newm && caddr) ? caddr : newm;
 }
-#endif /* _mem_mmap_anon || _mem_sbrk */
+#endif /* _mem_mmap_anon */
+
+#if _mem_mmap_anon /* getting space via mmap(MAP_ANON) */
+static Void_t* mmapanonmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
+{	
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
+	if(csize == 0)
+	{	nsize = ROUND(nsize, _Vmpagesize);
+		caddr = (Void_t*)mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
+		if(caddr == (Void_t*)(-1))
+			caddr = NIL(Void_t*);
+		return caddr;
+	}
+	else if(nsize == 0)
+	{	(void)munmap(caddr, csize);
+		return caddr;
+	}
+	else	return NIL(Void_t*);
+}
+#endif /* _mem_mmap_anon */
 
 #if _mem_mmap_zero /* get space by mmapping from /dev/zero */
 #include		<fcntl.h>
@@ -168,55 +219,68 @@ static Void_t* mmapanonmem(Void_t* caddr, size_t csize, size_t nsize, int usesbr
 #define FD_PRIVATE	(3*OPEN_MAX/4)	/* private file descriptor	*/
 #define FD_NONE		(-2)		/* no mapping with file desc	*/
 
-static Void_t* mmapzeromem(Void_t* caddr, size_t csize, size_t nsize, Memdisc_t* mmdc)
+/* this is called after an initial successful call of mmapzeromeminit() */
+static Void_t* mmapzeromem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
 {
-	if(mmdc->fd == FD_INIT ) /* open /dev/zero for mapping */
-	{	int	fd;
-		if((fd = open("/dev/zero", O_RDONLY)) < 0 )
-		{	mmdc->fd = FD_NONE;
-			return NIL(Void_t*);
-		}
-		if(fd >= FD_PRIVATE || (mmdc->fd = dup2(fd, FD_PRIVATE)) < 0 )
-			mmdc->fd = fd;
-		else	close(fd);
-#ifdef FD_CLOEXEC
-		fcntl(mmdc->fd,  F_SETFD, FD_CLOEXEC);
-#endif
-	}
+	Memdisc_t*	mmdc = (Memdisc_t*)disc;
+	off_t		offset;
 
-	if(mmdc->fd == FD_NONE)
-		return NIL(Void_t*);
-
-	/**/DEBUG_ASSERT(csize > 0 || nsize > 0);
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(csize == 0)
 	{	nsize = ROUND(nsize, _Vmpagesize);
-		caddr = NIL(Void_t*);
-		if(mmdc->fd >= 0 )
-			caddr = mmap(0, nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE, mmdc->fd, mmdc->offset);
-		if(!caddr || caddr == (Void_t*)(-1))
-			return NIL(Void_t*);
-		else
-		{	mmdc->offset += nsize;
-			return caddr;
-		}
+		offset = asoaddoff(&mmdc->offset, nsize);
+		caddr = mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE, mmdc->fd, offset);
+		if(caddr == (Void_t*)(-1))
+			caddr = NIL(Void_t*);
+		return caddr;
 	}
 	else if(nsize == 0)
 	{	Vmuchar_t	*addr = (Vmuchar_t*)sbrk(0);
 		if(addr < (Vmuchar_t*)caddr ) /* in sbrk space */
 			return NIL(Void_t*);
-		else
-		{	(void)munmap(caddr, csize);
-			return caddr;
-		}
+		(void)munmap(caddr, csize);
+		return caddr;
 	}
 	else	return NIL(Void_t*);
 }
+
+/* if this call succeeds then mmapzeromem() is the implementation */
+static Void_t* mmapzeromeminit(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
+{
+	Memdisc_t*	mmdc = (Memdisc_t*)disc;
+	int		fd;
+
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
+	if(mmdc->fd != FD_INIT)
+		return NIL(Void_t*);
+	if((fd = open("/dev/zero", O_RDONLY|O_CLOEXEC)) < 0)
+	{	mmdc->fd = FD_NONE;
+		return NIL(Void_t*);
+	}
+#if O_CLOEXEC == 0
+	else
+		SETCLOEXEC(fd);
+#endif
+	if(fd >= FD_PRIVATE || (mmdc->fd = fcntl(fd, F_DUPFD_CLOEXEC, FD_PRIVATE)) < 0)
+		mmdc->fd = fd;
+	else
+	{	close(fd);
+#if F_DUPFD_CLOEXEC == F_DUPFD
+		SETCLOEXEC(mmdc->fd);
+#endif
+	}
+	if(!(caddr = mmapzeromem(vm, caddr, csize, nsize, disc)))
+	{	close(mmdc->fd);
+		mmdc->fd = FD_NONE;
+	}
+	return caddr;
+}
 #endif /* _mem_mmap_zero */
 
-#if _std_malloc /* using native malloc as a last resource */
-static Void_t* mallocmem(Void_t* caddr, size_t csize, size_t nsize)
+#if _std_malloc /* using native malloc as a last resort */
+static Void_t* mallocmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
 {
-	/**/DEBUG_ASSERT(csize > 0 || nsize > 0);
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(csize == 0)
 		return (Void_t*)malloc(nsize);
 	else if(nsize == 0)
@@ -227,34 +291,53 @@ static Void_t* mallocmem(Void_t* caddr, size_t csize, size_t nsize)
 }
 #endif
 
-/* A discipline to get raw memory using VirtualAlloc/mmap/sbrk */
+/* A discipline to get raw memory */
 static Void_t* getmemory(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize, Vmdisc_t* disc)
 {
-	Vmuchar_t	*addr;
+	Vmuchar_t*	addr;
 
-	if((csize > 0 && !caddr) || (csize == 0 && nsize == 0) )
-		return NIL(Void_t*);
-
+	if(_Vmemoryf)
+	{	(disc)->memoryf = _Vmemoryf;
+		return (*_Vmemoryf)(vm, caddr, csize, nsize, disc);
+	}
+	GETMEMCHK(vm, caddr, csize, nsize, disc);
 #if _mem_mmap_anon
-	if(!(_Vmassert & VM_break) && (addr = mmapanonmem(caddr, csize, nsize, 0)) )
+	if((_Vmassert & VM_anon) && (addr = mmapanonmem(vm, caddr, csize, nsize, disc)))
+	{	GETMEMUSE(mmapanonmem, disc);
 		return (Void_t*)addr;
-#endif
-#if _mem_sbrk
-	if((_Vmassert & VM_break) && (addr = mmapanonmem(caddr, csize, nsize, 1)) )
-		return (Void_t*)addr;
+	}
 #endif
 #if _mem_mmap_zero
-	if((addr = mmapzeromem(caddr, csize, nsize, (Memdisc_t*)disc)) )
+	if((_Vmassert & VM_zero) && (addr = mmapzeromeminit(vm, caddr, csize, nsize, disc)))
+	{	GETMEMUSE(mmapzeromem, disc);
 		return (Void_t*)addr;
+	}
+#endif
+#if _mem_mmap_anon
+	if((_Vmassert & VM_safe) && (addr = safebrkmem(vm, caddr, csize, nsize, disc)))
+	{	GETMEMUSE(safebrkmem, disc);
+		return (Void_t*)addr;
+	}
+#endif
+#if _mem_sbrk
+	if((_Vmassert & VM_break) && (addr = sbrkmem(vm, caddr, csize, nsize, disc)))
+	{	GETMEMUSE(sbrkmem, disc);
+		return (Void_t*)addr;
+	}
 #endif
 #if _mem_win32
-	if((addr = win32mem(caddr, csize, nsize)) )
+	if((addr = win32mem(vm, caddr, csize, nsize, disc)))
+	{	GETMEMUSE(win32mem, disc);
 		return (Void_t*)addr;
+	}
 #endif
 #if _std_malloc
-	if((addr = mallocmem(caddr, csize, nsize)) )
+	if((_Vmassert & VM_native) && (addr = mallocmem(vm, caddr, csize, nsize, disc)))
+	{	GETMEMUSE(mallocmem, disc);
 		return (Void_t*)addr;
 #endif 
+	write(2, "vmalloc: panic: all memory allocation disciplines failed\n", 57);
+	abort();
 	return NIL(Void_t*);
 }
 
@@ -262,7 +345,6 @@ static Memdisc_t _Vmdcsystem = { { getmemory, NIL(Vmexcept_f), VM_INCREMENT, siz
 
 __DEFINE__(Vmdisc_t*,  Vmdcsystem, (Vmdisc_t*)(&_Vmdcsystem) );
 __DEFINE__(Vmdisc_t*,  Vmdcsbrk, (Vmdisc_t*)(&_Vmdcsystem) );
-
 
 /* Note that the below function may be invoked from multiple threads.
 ** It initializes the Vmheap region to use the VMHEAPMETH method.
@@ -298,19 +380,16 @@ Vmalloc_t* _vmheapinit(Vmalloc_t* vm)
 	else /* we won the right to initialize Vmheap below */
 	{	/**/DEBUG_ASSERT(status == 0);
 		/**/DEBUG_ASSERT(Init == HEAPINIT);
+		_vmoptions(3);
 	}
-
-#if DEBUG /* trace all allocation calls through the heap */
-	if(!_Vmtrace)
-	{	char	*env;
-		int	fd;
-		if((fd = vmtrace(-1)) >= 0 ||
-		   ((env = getenv("VMTRACE")) && (fd = creat(env, 0666)) >= 0 ) )
-			vmtrace(fd);
-	}
-#endif
 
 	heap = vmopen(Vmheap->disc, VMHEAPMETH, VM_HEAPINIT);
+	if(!vm && heap != Vmheap)
+	{	if(heap)
+			write(9, "\n\nFATAL: _vmheapinit() != Vmheap\n\n", 34);
+		else
+			write(9, "\n\nFATAL: _vmheapinit() == 0\n\n", 29);
+	}
 
 	/**/DEBUG_ASSERT(Init == HEAPINIT);
 	asocasint(&Init, HEAPINIT, heap == Vmheap ? HEAPDONE : 0);

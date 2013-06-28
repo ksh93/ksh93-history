@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -190,6 +190,7 @@ extern int 		sh_close(int);
 extern void 		sh_delay(double);
 extern int 		sh_dup(int);
 extern int 		sh_eval(Sfio_t*,int);
+extern int		sh_exec(Shell_t*,const Shnode_t*,int);
 extern void 		sh_exit(int);
 extern int		sh_fchdir(int);
 extern int		sh_fcntl(int, int, ...);
@@ -265,32 +266,65 @@ extern void		*sh_waitnotify_20120720(Shwait_f,void*);
 #   undef extern
 #endif /* _DLL */
 
-#define chdir(a)	sh_chdir(a)	
-#define fchdir(a)	sh_fchdir(a)
-#if _lib_lseek64
-#   define open64	sh_open
-#   define lseek64(a,b,c)	sh_seek(a,b,c)
-#   define stat64(a,b)	sh_stat(a,b)	
-#else
-#   define open		sh_open
-#   define lseek(a,b,c)	sh_seek(a,b,c)
-#   define stat(a,b)	sh_stat(a,b)	
-#endif
-#ifndef _SH_PRIVATE
-#   define access(a,b)	sh_access(a,b)
-#   define close(a)	sh_close(a)
-#if SHELLAPI(20120720)
-#   define exit(a)	sh_exit(sh_getinterp(),a)
-#else
-#   define exit(a)	sh_exit(a)
-#endif
-#   define fcntl(a,b,c)	sh_fcntl(a,b,c)
-#   define pipe(a)	sh_pipe(a)
-#   define read(a,b,c)	sh_read(a,b,c)
-#   define write(a,b,c)	sh_write(a,b,c)
-#   define umask(a)	sh_umask(a)
-#   define dup		sh_dup
-#endif /* !_SH_PRIVATE */
+#ifndef _AST_INTERCEPT
+#   if _lib_lseek64
+#       undef  stat64
+#	define stat64(a,b)	sh_stat(a,b)	
+#   else
+#       undef  stat
+#	define stat(a,b)	sh_stat(a,b)	
+#   endif
+#endif /* !_AST_INTERCEPT */
+#ifndef _shtest_c
+#   ifndef _SH_PRIVATE
+#       undef  access
+#	define access(a,b)	sh_access(a,b)
+#   endif
+#endif /* !_shtest_c */
+#ifndef _shio_h
+#   undef  chdir
+#   define chdir(a)		sh_chdir(a)	
+#   undef  fchdir
+#   define fchdir(a)		sh_fchdir(a)
+#   ifndef HIST_MAX
+#       if _lib_lseek64
+#           undef  open64
+#           define open64	sh_open
+#           undef  lseek64
+#           define lseek64(a,b,c)	sh_seek(a,b,c)
+#       else
+#           undef  open
+#           define open		sh_open
+#           undef  lseek
+#           define lseek(a,b,c)	sh_seek(a,b,c)
+#       endif
+#   endif
+#   ifndef _SH_PRIVATE
+#       undef  access
+#       define access(a,b)	sh_access(a,b)
+#       undef  close
+#       define close(a)		sh_close(a)
+#       if SHELLAPI(20120720)
+#           undef  exit
+#           define exit(a)	sh_exit(sh_getinterp(),a)
+#       else
+#           undef  exit
+#           define exit(a)	sh_exit(a)
+#       endif
+#       undef  fcntl
+#       define fcntl(a,b,c)	sh_fcntl(a,b,c)
+#       undef  pipe
+#       define pipe(a)		sh_pipe(a)
+#       undef  read
+#       define read(a,b,c)	sh_read(a,b,c)
+#       undef  write
+#       define write(a,b,c)	sh_write(a,b,c)
+#       undef  umask
+#       define umask(a)		sh_umask(a)
+#       undef  dup
+#       define dup		sh_dup
+#   endif /* !_SH_PRIVATE */
+#endif /* !_shio_h */
 
 #define SH_SIGSET	4
 #define SH_EXITSIG	0400	/* signal exit bit */

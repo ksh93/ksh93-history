@@ -196,6 +196,7 @@ int		local;
 /* get statistics */
 static int poolstat(Vmalloc_t* vm, Vmstat_t* st, int local )
 {
+	size_t		size;
 	Pool_t		*pl;
 	Vmpool_t	*pool = (Vmpool_t*)vm->data;
 
@@ -205,14 +206,14 @@ static int poolstat(Vmalloc_t* vm, Vmstat_t* st, int local )
 	if(pool->size <= 0 )
 		return -1;
 
-	ROUND(pool->size, ALIGN);
+	size = ROUND(pool->size, ALIGN);
 
 	for(pl = pool->free; pl; pl = pl->next )
 		st->n_free += 1;
-	st->s_free = st->n_free * pool->size;
+	st->s_free = st->n_free * size;
 
 	st->n_busy = pool->nblk - st->n_free;
-	st->s_busy = st->n_busy * pool->size;
+	st->s_busy = st->n_busy * size;
 
 	return 0;
 }

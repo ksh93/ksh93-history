@@ -27,8 +27,8 @@ CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
-HEADERSRC = ast.h ast_debug.h ast_dir.h ast_getopt.h ast_std.h \
-	ast_namval.h ast_windows.h \
+HEADERSRC = ast.h ast_debug.h ast_dir.h ast_errorf.h ast_getopt.h \
+	ast_ioctl.h ast_intercept.h ast_namval.h ast_std.h ast_windows.h \
 	ccode.h cdt.h cdtlib.h cmdarg.h debug.h dt.h error.h find.h ftw.h \
 	ftwalk.h fts.h fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h \
 	ip6.h lc.h ls.h magic.h mc.h mime.h mnt.h modecanon.h modex.h \
@@ -40,9 +40,9 @@ HEADERSRC = ast.h ast_debug.h ast_dir.h ast_getopt.h ast_std.h \
 	$(HEADERSTD)
 
 HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
-	$(ID)_api.h $(ID)_aso.h $(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h \
-	$(ID)_fs.h $(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h $(ID)_ndbm.h \
-	$(ID)_param.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h \
+	$(ID)_api.h $(ID)_aso.h $(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_fddir.h \
+	$(ID)_float.h $(ID)_fs.h $(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h \
+	$(ID)_ndbm.h $(ID)_param.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h \
 	$(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h $(ID)_sizeof.h \
 	$(HEADERSTD:/^/$(ID)_/)
 
@@ -62,7 +62,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strperm.3 strsignal.3 strsort.3 strtape.3 strton.3 struid.3 \
 	swap.3 tab.3 tm.3 tmx.3 tok.3 touch.3 tv.3 vecargs.3 vmalloc.3 \
 	$(HEADERSRC) \
-	state.c transition.c \
+	state.c intercept.c transition.c \
 	dirlib.h opendir.c readdir.c rewinddir.c seekdir.c telldir.c \
 	getcwd.c fastfind.c \
 	hashlib.h hashalloc.c hashdump.c hashfree.c hashlast.c \
@@ -75,7 +75,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strlcat.c strlcpy.c strlook.c strncopy.c strsearch.c strpsearch.c \
 	stresc.c stropt.c strtape.c strpcmp.c strnpcmp.c strvcmp.c strnvcmp.c \
 	tok.c tokline.c tokscan.c \
-	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
+	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathopen.c pathpath.c \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
 	pathnative.c pathposix.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
@@ -122,7 +122,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	eaccess.c gross.c gross_sgi.h omitted.c \
 	fakelink.h readlink.c symlink.c \
 	getpgrp.c setpgid.c setsid.c waitpid.c \
-	creat64.c fcntl.c open.c \
+	creat64.c at.c \
 	atexit.c getdents.c getwd.c dup2.c errno.c \
 	getpreroot.c ispreroot.c realopen.c setpreroot.c \
 	getgroups.c mount.c system.c iblocks.c \
@@ -209,7 +209,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* obsolete */ \
 	sfstrtmp.c spawn.c \
-	-liconv -lw /* these should be pulled in by -lc */
+	-lsocket -liconv -lw /* these should be pulled in by -lc */
 
 /*
  * man is stdio.h problematic

@@ -2200,7 +2200,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			}
 			shp->exitval = n;
 #ifdef SIGTSTP
-			if(!pipejob && sh_isstate(shp,SH_MONITOR))
+			if(!pipejob && sh_isstate(shp,SH_MONITOR) && sh_isoption(shp,SH_INTERACTIVE))
 				tcsetpgrp(JOBTTY,shp->gd->pid);
 #endif /*SIGTSTP */
 			job.curpgid = savepgid;
@@ -3249,13 +3249,14 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 pid_t sh_fork(Shell_t *shp,int flags, int *jobid)
 {
 	register pid_t parent;
-	register int sig;
+	sigset_t set,oset;
 	if(!shp->pathlist)
 		path_get(shp,"");
 	sfsync(NIL(Sfio_t*));
 	shp->trapnote &= ~SH_SIGTERM;
 	job_fork(-1);
-	shp->savesig = -1;
+	sigfillset(&set);
+	sigprocmask(SIG_BLOCK,&set,&oset);
 	while(_sh_fork(shp,parent=fork(),flags,jobid) < 0);
 	sh_stats(STAT_FORKS);
 #ifdef SPAWN_cwd
@@ -3265,13 +3266,7 @@ pid_t sh_fork(Shell_t *shp,int flags, int *jobid)
 		spawnvex_apply(shp->vexp,0,SPAWN_RESET);
 	}
 #endif /* SPAWN_cwd */
-	if(!shp->subshell)
-	{
-		sig = shp->savesig;
-		shp->savesig = 0;
-		if(sig>0)
-			kill(getpid(),sig);
-	}
+	sigprocmask(SIG_SETMASK,&oset,(sigset_t*)0);
 	job_fork(parent);
 	return(parent);
 }

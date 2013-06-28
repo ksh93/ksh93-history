@@ -107,13 +107,30 @@ struct _sfio_s;
 #define ASTCONF_AST		0x2000
 
 /*
- * pathcanon() flags
+ * pathcanon() flags and info
  */
 
-#define PATH_PHYSICAL	01
-#define PATH_DOTDOT	02
-#define PATH_EXISTS	04
+#define PATH_PHYSICAL		0x01
+#define PATH_DOTDOT		0x02
+#define PATH_EXISTS		0x04
+#define PATH_DEV		0x08
 #define PATH_VERIFIED(n) (((n)&01777)<<5)
+
+typedef struct Pathpart_s
+{
+	unsigned short	offset;
+	unsigned short	size;
+} Pathpart_t;
+
+typedef struct Pathdev_s
+{
+	int		fd;
+	pid_t		pid;
+	Pathpart_t	prot;
+	Pathpart_t	host;
+	Pathpart_t	port;
+	Pathpart_t	path;
+} Pathdev_t;
 
 /*
  * pathaccess() flags
@@ -236,11 +253,11 @@ typedef struct
 
 #define NOT_USED(x)	NoP(x)
 
-typedef int (*Error_f)(void*, void*, int, ...);
-
 typedef int (*Ast_confdisc_f)(const char*, const char*, const char*);
 typedef int (*Strcmp_context_f)(const char*, const char*, void*);
 typedef int (*Strcmp_f)(const char*, const char*);
+
+#include <ast_errorf.h>
 
 #ifndef _VMALLOC_H
 struct Vmdisc_s;
@@ -265,6 +282,7 @@ extern int		chresc(const char*, char**);
 extern int		chrexp(const char*, char**, int*, int);
 extern int		chrtoi(const char*);
 extern char*		conformance(const char*, size_t);
+extern ssize_t		debug_printf(int, const char*, ...);
 extern int		eaccess(const char*, int);
 extern char*		fmtbase(intmax_t, int, int);
 #define fmtbasell(a,b,c) fmtbase(a,b,c) /* until 2014-01-01 */
@@ -305,6 +323,7 @@ extern char*		pathcat(char*, const char*, int, const char*, const char*);
 extern char*		pathcat_20100601(const char*, int, const char*, const char*, char*, size_t);
 extern int		pathcd(const char*, const char*);
 extern int		pathcheck(const char*, const char*, Pathcheck_t*);
+extern char*		pathdev(const char*, char*, size_t, int, Pathdev_t*);
 extern int		pathexists(char*, int);
 extern char*		pathfind(const char*, const char*, const char*, char*, size_t);
 extern int		pathgetlink(const char*, char*, int);
@@ -312,6 +331,7 @@ extern int		pathinclude(const char*);
 extern char*		pathkey(char*, char*, const char*, const char*, const char*);
 extern char*		pathkey_20100601(const char*, const char*, const char*, char*, size_t, char*, size_t);
 extern size_t		pathnative(const char*, char*, size_t);
+extern int		pathopen(int, const char*, char*, size_t, int, int, mode_t);
 extern char*		pathpath(char*, const char*, const char*, int);
 extern char*		pathpath_20100601(const char*, const char*, int, char*, size_t);
 extern size_t		pathposix(const char*, char*, size_t);
@@ -359,7 +379,8 @@ extern int		strpcmp(const char*, const char*);
 extern int		strperm(const char*, char**, int);
 extern void*		strpsearch(const void*, size_t, size_t, const char*, char**);
 extern void*		strsearch(const void*, size_t, size_t, Strcmp_f, const char*, void*);
-extern void		strsort(char**, int, int(*)(const char*, const char*));
+extern void		strsort(char**, int, Strcmp_f);
+extern void		strsort_r(char**, size_t, Strcmp_context_f, void*);
 extern char*		strsubmatch(const char*, const char*, int);
 extern unsigned long	strsum(const char*, unsigned long);
 extern char*		strtape(const char*, char**);

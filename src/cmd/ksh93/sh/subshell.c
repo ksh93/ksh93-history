@@ -196,6 +196,7 @@ void sh_subfork(void)
 	{
 		/* this is the child part of the fork */
 		/* setting subpid to 1 causes subshell to exit when reached */
+		shp->cpid = 0;
 		sh_onstate(shp,SH_FORKED);
 		sh_onstate(shp,SH_NOLOG);
 		sh_offoption(shp,SH_MONITOR);
@@ -742,7 +743,14 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 				PWDNOD->nvalue.cp = sp->pwd;
 		}
 		else
+		{
 			free((void*)sp->pwd);
+			if(sp->shpwdfd >=0)
+			{
+				sh_close(sp->shpwdfd);
+				sp->shpwdfd = -1;
+			}
+		}
 		if(sp->mask!=shp->mask)
 			umask(shp->mask=sp->mask);
 		if(shp->coutpipe!=sp->coutpipe)

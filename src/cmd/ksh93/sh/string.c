@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -328,15 +328,18 @@ static char	*sh_fmtcsv(const char *string)
  * print <str> quoting chars so that it can be read by the shell
  * puts null terminated result on stack, but doesn't freeze it
  */
-char	*sh_fmtq(const char *string)
+char *sh_fmtstr(const char *string, int quote)
 {
 	register const char *cp = string, *op;
-	register int c, state;
+	register int c, state, type=quote;
 	int offset;
 	if(!cp)
 		return((char*)0);
 	offset = staktell();
 	state = ((c= mbchar(cp))==0);
+	if(quote=='"')
+		goto skip;
+	quote = '\'';
 	if(isaletter(c))
 	{
 		while((c=mbchar(cp)),isaname(c));
@@ -354,14 +357,17 @@ char	*sh_fmtq(const char *string)
 			c = mbchar(cp);
 		}
 	}
-	if(c==0 || c=='#' || c=='~')
+	if(c==0 || c=='#' || c=='~' || (type=='[' && (c=='@' || c=='!')))
+	{
+skip:
 		state = 1;
+	}
 	for(;c;c= mbchar(cp))
 	{
 #if SHOPT_MULTIBYTE
-		if(c=='\'' || c>=128 || c<0 || !iswprint(c)) 
+		if(c==quote || c>=128 || c<0 || !iswprint(c)) 
 #else
-		if(c=='\'' || !isprint(c))
+		if(c==quote || !isprint(c))
 #endif /* SHOPT_MULTIBYTE */
 			state = 2;
 		else if(c==']' || c=='=' || (c!=':' && c<=0x7f && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
@@ -370,16 +376,19 @@ char	*sh_fmtq(const char *string)
 	if(state<2)
 	{
 		if(state==1)
-			stakputc('\'');
+			stakputc(quote);
 		if(c = --cp - string)
 			stakwrite(string,c);
 		if(state==1)
-			stakputc('\'');
+			stakputc(quote);
 	}
 	else
 	{
 		int isbyte=0;
-		stakwrite("$'",2);
+		if(quote=='"')
+			stakputc('"');
+		else
+			stakwrite("$'",2);
 		cp = string;
 #if SHOPT_MULTIBYTE
 		while(op = cp, c= mbchar(cp))
@@ -411,8 +420,11 @@ char	*sh_fmtq(const char *string)
 			    case '\a':
 				c = 'a';
 				break;
-			    case '\\':	case '\'':
+			    case '\\':
 				break;
+			    case '"':  case '\'':
+				if(c==quote)
+					break;
 			    default:
 #if SHOPT_MULTIBYTE
 				isbyte = 0;
@@ -446,10 +458,20 @@ char	*sh_fmtq(const char *string)
 			else
 				stakwrite(op, cp-op);
 		}
-		stakputc('\'');
+		stakputc(quote);
 	}
 	stakputc(0);
 	return(stakptr(offset));
+}
+
+char	*sh_fmtq(const char *string)
+{
+	return(sh_fmtstr(string,'\''));
+}
+
+char	*sh_fmtj(const char *string)
+{
+	return(sh_fmtstr(string,'"'));
 }
 
 /*

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -286,6 +286,8 @@ static void error_exit(const char *message)
 }
 
 
+#ifndef eaccess
+
 /*
  * This version of access checks against effective uid and effective gid
  */
@@ -339,6 +341,8 @@ int eaccess(register const char *name, register int mode)
 	}
 	return(-1);
 }
+
+#endif
 
 #ifdef _lib_setreuid
 static void setids(int mode,int owner,int group)

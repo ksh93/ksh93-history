@@ -87,7 +87,7 @@ static int		extend(Sfio_t*,void*, Sffmt_t*);
 static const char   	preformat[] = "";
 static char		*genformat(Shell_t*,char*);
 static int		fmtvecho(Shell_t*, const char*, struct printf*);
-static ssize_t		fmtbase64(Shell_t*,Sfio_t*, char*, int);
+static ssize_t		fmtbase64(Shell_t*,Sfio_t*, char*, const char*, int);
 
 struct print
 {
@@ -171,7 +171,7 @@ int    b_print(int argc, char *argv[], Shbltin_t *context)
 	register int exitval=0,n, fd = 1;
 	register Shell_t *shp = context->shp;
 	const char *options, *msg = e_file+4;
-	char *format = 0;
+	char *format = 0, *fmttype=0;
 	int sflag = 0, nflag=0, rflag=0, vflag=0;
 	Optdisc_t disc;
 	disc.version = OPT_VERSION;
@@ -232,6 +232,8 @@ int    b_print(int argc, char *argv[], Shbltin_t *context)
 
 				fd = -1;
 			break;
+		case 'j':
+			fmttype = "json";
 		case 'v':
 			vflag='v';
 			break;
@@ -335,7 +337,7 @@ skip2:
 	{
 		while(*argv)
 		{
-			fmtbase64(shp,outfile,*argv++,vflag=='C');
+			fmtbase64(shp,outfile,*argv++,fmttype,vflag=='C');
 			if(!nflag)
 				sfputc(outfile,'\n');
 		}
@@ -508,7 +510,7 @@ static char *fmthtml(Shell_t *shp,const char *string, int flags)
 	return(stkptr(shp->stk,offset));
 }
 
-static ssize_t fmtbase64(Shell_t *shp, Sfio_t *iop, char *string, int alt)
+static ssize_t fmtbase64(Shell_t *shp, Sfio_t *iop, char *string, const char *fmt,int alt)
 {
 	char			*cp;
 	Sfdouble_t		d;
@@ -605,13 +607,15 @@ static ssize_t fmtbase64(Shell_t *shp, Sfio_t *iop, char *string, int alt)
 	}
 	else
 	{
-		if(alt && nv_isvtree(np))
+		if(alt==1 && nv_isvtree(np))
 			nv_onattr(np,NV_EXPORT);
-		else
-			alt = 0;
+		if(fmt && memcmp(fmt,"json",4)==0)
+			nv_onattr(np,NV_JSON);
 		cp = nv_getval(np);
-		if(alt)
+		if(alt==1)
 			nv_offattr(np,NV_EXPORT);
+		else if(fmt && memcmp(fmt,"json",4)==0)
+			nv_offattr(np,NV_JSON);
 		if(!cp)
 			return(0);
 		size = strlen(cp);
@@ -959,7 +963,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 	case 'B':
 		if(!shp->strbuf2)
 			shp->strbuf2 = sfstropen();
-		fe->size = fmtbase64(shp,shp->strbuf2,value->s, fe->flags&SFFMT_ALTER);
+		fe->size = fmtbase64(shp,shp->strbuf2,value->s, fe->n_str?fe->t_str:0, (fe->flags&SFFMT_ALTER)!=0);
 		value->s = sfstruse(shp->strbuf2);
 		fe->flags |= SFFMT_SHORT;
 		break;

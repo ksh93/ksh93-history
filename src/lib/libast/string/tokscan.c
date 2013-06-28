@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -119,12 +119,20 @@ lextok(register char* s, register int c, char** p, int* n)
 		}
 		else if (*s == '\\')
 		{
-			u = s;
-			if (!*++s || *s == '\n' && (!*++s || *s == '\n')) continue;
-			if (p)
+			if (!q && !isdigit(*(s + 1)) || *(s + 1) == q)
 			{
-				if (b == u) b = s;
-				else if (!t) t = u;
+				u = s;
+				if (!*++s || *s == '\n' && (!*++s || *s == '\n')) continue;
+				if (p)
+				{
+					if (b == u) b = s;
+					else if (!t) t = u;
+				}
+			}
+			else
+			{
+				if (t) *t++ = *s;
+				s++;
 			}
 		}
 		else if (q)

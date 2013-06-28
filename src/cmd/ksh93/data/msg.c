@@ -59,6 +59,7 @@ const char e_number[]		= "%s: bad number";
 const char e_badlocale[]	= "%s: unknown locale";
 const char e_nullset[]		= "%s: parameter null";
 const char e_notset[]		= "%s: parameter not set";
+const char e_notset2[]		= "%s[%d]: parameter not set";
 const char e_noparent[]		= "%s: no parent";
 const char e_subst[]		= "%s: bad substitution";
 const char e_create[]		= "%s: cannot create";

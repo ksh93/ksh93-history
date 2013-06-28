@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -52,6 +52,7 @@ typedef struct  _shlex_
 	int		inlineno;	/* saved value of sh.inlineno */
 	int		firstline;	/* saved value of sh.st.firstline */
 	int		assignlevel;	/* nesting level for assignment */
+	short		fundepth;	/* nesting level for functions */
 #if SHOPT_KIA
 	Sfio_t		*kiafile;	/* kia output file */
 	Sfio_t		*kiatmp;	/* kia reference file */

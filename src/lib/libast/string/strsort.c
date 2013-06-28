@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -31,10 +31,12 @@
  *  derived from Bourne Shell
  */
 
+#define _AST_API_H	1
+
 #include <ast.h>
 
 void
-strsort(char** argv, int n, int(*fn)(const char*, const char*))
+strsort(char** argv, int n, Strcmp_f cmp)
 {
 	register int 	i;
 	register int 	j;
@@ -49,7 +51,32 @@ strsort(char** argv, int n, int(*fn)(const char*, const char*))
 			for (i = j; i >= 0; i -= m)
 			{
 				ap = &argv[i];
-				if ((*fn)(ap[m], ap[0]) >= 0) break;
+				if ((*cmp)(ap[m], ap[0]) >= 0)
+					break;
+				s = ap[m];
+				ap[m] = ap[0];
+				ap[0] = s;
+			}
+}
+
+void
+strsort_r(char** argv, size_t n, Strcmp_context_f cmp, void* handle)
+{
+	register size_t i;
+	register size_t j;
+	register size_t m;
+	register char**	ap;
+	char*		s;
+	size_t 		k;
+
+	for (j = 1; j <= n; j *= 2);
+	for (m = 2 * j - 1; m /= 2;)
+		for (j = 0, k = n - m; j < k; j++)
+			for (i = j; i >= 0; i -= m)
+			{
+				ap = &argv[i];
+				if ((*cmp)(ap[m], ap[0], handle) >= 0)
+					break;
 				s = ap[m];
 				ap[m] = ap[0];
 				ap[0] = s;

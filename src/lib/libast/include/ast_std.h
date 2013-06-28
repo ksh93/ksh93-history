@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -255,7 +255,9 @@ typedef struct
 
 	int		(*mb_alpha)(wchar_t);
 
-	char		pad[936 - sizeof(void*)];
+	int		pwd;
+
+	char		pad[936 - sizeof(void*) - sizeof(int)];
 
 } _Ast_info_t;
 
@@ -344,6 +346,7 @@ extern int		_ast_getpgrp(void);
  * _AST_STD_I delays headers that require <ast_map.h>
  */
 
+#include <ast_intercept.h>
 #include <ast_map.h>
 
 #undef	_AST_STD_I

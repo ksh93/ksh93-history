@@ -74,6 +74,7 @@ then
 		trap "((running--))" CHLD
 		for ((i=0; i<JOBCOUNT; i++))
 		do	sleep 1 &
+			sleep .1
 			if	((++running > maxrunning))
 			then	((maxrunning=running))
 			fi
@@ -166,7 +167,7 @@ $SHELL > $tmpfile <<- \EOF
 		done
 	} &
 	cpid=$!
-	: &
+	sleep .2 &
 	print $cpid $!
 	sleep 1
 	kill -STOP $cpid

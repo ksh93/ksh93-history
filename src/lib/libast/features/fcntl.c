@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -47,6 +47,9 @@
 #endif
 #if _hdr_unistd
 #include <unistd.h>
+#endif
+#if _sys_socket
+#include <sys/socket.h>
 #endif
 
 #include <sys/stat.h>
@@ -103,126 +106,96 @@ main()
 	printf("\n");
 #endif
 
-#ifndef	F_DUPFD
-#define NEED_F	1
-#else
+#ifdef	F_DUPFD
 	if (F_DUPFD > f_local) f_local = F_DUPFD;
 #endif
-#ifndef	F_GETFD
-#define NEED_F	1
+#ifdef	F_DUPFD_CLOEXEC
+	if (F_DUPFD_CLOEXEC > f_local) f_local = F_DUPFD_CLOEXEC;
 #else
+#define NEED_F	1
+#endif
+#ifdef	F_GETFD
 	if (F_GETFD > f_local) f_local = F_GETFD;
 #endif
-#ifndef	F_GETFL
-#define NEED_F	1
-#else
+#ifdef	F_GETFL
 	if (F_GETFL > f_local) f_local = F_GETFL;
 #endif
-#ifndef	F_GETLK
-#define NEED_F	1
-#else
+#ifdef	F_GETLK
 	if (F_GETLK > f_local) f_local = F_GETLK;
 #endif
-#ifndef	F_RDLCK
-#define NEED_F	1
-#define NEED_LCK	1
-#else
+#ifdef	F_RDLCK
 	if (F_RDLCK > f_lck) f_lck = F_RDLCK;
 #endif
-#ifndef	F_SETFD
-#define NEED_F	1
-#else
+#ifdef	F_SETFD
 	if (F_SETFD > f_local) f_local = F_SETFD;
 #endif
-#ifndef	F_SETFL
-#define NEED_F	1
-#else
+#ifdef	F_SETFL
 	if (F_SETFL > f_local) f_local = F_SETFL;
 #endif
-#ifndef	F_SETLK
-#define NEED_F	1
-#else
+#ifdef	F_SETLK
 	if (F_SETLK > f_local) f_local = F_SETLK;
 #endif
-#ifndef	F_SETLKW
-#define NEED_F	1
-#else
+#ifdef	F_SETLKW
 	if (F_SETLKW > f_local) f_local = F_SETLKW;
 #endif
-#ifndef	F_UNLCK
-#define NEED_F	1
-#define NEED_LCK	1
-#else
+#ifdef	F_UNLCK
 	if (F_UNLCK > f_lck) f_lck = F_UNLCK;
 #endif
-#ifndef	F_WRLCK
-#define NEED_F	1
-#define NEED_LCK	1
-#else
+#ifdef	F_WRLCK
 	if (F_WRLCK > f_lck) f_lck = F_WRLCK;
+#endif
+#ifdef	F_EXLCK
+	if (F_EXLCK > f_local) f_local = F_EXLCK;
+#endif
+#ifdef	F_GETLEASE
+	if (F_GETLEASE > f_local) f_local = F_GETLEASE;
+#endif
+#ifdef	F_GETLK64
+	if (F_GETLK64 > f_local) f_local = F_GETLK64;
+#endif
+#ifdef	F_GETOWN
+	if (F_GETOWN > f_local) f_local = F_GETOWN;
+#endif
+#ifdef	F_GETOWN_EX
+	if (F_GETOWN_EX > f_local) f_local = F_GETOWN_EX;
+#endif
+#ifdef	F_GETSIG
+	if (F_GETSIG > f_local) f_local = F_GETSIG;
+#endif
+#ifdef	F_NOTIFY
+	if (F_NOTIFY > f_local) f_local = F_NOTIFY;
+#endif
+#ifdef	F_SETLEASE
+	if (F_SETLEASE > f_local) f_local = F_SETLEASE;
+#endif
+#ifdef	F_SETLK64
+	if (F_SETLK64 > f_local) f_local = F_SETLK64;
+#endif
+#ifdef	F_SETLKW64
+	if (F_SETLKW64 > f_local) f_local = F_SETLKW64;
+#endif
+#ifdef	F_SETOWN
+	if (F_SETOWN > f_local) f_local = F_SETOWN;
+#endif
+#ifdef	F_SETOWN_EX
+	if (F_SETOWN_EX > f_local) f_local = F_SETOWN_EX;
+#endif
+#ifdef	F_SETSIG
+	if (F_SETSIG > f_local) f_local = F_SETSIG;
+#endif
+#ifdef	F_SHLCK
+	if (F_SHLCK > f_local) f_local = F_SHLCK;
 #endif
 
 #if	NEED_F
-	printf("#define fcntl		_ast_fcntl\n");
 #if	_lib_fcntl
 	printf("#define _lib_fcntl	1\n");
 #endif
 	printf("#define _ast_F_LOCAL	%d\n", f_local + 1);
-#ifndef	F_DUPFD
-	printf("#define F_DUPFD		%d\n", ++f_local);
-#endif
-#ifndef	F_GETFD
-	printf("#define F_GETFD		%d\n", ++f_local);
-#endif
-#ifndef	F_GETFL
-	printf("#define F_GETFL		%d\n", ++f_local);
-#endif
-#ifndef	F_GETLK
-	printf("#define F_GETLK		%d\n", ++f_local);
-#endif
-#ifndef	F_SETFD
-	printf("#define F_SETFD		%d\n", ++f_local);
-#endif
-#ifndef	F_SETFL
-	printf("#define F_SETFL		%d\n", ++f_local);
-#endif
-#ifndef	F_SETLK
-	printf("#define F_SETLK		%d\n", ++f_local);
-#endif
-#ifndef	F_SETLKW
-	printf("#define F_SETLKW	%d\n", ++f_local);
-#endif
-#if	NEED_LCK
-	printf("\n");
-#ifndef	F_RDLCK
-	printf("#define F_RDLCK		%d\n", f_lck++);
-#endif
-#ifndef	F_WRLCK
-	printf("#define F_WRLCK		%d\n", f_lck++);
-#endif
-#ifndef	F_UNLCK
-	printf("#define F_UNLCK		%d\n", f_lck++);
-#endif
+#ifndef	F_DUPFD_CLOEXEC
+	printf("#define F_DUPFD_CLOEXEC	%d\n", ++f_local);
 #endif
 	printf("\n");
-	if (f_lck == 3)
-	{
-		printf("struct flock\n");
-		printf("{\n");
-		printf("	short	l_type;\n");
-		printf("	short	l_whence;\n");
-		printf("	off_t	l_start;\n");
-		printf("	off_t	l_len;\n");
-		printf("	short	l_pid;\n");
-		printf("};\n");
-		printf("\n");
-	}
-	printf("\n");
-#endif
-#ifdef F_DUPFD_CLOEXEC
-	printf("#define F_dupfd_cloexec	F_DUPFD_CLOEXEC\n");
-#else
-	printf("#define F_dupfd_cloexec	F_DUPFD\n");
 #endif
 
 #ifndef	O_APPEND
@@ -248,9 +221,7 @@ main()
 	if (O_NOCTTY > o_local) o_local = O_NOCTTY;
 #endif
 #ifndef	O_NONBLOCK
-#ifndef	O_NDELAY
 #define NEED_O	1
-#endif
 #else
 	if (O_NONBLOCK > o_local) o_local = O_NONBLOCK;
 #endif
@@ -269,9 +240,33 @@ main()
 #define NEED_O	1
 #endif
 
-#if	NEED_O
-	printf("#define open			_ast_open\n");
+#ifdef O_DSYNC
+	if (O_DSYNC > o_local) o_local = O_DSYNC;
+#endif
+#ifdef O_LARGEFILE
+	if (O_LARGEFILE > o_local) o_local = O_LARGEFILE;
+#endif
+#ifdef O_NOFOLLOW
+	if (O_NOFOLLOW > o_local) o_local = O_NOFOLLOW;
+#endif
+#ifdef O_NOLINKS
+	if (O_NOLINKS > o_local) o_local = O_NOLINKS;
+#endif
+#ifdef O_PRIV
+	if (O_PRIV > o_local) o_local = O_PRIV;
+#endif
+#ifdef O_RSYNC
+	if (O_RSYNC > o_local) o_local = O_RSYNC;
+#endif
+#ifdef O_SYNC
+	if (O_SYNC > o_local) o_local = O_SYNC;
+#endif
+#ifdef O_XATTR
+	if (O_XATTR > o_local) o_local = O_XATTR;
+#endif
+
 	printf("#define _ast_O_LOCAL		0%o\n", o_local<<1);
+#if	NEED_O
 #ifndef	O_RDONLY
 	printf("#define O_RDONLY		0\n");
 #endif
@@ -295,10 +290,11 @@ main()
 	printf("#define O_NOCTTY		0%o\n", o_local <<= 1);
 #endif
 #endif
-#ifndef	O_NONBLOCK
 #ifndef	O_NDELAY
-	printf("#define O_NONBLOCK		0%o\n", o_local <<= 1);
+	printf("#define O_NDELAY		0%o\n", o_local <<= 1);
 #endif
+#ifndef	O_NONBLOCK
+	printf("#define O_NONBLOCK		0%o\n", o_local <<= 1);
 #endif
 #ifndef	O_TRUNC
 	printf("#define O_TRUNC			0%o\n", o_local <<= 1);
@@ -312,18 +308,21 @@ main()
 	printf("#define O_NOCTTY		0\n");
 #endif
 #endif
-#ifndef	O_NONBLOCK
-#ifdef	O_NDELAY
-	printf("#define O_NONBLOCK		O_NDELAY\n");
-#endif
-#endif
 #ifndef	O_BINARY
 	printf("#define O_BINARY		0\n");
 #endif
-#ifdef	O_CLOEXEC
-	printf("#define O_cloexec		O_CLOEXEC\n");
+#ifndef	O_CLOEXEC
+	printf("#define O_CLOEXEC		0%o\n", o_local <<= 1);
+#endif
+#ifndef	O_SEARCH
+#ifdef O_PATH
+	printf("#define O_SEARCH		O_PATH\n");
 #else
-	printf("#define O_cloexec		0\n");
+	printf("#define O_SEARCH		0%o\n", o_local <<= 1);
+#endif
+#endif
+#ifndef	O_INTERCEPT
+	printf("#define O_INTERCEPT		0%o\n", o_local <<= 1);
 #endif
 #ifndef	O_TEMPORARY
 	printf("#define O_TEMPORARY		0\n");
@@ -331,13 +330,35 @@ main()
 #ifndef	O_TEXT
 	printf("#define O_TEXT			0\n");
 #endif
-#if	NEED_F || NEED_O
+#if !defined(SOCK_CLOEXEC) || !defined(SOCK_NONBLOCK)
 	printf("\n");
-#if	NEED_F
-	printf("extern int	fcntl(int, int, ...);\n");
+#ifndef SOCK_CLOEXEC
+	printf("#define _ast_SOCK_CLOEXEC	1\n");
+	printf("#define SOCK_CLOEXEC		02000000\n");
 #endif
-#if	NEED_O
-	printf("extern int	open(const char*, int, ...);\n");
+#ifndef SOCK_NONBLOCK
+	printf("#define _ast_SOCK_NONBLOCK	1\n");
+	printf("#define SOCK_NONBLOCK		04000\n");
+#endif
+#endif
+	printf("#define F_dupfd_cloexec		F_DUPFD_CLOEXEC /* OBSOLETE */\n");
+	printf("#define O_cloexec		O_CLOEXEC /* OBSOLETE*/\n");
+#if !defined(AT_FDCWD) || !defined(AT_SYMLINK_NOFOLLOW) || !defined(AT_REMOVEDIR) || !defined(AT_SYMLINK_FOLLOW) || !defined(AT_EACCESS)
+	printf("\n");
+#ifndef AT_FDCWD
+	printf("#define AT_FDCWD		-100\n");
+#endif
+#ifndef AT_SYMLINK_NOFOLLOW
+	printf("#define AT_SYMLINK_NOFOLLOW	0x100\n");
+#endif
+#ifndef AT_REMOVEDIR
+	printf("#define AT_REMOVEDIR		0x200\n");
+#endif
+#ifndef AT_SYMLINK_FOLLOW
+	printf("#define AT_SYMLINK_FOLLOW	0x400\n");
+#endif
+#ifndef AT_EACCESS
+	printf("#define AT_EACCESS		0x800\n");
 #endif
 #endif
 	printf("\n");
@@ -368,6 +389,50 @@ main()
 	printf("#undef	open\n");
 	printf("#define open		open64\n");
 	printf("#endif\n");
+
+	printf("\n");
+	printf("#if _BLD_ast && defined(__EXPORT__)\n");
+	printf("\n");
+	printf("#endif\n");
+	printf("#if !_lib_faccessat\n");
+	printf("extern int	faccessat(int, const char*, mode_t, int);\n");
+	printf("#endif\n");
+	printf("#if !_lib_fchmodat\n");
+	printf("extern int	fchmodat(int, const char*, mode_t, int);\n");
+	printf("#endif\n");
+	printf("#if !_lib_fchownat\n");
+	printf("extern int	fchownat(int, const char*, uid_t, gid_t, int);\n");
+	printf("#endif\n");
+	printf("#if !_lib_fstatat\n");
+	printf("struct stat;\n");
+	printf("extern int	fstatat(int, const char*, struct stat*, int);\n");
+	printf("#endif\n");
+	printf("#if !_lib_linkat\n");
+	printf("extern int	linkat(int, const char*, int, const char*, int);\n");
+	printf("#endif\n");
+	printf("#if !_lib_mkdirat\n");
+	printf("extern int	mkdirat(int, const char*, mode_t);\n");
+	printf("#endif\n");
+	printf("#if !_lib_mkfifoat\n");
+	printf("extern int	mkfifoat(int, const char*, mode_t);\n");
+	printf("#endif\n");
+	printf("#if !_lib_mknodat\n");
+	printf("extern int	mknodat(int, const char*, mode_t, dev_t);\n");
+	printf("#endif\n");
+	printf("#if !_lib_openat\n");
+	printf("extern int	openat(int, const char*, mode_t, int);\n");
+	printf("#endif\n");
+	printf("#if !_lib_readlinkat\n");
+	printf("extern int	readlinkat(int, const char*, void*, size_t);\n");
+	printf("#endif\n");
+	printf("#if !_lib_symlinkat\n");
+	printf("extern int	symlinkat(const char*, int, const char*);\n");
+	printf("#endif\n");
+	printf("#if !_lib_unlinkat\n");
+	printf("extern int	unlinkat(int, const char*, int);\n");
+	printf("#endif\n");
+	printf("\n");
+	printf("#undef	extern\n");
 
 	return 0;
 }

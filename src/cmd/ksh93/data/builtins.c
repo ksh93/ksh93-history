@@ -26,15 +26,18 @@
 #include	"ulimit.h"
 #include	"name.h"
 #include	"version.h"
+
+/* use Bltin() for builtins that do not accept -- options */
+
 #if KSHELL
 #   include	"builtins.h"
 #   include	"jobs.h"
 #   include	"FEATURE/cmds"
 #   define	bltin(x)	(b_##x)
-    /* The following is for builtins that do not accept -- options */
 #   define	Bltin(x)	(B_##x)
 #else
-#   define bltin(x)	0
+#   define	bltin(x)	0
+#   define	Bltin(x)	0
 #endif
 
 #ifndef SHOPT_CMDLIB_DIR
@@ -44,12 +47,11 @@
 #   define SHOPT_CMDLIB_HDR	<cmdlist.h>
 #endif
 
-#define Q(f)		#f	/* libpp cpp workaround -- fixed 2005-04-11 */
 #if _AST_VERSION < 20121001L
-#define CMDLIST(f)	SHOPT_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE, bltin(f),
+#define CMDLIST(f)	SHOPT_CMDLIB_DIR "/" #f, NV_BLTIN|NV_BLTINOPT|NV_NOFREE, b_##f,
 #else
-#define CMDLIST(f,d)	d "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE|BLT_DISABLE, bltin(f), \
-			SH_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_BLTINOPT|NV_NOFREE, bltin(f),
+#define CMDLIST(f,d)	d "/" #f, NV_BLTIN|NV_BLTINOPT|NV_NOFREE|BLT_DISABLE, b_##f, \
+			SH_CMDLIB_DIR "/" #f, NV_BLTIN|NV_BLTINOPT|NV_NOFREE, b_##f,
 #endif
 
 #undef	basename
@@ -482,6 +484,7 @@ USAGE_LICENSE
 	"\bPATH_RESOLVE\b.  If \bPATH_RESOLVE\b is \bphysical\b, "
 	"then the behavior will be as if \b-P\b were specified.  Otherwise, "
 	"the behavior will be as if  \b-L\b were specified.]"
+"[f]#[dirfd?Path is relative to this directory fd.]"
 "[L?Handle each pathname component \b..\b in a logical fashion by moving "
 	"up one level by name in the present working directory.]"
 "[P?The present working directory is first converted to an absolute pathname "
@@ -1119,6 +1122,8 @@ USAGE_LICENSE
 "[f]:[format?Write the \astring\a arguments using the format string "
 	"\aformat\a and do not append a new-line.  See \bprintf\b for "
 	"details on how to specify \aformat\a.]"
+"[j?Treat each \astring\a as a variable name and write the value in JSON "
+	"format.  Only valid for compound variables Cannot be used with \b-f\b.]"
 "[p?Write to the current co-process instead of standard output.]"
 "[r?Do not process \b\\\b sequences in each \astring\a operand as described "
 	"above.]"
@@ -1170,7 +1175,8 @@ USAGE_LICENSE
 		" suitable as a field in a \b.csv\b format file.]"
 	"[+%B?Treat the argument as a variable name and output the value "
 		"without converting it to a string.  This is most useful for "
-		"variables of type \b-b\b.]"
+		"variables of type \b-b\b.  The \bB\b can be preceded by "
+		" \b(json)\b to output variables in JSON format.]"
 	"[+%H?Output \astring\a with characters \b<\b, \b&\b, \b>\b, "
 		"\b\"\b, and non-printable characters properly escaped for "
 		"use in HTML and XML documents.  The alternate flag \b#\b "

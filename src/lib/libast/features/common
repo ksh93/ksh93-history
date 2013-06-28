@@ -282,9 +282,10 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 		}
 		printf("#define _ast_intmax_t		_ast_int%d_t\n", m);
 		if (m == sizeof(long))
-			printf("#define _ast_intmax_long		1\n");
+			printf("#define _ast_intmax_long	1\n");
 		printf("#define _ast_intswap		%d\n", w);
 		printf("\n");
+		printf("#define _ast_sizeof_intmax_t	%d	/* sizeof(intmax_t) */\n", m);
 		return 0;
 	}
 }end
@@ -313,6 +314,7 @@ tst	- output{
 		"int",		sizeof(int),		0,
 		"long",		sizeof(long),		0,
 		"size_t",	sizeof(size_t),		0,
+		"off_t",	sizeof(off_t),		0,
 		"pointer",	sizeof(void*),		COND * 4,
 		"float",	sizeof(float),		0,
 		"double",	sizeof(double),		0,

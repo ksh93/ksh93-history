@@ -318,8 +318,6 @@ intl :MAPLIB: intl.c
 
 m :MAPLIB: m.c m2.c m3.c m4.c m5.c m6.c
 
-nsl :MAPLIB: nsl.c
-
 /*
  * what was sco smoking
  * almost all of gethost* are in -lnsl except gethostbyname which
@@ -327,7 +325,7 @@ nsl :MAPLIB: nsl.c
  * to do the -lnsl job
  */
 
-socket :MAPLIB: socket.c nsl.c
+socket socket - socket nsl :MAPLIB: socket.c
 
 /*
  * more substance abuse

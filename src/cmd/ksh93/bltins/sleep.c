@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -50,6 +50,8 @@ int	b_sleep(register int argc,char *argv[],Shbltin_t *context)
 	int sflag=0;
 	time_t tloc = 0;
 	char *last;
+	if(shp->subshell)
+		sh_subfork();
 	if(!(shp->sigflag[SIGALRM]&(SH_SIGFAULT|SH_SIGOFF)))
 		sh_sigtrap(shp,SIGALRM);
 	while((argc = optget(argv,sh_optsleep))) switch(argc)

@@ -372,4 +372,7 @@ case x in
 $x) err_exit "case \$x='$x' should not match x";;
 esac
 
+unset IFS
+[[  ${IFS+abc} ]] && err_exit "testing for unset IFS not working"
+
 exit $((Errors<125?Errors:125))

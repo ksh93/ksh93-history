@@ -39,6 +39,13 @@
 
 #define abortsig(sig)	(sig==SIGABRT || sig==SIGBUS || sig==SIGILL || sig==SIGSEGV)
 
+struct Siginfo
+{
+	siginfo_t	info;
+	struct Siginfo	*next;
+	struct Siginfo	*last;
+};
+
 static char	indone;
 static int	cursig = -1;
 
@@ -72,6 +79,33 @@ static int	notify_builtin(Shell_t *shp, int sig)
 	return(action);
 }
 
+#ifdef _lib_sigaction
+   static void set_trapinfo(Shell_t *shp, int sig, siginfo_t *info)
+   {
+	sigset_t	set,oset;
+	if(info)
+	{
+		struct Siginfo *jp,*ip;
+		sigfillset(&set);
+		sigprocmask(SIG_BLOCK,&set,&oset);
+		ip = malloc(sizeof(struct Siginfo));
+		sigprocmask(SIG_SETMASK,&oset,(sigset_t*)0);
+		ip->next = 0;
+		memcpy(&ip->info,info,sizeof(siginfo_t));
+		if(!(jp=(struct Siginfo*)shp->siginfo[sig]))
+		{
+			ip->last = ip;
+			shp->siginfo[sig] = (void*)ip;
+		}
+		else
+		{
+			jp->last->next = ip;
+			jp->last = ip;
+		}
+	}
+   }
+#endif
+
 /*
  * Most signals caught or ignored by the shell come here
 */
@@ -86,10 +120,6 @@ void	sh_fault(register int sig)
 	register char		*trap;
 	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 	int	action=0;
-	/* reset handler */
-	if(!(sig&SH_TRAP))
-		signal(sig, sh_fault);
-	sig &= ~SH_TRAP;
 #ifdef SIGWINCH
 	if(sig==SIGWINCH)
 	{
@@ -123,21 +153,10 @@ if(sig==SIGBUS)
 		{
 			shp->trapnote |= SH_SIGTRAP;
 			shp->sigflag[sig] |= SH_SIGTRAP;
-			if(!shp->siginfo)
-				shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
-			if(info)
-			{
-				shp->siginfo[sig] = malloc(sizeof(siginfo_t));
-				memcpy(shp->siginfo[sig],info,sizeof(siginfo_t));
-			}
+#ifdef _lib_sigaction
+			set_trapinfo(shp,sig,info);
+#endif
 		}
-		return;
-	}
-	if(shp->subshell && trap && sig!=SIGINT && sig!=SIGQUIT && sig!=SIGWINCH && sig!=SIGCONT)
-	{
-		shp->exitval = SH_EXITSIG|sig;
-		sh_subfork();
-		shp->exitval = 0;
 		return;
 	}
 	/* handle ignored signals */
@@ -152,7 +171,6 @@ if(sig==SIGBUS)
 		{
 			if(shp->subshell)
 				shp->ignsig = sig;
-			sigrelease(sig);
 			return;
 		}
 		if(flag&SH_SIGDONE)
@@ -210,10 +228,7 @@ if(sig==SIGBUS)
 		 * propogate signal to foreground group
 		 */
 #ifdef _lib_sigaction
-		if(!shp->siginfo)
-			shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
-		shp->siginfo[sig] = malloc(sizeof(siginfo_t));
-		memcpy(shp->siginfo[sig],info,sizeof(siginfo_t));
+		set_trapinfo(shp,sig,info);
 #endif
 		if(sig==SIGHUP && job.curpgid)
 			killpg(job.curpgid,SIGHUP);
@@ -284,7 +299,7 @@ void sh_siginit(void *ptr)
 	}
 	shp->gd->sigmax = n++;
 	shp->st.trapcom = (char**)calloc(n,sizeof(char*));
-	shp->sigflag = (unsigned char*)calloc(n,1);
+	shp->sigflag = (unsigned short*)calloc(n,sizeof(short));
 	shp->gd->sigmsg = (char**)calloc(n,sizeof(char*));
 	for(tp=shtab_signals; sig=tp->sh_number; tp++)
 	{
@@ -323,6 +338,8 @@ void	sh_sigtrap(Shell_t *shp,register int sig)
 		}
 		else
 		{
+			if(!shp->siginfo)
+				shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
 			flag |= SH_SIGFAULT;
 			if(sig==SIGALRM && fun!=SIG_DFL && fun!=(sh_sigfun_t)sh_fault)
 				signal(sig,fun);
@@ -355,7 +372,11 @@ void	sh_sigdone(Shell_t *shp)
 void	sh_sigreset(Shell_t *shp,register int mode)
 {
 	register char	*trap;
+#ifdef SIGRTMIN
+	register int 	flag, sig=SIGRTMIN;
+#else
 	register int 	flag, sig=shp->st.trapmax;
+#endif
 	while(sig-- > 0)
 	{
 		if(trap=shp->st.trapcom[sig])
@@ -421,6 +442,7 @@ void	sh_chktrap(Shell_t* shp)
 {
 	register int 	sig=shp->st.trapmax;
 	register char *trap;
+	int count=0;
 	if(!(shp->trapnote&~SH_SIGIGNORE))
 		sig=0;
 	if(sh.intrap)
@@ -454,7 +476,7 @@ void	sh_chktrap(Shell_t* shp)
 	{
 		if(sig==cursig)
 			continue;
-		if(shp->sigflag[sig]&SH_SIGTRAP)
+		if((shp->sigflag[sig]&SH_SIGTRAP) || shp->siginfo && shp->siginfo[sig])
 		{
 			shp->sigflag[sig] &= ~SH_SIGTRAP;
 			if(sig==SIGCHLD)
@@ -464,19 +486,43 @@ void	sh_chktrap(Shell_t* shp)
 			}
 			if(trap=shp->st.trapcom[sig])
 			{
+				struct Siginfo  *ip=0, *ipnext;
+retry:
+				if(shp->siginfo)
+				{
+					do ip = shp->siginfo[sig];
+					while (asocasptr(&shp->siginfo[sig],ip,0)!=ip);
+				}
+			again:
 #ifdef _lib_sigaction
-				if(shp->siginfo && shp->siginfo[sig])
-					sh_setsiginfo((siginfo_t*)shp->siginfo[sig]);
+				if(ip)
+				{
+					sh_setsiginfo(&ip->info);
+					ipnext = ip->next;
+				}
+				else
+					continue;
 #endif
 				cursig = sig;
  				sh_trap(shp,trap,0);
+				count++;
 #ifdef _lib_sigaction
-				if(shp->siginfo[sig] && sig!=SIGCHLD)
-					free(shp->siginfo[sig]);
-				shp->siginfo[sig] = 0;
+				if(ip)
+				{
+					free(ip);
+					if(ip=ipnext)
+						goto again;
+				}
 #endif
+				if(shp->siginfo[sig])
+					goto retry;
 				cursig = -1;
  			}
+		}
+		if(sig==1 && count)
+		{
+			count=0;
+			sig = shp->st.trapmax;
 		}
 	}
 }

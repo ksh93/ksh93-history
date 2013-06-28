@@ -366,6 +366,8 @@ main()
 	printf("#define strsearch	_ast_strsearch\n");
 	printf("#undef	strsort\n");
 	printf("#define strsort		_ast_strsort\n");
+	printf("#undef	strsort_r\n");
+	printf("#define strsort_r	_ast_strsort_r\n");
 	printf("#undef	strsubmatch\n");
 	printf("#define strsubmatch	_ast_strsubmatch\n");
 	printf("#undef	strsum\n");

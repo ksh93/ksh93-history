@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -76,6 +76,7 @@ const struct shtable2 shtab_variables[] =
 	"LC_CTYPE",	0,				(char*)0,
 	"LC_MESSAGES",	0,				(char*)0,
 	"LC_NUMERIC",	0,				(char*)0,
+	"LC_TIME",	0,				(char*)0,
 	"FIGNORE",	0,				(char*)0,
 	"KSH_VERSION",	0,				(char*)0,
 	"JOBMAX",	NV_NOFREE|NV_INTEGER,		(char*)0,

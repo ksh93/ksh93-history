@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -3269,6 +3269,8 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 	if (!(p->env = (Env_t*)alloc(disc, 0, sizeof(Env_t))))
 		return fatal(disc, REG_ESPACE, pattern);
 	memset(p->env, 0, sizeof(*p->env));
+	if (!(p->env->mst = stkopen(STK_SMALL|STK_NULL)))
+		return fatal(disc, REG_ESPACE, pattern);
 	memset(&env, 0, sizeof(env));
 	env.regex = p;
 	env.flags = flags;

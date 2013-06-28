@@ -1,3 +1,24 @@
+13-06-28 intercept.c: add AST_SERIAL_always, in particular for AST_SERIAL_RESTART
+13-06-25 intercept.c: add syscall intercepts to unify { *at() restart pathopen() }
+13-06-25 pathopen.c: low level physical/logical/special path open using pathdev()
+13-06-24 pathcanon.c: add pathdev() for  { /dev/... /proc/... } parse
+13-06-19 vmbest.c: fix strict-aliasing warnings
+13-06-19 debug.h,debug.c: add debug_printf(fd,fmt,...), debug_vprintf(fd,fmt,ap), debug_snprintf(buf,siz,fmt,ap)
+13-06-18 features/lib: fix lib *64 tests to reference related headers
+13-06-18 malloc.c: add VMALLOC_OPTIONS=debug for debug trace vs verbose trace
+13-06-18 reg[nr]exec.c: fix file size < min boyer-moore match uninitialized data ref
+13-06-17 vmalloc: harden code to handle signal storm -- almost working save one workaround
+13-06-10 sfsetbuf.c: update SFIO_OPTIONS parse to model VMALLOC_OPTIONS
+13-06-10 SFIO_OPTIONS: add _Sfmaxm maxm=size 0:legacy-min-req -1:unlimited otherwise: page rounded limit
+13-06-10 sfrd.c: change map minimal requirement logic to use _Sfmaxm
+13-06-10 sfrd.c: add SFTEST_map_minimal, disabled by default for _ast_sizeof_pointer>=8
+13-06-07 vmalloc: split global initialization into lazy components
+13-06-01 vmalloc: getenv("VMALLOC_OPTIONS") is the only env control
+13-05-31 regex/regnexec.c: fix stkstd iterference by using private env->mst
+13-05-30 vmalloc/vmmaddress.c: fix leaky shmid in _vmpagesize()
+13-05-28 vmalloc/vmdebug.c: add free() delay list to avoid deadlock
+13-05-28 include/ast_errorf.h: split out for low level disc/meth libs
+13-05-24 string/strsort.c: add strsort_r() for Strcmp_context_f
 13-05-22 string/fmtbuf.c: add thread-safe logic
 13-05-21 misc/optget.c: add the D "DATA" section
 13-05-09 { aso cdt vmalloc } kpv sync

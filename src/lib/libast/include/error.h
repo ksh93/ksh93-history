@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -182,7 +182,6 @@ extern Error_info_t*	_error_infop_;
 
 extern void		error(int, ...);
 extern int		errormsg(const char*, int, ...);
-extern int		errorf(void*, void*, int, ...);
 extern void		errorv(const char*, int, va_list);
 #ifndef errorx
 extern char*		errorx(const char*, const char*, const char*, const char*);

@@ -19,83 +19,27 @@
 *                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
 /*
- * porting hacks here
+ * ast private <ast.h>
  */
 
+#ifndef _AST_LIB_H
+#define _AST_LIB_H	1
+
 #include <ast.h>
-#include <ls.h>
 
-#include "FEATURE/hack"
-
-void _STUB_gross(){}
-
-#if _lcl_xstat
-
-extern int fstat(int fd, struct stat* st)
+typedef struct Ast_global_s
 {
-#if _lib___fxstat
-	return __fxstat(_STAT_VER, fd, st);
-#else
-	return _fxstat(_STAT_VER, fd, st);
-#endif
-}
+	char*		id;			/* lib id			*/
+	uint32_t	version;		/* YYYYMMDD			*/
 
-extern int lstat(const char* path, struct stat* st)
-{
-#if _lib___lxstat
-	return __lxstat(_STAT_VER, path, st);
-#else
-	return _lxstat(_STAT_VER, path, st);
-#endif
-}
+	uintmax_t	serial;			/* total #instantiations	*/
 
-extern int stat(const char* path, struct stat* st)
-{
-#if _lib___xstat
-	return __xstat(_STAT_VER, path, st);
-#else
-	return _xstat(_STAT_VER, path, st);
-#endif
-}
+	uint32_t	restart;		/* EINTR restart serial		*/
 
-#endif
+} Ast_global_t;
 
-#if _lcl_xstat64
-
-extern int fstat64(int fd, struct stat64* st)
-{
-#if _lib___fxstat64
-	return __fxstat64(_STAT_VER, fd, st);
-#else
-	return _fxstat64(_STAT_VER, fd, st);
-#endif
-}
-
-extern int lstat64(const char* path, struct stat64* st)
-{
-#if _lib___lxstat64
-	return __lxstat64(_STAT_VER, path, st);
-#else
-	return _lxstat64(_STAT_VER, path, st);
-#endif
-}
-
-#undef	stat64
-
-extern int stat64(const char* path, struct stat64* st)
-{
-#if _lib___xstat64
-	return __xstat64(_STAT_VER, path, st);
-#else
-	return _xstat64(_STAT_VER, path, st);
-#endif
-}
-
-#endif
-
-#if __sgi && _hdr_locale_attr
-
-#include "gross_sgi.h"
+extern Ast_global_t	ast_global;
 
 #endif

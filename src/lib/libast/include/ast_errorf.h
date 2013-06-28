@@ -19,83 +19,23 @@
 *                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
+
 /*
- * porting hacks here
+ * generic discipline/method error message function
  */
 
-#include <ast.h>
-#include <ls.h>
+#ifndef _AST_ERRORF_H
+#define _AST_ERRORF_H		1
 
-#include "FEATURE/hack"
+typedef int (*Error_f)(void*, void*, int, ...);
 
-void _STUB_gross(){}
-
-#if _lcl_xstat
-
-extern int fstat(int fd, struct stat* st)
-{
-#if _lib___fxstat
-	return __fxstat(_STAT_VER, fd, st);
-#else
-	return _fxstat(_STAT_VER, fd, st);
-#endif
-}
-
-extern int lstat(const char* path, struct stat* st)
-{
-#if _lib___lxstat
-	return __lxstat(_STAT_VER, path, st);
-#else
-	return _lxstat(_STAT_VER, path, st);
-#endif
-}
-
-extern int stat(const char* path, struct stat* st)
-{
-#if _lib___xstat
-	return __xstat(_STAT_VER, path, st);
-#else
-	return _xstat(_STAT_VER, path, st);
-#endif
-}
-
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		__EXPORT__
 #endif
 
-#if _lcl_xstat64
+extern int		errorf(void*, void*, int, ...);
 
-extern int fstat64(int fd, struct stat64* st)
-{
-#if _lib___fxstat64
-	return __fxstat64(_STAT_VER, fd, st);
-#else
-	return _fxstat64(_STAT_VER, fd, st);
-#endif
-}
-
-extern int lstat64(const char* path, struct stat64* st)
-{
-#if _lib___lxstat64
-	return __lxstat64(_STAT_VER, path, st);
-#else
-	return _lxstat64(_STAT_VER, path, st);
-#endif
-}
-
-#undef	stat64
-
-extern int stat64(const char* path, struct stat64* st)
-{
-#if _lib___xstat64
-	return __xstat64(_STAT_VER, path, st);
-#else
-	return _xstat64(_STAT_VER, path, st);
-#endif
-}
-
-#endif
-
-#if __sgi && _hdr_locale_attr
-
-#include "gross_sgi.h"
+#undef	extern
 
 #endif

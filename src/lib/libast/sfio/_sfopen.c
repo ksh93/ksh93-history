@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -107,7 +107,7 @@ char*		mode;		/* mode of the stream */
 				ctl = (ctl & ~(O_TEXT|O_BINARY|O_APPEND)) | oflags;
 				sysfcntlf(f->file, F_SETFL, ctl);
 			}
-#if !O_cloexec
+#if !O_CLOEXEC
 			if (fflags & SF_FD_CLOEXEC)
 				SETCLOEXEC(f->file);
 #endif
@@ -232,7 +232,7 @@ int*		uflagp;
 		oflags |= O_BINARY;
 		continue;
 	case 'e' :
-		oflags |= O_cloexec;
+		oflags |= O_CLOEXEC;
 		fflags |= SF_FD_CLOEXEC;
 		continue;
 	case 'm' :

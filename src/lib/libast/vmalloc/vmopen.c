@@ -27,7 +27,7 @@ void _STUB_vmopen(){}
 
 #include	"vmhdr.h"
 
-static char*    Version = "\n@(#)$Id: Vmalloc (AT&T Labs - Research) 2013-05-01 $\0\n";
+static char*    Version = "\n@(#)$Id: Vmalloc (AT&T Labs - Research) 2013-06-10 $\0\n";
 
 /*	Opening a new region for memory allocation.
 **
@@ -63,7 +63,7 @@ int		mode;	/* type of region		*/
 	if(!meth || !disc || !disc->memoryf )
 		return NIL(Vmalloc_t*);
 
-	GETPAGESIZE(_Vmpagesize); /**/DEBUG_ASSERT(_Vmpagesize > 0);
+	VMPAGESIZE(); /**/DEBUG_ASSERT(_Vmpagesize > 0);
 
 	mode = (mode&VM_OPENFLAGS) | meth->meth; /* user-settable flags & method */
 
@@ -81,14 +81,20 @@ int		mode;	/* type of region		*/
 
 	if(disc->exceptf)
 	{	if((rv = (*disc->exceptf)(vmp,VM_OPEN,(Void_t*)(&addr),disc)) < 0)
+		{	if(initheap)
+				write(9, "vmalloc: panic: heap initialization error #1\n", 45);
 			return NIL(Vmalloc_t*);
+		}
 		else if(rv == 0 ) /* normal case of region opening */
 		{	if(addr) /* Vmalloc_t will be kept along with Vmdata_t */
 				mode |= VM_MEMORYF;
 		}
 		else if(rv > 0) /* region opened before and now being restored */
 		{	if(!(vd = (Vmdata_t*)addr)) /* addr should point to Vmdata_t */
+			{	if(initheap)
+					write(9, "vmalloc: panic: heap initialization error #2\n", 45);
 				return NIL(Vmalloc_t*);
+			}
 			/**/DEBUG_ASSERT(VMLONG(vd)%ALIGN == 0);
 
 			if(vd->mode & VM_MEMORYF) /* point addr to Vmalloc_t */
@@ -106,7 +112,10 @@ int		mode;	/* type of region		*/
 
 		vdsz = 0; /* get actual size of Vmdata_t including method specific data */
 		if(!meth->eventf || (*meth->eventf)(vmp, VM_OPEN, &vdsz) < 0 || vdsz <= 0 )
+		{	if(initheap)
+				write(9, "vmalloc: panic: heap initialization error #3\n", 45);
 			return NIL(Vmalloc_t*);
+		}
 		vdsz = ROUND(vdsz, ALIGN);
 
 		sgsz = ROUND(sizeof(Seg_t), ALIGN); /* size of segment structure */
@@ -115,7 +124,10 @@ int		mode;	/* type of region		*/
 		size = vmsz + vdsz + sgsz + 8*_Vmpagesize;
 		size = ROUND(size,incr); /**/DEBUG_ASSERT(size%ALIGN == 0 );
 		if(!(base = (Vmuchar_t*)(*disc->memoryf)(vmp, NIL(Void_t*), 0, size, disc)) )
+		{	if(initheap)
+				write(9, "vmalloc: panic: heap initialization error #4\n", 45);
 			return NIL(Vmalloc_t*);
+		}
 		memset(base, 0, size);
 
 		/* make sure memory is properly aligned */
@@ -135,7 +147,7 @@ int		mode;	/* type of region		*/
 		vd->free = NIL(Block_t*);
 
 		vd->lock = 1; /* initialize seg and add it to segment list */
-		(*_Vmseginit)(vd, seg, base, size);
+		(*_Vmseginit)(vd, seg, base, size, 1);
 		vd->lock = 0;
 	}
 	vmp->data = vd;
@@ -150,6 +162,8 @@ int		mode;	/* type of region		*/
 			vm = (Vmalloc_t*)addr;
 		else if(!(vm = (Vmalloc_t*)vmalloc(Vmheap, sizeof(Vmalloc_t))) ) /* on the heap */
 		{	(void)(*disc->memoryf)(vmp, vd->seg->base, vd->seg->size, 0, disc);
+			if(initheap)
+				write(9, "vmalloc: panic: heap initialization error #5\n", 45);
 			return NIL(Vmalloc_t*);
 		}
 		*vm = *vmp;
@@ -174,6 +188,8 @@ int		mode;	/* type of region		*/
 		if(!vh) /* need a new slot */
 		{	if(!(vh = vmalloc(Vmheap, sizeof(Vmhold_t))) )
 			{	vmclose(vm);
+				if(initheap)
+					write(9, "vmalloc: panic: heap initialization error #6\n", 45);
 				return NIL(Vmalloc_t*);
 			}
 			else	vh->vm = vm;

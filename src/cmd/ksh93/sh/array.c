@@ -38,6 +38,7 @@
 #define NV_CHILD		NV_EXPORT
 #define ARRAY_CHILD		1
 #define ARRAY_NOFREE		2
+#define ARRAY_UNSET		4
 
 struct index_array
 {
@@ -314,6 +315,8 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 				ap->cur = 0;
 		}
 	}
+	if(nv_isattr(np,NV_NOTSET)==NV_NOTSET) 
+		nv_offattr(np,NV_BINARY);
 	if(is_associative(ap))
 	{
 		mp = (Namval_t*)((*arp->fun)(np,NIL(char*),NV_ACURRENT));
@@ -336,6 +339,13 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 					ap->header.nelem++;
 				}
 				return(mp);
+			}
+			else if(!up->cp)
+			{
+				if(flag==ARRAY_ASSIGN)
+					mp->nvsize &= ~1;
+				else if((mp->nvsize&1) && nv_isattr(np,NV_INTEGER))
+					nv_onattr(np,NV_BINARY);
 			}
 		}
 	}
@@ -391,9 +401,13 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 				nv_putsub(up->np,NIL(char*),0,ARRAY_UNDEF);
 			return(up->np);
 		}
+		if(flag&ARRAY_ASSIGN)
+			array_clrbit(ap->bits,ap->cur,ARRAY_UNSET);
+		else if(!up->cp && nv_isattr(np,NV_INTEGER) && array_isbit(ap->bits,ap->cur,ARRAY_UNSET))
+			nv_onattr(np,NV_BINARY);
 	}
 	np->nvalue.cp = up->cp;
-	if(!up->cp && (np->nvflag&NV_INT16)!=NV_INT16)
+	if(!up->cp && nv_isattr(np,NV_NOTSET)!=NV_NOTSET)
 	{
 		char *xp = nv_setdisc(np,"get",np,(Namfun_t*)np);
 		if(flag!=ARRAY_ASSIGN)
@@ -530,7 +544,11 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		nv_putsub(mp,name,0,ARRAY_ADD|ARRAY_NOSCOPE);
 		mq = 0;
 		if(nq=nv_opensub(np))
+		{
 			mq = nv_search(name,ap->table,NV_ADD);
+			if(flags&NV_COMVAR)
+				mq->nvenv = (char*)mp;
+		}
 		if(nq && (((flags&NV_COMVAR) && nv_isvtree(nq)) || nv_isarray(nq)))
 		{
 			mq->nvalue.cp = 0;
@@ -709,8 +727,11 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 	skip:
 		/* prevent empty string from being deleted */
 		up = array_getup(np,ap,!nofree);
-		if(up->cp ==  Empty)
+		if(up->cp== Empty  && nv_isattr(np,NV_INTEGER))
+		{
+			nv_offattr(np,NV_BINARY);
 			up->cp = 0;
+		}
 #if SHOPT_FIXEDARRAY
 		if(nv_isarray(np) && !ap->fixed)
 #else
@@ -718,6 +739,8 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 #endif /* SHOPT_FIXEDARRAY */
 			np->nvalue.up = up;
 		nv_putv(np,string,flags,&ap->hdr);
+		if(nofree && !up->cp)
+			up->cp = Empty;
 #if SHOPT_FIXEDARRAY
 		if(fp = (struct fixed_array*)ap->fixed)
 		{
@@ -777,7 +800,10 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 			free((void*)aq->xp);
 		}
 		if((nfp = nv_disc(np,(Namfun_t*)ap,NV_POP)) && !(nfp->nofree&1))
+		{
+			ap = 0;
 			free((void*)nfp);
+		}
 		if(!nv_isnull(np))
 		{
 			if(!np->nvfun)
@@ -789,7 +815,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 		if(np->nvalue.cp==Empty)
 			np->nvalue.cp = 0;
 	}
-	if(!string && (flags&NV_TYPE))
+	if(!string && (flags&NV_TYPE) && ap)
 		array_unscope(np,ap);
 }
 
@@ -841,7 +867,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	ap->maxi = newsize;
 	ap->cur = maxi;
 	ap->bits =  (unsigned char*)&ap->val[newsize];
-	memset(ap->bits, 0, newsize);
+	memset(ap->bits, ARRAY_UNSET, newsize);
 	if(arp)
 	{
 		ap->header = arp->header;
@@ -1079,6 +1105,7 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 	{
 		struct index_array *aq = (struct index_array*)ap;
 		array_setbit(aq->bits,aq->cur,ARRAY_CHILD);
+		array_clrbit(aq->bits,aq->cur,ARRAY_UNSET);
 		if(c=='.' && !nq->nvalue.cp)
 			ap->nelem++;
 		up->np = nq;
@@ -1272,6 +1299,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long size,int flags)
 				{
 					if(!ap->val[n].cp)
 					{
+						array_clrbit(ap->bits,n,ARRAY_UNSET);
 						ap->val[n].cp = Empty;
 						if(!array_covered(np,ap))
 							ap->header.nelem++;
@@ -1304,12 +1332,13 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long size,int flags)
 					ap->val[size].cp = Empty;
 				if(!sp && !array_covered(np,ap))
 					ap->header.nelem++;
+				array_clrbit(ap->bits,size,ARRAY_UNSET);
 			}
 		}
 		else if(!(flags&ARRAY_SCAN))
 		{
 			ap->header.flags &= ~ARRAY_SCAN;
-			if(array_isbit(ap->bits,size,ARRAY_CHILD))
+			if(array_isbit(ap->bits,size,ARRAY_CHILD) && ap->val[size].np)
 				nv_putsub(ap->val[size].np,NIL(char*),0,ARRAY_UNDEF);
 			if(sp && !(flags&ARRAY_ADD) && !ap->val[size].cp)
 				np = 0;
@@ -1861,7 +1890,11 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				ap->nextpos = (Namval_t*)dtnext(ap->header.table,mp);
 			}
 			else if(!mp && *sp && mode==0)
+			{
 				mp = nv_search(sp,ap->header.table,NV_ADD|HASH_NOSCOPE);
+				if(!mp->nvalue.cp)
+					mp->nvsize |= 1;
+			}
 			np = mp;
 			if(ap->pos && ap->pos==np)
 				ap->header.flags |= ARRAY_SCAN;

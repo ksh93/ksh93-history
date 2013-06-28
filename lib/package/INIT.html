@@ -55,6 +55,8 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+13-06-24 add -lsocket =&gt; -lsocket -lnsl for systems that don't have it in -lc
+13-06-17 package.sh: fix host type logic to handle -m32/-m64 almost cross-compile
 13-05-21 C+probe: add ksh-2013-05-21 `...` hang workaround -- FIXME
 13-05-17 package.sh: package make should continue if ksh fails to build
 13-05-17 make.probe: fix CC.DIALECT+=EXPORT=DLL logic
@@ -1009,7 +1011,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>May 24, 2013</TD>
+<TD align=right>June 28, 2013</TD>
 </TR>
 </TABLE>
 <P>

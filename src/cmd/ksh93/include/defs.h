@@ -156,6 +156,7 @@ struct shared
 	Dt_t		*track_tree;	/* for tracked aliases*/ \
 	Dt_t		*var_base;	/* global level variables */ \
 	Dt_t		*openmatch; \
+	Dt_t		*namref_root; \
 	Namval_t	*namespace;	/* current active namespace*/ \
 	Namval_t	*last_table;	/* last table used in last nv_open  */ \
 	Namval_t	*prev_table;	/* previous table used in nv_open  */ \
@@ -186,7 +187,7 @@ struct shared
 	int		topfd; \
 	int		errorfd; \
 	int		savesig; \
-	unsigned char	*sigflag;	/* pointer to signal states */ \
+	unsigned short	*sigflag;	/* pointer to signal states */ \
 	char		intrap; \
 	char		login_sh; \
 	char		lastbase; \
@@ -415,7 +416,6 @@ extern void 		sh_envput(Shell_t*, Namval_t*);
 extern void 		sh_envnolocal(Namval_t*,void*);
 extern Sfdouble_t	sh_arith(Shell_t*,const char*);
 extern void		*sh_arithcomp(Shell_t *,char*);
-extern int		sh_exec(Shell_t*,const Shnode_t*,int);
 extern pid_t 		sh_fork(Shell_t*,int,int*);
 extern pid_t		_sh_fork(Shell_t*,pid_t, int ,int*);
 extern char 		*sh_mactrim(Shell_t*,char*,int);
@@ -431,6 +431,8 @@ extern int		sh_mathstd(const char*);
 extern void		sh_printopts(Shell_t*,Shopt_t,int,Shopt_t*);
 extern int 		sh_readline(Shell_t*,char**,volatile int,int,ssize_t,long);
 extern Sfio_t		*sh_sfeval(char*[]);
+extern char		*sh_fmtj(const char*);
+extern char		*sh_fmtstr(const char*,int);
 extern void		sh_setmatch(Shell_t*,const char*,int,int,int[],int);
 extern Dt_t		*sh_subaliastree(Shell_t*,int);
 extern void             sh_scope(Shell_t*, struct argnod*, int);

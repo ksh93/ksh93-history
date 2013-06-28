@@ -710,4 +710,8 @@ unset ar[3]
 set -s -Aar
 [[ $(typeset -p ar) == *'(11 22 3.5 9)' ]] || err_exit 'set -s -A ar failed with elemet 3 deleted'
 
+typeset -A ar=( ["@"]=1 ["*"]=2 ["!"]=3 ["$"]=4 ["|"]=5 ["'"]=6 ["&"]=7 ["#"]=8 ["["]=9 ["]"]=10 )
+exp="typeset -A ar=(['!']=3 ['#']=8 ['\$']=4 ['&']=7 [\$'\'']=6 ['*']=2 ['@']=1 ['[']=9 [']']=10 ['|']=5)"
+[[ $(typeset -p ar) == "$exp" ]] || err_exit 'associative array quoting error'
+
 exit $((Errors<125?Errors:125))

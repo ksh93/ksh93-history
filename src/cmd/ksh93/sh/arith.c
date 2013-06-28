@@ -200,7 +200,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	return(np);
 }
 
-static Math_f sh_mathstdfun(const char *fname, size_t fsize, short * nargs)
+Math_f sh_mathstdfun(const char *fname, size_t fsize, short * nargs)
 {
 	register const struct mathtab *tp;
 	register char c = fname[0];
@@ -354,11 +354,19 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					np->nvshell = shp;
 					nv_onattr(np,NV_NOFREE|NV_LDOUBLE|NV_RDONLY);
 				}
-				else if(!(np = nv_open(*ptr,root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|dot)) || Varsubscript)
+				else
 				{
 					np = 0;
-					lvalue->value = (char*)*ptr;
-					lvalue->flag =  str-lvalue->value;
+					if(shp->namref_root && !(lvalue->emode&ARITH_COMP))
+						np = nv_open(*ptr,shp->namref_root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|NV_NOSCOPE|NV_NOADD|dot);
+					if(!np)
+						np = nv_open(*ptr,root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|dot);
+					if(!np || Varsubscript)
+					{
+						np = 0;
+						lvalue->value = (char*)*ptr;
+						lvalue->flag =  str-lvalue->value;
+					}
 				}
 				if(saveptr != stkptr(shp->stk,0))
 					stkset(shp->stk,saveptr,offset);

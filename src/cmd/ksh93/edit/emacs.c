@@ -994,7 +994,10 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		case '*':		/* filename expansion */
 		case '=':	/* escape = - list all matching file names */
 			ep->mark = cur;
-			if(ed_expand(ep->ed,(char*)out,&cur,&eol,i,count) < 0)
+			ch = i;
+			if(i=='\\' && ep->mark>0 && out[ep->mark-1]=='/')
+				i = '=';
+			if(ed_expand(ep->ed,(char*)out,&cur,&eol,ch,count) < 0)
 			{
 				if(ep->ed->e_tabcount==1)
 				{

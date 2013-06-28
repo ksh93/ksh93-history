@@ -916,7 +916,7 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	Namfun_t	*fp, *fpnext;
 	const char	*val = mp->nvalue.cp;
 	unsigned short	flag = mp->nvflag;
-	unsigned short	size = mp->nvsize;
+	size_t		size = nv_size(mp);
 	mp->nvshell = np->nvshell;
 	for(fp=mp->nvfun; fp; fp=fpnext)
 	{
@@ -946,7 +946,7 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	}
 	if(flags&NV_APPEND)
 		return(1);
-	if(mp->nvsize == size)
+	if(nv_size(mp) == size)
 	        nv_setsize(mp,nv_size(np));
 	if(mp->nvflag == flag)
 	        mp->nvflag = (np->nvflag&~(NV_MINIMAL))|(mp->nvflag&NV_MINIMAL);
@@ -1231,10 +1231,11 @@ Namval_t *sh_addbuiltin_20120720(Shell_t* shp,const char *path, Shbltin_f bltin,
 				return(np);
 			if(!bltin)
 				bltin = (Shbltin_f)np->nvalue.bfp;
-			if(np->nvenv)
-				dtdelete(shp->bltin_tree,np);
 			if(extra == (void*)1)
+			{
+				dtdelete(shp->bltin_tree,np);
 				return(0);
+			}
 			np = 0;
 		}
 		break;

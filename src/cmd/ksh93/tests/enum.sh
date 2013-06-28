@@ -110,4 +110,13 @@ bool  -a bl
 (( bl[4]=false))
 [[ ${bl[4]} == false ]] || err_exit "setting enum array element to 0 doesn't expand to enumeration value"
 
+bool -a bia
+(( bia[4]=false))
+[[ ${bia[3]} ]] &&  err_exit 'empty index array element should not produce a value'
+(( bia[3] == 0 )) || err_exit 'empty index array element should be numerically 0'
+bool  -A baa
+(( baa[4]=false))
+[[ ${baa[3]} ]] &&  err_exit 'empty associative array element should not produce a value'
+(( baa[3] == 0 )) || err_exit 'empty associative array element should be numerically 0'
+
 exit $((Errors<125?Errors:125))

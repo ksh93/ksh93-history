@@ -353,4 +353,20 @@ typeset -m "d.sta.st[$((d.sta.st_numelements++))].obj=foo"
 [[ $(typeset -p d) == "$exp" ]] || err_exit 'compound variable not displayed properly'
 idempotent exp d
 
+function f2
+{
+	nameref mar=$1 exp=$2
+	typeset dummy x="-1a2b3c4d9u"
+	dummy="${x//~(E)([[:digit:]])|([[:alpha:]])/D}"
+	exp=${ print -v .sh.match;}
+	typeset -m "mar=.sh.match"
+}
+function f1
+{
+	typeset matchar exp
+	f2 matchar exp
+	[[ ${ print -v matchar;}  == "$exp" ]] || err_exit  'move .sh.match to a function local variable using a name reference fails'
+}
+f1
+
 exit $((Errors<125?Errors:125))

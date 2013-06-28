@@ -616,6 +616,13 @@
 #	endif /*FIOCLEX*/
 #endif /*F_SETFD*/
 
+#ifndef F_DUPFD_CLOEXEC
+#	define F_DUPFD_CLOEXEC		F_DUPFD
+#endif
+#ifndef O_CLOEXEC
+#	define O_CLOEXEC		0
+#endif
+
 #define SF_FD_CLOEXEC			0x0001
 
 /* a couple of error number that we use, default values are like Linux */
@@ -795,6 +802,8 @@ struct _fmtpos_s
 #define SFFMT_POINTER	020		/* %p,n,s,S		*/
 #define SFFMT_CLASS	040		/* %[			*/
 
+/* _Sftest SF_TEST_* bitmasks -- 0x0001..0x0080 are unnamed */
+
 /* local variables used across sf-functions */
 typedef void  (*Sfnotify_f)_ARG_((Sfio_t*, int, void*));
 #define _Sfpage		(_Sfextern.sf_page)
@@ -810,6 +819,8 @@ typedef void  (*Sfnotify_f)_ARG_((Sfio_t*, int, void*));
 #define _Sfonce		(_Sfextern.sf_once)
 #define _Sfoncef	(_Sfextern.sf_oncef)
 #define _Sfmutex	(_Sfextern.sf_mutex)
+#define _Sfmaxm		(_Sfextern.sf_maxm)
+#define _Sftest		(_Sfextern.sf_test)
 typedef struct _sfextern_s
 {	ssize_t			sf_page;
 	struct _sfpool_s	sf_pool;
@@ -824,6 +835,8 @@ typedef struct _sfextern_s
 	Vtonce_t*		sf_once;
 	void			(*sf_oncef)_ARG_((void));
 	Vtmutex_t*		sf_mutex;
+	size_t			sf_maxm;
+	unsigned long		sf_test;
 } Sfextern_t;
 
 /* get the real value of a byte in a coded long or ulong */

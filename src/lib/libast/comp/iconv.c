@@ -32,7 +32,7 @@
 #include <ast.h>
 #include <dirent.h>
 
-#define DEBUG_TRACE		-1
+#define DEBUG_TRACE		0
 #define _ICONV_LIST_PRIVATE_
 
 #include <ccode.h>

@@ -91,6 +91,10 @@ char e_version[]	= "\n@(#)$Id: Version "
 #define ATTRS		1
 			"B"
 #endif
+#if _AST_INTERCEPT
+#define ATTRS		1
+			"I"
+#endif
 #if SHOPT_COSHELL
 #define ATTRS		1
 			"J"
@@ -203,6 +207,7 @@ typedef struct _init_
 	Namfun_t	SH_JOBPOOL_init;
 #endif /* SHOPT_COSHELL */
 #ifdef _hdr_locale
+	Namfun_t	LC_TIME_init;
 	Namfun_t	LC_TYPE_init;
 	Namfun_t	LC_NUM_init;
 	Namfun_t	LC_COLL_init;
@@ -1434,7 +1439,11 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	register size_t n;
 	int type;
 	static char *login_files[2];
+#if AST_VERSION >= 20130509
+	memfatal(NiL);
+#else
 	memfatal();
+#endif
 	n = strlen(e_version);
 	if(e_version[n-1]=='$' && e_version[n-2]==' ')
 		e_version[n-2]=0;
@@ -2083,10 +2092,10 @@ static void stat_init(Shell_t *shp)
 	np = create_svar(SH_SIG,"status",0, fp);
 	np->nvalue.ip = &sip->si_status;
 	np = create_svar(SH_SIG,"addr",0, fp);
-	np->nvsize = 16;
+	nv_setsize(np,16);
 	np->nvalue.llp = (Sflong_t*)&sip->si_addr;
 	np = create_svar(SH_SIG,"value",0, fp);
-	np->nvsize = 16;
+	nv_setsize(np,16);
 	np->nvalue.llp = (Sflong_t*)&sip->si_value;
     }
 #endif
@@ -2146,6 +2155,8 @@ static Init_t *nv_init(Shell_t *shp)
 	ip->L_ARG_init.disc = &L_ARG_disc;
 	ip->L_ARG_init.nofree = 1;
 #ifdef _hdr_locale
+	ip->LC_TIME_init.disc = &LC_disc;
+	ip->LC_TIME_init.nofree = 1;
 	ip->LC_TYPE_init.disc = &LC_disc;
 	ip->LC_TYPE_init.nofree = 1;
 	ip->LC_NUM_init.disc = &LC_disc;
@@ -2187,6 +2198,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(OPTIONS, &ip->OPTIONS_init);
 	nv_stack(SH_ASTBIN, &ip->OPTastbin_init);
 #ifdef _hdr_locale
+	nv_stack(LCTIMENOD, &ip->LC_TIME_init);
 	nv_stack(LCTYPENOD, &ip->LC_TYPE_init);
 	nv_stack(LCALLNOD, &ip->LC_ALL_init);
 	nv_stack(LCMSGNOD, &ip->LC_MSG_init);

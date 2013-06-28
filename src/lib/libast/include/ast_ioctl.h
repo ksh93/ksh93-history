@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1994-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -15,17 +15,23 @@
 *                           Florham Park NJ                            *
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
+*                  David Korn <dgk@research.att.com>                   *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
-/*
- * small test for -lnsl
- */
+#ifndef _AST_IOCTL_H
+#define _AST_IOCTL_H	1
 
+#include <sys/ioctl.h>
 
-extern void*	gethostbyname();
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
 
-int
-main()
-{
-	return gethostbyname(0) == 0;
-}
+#undef	ioctl
+#define ioctl		ast_ioctl
+extern int		ast_ioctl(int, int, ...);
+
+#undef	extern
+
+#endif

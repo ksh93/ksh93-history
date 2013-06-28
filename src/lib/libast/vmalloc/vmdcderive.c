@@ -84,5 +84,5 @@ Vmdisc_t* vmdcderive(Vmalloc_t* vm, ssize_t round, int heap)
 }
 
 /* standard discipline to allocate from the heap */
-static Drvdisc_t	_Vmdcheap = { {drvgetmem, drvexcept, 0}, -1, &_Vmheap };
+static Drvdisc_t	_Vmdcheap = { {drvgetmem, drvexcept, 0, 0}, -1, &_Vmheap };
 __DEFINE__(Vmdisc_t*, Vmdcheap, (Vmdisc_t*)(&_Vmdcheap));

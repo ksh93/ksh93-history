@@ -353,6 +353,7 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 	lexp->heredoc = 0;
 	lexp->inlineno = shp->inlineno;
 	lexp->firstline = shp->st.firstline;
+	lexp->fundepth = 0;
 	shp->nextprompt = 1;
 	loop_level = 0;
 	label_list = label_last = 0;
@@ -780,6 +781,7 @@ static Shnode_t *funct(Lex_t *lexp)
 		t->funct.functtyp |= FPOSIX;
 	else if(sh_lex(lexp))
 		sh_syntax(lexp);
+	lexp->fundepth++;
 	if(!(iop=fcfile()))
 	{
 		iop = sfopen(NIL(Sfio_t*),fcseek(0),"s");
@@ -949,6 +951,7 @@ static Shnode_t *funct(Lex_t *lexp)
 #endif /* SHOPT_KIA */
 	t->funct.functtyp |= opt_get;
 	opt_get = save_optget;
+	lexp->fundepth--;
 	return(t);
 }
 
@@ -1301,6 +1304,8 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 
 #if SHOPT_NAMESPACE
 	    case NSPACESYM:
+		if(lexp->fundepth)
+			sh_syntax(lexp);
 		t = getnode(functnod);
 		t->funct.functtyp=TNSPACE;
 		t->funct.functargs = 0;

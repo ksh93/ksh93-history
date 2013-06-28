@@ -149,8 +149,7 @@ static Mmvm_t* mmfix(Mmvm_t* mmvm, Mmdisc_t* mmdc, int fd)
 	{	/**/DEBUG_ASSERT(!base || (base && (VMLONG(base)%_Vmpagesize) == 0) );
 		if(mmdc->proj < 0)
 		{	munmap((Void_t*)mmvm, size); 
-			mmvm = (Mmvm_t*)mmap(base, size, (PROT_READ|PROT_WRITE),
-					     (MAP_FIXED|MAP_SHARED), fd, (off_t)0 );
+			mmvm = (Mmvm_t*)mmap(base, size, (PROT_READ|PROT_WRITE), (MAP_FIXED|MAP_SHARED), fd, (off_t)0);
 		}
 		else
 		{	shmdt((Void_t*)mmvm);
@@ -204,8 +203,7 @@ static int mminit(Mmdisc_t* mmdc)
 		}
 
 		/* map the file into memory */
-		mmvm = (Mmvm_t*)mmap(NIL(Void_t*), size, (PROT_READ|PROT_WRITE),
-		 		     MAP_SHARED, fd, (off_t)0 );
+		mmvm = (Mmvm_t*)mmap(NIL(Void_t*), size, (PROT_READ|PROT_WRITE), MAP_SHARED, fd, (off_t)0);
 		if(!mmvm || mmvm == (Mmvm_t*)(-1) ) /* initial mapping failed */
 		{	/**/DEBUG_MESSAGE("vmdcshare: mmap() failed");
 			goto done;
@@ -229,6 +227,14 @@ static int mminit(Mmdisc_t* mmdc)
 		}
 	}
 
+#if 0
+	switch (mmvm->magic)
+	{
+	case 0:			write(2, "vmalloc: mmvm->magic=0\n", 23); break;
+	case MM_JUST4US:	write(2, "vmalloc: mmvm->magic=MM_JUST4US\n", 32); break;
+	case MM_MAGIC:		write(2, "vmalloc: mmvm->magic=MM_MAGIC\n", 29); break;
+	}
+#endif
 	/* all processes compete for the chore to initialize data */
 	if(asocasint(&mmvm->magic, 0, MM_JUST4US) == 0 ) /* lucky winner: us! */
 	{	if((base = vmmaddress(size)) != NIL(Void_t*))
@@ -444,7 +450,7 @@ int		mode;	/*  1: keep memory segments		*/
 {
 	Mmdisc_t	*mmdc;
 
-	GETPAGESIZE(_Vmpagesize);
+	VMPAGESIZE();
 
 	if(!name || !name[0] )
 	{	/**/DEBUG_MESSAGE("vmdcshare: store name not given");

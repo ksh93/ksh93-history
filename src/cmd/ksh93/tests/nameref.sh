@@ -721,4 +721,24 @@ function foo
 }
 foo
 
+val=$($SHELL 2> /dev/null <<- \EOF
+	(sleep 2;kill -9 $$) &
+	typeset -a ar=( 2 3 4 )
+	function fn
+	{
+		nameref n=$1
+		print -- "$n"
+	}
+	function main
+	{
+		integer i
+		for ((i=0 ; i < ${#ar[@]} ;))
+		do fn ar[i++]
+		done
+	}
+	main
+EOF
+) || err_exit  'nameref n=ar[i++] hangs'
+[[ $val == $'2\n3\n4' ]] || err_exit 'nameref n=ar[i++] gives wrong value'
+
 exit $((Errors<125?Errors:125))

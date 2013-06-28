@@ -27,6 +27,7 @@
  *
  */
 
+#define _shio_h	1
 #include	"defs.h"
 #include	<fcin.h>
 #include	<ls.h>
@@ -94,8 +95,10 @@ static int	(*fdnotify)(int,int);
 #         define SHUT_WR         1
 #      endif
 #      if _socketpair_shutdown_mode
+#	  undef pipe
 #         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,v)<0||shutdown((v)[1],SHUT_RD)<0||fchmod((v)[1],S_IWUSR)<0||shutdown((v)[0],SHUT_WR)<0||fchmod((v)[0],S_IRUSR)<0)?(-1):0)
 #      else
+#	  undef pipe
 #         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,v)<0||shutdown((v)[1],SHUT_RD)<0||shutdown((v)[0],SHUT_WR)<0)?(-1):0)
 #      endif
 #   endif
@@ -951,9 +954,11 @@ int	sh_pipe(register int pv[])
 	return(0);
 }
 
-#undef pipe
-#if !_lib_pipe2 || !defined(O_CLOEXEC)
-#    define pipe2(a,b)	pipe(a)
+#ifndef pipe2
+#   undef pipe
+#   if !_lib_pipe2 || !defined(O_CLOEXEC)
+#       define pipe2(a,b)	pipe(a)
+#   endif
 #endif
 /* create a real pipe when pipe() is socketpair */
 int	sh_rpipe(register int pv[])
@@ -979,8 +984,10 @@ int	sh_rpipe(register int pv[])
 	return(0);
 }
 
-#ifndef _lib_accept4
-#   define accept4(a,b,c,d)	accept(a,b,c)
+#ifndef accept4
+#   ifndef _lib_accept4
+#       define accept4(a,b,c,d)	accept(a,b,c)
+#   endif
 #endif
 #if SHOPT_COSHELL
     int sh_coaccept(Shell_t *shp,int *pv,int out)
@@ -2939,7 +2946,6 @@ ssize_t sh_write(register int fd, const void* buff, size_t n)
 	return(r);
 }
 
-#undef lseek
 /*
  * shell version of lseek() for user added builtins
  */
@@ -2953,7 +2959,6 @@ off_t sh_seek(register int fd, off_t offset, int whence)
 		return(lseek(fd,offset,whence));
 }
 
-#undef dup
 int sh_dup(register int old)
 {
 	Shell_t *shp = sh_getinterp();
@@ -2969,7 +2974,6 @@ int sh_dup(register int old)
 	return(fd);
 }
 
-#undef fcntl
 int sh_fcntl(register int fd, int op, ...)
 {
 	Shell_t *shp = sh_getinterp();
@@ -3155,11 +3159,6 @@ int sh_chdir(const char* dir)
 	return(r);
 }
 
-#ifdef stat64
-#   undef stat64
-#else
-#   undef stat
-#endif
 int sh_stat(const char* path,struct stat *statb)
 {
 	int r,err=errno;
@@ -3167,3 +3166,4 @@ int sh_stat(const char* path,struct stat *statb)
 		errno = err;
 	return(r);
 }
+
