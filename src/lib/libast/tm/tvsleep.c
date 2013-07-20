@@ -67,32 +67,6 @@ tvsleep(register const Tv_t* tv, register Tv_t* rv)
 	}
 	return r;
 
-#else
-
-	unsigned int		s = tv->tv_sec;
-	uint32_t		n = tv->tv_nsec;
-
-	if (s += (n + 999999999L) / 1000000000L)
-	{
-		if (s = sleep(s))
-		{
-			if (rv)
-			{
-				rv->tv_sec = s;
-				rv->tv_nsec = 0;
-			}
-			return -1;
-		}
-		return 0;
-	}
-
-#if _lib_usleep
-
-	unsigned long		t;
-
-	if (t = (n + 999L) / 1000L)
-		usleep(t);
-
 #elif _lib_select
 
 	struct timeval	stv;
@@ -105,6 +79,44 @@ tvsleep(register const Tv_t* tv, register Tv_t* rv)
 			*rv = *tv;
 		return -1;
 	}
+
+#else
+
+	uint32_t	s = tv->tv_sec;
+	uint32_t	n = tv->tv_nsec;
+	unsigned int	t;
+
+	if (s += (n + 999999999L) / 1000000000L)
+	{
+		while (s)
+		{
+			if (s > UINT_MAX)
+			{
+				t = UINT_MAX;
+				s -= UINT_MAX;
+			}
+			else
+			{
+				t = s;
+				s = 0;
+			}
+			if (t = sleep(t))
+			{
+				if (rv)
+				{
+					rv->tv_sec = s + t;
+					rv->tv_nsec = 0;
+				}
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+#if _lib_usleep
+
+	if (t = (n + 999L) / 1000L)
+		usleep(t);
 
 #elif _lib_poll
 

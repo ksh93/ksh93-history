@@ -829,4 +829,14 @@ Child_t C=( apar=( name=IV09557))
 [[ ${A.apar.name} == IV01111 ]] || err_exit "A.apar.name is ${A.apar.name} should be IV01111"
 [[ ${A.apar.name} == "${C.apar.name}" ]] && err_exit 'string fields in nested typed not working correctly'
 
+unset ar
+Pt_t -a ar=((x=3 y=4) (x=5 y=6))
+ar=()
+[[ $(typeset -p ar) == 'Pt_t -a ar=()' ]] || err_exit 'ar=() for an index array of Pt_t not correct'
+
+unset ar
+Pt_t -A ar=([one]=(x=3 y=4) [two]=(x=5 y=6))
+ar=()
+[[ $(typeset -p ar) == 'Pt_t -A ar=()' ]] || err_exit 'ar=() for an associative array of Pt_t not correct'
+
 exit $((Errors<125?Errors:125))

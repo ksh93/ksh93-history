@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2012 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -102,5 +102,12 @@ false
 [[ $(run $foo) ==  'global prog abc' ]] || err_exit 'global binary on PATH failed'
 false
 [[ $(.x.runxrun) ==  'xfun local bar' ]] || err_exit 'namespace function on FPATH failed'
+
+namespace sp1
+{
+	compound -a c=( [4]=( bool b=true) )
+}
+exp=$'(\n\t[4]=(\n\t\t_Bool b=true\n\t)\n)'
+[[ $(print -v .sp1.c) == "$exp" ]] || err_exit 'print -v .sp1.c where sp1 is a namespace and c a compound variable not correct'
 
 exit $((Errors<125?Errors:125))

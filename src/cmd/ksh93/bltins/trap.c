@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -79,7 +79,10 @@ int	b_trap(int argc,char *argv[],Shbltin_t *context)
 			{
 				++argv;
 				if(*action=='-' && action[1]==0)
+				{
 					clear++;
+					dflag++;
+				}
 				/*
 				 * NOTE: 2007-11-26: workaround for tests/signal.sh
 				 * if function semantics can be worked out then it
@@ -158,7 +161,7 @@ int	b_trap(int argc,char *argv[],Shbltin_t *context)
 			else if(clear)
 			{
 				sh_sigclear(shp,sig);
-				if(dflag)
+				if(dflag && !(shp->sigflag[sig]&SH_SIGOFF))
 					signal(sig,SIG_DFL);
 			}
 			else
@@ -220,10 +223,10 @@ int	b_kill(int argc,char *argv[],Shbltin_t *context)
 			break;
 		case 'q':
 			flag |= Q_FLAG;
-			shp->sigmsg = (void*)opt_info.num;
+			shp->sigval = opt_info.num;
 			break;
 		case '?':
-			shp->sigmsg = 0;
+			shp->sigval = 0;
 			errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
 			break;
 	}
@@ -233,7 +236,7 @@ endopts:
 		argv++;
 	if(error_info.errors || flag==(L_FLAG|S_FLAG) || (!(*argv) && !(flag&L_FLAG)))
 	{
-		shp->sigmsg = 0;
+		shp->sigval = 0;
 		errormsg(SH_DICT,ERROR_usage(2),"%s", optusage((char*)0));
 	}
 	/* just in case we send a kill -9 $$ */
@@ -251,7 +254,7 @@ endopts:
 				if((sig=sig_number(shp,signame))<0)
 				{
 					shp->exitval = 2;
-					shp->sigmsg = 0;
+					shp->sigval = 0;
 					errormsg(SH_DICT,ERROR_exit(1),e_nosignal,signame);
 				}
 				sfprintf(sfstdout,"%d\n",sig);
@@ -269,7 +272,7 @@ endopts:
 	}
 	if(job_walk(shp,sfstdout,job_kill,sig|(flag&Q_FLAG),argv))
 		shp->exitval = 1;
-	shp->sigmsg = 0;
+	shp->sigval = 0;
 	return(shp->exitval);
 }
 

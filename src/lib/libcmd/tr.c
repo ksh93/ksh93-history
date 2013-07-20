@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tr (AT&T Research) 2013-04-05 $\n]"
+"[-?\n@(#)$Id: tr (AT&T Research) 2013-07-17 $\n]"
 USAGE_LICENSE
 "[+NAME?tr - translate, squeeze, and/or delete characters]"
 "[+DESCRIPTION?\btr\b copies the standard input to the standard output "
@@ -112,7 +112,7 @@ USAGE_LICENSE
 #define DELBIT		0x40000000
 #define ONEBIT		0x20000000
 
-#define setchar(p,s,t)	((p)->type=(t),(p)->prev=(p)->last=(-1),(p)->isit=0,(p)->count=0,(p)->base=(p)->next=(s))
+#define setchar(p,s,t)	((p)->type=(t),(p)->prev=(p)->last=(-1),(p)->isit=0,(p)->iseq=0,(p)->count=0,(p)->base=(p)->next=(s))
 
 #if !defined(towupper) && !_lib_towupper
 #define towupper(x)	toupper(x)
@@ -147,6 +147,8 @@ typedef struct Tr_s
 	int		chars;
 	int		warn;
 	regclass_t	isit;
+	regex_t*	iseq;
+	regex_t		eqre;
 	unsigned char*	base;
 	unsigned char*	next;
 	unsigned char*	hold;
@@ -184,15 +186,33 @@ nextchar(register Tr_t* tr)
 	}
 
 	/*
-	 * tr.last>=0 when string contains char class
+	 * tr.last>=0 when string contains char/equiv class
 	 */
 
  next:
 	if (tr->last >= 0)
 	{
 		while (++tr->prev <= tr->last)
-			if (!tr->isit || (*tr->isit)(tr->prev))
-				return (!tr->type || !tr->convert) ? tr->prev : tr->convert == 'l' ? towlower(tr->prev) : towupper(tr->prev);
+		{
+			if (tr->isit)
+			{
+				if (!(*tr->isit)(tr->prev))
+					continue;
+			}
+			if (tr->iseq)
+			{
+				if ((c = mbconv(buf, tr->prev)) <= 0 || regnexec(tr->iseq, buf, c, 0, NiL, 0))
+					continue;
+			}
+			return (!tr->type || !tr->convert) ? tr->prev : tr->convert == 'l' ? towlower(tr->prev) : towupper(tr->prev);
+		}
+		if (tr->isit)
+			tr->isit = 0;
+		else if (tr->iseq)
+		{
+			regfree(tr->iseq);
+			tr->iseq = 0;
+		}
 		tr->prev--;
 		tr->last = -1;
 		tr->hold = tr->next;
@@ -253,13 +273,24 @@ nextchar(register Tr_t* tr)
 		case '=':
 			if ((q = regcollate((char*)tr->next, (char**)&e, buf, sizeof(buf), &wc)) >= 0)
 			{
+				if (*tr->next == '=' && q > 0)
+				{
+					sfsprintf(buf, sizeof(buf), "^[[%-.*s]$", e - tr->next, tr->next);
+					if (c = regcomp(&tr->eqre, buf, REG_EXTENDED))
+						regfatalpat(&tr->eqre, 3, c, buf);
+					tr->next = e;
+					tr->iseq = &tr->eqre;
+					tr->prev = -1;
+					tr->last = tr->chars;
+					return nextchar(tr);
+				}
 				tr->next = e;
 				c = q > 1 ? wc : q ? buf[0] : 0;
 				break;
 			}
 			/*FALLTHROUGH*/
 		member:
-			if (*(e = tr->next + 1))
+			if (*(e = tr->next + 1) && *e != ']')
 			{
 				while (*++e && *e != c && *e != ']');
 				if (*e != ']' && *++e == ']')
@@ -270,15 +301,11 @@ nextchar(register Tr_t* tr)
 			{
 				tr->level++;
 				c = nextchar(tr);
-				if (*tr->next == '*')
+				if (tr->type == 1 && *tr->next == '*')
 				{
 					e = tr->next + 1;
 					if (!(tr->count = (int)strtol((char*)tr->next + 1, (char**)&tr->next, 0)) && tr->next == e)
-					{
-						if (tr->type == 0)
-							return -2;
 						tr->count = -1;
-					}
 					if (*tr->next++ != ']')
 						return -2;
 					if (tr->count < 0)

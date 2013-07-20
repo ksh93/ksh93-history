@@ -31,15 +31,17 @@
 #include <sys/socket.h>
 #endif
 
+static const char	dot[] = ".";
+
 Ast_global_t		ast_global =
 {
 	"libast",
-	20130628,
+	20130717,
 	0,
 	0,
 };
 
-#define LOCAL(f)	(ast.f)		/* thread local one day		*/
+#define LOCAL(f)	(ast.f)		/* to thread or not		*/
 #define GLOBAL(f)	(ast_global.f)	/* process global		*/
 
 #define RESTART(r,f)	\
@@ -48,7 +50,7 @@ Ast_global_t		ast_global =
 		do \
 		{ \
 			serial = asoget32(&GLOBAL(restart)); \
-		} while ((r = f) == -1 && errno == EINTR && (serial == AST_SERIAL_always || serial != asoget32(&GLOBAL(restart)))); \
+		} while ((r = f) == -1 && errno == EINTR && serial != asoget32(&GLOBAL(restart))); \
 	} while (0)
 
 /* ast global/local data support */
@@ -77,21 +79,36 @@ astserial(int serial, uint32_t op)
 	switch (op)
 	{
 	case AST_SERIAL_get:
+		switch (r)
+		{
+		case AST_SERIAL_except:
+			asocas32(v, r, AST_SERIAL_always);
+			break;
+		}
 		break;
 	case AST_SERIAL_inc:
 		switch (r)
 		{
 		case AST_SERIAL_always:
 			break;
-		case AST_SERIAL_always-1:
-			asocas32(v, r, 1);
+		case AST_SERIAL_except:
+			asocas32(v, r, AST_SERIAL_always);
+			r = asoget32(v);
 			break;
+		case AST_SERIAL_max:
+			if (asocas32(v, r, 1) == r)
+			{
+				r = asoget32(v);
+				break;
+			}
+			/*FALLTHROUGH*/
 		default:
 			r = asoinc32(v) + 1;
 			break;
 		}
 		break;
 	case AST_SERIAL_always:
+	case AST_SERIAL_except:
 		asocas32(v, r, op);
 		break;
 	}
@@ -177,7 +194,10 @@ ast_openat(int cwd, const char* path, int flags, ...)
 {
 	int	r;
 #if _ast_O_LOCAL && O_CLOEXEC >= _ast_O_LOCAL
-	int	c;
+	int	o_cloexec;
+#endif
+#if _ast_O_LOCAL && O_DIRECTORY >= _ast_O_LOCAL
+	int	o_directory;
 #endif
 	mode_t	mode;
 	va_list	ap;
@@ -189,18 +209,58 @@ ast_openat(int cwd, const char* path, int flags, ...)
 	if (flags & O_CLOEXEC)
 	{
 		flags &= ~O_CLOEXEC;
-		c = 1;
+		o_cloexec = 1;
 	}
 	else
-		c = 0;
+		o_cloexec = 0;
+#endif
+#if _ast_O_LOCAL && O_DIRECTORY >= _ast_O_LOCAL
+	if (flags & O_DIRECTORY)
+	{
+		flags &= ~O_DIRECTORY;
+		o_directory = 1;
+	}
+	else
+		o_directory = 0;
+#endif
+	if (!path)
+		path = dot;
+#if _ast_O_LOCAL && O_DIRECTORY >= _ast_O_LOCAL
+ what_happened_to_kiss:
 #endif
 	if (flags & O_INTERCEPT)
 		RESTART(r, openat(cwd, path, flags&~O_INTERCEPT, mode));
 	else
 		RESTART(r, pathopen(cwd, path, NiL, 0, 0, flags|O_INTERCEPT, mode));
 #if _ast_O_LOCAL && O_CLOEXEC >= _ast_O_LOCAL
-	if (c && r >= 0)
-		RESTART(c, fcntl(r, F_SETFD, FD_CLOEXEC));
+	if (o_cloexec && r >= 0)
+		RESTART(o_cloexec, fcntl(r, F_SETFD, FD_CLOEXEC));
+#endif
+#if _ast_O_LOCAL && O_DIRECTORY >= _ast_O_LOCAL
+	if (o_directory)
+	{
+		if (r >= 0)
+		{
+			struct stat	st;
+
+			if (fstat(r, &st))
+			{
+				close(r);
+				r = -1;
+			}
+			else if (!S_ISDIR(st.st_mode))
+			{
+				close(r);
+				r = -1;
+				errno = ENOTDIR;
+			}
+		}
+		else if (errno == EACCES && !(flags & O_SEARCH) && O_SEARCH && O_SEARCH < _ast_O_LOCAL)
+		{
+			flags |= O_SEARCH;
+			goto what_happened_to_kiss;
+		}
+	}
 #endif
 	return r;
 }
@@ -723,8 +783,16 @@ int
 ast_socket(int domain, int type, int protocol)
 {
 	int	r;
+	int	t;
 
-	RESTART(r, socket(domain, type, protocol));
+	t = type;
+#if _ast_SOCK_CLOEXEC
+	t &= ~SOCK_CLOEXEC;
+#endif
+#if _ast_SOCK_NONBLOCK
+	t &= ~SOCK_NONBLOCK;
+#endif
+	RESTART(r, socket(domain, t, protocol));
 	SOCKTYPE(r, type, r, -1);
 	return r;
 }
@@ -733,8 +801,16 @@ int
 ast_socketpair(int domain, int type, int protocol, int fds[2])
 {
 	int	r;
+	int	t;
 
-	RESTART(r, socketpair(domain, type, protocol, fds));
+	t = type;
+#if _ast_SOCK_CLOEXEC
+	t &= ~SOCK_CLOEXEC;
+#endif
+#if _ast_SOCK_NONBLOCK
+	t &= ~SOCK_NONBLOCK;
+#endif
+	RESTART(r, socketpair(domain, t, protocol, fds));
 	SOCKTYPE(r, type, fds[0], fds[1]);
 	return r;
 }

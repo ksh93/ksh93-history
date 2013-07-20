@@ -38,6 +38,8 @@
 #define AST_SERIAL_get			0
 #define AST_SERIAL_inc			1
 #define AST_SERIAL_always		0xffffffff
+#define AST_SERIAL_except		(AST_SERIAL_always-1)
+#define AST_SERIAL_max			(AST_SERIAL_except-1)
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

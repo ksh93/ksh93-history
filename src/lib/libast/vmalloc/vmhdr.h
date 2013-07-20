@@ -307,9 +307,16 @@ struct _block_s
 #define PREV(b)		(*((Block_t**)(((Vmuchar_t*)(b)) - sizeof(Block_t*)) ) )
 #define NEXT(b)		((Block_t*)((b)->body.data + BDSZ(b)) )
 
-#define SMENCODE(i)	((i) << 24)			/* code index of a small block	*/
-#define SMDECODE(i)	((i) >> 24)			/* code index of a small block	*/
-#define SMBITS		(BITS | SMENCODE(0xffff) )	/* bits not related to size	*/
+#if _ast_sizeof_pointer == 4
+#define SMENCODE(i)	((uint32_t)(i) << 24)		/* code index of a small block	*/
+#define SMDECODE(i)	((uint32_t)(i) >> 24)		/* code index of a small block	*/
+#define SMBITS		(BITS | SMENCODE(0xff))		/* bits not related to size	*/
+#else
+#define SMENCODE(i)	((uint64_t)(i) << 24)		/* code index of a small block	*/
+#define SMDECODE(i)	((uint64_t)(i) >> 24)		/* code index of a small block	*/
+#define SMBITS		(BITS | SMENCODE(0xffff))	/* bits not related to size	*/
+#endif
+
 #define SMINDEXB(b)	(SMDECODE(SIZE(b)))		/* get index of a small block	*/
 #define SMBDSZ(b)	(SIZE(b) & ~SMBITS) /* size of small block	*/
 #define TRUESIZE(z)	((z) & (((z)&SMALL) ? ~SMBITS : ~BITS) )

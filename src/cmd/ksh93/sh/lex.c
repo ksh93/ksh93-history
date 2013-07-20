@@ -2480,7 +2480,7 @@ static int alias_exceptf(Sfio_t *iop,int type,Sfdisc_t *handle)
 			if(dp!=handle)
 				sfdisc(iop,dp);
 		}
-		else if(type==SF_FINAL)
+		else if(type==SF_DPOP || type==SF_FINAL)
 			free((void*)ap);
 		goto done;
 	}

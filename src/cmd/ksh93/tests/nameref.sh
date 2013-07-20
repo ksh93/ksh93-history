@@ -741,4 +741,12 @@ EOF
 ) || err_exit  'nameref n=ar[i++] hangs'
 [[ $val == $'2\n3\n4' ]] || err_exit 'nameref n=ar[i++] gives wrong value'
 
+#name references in name spaces
+namespace sp1
+{
+	compound -a c=( [4][16]=( bool -a b=( [4][3]=true [4][5]=false ) ) )
+}
+nameref n=.sp1.c[4][16]
+[[ ${n.b[4][@]} == "${.sp1.c[4][16].b[4][@]}" ]] || err_exit 'name references to variables in name spaces not working'
+
 exit $((Errors<125?Errors:125))

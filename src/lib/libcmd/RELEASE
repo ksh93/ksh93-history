@@ -1,3 +1,5 @@
+13-07-17 tr.c: finally handle ``tr -Cd "[=e=]" <<<"1e2é3"''-- how about a posix equivalence class api
+13-07-16 cp.c: limit st_size>0 logic to S_ISREG() files
 13-05-01 vmstate.c: update for new vmalloc snarf
 13-04-22 grep.c: add first draft of context.c to handle -C
 13-04-03 grep.c: fix --highlight to highlight all matches on each line

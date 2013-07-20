@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2013-03-06 # update in USAGE too #
+version=2013-07-17 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -716,7 +716,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2013-03-06 $
+@(#)$Id: iffe (AT&T Research) 2013-07-17 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -4357,12 +4357,13 @@ _END_EXTERNS_
 					case $a in
 					*.c)	rm -f $tmp.exe
 						{
+						grep '^#include.*iffe --include-first' $a
 						echo "$tst
 $ext
 $std
 $usr
 $inc"
-						cat $a
+						grep -v '^#include.*iffe --include-first' $a
 						} > $tmp.c
 						compile $cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$stderr 2>&$stderr &&
 						$executable $tmp.exe &&

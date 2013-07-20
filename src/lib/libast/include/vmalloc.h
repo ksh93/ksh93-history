@@ -69,9 +69,10 @@ struct Vmethod_s
 {	Void_t*		(*allocf)_ARG_((Vmalloc_t*, size_t, int));
 	Void_t*		(*resizef)_ARG_((Vmalloc_t*, Void_t*, size_t, int, int));
 	int		(*freef)_ARG_((Vmalloc_t*, Void_t*, int));
+	int		(*nopf)_ARG_((Vmalloc_t*, Void_t*, int));	/* was addrf -- binary compatibility filler */
+	int		(*statf) _ARG_((Vmalloc_t*, Vmstat_t*, int));	/* was sizef */
+	int		(*eventf)_ARG_((Vmalloc_t*, int, Void_t*));	/* was compactf */
 	Void_t*		(*alignf)_ARG_((Vmalloc_t*, size_t, size_t, int));
-	int		(*statf) _ARG_((Vmalloc_t*, Vmstat_t*, int));
-	int		(*eventf)_ARG_((Vmalloc_t*, int, Void_t*));
 	unsigned int	meth;
 };
 

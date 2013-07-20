@@ -317,9 +317,10 @@ static Vmethod_t _Vmlast =
 {	lastalloc,
 	lastresize,
 	lastfree,
-	lastalign,
+	0,
 	laststat,
 	lastevent,
+	lastalign,
 	VM_MTLAST
 };
 

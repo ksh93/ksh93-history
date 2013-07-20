@@ -1133,9 +1133,10 @@ static Vmethod_t _Vmbest =
 {	bestalloc,
 	bestresize,
 	bestfree,
-	bestalign,
+	0,
 	beststat,
 	bestevent,
+	bestalign,
 	VM_MTBEST
 };
 

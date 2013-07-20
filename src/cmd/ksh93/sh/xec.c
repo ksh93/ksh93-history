@@ -982,6 +982,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			struct ionod	*io;
 			int		command=0, flgs=NV_ASSIGN;
 			shp->bltindata.invariant = type>>(COMBITS+2);
+			shp->bltindata.pwdfd = shp->pwdfd;
 			type &= (COMMSK|COMSCAN);
 			sh_stats(STAT_SCMDS);
 			error_info.line = t->com.comline-shp->st.firstline;
@@ -1572,7 +1573,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						unset_instance(nq,&node,&nr,mode);
 					sh_funstaks(slp->slchild,-1);
 					stkclose(slp->slptr);
-					if(jmpval > SH_JMPFUN)
+					if(jmpval>SH_JMPFUN || (io && jmpval>SH_JMPIO))
 						siglongjmp(*shp->jmplist,jmpval);
 					goto setexit;
 				}
@@ -1793,6 +1794,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					/* default std input for & */
 					signal(SIGINT,SIG_IGN);
 					signal(SIGQUIT,SIG_IGN);
+					shp->sigflag[SIGINT] = SH_SIGOFF;
+					shp->sigflag[SIGQUIT] = SH_SIGOFF;
 					if(!shp->st.ioset)
 					{
 						if(sh_close(0)>=0)
@@ -3592,6 +3595,8 @@ static void sigreset(Shell_t *shp,int mode)
 	{
 		if(sig==SIGCHLD)
 			continue;
+		if(shp->sigflag[sig]&SH_SIGOFF)
+			return;
 		if((trap=shp->st.trapcom[sig]) && *trap==0)
 			signal(sig,mode?(sh_sigfun_t)sh_fault:SIG_IGN);
 	}
@@ -3692,13 +3697,6 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 				sh_redirect(shp,t->fork.forkio,0);
 			if(optimize==0)
 			{
-#ifdef SIGTSTP
-				if(job.jobcontrol)
-				{
-					signal(SIGTTIN,SIG_DFL);
-					signal(SIGTTOU,SIG_DFL);
-				}
-#endif /* SIGTSTP */
 #ifdef JOBS
 				if(sh_isstate(shp,SH_MONITOR) && (job.jobcontrol || (otype&FAMP)))
 				{
@@ -3731,13 +3729,6 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		}
 		if(optimize==0)
 		{
-#ifdef SIGTSTP
-			if(job.jobcontrol)
-			{
-				signal(SIGTTIN,SIG_IGN);
-				signal(SIGTTOU,SIG_IGN);
-			}
-#endif /* SIGTSTP */
 			if(spawnpid>0)
 				_sh_fork(shp,spawnpid,otype,jobid);
 			if(grp>0 && !(otype&FAMP))
@@ -3820,14 +3811,6 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 		/* restore firstline in case LINENO was exported */
 		shp->st.firstline = lineno;
 		shp->exitval = 0;
-#ifdef SIGTSTP
-		if(job.jobcontrol)
-		{
-			signal(SIGTTIN,SIG_DFL);
-			signal(SIGTTOU,SIG_DFL);
-			jobwasset++;
-		}
-#endif /* SIGTSTP */
 #ifdef JOBS
 		if(sh_isstate(shp,SH_MONITOR) && (job.jobcontrol || (otype&FAMP)))
 		{
@@ -3882,13 +3865,6 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	sh_popcontext(shp,buffp);
 	if(buffp->olist)
 		free_list(buffp->olist);
-#ifdef SIGTSTP
-	if(jobwasset)
-	{
-		signal(SIGTTIN,SIG_IGN);
-		signal(SIGTTOU,SIG_IGN);
-	}
-#endif /* SIGTSTP */
 	if(sigwasset)
 		sigreset(shp,1);	/* restore ignored signals */
 	if(scope)

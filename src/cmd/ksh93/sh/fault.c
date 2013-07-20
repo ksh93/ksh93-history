@@ -86,10 +86,7 @@ static int	notify_builtin(Shell_t *shp, int sig)
 	if(info)
 	{
 		struct Siginfo *jp,*ip;
-		sigfillset(&set);
-		sigprocmask(SIG_BLOCK,&set,&oset);
 		ip = malloc(sizeof(struct Siginfo));
-		sigprocmask(SIG_SETMASK,&oset,(sigset_t*)0);
 		ip->next = 0;
 		memcpy(&ip->info,info,sizeof(siginfo_t));
 		if(!(jp=(struct Siginfo*)shp->siginfo[sig]))
@@ -120,6 +117,8 @@ void	sh_fault(register int sig)
 	register char		*trap;
 	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 	int	action=0;
+	if(sig==SIGCHLD)
+		sfprintf(sfstdout,"childsig\n");
 #ifdef SIGWINCH
 	if(sig==SIGWINCH)
 	{
@@ -145,18 +144,6 @@ if(sig==SIGBUS)
 		/* critical region, save and process later */
 		if(!(shp->sigflag[sig]&SH_SIGIGNORE))
 			shp->savesig = sig;
-		return;
-	}
-	if(sig==SIGALRM && shp->bltinfun==b_sleep)
-	{
-		if(trap && *trap)
-		{
-			shp->trapnote |= SH_SIGTRAP;
-			shp->sigflag[sig] |= SH_SIGTRAP;
-#ifdef _lib_sigaction
-			set_trapinfo(shp,sig,info);
-#endif
-		}
 		return;
 	}
 	/* handle ignored signals */
@@ -299,7 +286,7 @@ void sh_siginit(void *ptr)
 	}
 	shp->gd->sigmax = n++;
 	shp->st.trapcom = (char**)calloc(n,sizeof(char*));
-	shp->sigflag = (unsigned short*)calloc(n,sizeof(short));
+	shp->sigflag = (unsigned char*)calloc(n,sizeof(char));
 	shp->gd->sigmsg = (char**)calloc(n,sizeof(char*));
 	for(tp=shtab_signals; sig=tp->sh_number; tp++)
 	{

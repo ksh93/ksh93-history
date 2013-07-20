@@ -122,7 +122,7 @@ size_t		align;		/* alignment			*/
 #endif
 		comma = 1;
 	}
-	if(threadid >= 0)
+	if(threadid)
 	{	if(comma)
 			*bufp++ = ',';
 		bufp = (*_Vmstrcpy)(bufp, "tid", '=');

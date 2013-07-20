@@ -135,7 +135,7 @@ struct back_save
 #define P_FG		0400
 #define P_BG		01000
 
-static int		job_chksave(pid_t,int);
+static int		job_chksave(pid_t,long);
 static struct process	*job_bypid(pid_t);
 static struct process	*job_byjid(int);
 static char		*job_sigmsg(Shell_t*, int);
@@ -482,6 +482,8 @@ bool job_reap(register int sig)
 		}
 		if(pid<=0)
 			break;
+		if(pid==shp->spid)
+			shp->spid = 0;
 		if(wstat==0)
 			job_chksave(pid,-1);
 		flags |= WNOHANG;
@@ -628,9 +630,7 @@ bool job_reap(register int sig)
 		sfsync(sfstderr);
 	}
 	shp->trapnote |= (shp->sigflag[SIGCHLD]&SH_SIGTRAP);
-	if(sig)
-		signal(sig, job_waitsafe);
-	else if(shp->trapnote&SH_SIGTRAP)
+	if(!sig && (shp->trapnote&SH_SIGTRAP))
 	{
 		int c = job.in_critical;
 		job.in_critical = 0;
@@ -763,6 +763,8 @@ void job_init(Shell_t *shp, int lflag)
 #   endif /* SA_NOCLDSTOP || SA_NOCLDWAIT */
 	signal(SIGTTIN,SIG_IGN);
 	signal(SIGTTOU,SIG_IGN);
+	shp->sigflag[SIGTTIN] = SH_SIGOFF;
+	shp->sigflag[SIGTTOU] = SH_SIGOFF;
 	/* The shell now handles ^Z */
 	signal(SIGTSTP,sh_fault);
 	tcsetpgrp(JOBTTY,shp->gd->pid);
@@ -1167,7 +1169,7 @@ int job_kill(register struct process *pw,register int sig)
 	const char *msg;
 	int qflag = sig&JOB_QFLAG;
 #ifdef SIGTSTP
-	int stopsig;
+	bool stopsig;
 #endif
 #if _lib_sigqueue
 	union sigval sig_val;
@@ -1178,7 +1180,7 @@ int job_kill(register struct process *pw,register int sig)
 		goto error;
 	shp = pw->p_shp;
 #if _lib_sigqueue
-	sig_val.sival_ptr = shp->sigmsg;
+	sig_val.sival_int = shp->sigval;
 #endif
 	sig &= ~JOB_QFLAG;
 #ifdef SIGTSTP
@@ -1221,7 +1223,7 @@ int job_kill(register struct process *pw,register int sig)
 				{
 					if(pw->p_flag&P_STOPPED)
 						pw->p_flag &= ~(P_STOPPED|P_SIGNALLED);
-					if(sig)
+					if(sig && !qflag)
 						kill(pid,SIGCONT);
 				}
 			}
@@ -1264,8 +1266,10 @@ int job_kill(register struct process *pw,register int sig)
 			if(r>=0 && (sig==SIGHUP||sig==SIGTERM || sig==SIGCONT))
 				job_unstop(pw);
 #endif	/* SIGTSTP */
+#if 0
 			if(r>=0)
 				sh_delay(.05);
+#endif
 		}
 		while(pw && pw->p_pgrp==0 && (r=kill(pw->p_pid,sig))>=0) 
 		{
@@ -1704,10 +1708,10 @@ bool	job_wait(register pid_t pid)
 			break;
 		if(shp->sigflag[SIGALRM]&SH_SIGTRAP)
 			sh_timetraps(shp);
-		if((intr && (shp->trapnote&SH_SIGTRAP)) || (pid==1 && !intr))
+		if((intr && (shp->trapnote&(SH_SIGSET|SH_SIGTRAP))) || (pid==1 && !intr))
 			break;
 	}
-	if(intr && (shp->trapnote&SH_SIGTRAP))
+	if(intr && (shp->trapnote&(SH_SIGSET|SH_SIGTRAP)))
 		shp->exitval = 1;
 	pwfg = 0;
 	if(pid==1)
@@ -2014,7 +2018,7 @@ static char *job_sigmsg(Shell_t *shp,int sig)
  * if pid==0, then oldest saved process is deleted
  * If pid is not found a -1 is returned.
  */
-static int job_chksave(register pid_t pid, int env)
+static int job_chksave(register pid_t pid, long env)
 {
 	register struct jobsave *jp = bck.list, *jpold=0;
 	register int r= -1;

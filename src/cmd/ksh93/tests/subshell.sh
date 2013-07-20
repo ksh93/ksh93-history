@@ -662,4 +662,11 @@ function B
 x=${ ( B ) ; }
 [[ $(<$tmp/log) ==  *'TRAP A'*'TRAP B'* ]] || err_exit 'trap A and trap B not both executed'
 
+function foo
+{
+	.sh.value=bam
+}
+val=${ foo;}
+[[ $val ]] && err_exit "function foo generates $val but should generate the empty string in command substitution"
+
 exit $((Errors<125?Errors:125))

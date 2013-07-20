@@ -1978,8 +1978,9 @@ static const Namdisc_t svar_disc =
 
 static char *name_svar(Namval_t *np, Namfun_t *fp)
 {
-	Shell_t	 *shp = sh_ptr(np);
-	sfprintf(shp->strbuf,".sh.stats.%s",np->nvname);
+	Shell_t	 *shp = sh_ptr(np);;
+	Namval_t *mp = *(Namval_t**)(fp+1);
+	sfprintf(shp->strbuf,".sh.%s.%s",mp->nvname,np->nvname);
 	return(sfstruse(shp->strbuf));
 }
 
@@ -1998,18 +1999,26 @@ static int svar_init(Shell_t *shp, Namval_t *pp, const Shtable_t* tab)
 {
 	int		i,nnodes=0;
 	struct Svars	*sp;
-	Namval_t	*np;
+	Namval_t	*np,**mp;
+	Namfun_t	*fp;
 	while(*tab[nnodes].sh_name)
 		nnodes++;
-	sp = newof(0,struct Svars,1,nnodes*NV_MINSZ);
-	sp->numnodes = nnodes;
+	sp = newof(0,struct Svars,1,nnodes*NV_MINSZ+sizeof(Namfun_t)+sizeof(void*));
 	sp->nodes = (char*)(sp+1);
+	fp = (Namfun_t*)((char*)sp->nodes +nnodes*NV_MINSZ);
+	memset(fp,0,sizeof(Namfun_t));
+	fp->dsize = sizeof(Namfun_t);
+	fp->disc = &svar_child_disc;
+	fp->nofree = 1;
+	mp = (Namval_t**)(fp+1);
+	*mp =  pp;
+	sp->numnodes = nnodes;
 	sp->parent = pp;
 	sp->sh = shp;
 	for(i=0; i < nnodes; i++)
 	{
 		np = nv_namptr(sp->nodes,i);
-		np->nvfun = &svar_child_fun;
+		np->nvfun = fp;
 		np->nvname = (char*)tab[i].sh_name;
 		np->nvshell = shp;
 		nv_onattr(np,tab[i].sh_number);
@@ -2063,6 +2072,8 @@ static void stat_init(Shell_t *shp)
 	np->nvalue.ip = &sip->si_signo;
 	np = create_svar(SH_SIG,"name",0, fp);
 	sh_siglist(sp->sh,sp->sh->strbuf,sip->si_signo+1);
+	sfseek(sp->sh->strbuf,(Sfoff_t)-1,SEEK_END);
+	sfputc(sp->sh->strbuf,0);
 	nv_putval(np,sfstruse(sp->sh->strbuf),NV_RDONLY);
 	np = create_svar(SH_SIG,"pid",0, fp);
 	np->nvalue.idp = &sip->si_pid;

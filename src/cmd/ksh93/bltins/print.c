@@ -601,6 +601,8 @@ static ssize_t fmtbase64(Shell_t *shp, Sfio_t *iop, char *string, const char *fm
 	}
 	else if(nv_isarray(np) && (ap=nv_arrayptr(np)) && array_elem(ap) && (ap->flags&(ARRAY_UNDEF|ARRAY_SCAN)))
 	{
+		if(*string=='.' && memcmp(string,".sh.",4))
+			shp->namespace = shp->last_table;
 		nv_outnode(np,iop,(alt?-1:0),0);
 		sfputc(iop,')');
 		return(sftell(iop));

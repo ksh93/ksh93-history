@@ -87,7 +87,7 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 	}
 
 	/* Move fd to a number > 10 and register the fd number with the shell */
-	shfd = fcntl(fd, F_dupfd_cloexec, 10);
+	shfd = sh_fcntl(fd, F_dupfd_cloexec, 10);
 	savederrno=errno;
 	close(fd);
 	errno=savederrno;
@@ -149,7 +149,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	register Shell_t *shp = context->shp;
 	int saverrno=0;
 	int rval;
-	bool flag=false,xattr=false, use_devfd=false;
+	bool pflag=false,xattr=false, use_devfd=false;
 	char *oldpwd,*cp;
 	struct stat statb;
 	int dirfd = shp->pwdfd;
@@ -164,10 +164,10 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 			dirfd = opt_info.num;
 			break;
 		case 'L':
-			flag = false;
+			pflag = false;
 			break;
 		case 'P':
-			flag = true;
+			pflag = true;
 			break;
 #ifdef O_XATTR
 		case '@':
@@ -283,7 +283,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 			stakputs(last+PATH_OFFSET);
 			stakputc(0);
 		}
-		if(!flag)
+		if(!pflag)
 		{
 			register char *cp;
 			stakseek(PATH_MAX+PATH_OFFSET);
@@ -399,7 +399,7 @@ success:
 #   endif
 #endif
 	}
-	else if(flag)
+	else if(pflag)
 	{
 		dir = stakptr(PATH_OFFSET);
 		if (!(dir=pathcanon(dir,PATH_MAX,PATH_PHYSICAL)))
@@ -415,10 +415,10 @@ success:
 	if(*dir != '/')
 		return(0);
 	nv_putval(opwdnod,oldpwd,NV_RDONLY);
-	flag = (strlen(dir)>0)?true:false;
+	pflag = (strlen(dir)>0)?true:false;
 	/* delete trailing '/' */
-	while(--flag>0 && dir[flag]=='/')
-		dir[flag] = 0;
+	while(--pflag>0 && dir[(int)pflag]=='/')
+		dir[(int)pflag] = 0;
 	nv_putval(pwdnod,dir,NV_RDONLY);
 	nv_onattr(pwdnod,NV_NOFREE|NV_EXPORT);
 	shp->pwd = pwdnod->nvalue.cp;

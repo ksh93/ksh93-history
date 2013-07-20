@@ -18,6 +18,15 @@ hdr	wctype wchar.h
 
 dat	_tzname,tzname
 
+if	mac AT_FDCWD fcntl.h {
+}
+elif	mac AT_FDCWD -D_ATFILE_SOURCE fcntl.h {
+	#ifndef _ATFILE_SOURCE
+	#define _ATFILE_SOURCE 1
+	#endif
+}
+endif
+
 lib	BSDsetpgrp
 lib	_cleanup
 lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
@@ -45,10 +54,7 @@ lib	fstatvfs64,statvfs64 -D_LARGEFILE64_SOURCE sys/statvfs.h
 lib	opendir64,readdir64,rewinddir64,seekdir64,telldir64,closedir64 -D_LARGEFILE64_SOURCE dirent.h
 lib	accept4,socketpair sys/socket.h
 
-lib	openat -D_ATFILE_SOURCE fcntl.h unistd.h yes{
-	#define _ATFILE_SOURCE	1
-}end
-lib	faccessat,fchmodat,fchownat,fstatat,linkat,mkdirat,mkfifoat,mknodat,openat,readlinkat,symlinkat,unlinkat -D_ATFILE_SOURCE fcntl.h unistd.h
+lib	faccessat,fchmodat,fchownat,fstatat,linkat,mkdirat,mkfifoat,mknodat,openat,readlinkat,renameat,symlinkat,unlinkat -D_ATFILE_SOURCE fcntl.h unistd.h
 lib	fstatat64,openat64 -D_ATFILE_SOURCE -D_LARGEFILE64_SOURCE fcntl.h unistd.h sys/stat.h
 
 lib	lchmod note{ lchmod implemented }end execute{

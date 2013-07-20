@@ -1183,8 +1183,10 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 	else if(*stkptr(shp->stk,stktell(shp->stk)-1) == ']')
 		mp = np;
 	name = stkfreeze(shp->stk,1);
-	len = strlen(name);
 	shp->last_root = 0;
+	if(shp->last_table && !nv_type(shp->last_table) && (cp=nv_name(shp->last_table)) && (len=strlen(cp))  && memcmp(name,cp,len)==0 && name[len]=='.')
+		name += len+1;
+	len = strlen(name);
 	dir = nv_diropen(mp,name,(void*)shp);
 	walk.root = shp->last_root?shp->last_root:shp->var_tree;
 	if(subscript)

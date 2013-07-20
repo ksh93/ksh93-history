@@ -241,9 +241,10 @@ static Vmethod_t _Vmpool =
 {	poolalloc,
 	poolresize,
 	poolfree,
-	poolalign,
+	0,
 	poolstat,
 	poolevent,
+	poolalign,
 	VM_MTPOOL
 };
 

@@ -185,7 +185,7 @@ static const char paren_chars[] = "([{)]}";   /* for % command */
 static void	cursor(Vi_t*, int);
 static void	del_line(Vi_t*,int);
 static int	getcount(Vi_t*,int);
-static void	getline(Vi_t*,int);
+static void	vigetline(Vi_t*,int);
 static int	getrchar(Vi_t*);
 static int	mvcursor(Vi_t*,int);
 static void	pr_string(Vi_t*,const char*);
@@ -582,11 +582,11 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 		refresh(vp,INPUT);
 	}
 	if(viraw)
-		getline(vp,APPEND);
+		vigetline(vp,APPEND);
 	else if(last_virt>=0 && virtual[last_virt]==term_char)
-		getline(vp,APPEND);
+		vigetline(vp,APPEND);
 	else
-		getline(vp,ESC);
+		vigetline(vp,ESC);
 	if(vp->ed->e_multiline)
 		cursor(vp, last_phys);
 	/*** add a new line if user typed unescaped \n ***/
@@ -1359,7 +1359,7 @@ static int getcount(register Vi_t *vp,register int c)
  *
 }*/
 
-static void getline(register Vi_t* vp,register int mode)
+static void vigetline(register Vi_t* vp,register int mode)
 {
 	register int c;
 	register int tmp;
@@ -1460,7 +1460,7 @@ static void getline(register Vi_t* vp,register int mode)
 				/*** treat as backspace ***/
 
 		case '\b':		/** backspace **/
-			if( virtual[cur_virt] == '\\' )
+			if(cur_virt>=0 && virtual[cur_virt] == '\\')
 			{
 				cdelete(vp,1, BAD);
 				append(vp,usrerase, mode);
@@ -2230,7 +2230,7 @@ static int search(register Vi_t* vp,register int mode)
 		append(vp,mode, APPEND);
 		refresh(vp,INPUT);
 		first_virt = 1;
-		getline(vp,SEARCH);
+		vigetline(vp,SEARCH);
 		first_virt = 0;
 		virtual[last_virt + 1] = '\0';	/*** make null terminated ***/
 		vp->direction = mode=='/' ? -1 : 1;

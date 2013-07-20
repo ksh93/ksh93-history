@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -345,13 +345,6 @@ pathtemp(char* buf, size_t len, const char* dir, const char* pfx, int* fdp)
 			{
 				if (!mkdir(b, tmp.mode|S_IXUSR))
 				{
-#ifndef O_SEARCH
-#ifndef O_PATH
-#define O_SEARCH	0
-#else
-#define O_SEARCH	O_PATH
-#endif
-#endif
 					if ((n = open(b, O_SEARCH)) >= 0)
 					{
 						*fdp = n;

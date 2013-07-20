@@ -10,7 +10,7 @@ valgrindflags='--xml=yes --log-file=/dev/null --track-origins=yes --read-var-inf
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2013-06-18 $
+@(#)$Id: shtests (AT&T Research) 2013-07-16 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -170,8 +170,7 @@ trap + PIPE # unadvertized -- set SIGPIPE to SIG_DFL #
 
 integer compile=-1 posix=-1 utf8=-1
 integer debug=0 locale=0 time=1
-typeset vmalloc_options=abort trace= valgrind=
-vmalloc_options= #XXX# until multi-region vmalloc trace fixed #XXX#
+typeset vmalloc_options= trace= valgrind=
 
 while	getopts -a $command "$USAGE" OPT
 do	case $OPT in
@@ -191,7 +190,7 @@ do	case $OPT in
 	u)	utf8=$OPTARG
 		;;
 	v)	if	(( OPTARG ))
-		then	vmalloc_options=abort
+		then	vmalloc_options=method=best,abort
 		else	vmalloc_options=
 		fi
 		;;

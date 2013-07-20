@@ -119,4 +119,8 @@ bool  -A baa
 [[ ${baa[3]} ]] &&  err_exit 'empty associative array element should not produce a value'
 (( baa[3] == 0 )) || err_exit 'empty associative array element should be numerically 0'
 
+bool -A a=( [2]=true [4]=false )
+[[ ${a[2]} == true ]] || err_exit 'associative arrary assignment failure'
+[[ ${#a[@]} == 2 ]] || err_exit ' bool -A a should only have two elements' 
+
 exit $((Errors<125?Errors:125))

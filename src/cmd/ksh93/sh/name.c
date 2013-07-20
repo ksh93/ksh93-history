@@ -412,6 +412,8 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 					if(array&NV_ARRAY)
 					{
 						nv_setarray(np,nv_associative);
+						if(typ)
+							nv_settype(np,typ,0);
 					}
 					else
 					{
@@ -473,8 +475,39 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 					goto skip;
 				if(tp->tre.tretyp==0 && !tp->com.comset && !tp->com.comarg)
 				{
-					if(!(arg->argflag&ARG_APPEND) && nv_isattr(np,NV_BINARY|NV_NOFREE|NV_RAW)!=(NV_BINARY|NV_NOFREE|NV_RAW))
-						_nv_unset(np,NV_EXPORT);
+					if(!(arg->argflag&ARG_APPEND))
+					{
+						if(ap)
+						{
+							nv_putsub(np, NIL(char*), 0, ARRAY_SCAN);
+							if(!ap->fun && !np->nvfun->next && !nv_type(np))
+							{
+								
+								_nv_unset(np,NV_EXPORT);
+								nv_onattr(np,NV_ARRAY);
+							}
+							else
+							{
+								ap->nelem++;
+								while(1)
+								{
+									ap->flags &= ~ARRAY_SCAN;
+									_nv_unset(np,NV_EXPORT);
+									ap->flags |= ARRAY_SCAN;
+									if(!nv_nextsub(np))
+										break;
+								}
+								ap->nelem--;
+							}
+						}
+						else if(nv_isattr(np,NV_BINARY|NV_NOFREE|NV_RAW)!=(NV_BINARY|NV_NOFREE|NV_RAW))
+						{
+							array = nv_isarray(np);
+							_nv_unset(np,NV_EXPORT);
+							if(array)
+								nv_onattr(np,NV_ARRAY);
+						}
+					}
 					goto skip;
 				}
 				if(tp->tre.tretyp==TLST || !tp->com.comset || tp->com.comset->argval[0]!='[')
@@ -958,8 +991,19 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 #if SHOPT_FIXEDARRAY
 					static char null[1] = "";
 #endif /* SHOPT_FIXEDARRAY */
+					char *xp=0;
+					ssize_t	xlen;
 					c = (cp-sp);
-					copy = strlen(cp=nv_name(np));
+					/* eliminate namespace name */
+					if(shp->last_table && !nv_type(shp->last_table)) 
+					{
+						xp = nv_name(shp->last_table);
+						xlen = strlen(xp);
+					}
+					cp = nv_name(np);
+					if(xp && memcmp(cp,xp,xlen) && cp[xlen]=='.')
+						cp += xlen+1;
+					copy = strlen(cp);
 					dp->nofree |= 1;
 #if SHOPT_FIXEDARRAY
 					if(*sp==0)
@@ -2791,9 +2835,9 @@ char *nv_getval(register Namval_t *np)
 	if(numeric)
 	{
 		Sflong_t  ll;
-		if(!up->cp)
-			return("0");
 		if(nv_isattr(np,NV_NOTSET)==NV_NOTSET)
+			return(NULL);
+		if(!up->cp)
 			return("0");
 		if(nv_isattr (np,NV_DOUBLE)==NV_DOUBLE)
 		{

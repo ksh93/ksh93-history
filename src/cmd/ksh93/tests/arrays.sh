@@ -714,4 +714,31 @@ typeset -A ar=( ["@"]=1 ["*"]=2 ["!"]=3 ["$"]=4 ["|"]=5 ["'"]=6 ["&"]=7 ["#"]=8 
 exp="typeset -A ar=(['!']=3 ['#']=8 ['\$']=4 ['&']=7 [\$'\'']=6 ['*']=2 ['@']=1 ['[']=9 [']']=10 ['|']=5)"
 [[ $(typeset -p ar) == "$exp" ]] || err_exit 'associative array quoting error'
 
+unset ar
+ar=(foo bar bam)
+ar=()
+[[ $(typeset -p ar) == 'typeset -a ar' ]] || err_exit 'ar=() does not preserve index array type'
+
+unset ar
+typeset -A ar=([0]=foo [1]=bar [2]=bam)
+ar=()
+[[ $(typeset -p ar) == 'typeset -A ar=()' ]] || err_exit 'ar=() does not preserve associative array type'
+
+unset ar
+typeset -CA ar
+ar[1]=(foo=1; bar=2)
+ar[3]=(foo=3; bar=4)
+ar=()
+[[ $(typeset -p ar) == 'typeset -C -A ar=()' ]] || err_exit 'ar=()  does not preserve -C attribute'
+
+unset ar
+ar=(foo bar bam)
+ar=()
+[[ $(typeset -p ar) == 'typeset -a ar' ]] || err_exit 'ar=() for index array should preserve index array type'
+
+unset ar
+typeset -A ar=([1]=foo [3]=bar)
+ar=()
+[[ $(typeset -p ar) == 'typeset -A ar=()' ]] || err_exit 'ar=() for associative array should preserve index array type'
+
 exit $((Errors<125?Errors:125))

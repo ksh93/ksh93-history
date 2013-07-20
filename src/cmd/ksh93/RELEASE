@@ -1,4 +1,29 @@
-13-06-25  --- Release ksh93v- ---
+13-07-18  --- Release ksh93v- ---
+13-07-18  Assignments of the type name=(...) to array variables now preserve
+	  the array type and the variable type if any.
+13-07-18  If a PATH ends in ., and you are in the current directory and this
+	  directory is in FPATH, ksh now treats this a a function directory.
+13-07-17  ${!.sh.sig@]} now expands to all the .sh.sig. variables.
+13-07-17  A bug in which a fatal error such as invalid shift in a function
+	  defined with f() did not terminate the script when the f was
+	  invoked with a redirection has been fixed.
+13-07-17  A timing bug in $(...) which could cause the return value to be
+	  127 has been fixed.
+13-07-16  A bug in which references to compound variables inside a namespace
+	  was not working has been fixed.
+13-07-15  Running a function f that assigns to .sh.value no longer outputs the
+	  value of .sh.value when invoked via ${ f;}.
+13-07-15  Fixed a bug in which bool -A a=( [2]=true [4]=false ) caused the
+	  number of elements to show up as 4 rather than 2.
+13-07-11  Eliminated two references to uninitialized memory.
+13-07-10  A memory leak with using aliases has been fixed.
+13-07-09  A memory leak with autoload functions has been fixed.
+13-07-08  When using kill -q to send a signal, a CONT signal is not sent to
+	  wake the process if it is sleeping after sending the signal.
+13-07-08  Fixed a namespace bug in which print -v did not work for printing
+	  a compound array of a namespace variable.
+13-07-02  A bug in which trap '' TTOU could cause the shell to go into an
+	  infinite loop has been fixed.
 13-06-25  ksh93 uses the new ast system call intercepts to restart interrupted 
 	  signals.
 13-06-21  A -f nn option has been added to cd to change to a directory

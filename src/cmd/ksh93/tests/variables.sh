@@ -677,4 +677,7 @@ $SHELL -c 'unset .sh' 2> /dev/null
 x=$($SHELL -c 'foo=bar foobar=fbar; print -r -- ${!foo*}')
 [[ $x == 'foo '* ]] || err_exit 'foo not included in ${!foo*}' 
 
+[[ ${!.sh.sig@} == *.sh.sig.pid* ]]  ||  err_exit '.sh.sig.pid not in ${!.sh.sig@]}'
+[[ ${!.sh.sig@} == *.sh.sig.status* ]]  ||  err_exit '.sh.sig.status not in ${!.sh.sig@]}'
+
 exit $((Errors<125?Errors:125))

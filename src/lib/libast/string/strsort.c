@@ -72,7 +72,7 @@ strsort_r(char** argv, size_t n, Strcmp_context_f cmp, void* handle)
 	for (j = 1; j <= n; j *= 2);
 	for (m = 2 * j - 1; m /= 2;)
 		for (j = 0, k = n - m; j < k; j++)
-			for (i = j; i >= 0; i -= m)
+			for (i = j;; i -= m)
 			{
 				ap = &argv[i];
 				if ((*cmp)(ap[m], ap[0], handle) >= 0)
@@ -80,5 +80,7 @@ strsort_r(char** argv, size_t n, Strcmp_context_f cmp, void* handle)
 				s = ap[m];
 				ap[m] = ap[0];
 				ap[0] = s;
+				if (i < m)
+					break;
 			}
 }

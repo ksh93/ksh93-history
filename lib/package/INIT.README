@@ -93,6 +93,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+13-07-17 iffe.sh: add '^#include.*iffe --include-first' for *.c feature test macro initialization
+13-07-17 package.sh: refix 13-06-17 fix to check both $CC and $CCFLAGS
 13-06-24 add -lsocket => -lsocket -lnsl for systems that don't have it in -lc
 13-06-17 package.sh: fix host type logic to handle -m32/-m64 almost cross-compile
 13-05-21 C+probe: add ksh-2013-05-21 `...` hang workaround -- FIXME

@@ -1,3 +1,8 @@
+13-07-19 fix features/fcntl.c to keep track of highest bit in o_local
+13-07-18 incorporate roland mainz' solaris compatibility and hugepage patches
+13-07-18 include/vmalloc.h: restore Vmethod_t callout function order for backwards binary compatibility
+13-07-17 port/intercept.c: ast_openat(fd,0,...) => openat(fd,".",...)
+13-07-16 string/chresc.c: limit \xH \xHH to 2 hex digits (\u and \U handle wide chars now)
 13-06-28 intercept.c: add AST_SERIAL_always, in particular for AST_SERIAL_RESTART
 13-06-25 intercept.c: add syscall intercepts to unify { *at() restart pathopen() }
 13-06-25 pathopen.c: low level physical/logical/special path open using pathdev()

@@ -45,13 +45,17 @@
 #define ATBEG(cwd,path) \
 	{ \
 		char	_at_##path[PATH_MAX]; \
-		if (cwd >= 0) \
+		if (*path == '/') \
+			cwd = AT_FDCWD; \
+		else if (cwd != AT_FDCWD) \
 			sfsprintf(_at_##path, sizeof(_at_##path), _fd_self_dir_fmt, cwd, "/", path);
 
 #define ATBEGL(lwd,link) \
 	{ \
 		char	_at_##link[PATH_MAX]; \
-		if (lwd >= 0) \
+		if (*link == '/') \
+			lwd = AT_FDCWD; \
+		else if (lwd != AT_FDCWD) \
 			sfsprintf(_at_##link, sizeof(_at_##link), _fd_self_dir_fmt, lwd, "/", link);
 
 #else
@@ -59,19 +63,23 @@
 #define ATBEG(cwd,path) \
 	{ \
 		char	_at_##path[PATH_MAX]; \
-		if (cwd >= 0) \
+		if (*path == '/') \
+			cwd = AT_FDCWD; \
+		else if (cwd != AT_FDCWD) \
 			sfsprintf(_at_##path, sizeof(_at_##path), _fd_pid_dir_fmt, getpid(), cwd, "/", path);
 
 #define ATBEGL(lwd,path) \
 	{ \
 		char	_at_##link[PATH_MAX]; \
-		if (lwd >= 0) \
+		if (*link == '/') \
+			lwd = AT_FDCWD; \
+		else if (lwd != AT_FDCWD) \
 			sfsprintf(_at_##link, sizeof(_at_##link), _fd_pid_dir_fmt, getpid(), lwd, "/", link);
 
 #endif
 
 #define ATPATH(cwd,path) \
-		((cwd>=0)?(const char*)_at_##path:path)
+		((cwd==AT_FDCWD)?path:(const char*)_at_##path)
 
 #define ATEND() \
 	}
@@ -88,7 +96,7 @@ static unsigned int	_at_lock;
 		int		_at_dot = -1; \
 		int		_at_ret; \
 		unsigned int	_at_tid; \
-		if (cwd >= 0) \
+		if (cwd != AT_FDCWD && *path != '/') \
 		{ \
 			sigcrit(SIG_REG_ALL); \
 			_at_tid = asothreadid(); \
@@ -204,7 +212,7 @@ fstatat(int cwd, const char* path, struct stat* st, int flags)
 	int	r;
 
 	ATBEG(cwd, path);
-	r = (flags & AT_SYMLINK_NOFOLLOW) ? lstat(ATPATH(cwd, path), st, flags) : stat(ATPATH(cwd, path), st, flags);
+	r = (flags & AT_SYMLINK_NOFOLLOW) ? lstat(ATPATH(cwd, path), st) : stat(ATPATH(cwd, path), st);
 	ATEND();
 	return r;
 }
@@ -220,9 +228,9 @@ linkat(int pwd, const char* path, int lwd, const char* linkpath, int flags)
 {
 	int	r;
 
-	if (pwd < 0 || *path == '/')
+	if (pwd == AT_FDCWD || *path == '/')
 	{
-		if (lwd < 0 || *linkpath == '/')
+		if (lwd == AT_FDCWD || *linkpath == '/')
 			r = link(path, linkpath);
 		else
 		{
@@ -231,7 +239,7 @@ linkat(int pwd, const char* path, int lwd, const char* linkpath, int flags)
 			ATEND();
 		}
 	}
-	else if (lwd < 0 || *linkpath == '/')
+	else if (lwd == AT_FDCWD || *linkpath == '/')
 	{
 		ATBEG(pwd, path);
 		r = link(ATPATH(pwd, path), linkpath);
@@ -333,13 +341,57 @@ openat(int cwd, const char* path, int flags, ...)
 #undef	STUB
 
 ssize_t
-readlinkat(int cwd, const char* path, void* buf, size_t size)
+readlinkat(int cwd, const char* path, char* buf, size_t size)
 {
 	ssize_t	r;
 
 	ATBEG(cwd, path);
 	r = readlink(ATPATH(cwd, path), buf, size);
 	ATEND();
+	return r;
+}
+
+#endif
+
+#if !_lib_renameat
+
+#undef	STUB
+
+int
+renameat(int fwd, const char* fpath, int twd, const char* tpath)
+{
+	int	r;
+
+	if (fwd == AT_FDCWD || *fpath == '/')
+	{
+		if (twd == AT_FDCWD || *tpath == '/')
+			r = rename(fpath, tpath);
+		else
+		{
+			ATBEG(twd, tpath);
+			r = rename(fpath, ATPATH(twd, tpath));
+			ATEND();
+		}
+	}
+	else if (twd == AT_FDCWD || *tpath == '/')
+	{
+		ATBEG(fwd, fpath);
+		r = rename(ATPATH(fwd, fpath), tpath);
+		ATEND();
+	}
+	else
+	{
+#ifdef BEGL
+		ATBEG(fwd, fpath);
+		ATBEGL(twd, tpath);
+		r = rename(ATPATH(fwd, fpath), ATPATH(twd, tpath));
+		ATEND();
+		ATEND();
+#else
+		errno = EINVAL;
+		r = -1;
+#endif
+	}
 	return r;
 }
 
@@ -372,7 +424,7 @@ unlinkat(int cwd, const char* path, int flags)
 	int	r;
 
 	ATBEG(cwd, path);
-	r = unlink(ATPATH(cwd, path), flags);
+	r = (flags & AT_REMOVEDIR) ? rmdir(ATPATH(cwd, path)) : unlink(ATPATH(cwd, path));
 	ATEND();
 	return r;
 }

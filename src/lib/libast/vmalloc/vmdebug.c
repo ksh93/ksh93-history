@@ -685,9 +685,10 @@ static Vmethod_t _Vmdebug =
 {	dballoc,
 	dbresize,
 	dbfree,
-	dbalign,
+	0,
 	dbstat,
 	dbevent,
+	dbalign,
 	VM_MTDEBUG
 };
 

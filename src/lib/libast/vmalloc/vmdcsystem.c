@@ -74,6 +74,20 @@ static Vmemory_f	_Vmemoryf = 0;
 #endif /*MAP_ANON*/
 #endif /*_mem_mmap_anon || _mem_mmap_zero*/
 
+/*
+ * hint at "transparent huge pages" (=largepages) if
+ * we allocate more memory than fit into 8 "normal"
+ * MMU pages (we silently assume that largepages are
+ * always at least 8 times larger than the next smaller
+ * page size - which is true for all known platforms)
+ */
+
+#ifdef MADV_HUGEPAGE
+#define ADVISE(a,z)	((a)&&((z)>=8*_Vmpagesize)?madvise((a),(z),MADV_HUGEPAGE):0)
+#else
+#define ADVISE(a,z)
+#endif
+
 #if _mem_win32 /* getting memory on a window system */
 #if _PACKAGE_ast
 #include	<ast_windows.h>
@@ -201,6 +215,7 @@ static Void_t* mmapanonmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t ns
 		caddr = (Void_t*)mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
 		if(caddr == (Void_t*)(-1))
 			caddr = NIL(Void_t*);
+		ADVISE(caddr, nsize);
 		return caddr;
 	}
 	else if(nsize == 0)
@@ -232,6 +247,7 @@ static Void_t* mmapzeromem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t ns
 		caddr = mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE, mmdc->fd, offset);
 		if(caddr == (Void_t*)(-1))
 			caddr = NIL(Void_t*);
+		ADVISE(caddr, nsize);
 		return caddr;
 	}
 	else if(nsize == 0)
@@ -420,9 +436,10 @@ Vmalloc_t _Vmheap =
 {	{	heapalloc,
 		heapresize,
 		heapfree,
-		heapalign,
+		0,	/* nopf		*/
 		heapstat,
 		0,	/* eventf	*/
+		heapalign,
 		0  	/* method ID	*/
 	},
 	NIL(char*),	/* file	name	*/

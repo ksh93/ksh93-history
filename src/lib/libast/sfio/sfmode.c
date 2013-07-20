@@ -405,12 +405,16 @@ reg int		local;	/* a local call */
 	if(f->mode&SF_GETR)
 	{	f->mode &= ~SF_GETR;
 #if _mmap_worthy
-		if((f->bits&SF_MMAP) && (f->tiny[0] += 1) >= (4*SF_NMAP) )
-		{	/* turn off mmap to avoid page faulting */
-			sfsetbuf(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
-			f->tiny[0] = 0;
+		if(f->bits&SF_MMAP)
+		{
+			if (!++f->ngetr)
+				f->tiny[0]++;
+			if(((f->tiny[0]<<8)|f->ngetr) >= (4*SF_NMAP) )
+			{	/* turn off mmap to avoid page faulting */
+				sfsetbuf(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
+				f->ngetr = f->tiny[0] = 0;
+			}
 		}
-		else
 #endif
 		if(f->getr)
 		{	f->next[-1] = f->getr;

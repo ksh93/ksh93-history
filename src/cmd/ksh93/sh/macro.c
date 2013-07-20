@@ -2102,16 +2102,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			}
 			else if(t->com.comarg->argflag&ARG_RAW)
 				str = t->com.comarg->argval;
-			if(str && (np=nv_search(str,mp->shp->fun_tree,0)) && is_afunction(np) && nv_isattr(np,NV_SHVALUE))
-			{
-				_nv_unset(SH_VALNOD,NV_RDONLY);
-				if(sh_exec(mp->shp,t,SH_ERREXIT)==0 && (str=nv_getval(SH_VALNOD)))
-				{
-					stkset(stkp,savptr,savtop);
-					mac_copy(mp,str,len=strlen(str));
-				}
-				return;
-			}
 		}
 	}
 	else
@@ -2196,7 +2186,13 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	newlines = 0;
 	if(type==3 && mp->shp->spid)
 	{
+		c = mp->shp->exitval;
 		job_wait(mp->shp->spid);
+		if(mp->shp->exitval==ERROR_NOENT)
+		{
+			mp->shp->exitval = c;
+			exitset(mp->shp);
+		}
 		if(mp->shp->pipepid==mp->shp->spid)
 			mp->shp->spid = 0;
 		mp->shp->pipepid = 0;

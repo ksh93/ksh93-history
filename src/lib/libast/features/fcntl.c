@@ -27,9 +27,10 @@
  * generate POSIX fcntl.h
  */
 
-#include <sys/types.h>
-
+#include "FEATURE/standards"	/* iffe --include-first */
 #include "FEATURE/lib"
+
+#include <sys/types.h>
 
 #define getdtablesize	______getdtablesize
 #define getpagesize	______getpagesize
@@ -67,12 +68,26 @@
 #define	off_t	off64_t
 #endif
 
+/*
+ * some bit macros may in fact be bits
+ */
+
+static unsigned int
+hibit(unsigned int m)
+{
+	unsigned int	b;
+
+	while (b = m & (m - 1))
+		m = b;
+	return m;
+}
+
 int
 main()
 {
-	int		f_local = 0;
-	int		f_lck = 0;
-	int		o_local = 2;
+	unsigned int	f_local = 0;
+	unsigned int	f_lck = 0;
+	unsigned int	o_local = 2;
 
 	printf("#pragma prototyped\n");
 	printf("\n");
@@ -186,6 +201,15 @@ main()
 #ifdef	F_SHLCK
 	if (F_SHLCK > f_local) f_local = F_SHLCK;
 #endif
+#ifdef	F_SHARE
+	if (F_SHARE > f_local) f_local = F_SHARE;
+#endif
+#ifdef	F_UNSHARE
+	if (F_UNSHARE > f_local) f_local = F_UNSHARE;
+#endif
+#ifdef	F_BADFD /* Create Poison FD */
+	if (F_BADFD > f_local) f_local = F_BADFD;
+#endif
 
 #if	NEED_F
 #if	_lib_fcntl
@@ -193,7 +217,7 @@ main()
 #endif
 	printf("#define _ast_F_LOCAL	%d\n", f_local + 1);
 #ifndef	F_DUPFD_CLOEXEC
-	printf("#define F_DUPFD_CLOEXEC	%d\n", ++f_local);
+	printf("#define F_DUPFD_CLOEXEC	%d	/* ast extension */\n", ++f_local);
 #endif
 	printf("\n");
 #endif
@@ -240,11 +264,11 @@ main()
 #define NEED_O	1
 #endif
 
-#ifdef O_DSYNC
-	if (O_DSYNC > o_local) o_local = O_DSYNC;
-#endif
 #ifdef O_LARGEFILE
 	if (O_LARGEFILE > o_local) o_local = O_LARGEFILE;
+#endif
+#ifdef O_LARGEFILE128
+	if (O_LARGEFILE128 > o_local) o_local = O_LARGEFILE128;
 #endif
 #ifdef O_NOFOLLOW
 	if (O_NOFOLLOW > o_local) o_local = O_NOFOLLOW;
@@ -255,6 +279,9 @@ main()
 #ifdef O_PRIV
 	if (O_PRIV > o_local) o_local = O_PRIV;
 #endif
+#ifdef O_DSYNC
+	if (O_DSYNC > o_local) o_local = O_DSYNC;
+#endif
 #ifdef O_RSYNC
 	if (O_RSYNC > o_local) o_local = O_RSYNC;
 #endif
@@ -264,7 +291,35 @@ main()
 #ifdef O_XATTR
 	if (O_XATTR > o_local) o_local = O_XATTR;
 #endif
+#ifdef O_DIRECT
+	if (O_DIRECT > o_local) o_local = O_DIRECT;
+#endif
+#ifndef O_DIRECTORY
+#define NEED_O	1
+#else
+	if (O_DIRECTORY > o_local) o_local = O_DIRECTORY;
+#endif
+#ifndef O_SEARCH
+#define NEED_O	1
+#else
+	if (O_SEARCH > o_local) o_local = O_SEARCH;
+#endif
+#ifdef O_PATH
+	if (O_PATH > o_local) o_local = O_PATH;
+#endif
+#ifdef O_EXEC
+	if (O_EXEC > o_local) o_local = O_EXEC;
+#endif
+#ifndef O_CLOEXEC
+#define NEED_O	1
+#else
+	if (O_CLOEXEC > o_local) o_local = O_CLOEXEC;
+#endif
+#ifdef O_TTY_INIT
+	if (O_TTY_INIT > o_local) o_local = O_TTY_INIT;
+#endif
 
+	o_local = hibit(o_local);
 	printf("#define _ast_O_LOCAL		0%o\n", o_local<<1);
 #if	NEED_O
 #ifndef	O_RDONLY
@@ -277,27 +332,27 @@ main()
 	printf("#define O_RDWR			2\n");
 #endif
 #ifndef	O_APPEND
-	printf("#define O_APPEND		0%o\n", o_local <<= 1);
+	printf("#define O_APPEND		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_CREAT
-	printf("#define O_CREAT			0%o\n", o_local <<= 1);
+	printf("#define O_CREAT			0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_EXCL
-	printf("#define O_EXCL			0%o\n", o_local <<= 1);
+	printf("#define O_EXCL			0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_NOCTTY
 #ifdef	TIOCNOTTY
-	printf("#define O_NOCTTY		0%o\n", o_local <<= 1);
+	printf("#define O_NOCTTY		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #endif
 #ifndef	O_NDELAY
-	printf("#define O_NDELAY		0%o\n", o_local <<= 1);
+	printf("#define O_NDELAY		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_NONBLOCK
-	printf("#define O_NONBLOCK		0%o\n", o_local <<= 1);
+	printf("#define O_NONBLOCK		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_TRUNC
-	printf("#define O_TRUNC			0%o\n", o_local <<= 1);
+	printf("#define O_TRUNC			0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #endif
 #ifndef	O_ACCMODE
@@ -312,17 +367,40 @@ main()
 	printf("#define O_BINARY		0\n");
 #endif
 #ifndef	O_CLOEXEC
-	printf("#define O_CLOEXEC		0%o\n", o_local <<= 1);
+	printf("#define O_CLOEXEC		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_SEARCH
 #ifdef O_PATH
+	/*
+	 * O_PATH is a Linux's variation of O_SEARCH. Since this is treated
+	 * as extension it may not be available without _GNU_SOURCE.
+	 * Even even with _GNU_SOURCE some Linux platforms have bugs in their
+	 * headers which prevents the definition of O_PATH in some hideous
+	 * cases. To prevent all this mess we just grab the octal value and
+	 * define it as O_SEARCH.
+	 * Do not change this. You'll end-up in hell, together with the Linux
+	 * headers. Quickly. - rm
+	 * why not play nice and just provide O_SEARCH - gsf
+	 */
+	printf("#ifdef O_PATH\n");
 	printf("#define O_SEARCH		O_PATH\n");
+	printf("#else\n");
+	printf("#define O_SEARCH		0%o\n", (unsigned int)O_PATH);
+	printf("#endif\n");
 #else
-	printf("#define O_SEARCH		0%o\n", o_local <<= 1);
+	printf("#define O_SEARCH		0\n");
 #endif
+#endif
+#ifdef O_DIRECTORY
+	/* O_DIRECTORY -- see O_PATH caveats above */
+	printf("#ifndef O_DIRECTORY\n");
+	printf("#define O_DIRECTORY		0%o\n", (int)O_DIRECTORY);
+	printf("#endif\n");
+#else
+	printf("#define O_DIRECTORY		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_INTERCEPT
-	printf("#define O_INTERCEPT		0%o\n", o_local <<= 1);
+	printf("#define O_INTERCEPT		0%o	/* ast extension */\n", o_local <<= 1);
 #endif
 #ifndef	O_TEMPORARY
 	printf("#define O_TEMPORARY		0\n");
@@ -334,11 +412,11 @@ main()
 	printf("\n");
 #ifndef SOCK_CLOEXEC
 	printf("#define _ast_SOCK_CLOEXEC	1\n");
-	printf("#define SOCK_CLOEXEC		02000000\n");
+	printf("#define SOCK_CLOEXEC		02000000 /* ast extension */\n");
 #endif
 #ifndef SOCK_NONBLOCK
 	printf("#define _ast_SOCK_NONBLOCK	1\n");
-	printf("#define SOCK_NONBLOCK		04000\n");
+	printf("#define SOCK_NONBLOCK		04000	/* ast extension */\n");
 #endif
 #endif
 	printf("#define F_dupfd_cloexec		F_DUPFD_CLOEXEC /* OBSOLETE */\n");
@@ -346,19 +424,20 @@ main()
 #if !defined(AT_FDCWD) || !defined(AT_SYMLINK_NOFOLLOW) || !defined(AT_REMOVEDIR) || !defined(AT_SYMLINK_FOLLOW) || !defined(AT_EACCESS)
 	printf("\n");
 #ifndef AT_FDCWD
-	printf("#define AT_FDCWD		-100\n");
+	/* AT_FDCWD must be < -256 for portability reasons */
+	printf("#define AT_FDCWD		-666	/* ast extension */\n");
 #endif
 #ifndef AT_SYMLINK_NOFOLLOW
-	printf("#define AT_SYMLINK_NOFOLLOW	0x100\n");
+	printf("#define AT_SYMLINK_NOFOLLOW	0x100	/* ast extension */\n");
 #endif
 #ifndef AT_REMOVEDIR
-	printf("#define AT_REMOVEDIR		0x200\n");
+	printf("#define AT_REMOVEDIR		0x200	/* ast extension*/\n");
 #endif
 #ifndef AT_SYMLINK_FOLLOW
-	printf("#define AT_SYMLINK_FOLLOW	0x400\n");
+	printf("#define AT_SYMLINK_FOLLOW	0x400	/* ast extension*/\n");
 #endif
 #ifndef AT_EACCESS
-	printf("#define AT_EACCESS		0x800\n");
+	printf("#define AT_EACCESS		0x800	/* ast extension*/\n");
 #endif
 #endif
 	printf("\n");
@@ -420,10 +499,13 @@ main()
 	printf("extern int	mknodat(int, const char*, mode_t, dev_t);\n");
 	printf("#endif\n");
 	printf("#if !_lib_openat\n");
-	printf("extern int	openat(int, const char*, mode_t, int);\n");
+	printf("extern int	openat(int, const char*, int, ...);\n");
 	printf("#endif\n");
 	printf("#if !_lib_readlinkat\n");
-	printf("extern int	readlinkat(int, const char*, void*, size_t);\n");
+	printf("extern int	readlinkat(int, const char*, char*, size_t);\n");
+	printf("#endif\n");
+	printf("#if !_lib_renameat\n");
+	printf("extern int	renameat(int, const char*, int, const char*);\n");
 	printf("#endif\n");
 	printf("#if !_lib_symlinkat\n");
 	printf("extern int	symlinkat(const char*, int, const char*);\n");

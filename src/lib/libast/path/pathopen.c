@@ -166,7 +166,7 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 			return	dev.pid > 0 && dev.pid != getpid() ?
 				openat(AT_FDCWD, b, oflags, mode) :
 				b[dev.path.offset] ?
-				openat(dev.fd, b + dev.path.offset + 1, oflags, mode) :
+				openat(dev.fd, b + dev.path.offset, oflags, mode) :
 				fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0);
 		else if (dev.prot.offset)
 		{

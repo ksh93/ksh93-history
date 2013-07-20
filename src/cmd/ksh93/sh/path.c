@@ -140,6 +140,14 @@ static pid_t path_pfexecve(Shell_t *shp,const char *path, char *argv[],char *con
 static pid_t _spawnveg(Shell_t *shp,const char *path, char* const argv[], char* const envp[], pid_t pgid)
 {
 	pid_t pid;
+#ifdef SIGTSTP
+	if(job.jobcontrol)
+	{
+		signal(SIGTTIN,SIG_DFL);
+		signal(SIGTTOU,SIG_DFL);
+	}
+#endif /* SIGTSTP */
+
 	while(1)
 	{
 		sh_stats(STAT_SPAWN);
@@ -158,6 +166,13 @@ static pid_t _spawnveg(Shell_t *shp,const char *path, char* const argv[], char* 
 		if(pid>=0 || errno!=EAGAIN)
 			break;
 	}
+#ifdef SIGTSTP
+	if(job.jobcontrol)
+	{
+		signal(SIGTTIN,SIG_IGN);
+		signal(SIGTTOU,SIG_IGN);
+	}
+#endif /* SIGTSTP */
 	return(pid);
 }
 
@@ -642,6 +657,7 @@ static void funload(Shell_t *shp,int fno, const char *name)
 		}
 		while((rp=dtnext(shp->fpathdict,rp)) && strcmp(pname,rp->fname)==0);
 		sh_close(fno);
+		free((void*)pname);
 		return;
 	}
 	sh_onstate(shp,SH_NOLOG);
@@ -753,6 +769,25 @@ bool	path_search(Shell_t *shp,register const char *name,Pathcomp_t **oldpp, int 
 	return(false);
 }
 
+static bool pwdinfpath(void)
+{
+	register const char *pwd = nv_getval(PWDNOD);
+	register const char *fpath = nv_getval(FPATHNOD);
+	register int n;
+	if(!pwd || ! fpath)
+		return(false);
+	while(*fpath)
+	{
+		for(n=0; pwd[n] && pwd[n]==fpath[n]; n++);
+		if(fpath[n]==':' || fpath[n]==0)
+			return(true);
+		fpath +=n;
+		while(*fpath)
+			fpath++;
+	}
+	return(false);
+}
+
 /*
  * do a path search and find the full pathname of file name
  */
@@ -784,6 +819,8 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 			return(0);
 		}
 		isfun = (oldpp->flags&PATH_FPATH);
+		if(!isfun && *oldpp->name=='.' && oldpp->name[1]==0 && pwdinfpath())
+			isfun = 1;
 		if(!isfun && !sh_isoption(shp,SH_RESTRICTED))
 		{
 #if SHOPT_DYNAMIC
@@ -981,7 +1018,7 @@ static int canexecute(Shell_t *shp,register char *path, int isfun)
 	errno = EPERM;
 	if(S_ISDIR(statb.st_mode))
 		errno = EISDIR;
-	else if((statb.st_mode&S_IXALL)==S_IXALL || sh_access(path,X_OK)>=0)
+	else if(isfun==1 || (statb.st_mode&S_IXALL)==S_IXALL || sh_access(path,X_OK)>=0)
 		return(fd);
 	if(isfun && fd>=0)
 		sh_close(fd);

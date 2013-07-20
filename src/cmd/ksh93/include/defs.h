@@ -187,7 +187,7 @@ struct shared
 	int		topfd; \
 	int		errorfd; \
 	int		savesig; \
-	unsigned short	*sigflag;	/* pointer to signal states */ \
+	unsigned char	*sigflag;	/* pointer to signal states */ \
 	char		intrap; \
 	char		login_sh; \
 	char		lastbase; \
@@ -228,6 +228,7 @@ struct shared
 	int		xargexit; \
 	int		nenv; \
 	int		lexsize; \
+	int		sigval; \
 	mode_t		mask; \
 	Env_t		*env; \
 	void		*init_context; \
@@ -240,7 +241,6 @@ struct shared
 	void		*cdpathlist; \
 	char		**argaddr; \
 	void		*optlist; \
-	void		*sigmsg; \
 	void		**siginfo; \
 	Spawnvex_t	*vex; \
 	Spawnvex_t	*vexp; \

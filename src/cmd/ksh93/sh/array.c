@@ -1873,7 +1873,9 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 					nv_arraychild(np,mp,0);
 				if(shp->subshell)
 					np = sh_assignok(np,1);
-				if(!ap->header.scope || !nv_search(sp,dtvnext(ap->header.table),0))
+				if(type&NV_INTEGER)
+					nv_onattr(mp,NV_NOTSET);
+				else if(!ap->header.scope || !nv_search(sp,dtvnext(ap->header.table),0))
 					ap->header.nelem++;
 				if(nv_isnull(mp))
 				{
