@@ -264,11 +264,17 @@ main()
 #define NEED_O	1
 #endif
 
+#ifdef O_BLKSEEK
+	if (O_BLKSEEK > o_local) o_local = O_BLKSEEK;
+#endif
 #ifdef O_LARGEFILE
 	if (O_LARGEFILE > o_local) o_local = O_LARGEFILE;
 #endif
 #ifdef O_LARGEFILE128
 	if (O_LARGEFILE128 > o_local) o_local = O_LARGEFILE128;
+#endif
+#ifdef O_NOATIME
+	if (O_NOATIME > o_local) o_local = O_NOATIME;
 #endif
 #ifdef O_NOFOLLOW
 	if (O_NOFOLLOW > o_local) o_local = O_NOFOLLOW;
@@ -299,6 +305,9 @@ main()
 #else
 	if (O_DIRECTORY > o_local) o_local = O_DIRECTORY;
 #endif
+#ifdef O_OPENDIR
+	if (O_OPENDIR > o_local) o_local = O_OPENDIR;
+#endif
 #ifndef O_SEARCH
 #define NEED_O	1
 #else
@@ -314,6 +323,11 @@ main()
 #define NEED_O	1
 #else
 	if (O_CLOEXEC > o_local) o_local = O_CLOEXEC;
+#endif
+#ifndef O_NDELAY
+#define NEED_O	1
+#else
+	if (O_NDELAY > o_local) o_local = O_NDELAY;
 #endif
 #ifdef O_TTY_INIT
 	if (O_TTY_INIT > o_local) o_local = O_TTY_INIT;
@@ -385,7 +399,7 @@ main()
 	printf("#ifdef O_PATH\n");
 	printf("#define O_SEARCH		O_PATH\n");
 	printf("#else\n");
-	printf("#define O_SEARCH		0%o\n", (unsigned int)O_PATH);
+	printf("#define O_SEARCH		0%o /* O_PATH */\n", (unsigned int)O_PATH);
 	printf("#endif\n");
 #else
 	printf("#define O_SEARCH		0\n");
@@ -397,7 +411,31 @@ main()
 	printf("#define O_DIRECTORY		0%o\n", (int)O_DIRECTORY);
 	printf("#endif\n");
 #else
+#ifdef O_OPENDIR
+	printf("#define O_DIRECTORY		0%o /* O_OPENDIR */\n", O_OPENDIR);
+#else
 	printf("#define O_DIRECTORY		0%o	/* ast extension */\n", o_local <<= 1);
+#endif
+#endif
+#ifdef O_CLOEXEC
+	printf("#ifndef O_CLOEXEC\n");
+	printf("#define O_CLOEXEC		0%o	/* just in case _foo_SOURCE or _USE_foo omitted */\n", (int)O_CLOEXEC);
+	printf("#endif\n");
+#endif
+#ifdef O_DIRECT
+	printf("#ifndef O_DIRECT\n");
+	printf("#define O_DIRECT		0%o	/* just in case _foo_SOURCE or _USE_foo omitted */\n", (int)O_DIRECT);
+	printf("#endif\n");
+#endif
+#ifdef O_NOFOLLOW
+	printf("#ifndef O_NOFOLLOW\n");
+	printf("#define O_NOFOLLOW		0%o	/* just in case _foo_SOURCE or _USE_foo omitted */\n", (int)O_NOFOLLOW);
+	printf("#endif\n");
+#endif
+#ifdef O_NOATIME
+	printf("#ifndef O_NOATIME\n");
+	printf("#define O_NOATIME		0%o	/* just in case _foo_SOURCE or _USE_foo omitted */\n", (int)O_NOATIME);
+	printf("#endif\n");
 #endif
 #ifndef	O_INTERCEPT
 	printf("#define O_INTERCEPT		0%o	/* ast extension */\n", o_local <<= 1);
@@ -418,6 +456,11 @@ main()
 	printf("#define _ast_SOCK_NONBLOCK	1\n");
 	printf("#define SOCK_NONBLOCK		04000	/* ast extension */\n");
 #endif
+#endif
+#ifdef F_DUPFD_CLOEXEC
+	printf("#ifndef F_DUPFD_CLOEXEC\n");
+	printf("#define F_DUPFD_CLOEXEC		0%o	/* just in case _foo_SOURCE or _USE_foo omitted */\n", (int)F_DUPFD_CLOEXEC);
+	printf("#endif\n");
 #endif
 	printf("#define F_dupfd_cloexec		F_DUPFD_CLOEXEC /* OBSOLETE */\n");
 	printf("#define O_cloexec		O_CLOEXEC /* OBSOLETE*/\n");
@@ -474,7 +517,7 @@ main()
 	printf("\n");
 	printf("#endif\n");
 	printf("#if !_lib_faccessat\n");
-	printf("extern int	faccessat(int, const char*, mode_t, int);\n");
+	printf("extern int	faccessat(int, const char*, int, int);\n");
 	printf("#endif\n");
 	printf("#if !_lib_fchmodat\n");
 	printf("extern int	fchmodat(int, const char*, mode_t, int);\n");

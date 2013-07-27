@@ -41,6 +41,7 @@
  *
  * pathcanon() and pathdev() return pointer to trailing 0 in canon
  * pathdev() handles ast specific /dev/ and /proc/ special files
+ * pathdev(PATH_DEV) returns 1 if path is a valid special file, 0 otherwise
  * see pathopen() for the api that ties it all together
  */
 
@@ -167,36 +168,71 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 		else if (size > 8 && s[1] == 'd' && s[2] == 'e' && s[3] == 'v' && s[4] == '/')
 		{
 			NEXT(s, 5);
-			if (s[0] == 'f' && s[1] == 'd' && s[2] == '/')
+			if (s[0] == 'f' && s[1] == 'd' && (s[2] == '/' || s[2] == 0))
 			{
-				NEXT(s, 3);
-				DIGITS(s, dev->fd);
-				if (*s == '/' || *s == 0)
+				NEXT(s, 2);
+				if (*s)
 				{
-					NEXT(s, 0);
-					r = s;
-					dev->prot.offset = 0;
-					dev->pid = -1;
+					DIGITS(s, dev->fd);
+					if (*s == '/' || *s == 0)
+					{
+						NEXT(s, 0);
+						r = s;
+						dev->prot.offset = 0;
+						dev->pid = -1;
+					}
 				}
+				else if (flags & PATH_DEV)
+					r = s;
 			}
-			else if (s[0] == 's' && s[1] == 'c' && s[2] == 't' && s[3] == 'p' && s[4] == '/' && (n = 5) ||
-				 s[0] == 't' && s[1] == 'c' && s[2] == 'p' && s[3] == '/' && (n = 4) ||
-				 s[0] == 'u' && s[1] == 'd' && s[2] == 'p' && s[3] == '/' && (n = 4))
+			else if (s[0] == 's' && s[1] == 'c' && s[2] == 't' && s[3] == 'p' && (s[4] == '/' || s[4] == 0) && (n = 4) ||
+				 s[0] == 't' && s[1] == 'c' && s[2] == 'p' && (s[3] == '/' || s[3] == 0) && (n = 3) ||
+				 s[0] == 'u' && s[1] == 'd' && s[2] == 'p' && (s[3] == '/' || s[3] == 0) && (n = 3))
 			{
 				dev->prot.offset = canon ? 5 : (s - p);
-				dev->prot.size = n - 1;
+				dev->prot.size = n;
 				NEXT(s, n);
-				if (t = strchr(s, '/'))
+				if (*s)
 				{
-					dev->host.offset = canon ? (dev->prot.offset + n) : (s - p);
-					dev->host.size = t - s;
-					NEXT(t, 0);
-					if (s = strchr(t, '/'))
-						NEXT(s, 0);
+					dev->host.offset = canon ? (dev->prot.offset + n + 1) : (s - p);
+					if (t = strchr(s, '/'))
+					{
+						dev->host.size = t - s;
+						NEXT(t, 0);
+					}
 					else
-						s = t + strlen(t);
-					dev->port.offset = canon ? (dev->host.offset + dev->host.size + 1) : (s - p);
-					dev->port.size = s - t;
+					{
+						t = s + strlen(s);
+						dev->host.size = t - s;
+					}
+					if (*t)
+					{
+						dev->port.offset = canon ? (dev->host.offset + dev->host.size + 1) : (t - p);
+						if (s = strchr(t, '/'))
+						{
+							dev->port.size = s - t;
+							NEXT(s, 0);
+						}
+						else
+						{
+							s = t + strlen(t);
+							dev->port.size = s - t;
+						}
+						dev->fd = -1;
+						dev->pid = -1;
+						r = s;
+					}
+					else if (flags & PATH_DEV)
+					{
+						dev->port.offset = 0;
+						dev->fd = -1;
+						dev->pid = -1;
+						r = t;
+					}
+				}
+				else if (flags & PATH_DEV)
+				{
+					dev->host.offset = 0;
 					dev->fd = -1;
 					dev->pid = -1;
 					r = s;

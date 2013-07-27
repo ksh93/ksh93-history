@@ -102,231 +102,6 @@ static int	(*fdnotify)(int,int);
 #         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,v)<0||shutdown((v)[1],SHUT_RD)<0||shutdown((v)[0],SHUT_WR)<0)?(-1):0)
 #      endif
 #   endif
-
-#ifndef SOCK_CLOEXEC
-#   define SOCK_CLOEXEC	0
-#endif
-
-#if !_lib_getaddrinfo
-
-#undef	EAI_SYSTEM
-
-#define EAI_SYSTEM		1
-
-#undef	addrinfo
-#undef	getaddrinfo
-#undef	freeaddrinfo
-
-#define addrinfo		local_addrinfo
-#define getaddrinfo		local_getaddrinfo
-#define freeaddrinfo		local_freeaddrinfo
-
-struct addrinfo
-{
-        int			ai_flags;
-        int			ai_family;
-        int			ai_socktype;
-        int			ai_protocol;
-        socklen_t		ai_addrlen;
-        struct sockaddr*	ai_addr;
-        struct addrinfo*	ai_next;
-};
-
-static int
-getaddrinfo(const char* node, const char* service, const struct addrinfo* hint, struct addrinfo **addr)
-{
-	unsigned long	    	ip_addr = 0;
-	unsigned short	    	ip_port = 0;
-	struct addrinfo*	ap;
-	struct hostent*		hp;
-	struct sockaddr_in*	ip;
-	char*			prot;
-	long			n;
-	
-	if (!(hp = gethostbyname(node)) || hp->h_addrtype!=AF_INET || hp->h_length>sizeof(struct in_addr))
-	{
-		errno = EADDRNOTAVAIL;
-		return EAI_SYSTEM;
-	}
-	ip_addr = (unsigned long)((struct in_addr*)hp->h_addr)->s_addr;
-	if ((n = strtol(service, &prot, 10)) > 0 && n <= USHRT_MAX && !*prot)
-		ip_port = htons((unsigned short)n);
-	else
-	{
-		struct servent*	sp;
-		const char*	protocol = 0;
-
-		if (hint)
-			switch (hint->ai_socktype)
-			{
-			case SOCK_STREAM:
-				switch (hint->ai_protocol)
-				{
-				case 0: 	  
-					protocol = "tcp";
-					break;
-#ifdef IPPROTO_SCTP
-				case IPPROTO_SCTP:
-					protocol = "sctp";
-					break;
-#endif
-				}
-				break;
-			case SOCK_DGRAM:
-				protocol = "udp";
-				break;
-			}
-		if (!protocol)
-		{
-			errno =  EPROTONOSUPPORT;
-			return 1;
-		}
-		if (sp = getservbyname(service, protocol))
-			ip_port = sp->s_port;
-	}
-	if (!ip_port)
-	{
-		errno = EADDRNOTAVAIL;
-		return EAI_SYSTEM;
-	}
-	if (!(ap = newof(0, struct addrinfo, 1, sizeof(struct sockaddr_in))))
-		return EAI_SYSTEM;
-	if (hint)
-		*ap = *hint;
-	ap->ai_family = hp->h_addrtype;
-	ap->ai_addrlen 	= sizeof(struct sockaddr_in);
-	ap->ai_addr = (struct sockaddr *)(ap+1);
-	ip = (struct sockaddr_in *)ap->ai_addr;
-	ip->sin_family = AF_INET;
-	ip->sin_port = ip_port;
-	ip->sin_addr.s_addr = ip_addr;
-	*addr = ap;
-	return 0;
-}
-
-static void
-freeaddrinfo(struct addrinfo* ap)
-{
-	if (ap)
-		free(ap);
-}
-
-#endif
-
-/*
- * return <protocol>/<host>/<service> fd
- * If called with flags==O_NONBLOCK return 1 if protocol is supported
- */
-
-typedef int (*Inetintr_f)(struct addrinfo*, void*);
-
-static int
-inetopen(const char* path, int flags, Inetintr_f onintr, void* handle)
-{
-	register char*		s;
-	register char*		t;
-	int			fd;
-	int			oerrno;
-	struct addrinfo		hint;
-	struct addrinfo*	addr;
-	struct addrinfo*	p;
-	int			server = !!(flags&O_SERVICE);
-
-	memset(&hint, 0, sizeof(hint));
-	hint.ai_family = PF_UNSPEC;
-	switch (path[0])
-	{
-#ifdef IPPROTO_SCTP
-	case 's':
-		if (path[1]!='c' || path[2]!='t' || path[3]!='p' || path[4]!='/')
-		{
-			errno = ENOTDIR;
-			return -1;
-		}
-		hint.ai_socktype = SOCK_STREAM;
-		hint.ai_protocol = IPPROTO_SCTP;
-		path += 5;
-		break;
-#endif
-	case 't':
-		if (path[1]!='c' || path[2]!='p' || path[3]!='/')
-		{
-			errno = ENOTDIR;
-			return -1;
-		}
-		hint.ai_socktype = SOCK_STREAM;
-		path += 4;
-		break;
-	case 'u':
-		if (path[1]!='d' || path[2]!='p' || path[3]!='/')
-		{
-			errno = ENOTDIR;
-			return -1;
-		}
-		hint.ai_socktype = SOCK_DGRAM;
-		path += 4;
-		break;
-	default:
-		errno = ENOTDIR;
-		return -1;
-	}
-	if(flags==O_NONBLOCK)
-		return 1;
-	if (!(s = strdup(path)))
-		return -1;
-	if (t = strchr(s, '/'))
-	{
-		*t++ = 0;
-		if (streq(s, "local"))
-			s = strdup("localhost");
-		fd = getaddrinfo(s, t, &hint, &addr);
-	}
-	else
-		fd = -1;
-	free(s);
-	if (fd)
-	{
-		if (fd != EAI_SYSTEM)
-			errno = ENOTDIR;
-		return -1;
-	}
-	oerrno = errno;
-	errno = 0;
-	fd = -1;
-	for (p = addr; p; p = p->ai_next)
-	{
-		/*
-		 * some api's don't take the hint
-		 */
-
-		if (!p->ai_protocol)
-			p->ai_protocol = hint.ai_protocol;
-		if (!p->ai_socktype)
-			p->ai_socktype = hint.ai_socktype;
-		while ((fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) >= 0)
-		{
-			if (server && !bind(fd, p->ai_addr, p->ai_addrlen) && !listen(fd, 5) || !server && !connect(fd, p->ai_addr, p->ai_addrlen))
-				goto done;
-			sh_close(fd);
-			fd = -1;
-			if (errno != EINTR || !onintr)
-				break;
-			if ((*onintr)(addr, handle))
-				goto done;
-		}
-	}
- done:
-	freeaddrinfo(addr);
-	if (fd >= 0)
-		errno = oerrno;
-	return fd;
-}
-
-#else
-
-#undef	O_SERVICE
-#undef	SHOPT_COSHELL
-
 #endif
 
 struct fdsave
@@ -611,7 +386,7 @@ static void io_preserve(Shell_t* shp, register Sfio_t *sp, register int f2)
 	if(sp)
 		fd = sfsetfd(sp,10);
 	else
-		fd = sh_fcntl(f2,F_dupfd_cloexec,10);
+		fd = sh_fcntl(f2,F_DUPFD_CLOEXEC,10);
 	if(f2==shp->infd)
 		shp->infd = fd;
 	if(fd<0)
@@ -695,7 +470,6 @@ int sh_iorenumber(Shell_t *shp, register int f1,register int f2)
 /*
  * close a file descriptor and update stream table and attributes 
  */
-#undef close
 int sh_close(register int fd)
 {
 	Shell_t *shp = sh_getinterp();
@@ -729,42 +503,20 @@ int sh_close(register int fd)
 	return(0);
 }
 
-#ifdef O_SERVICE
-
-static int
-onintr(struct addrinfo* addr, void* handle)
-{
-	Shell_t*	shp = (Shell_t*)handle;
-
-	if (shp->trapnote&SH_SIGSET)
-	{
-		freeaddrinfo(addr);
-		sh_exit(shp,SH_EXITSIG);
-		return -1;
-	}
-	if (shp->trapnote)
-		sh_chktrap(shp);
-	return 0;
-}
-
-#endif
-
-#ifdef open64
-#   undef open64
-#else
-#   undef open
-#endif
 /*
- * Mimic open(2) with checks for pseudo /dev/ files.
+ * Mimic open(2) and keep track of fd/sfio descriptors
  */
 int sh_open(register const char *path, int flags, ...)
 {
 	Shell_t			*shp = sh_getinterp();
 	Sfio_t			*sp;
-	register int		fd = -1;
+	int			fd;
 	mode_t			mode;
 	char			*e;
 	va_list			ap;
+#if SHOPT_REGRESS
+	char			buf[PATH_MAX];
+#endif
 	va_start(ap, flags);
 	mode = (flags & O_CREAT) ? va_arg(ap, int) : 0;
 	va_end(ap);
@@ -779,99 +531,27 @@ int sh_open(register const char *path, int flags, ...)
 		errno = ENOENT;
 		return(-1);
 	}
-	if (path[0]=='/' && path[1]=='d' && path[2]=='e' && path[3]=='v' && path[4]=='/')
-	{
-		switch (path[5])
-		{
-		case 'f':
-			if (path[6]=='d' && path[7]=='/')
-			{
-				if(flags&O_NONBLOCK)
-					return(1);
-				fd = (int)strtol(path+8, &e, 10);
-				if (*e)
-					fd = -1;
-			}
-			break;
-		case 's':
-			if (path[6]=='t' && path[7]=='d')
-				switch (path[8])
-				{
-				case 'e':
-					if (path[9]=='r' && path[10]=='r' && !path[11])
-						fd = 2;
-					break;
-				case 'i':
-					if (path[9]=='n' && !path[10])
-						fd = 0;
-					break;
-				case 'o':
-					if (path[9]=='u' && path[10]=='t' && !path[11])
-						fd = 1;
-					break;
-				}
-		}
-#ifdef O_SERVICE
-		if (fd < 0)
-		{
-			if ((fd = inetopen(path+5, flags, onintr, shp)) < 0 && errno != ENOTDIR)
-				return -1;
-			if(flags&O_NONBLOCK)
-				return(fd>=0);
-			if (fd >= 0)
-				goto ok;
-		}
-		if(flags&O_NONBLOCK)
-			return(0);
-#endif
-	}
-	if (fd >= 0)
-	{
-		int nfd= -1, err=errno;
-		if (flags & O_CREAT)
-		{
-			struct stat st;
-			if (stat(path,&st) >=0)
-			{
-				while((nfd = open(path,flags,st.st_mode))<0 && errno==EINTR)
-					errno = err;
-			}
-		}
-		else
-		{
-			while((nfd = open(path,flags))<0 && errno==EINTR)
-				errno = err;
-		}
-		if(nfd>=0)
-		{
-			fd = nfd;
-			goto ok;
-		}
-		if((mode=sh_iocheckfd(shp,fd,fd))==IOCLOSE)
-			return(-1);
-		flags &= O_ACCMODE;
-		if(!(mode&IOWRITE) && ((flags==O_WRONLY) || (flags==O_RDWR)))
-			return(-1);
-		if(!(mode&IOREAD) && ((flags==O_RDONLY) || (flags==O_RDWR)))
-			return(-1);
-		if((fd=dup(fd))<0)
-			return(-1);
-	}
-	else
-	{
 #if SHOPT_REGRESS
-		char	buf[PATH_MAX];
-		if(strncmp(path,"/etc/",5)==0)
-		{
-			sfsprintf(buf, sizeof(buf), "%s%s", sh_regress_etc(path, __LINE__, __FILE__), path+4);
-			path = buf;
-		}
+	if(strncmp(path,"/etc/",5)==0)
+	{
+		sfsprintf(buf, sizeof(buf), "%s%s", sh_regress_etc(path, __LINE__, __FILE__), path+4);
+		path = buf;
+	}
 #endif
-		while((fd = open(path, flags, mode)) < 0)
-			if(errno!=EINTR || shp->trapnote)
-				return(-1);
- 	}
- ok:
+#ifdef PATH_DEV
+	if (flags == O_NONBLOCK)
+		return pathopen(AT_FDCWD, path, NiL, 0, PATH_DEV, flags, mode) > 0;
+#endif
+	fd = open(path, flags, mode);
+#ifndef PATH_DEV
+	if (flags == O_NONBLOCK)
+	{
+		close(fd);
+		return 1;
+	}
+#endif
+	if (fd < 0)
+		return -1;
 	flags &= O_ACCMODE;
 	if(flags==O_WRONLY)
 		mode = IOWRITE;
@@ -884,7 +564,7 @@ int sh_open(register const char *path, int flags, ...)
 	if((sp=shp->sftable[fd]) && (sfset(sp,0,0)&SF_STRING))
 	{
 		int n,err=errno;
-		if((n=sh_fcntl(fd,F_dupfd_cloexec,10)) >=10)
+		if((n=sh_fcntl(fd,F_DUPFD_CLOEXEC,10)) >=10)
 		{
 			while(close(fd)<0 && errno==EINTR)
 				errno = err;
@@ -892,7 +572,7 @@ int sh_open(register const char *path, int flags, ...)
 			mode |= IOCLEX;
 		}
 	}
-	if(flags&O_cloexec)
+	if(flags&O_CLOEXEC)
 		mode |= IOCLEX;
 	shp->fdstatus[fd] = mode;
 	return(fd);
@@ -904,7 +584,7 @@ int sh_open(register const char *path, int flags, ...)
  */
 int sh_chkopen(register const char *name)
 {
-	register int fd = sh_open(name,O_RDONLY|O_cloexec,0);
+	register int fd = sh_open(name,O_RDONLY|O_CLOEXEC,0);
 	if(fd < 0)
 		errormsg(SH_DICT,ERROR_system(1),e_open,name);
 	return(fd);
@@ -920,7 +600,7 @@ int sh_iomovefd(Shell_t *shp,register int fdold)
 		sh_iovalidfd(shp,fdold);
 	if(fdold<0 || fdold>9)
 		return(fdold);
-	fdnew = sh_iomovefd(shp,sh_fcntl(fdold,F_dupfd_cloexec,10));
+	fdnew = sh_iomovefd(shp,sh_fcntl(fdold,F_DUPFD_CLOEXEC,10));
 	shp->fdstatus[fdnew] = (shp->fdstatus[fdold]|IOCLEX);
 	sh_close(fdold);
 	shp->fdstatus[fdold] = IOCLOSE;
@@ -997,7 +677,7 @@ int	sh_rpipe(register int pv[])
 	pv[0] = -1;
 	if(fd<0)
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
-	if((pv[out]=sh_fcntl(fd, F_dupfd_cloexec,10)) >=10)
+	if((pv[out]=sh_fcntl(fd, F_DUPFD_CLOEXEC,10)) >=10)
 		sh_close(fd);
 	else
 		pv[out] = sh_iomovefd(shp,fd);
@@ -1018,7 +698,7 @@ int	sh_rpipe(register int pv[])
 	int			r,port=20000;
 	struct sockaddr_in	sin;
 	socklen_t		slen;
-	if ((pv[out] = socket (AF_INET, SOCK_STREAM|SOCK_CLOEXEC, 0)) < 0)
+	if ((pv[out] = socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, 0)) < 0)
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
 	do
 	{
@@ -1033,9 +713,6 @@ int	sh_rpipe(register int pv[])
 		sh_close(pv[out]);
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
 	}
-#if SOCK_CLOEXEC==0
-	fcntl(pv[out],F_SETFD,FD_CLOEXEC);
-#endif
 	shp->fdstatus[pv[out]] |= IOCLEX;
 	pv[1-out] = -1;
 	pv[2] = port;
@@ -1290,7 +967,7 @@ static int iovex_stream(void *context, uintmax_t origfd, uintmax_t fd2)
 		}
 		else
 		{
-			int flag = (status&IOCLEX)?F_dupfd_cloexec:F_DUPFD;
+			int flag = (status&IOCLEX)?F_DUPFD_CLOEXEC:F_DUPFD;
 			sh_fcntl(origfd,flag,fd);
 		}
 		shp->sftable[fd] = sporig;
@@ -1544,7 +1221,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					spawnvex_add(vc,dupfd,-1,0,0);
 					fd = dupfd;
 				}
-				else if((fd=sh_fcntl(dupfd,F_dupfd_cloexec,3))<0)
+				else if((fd=sh_fcntl(dupfd,F_DUPFD_CLOEXEC,3))<0)
 					goto fail;
 				if(fd>= shp->gd->lim.open_max)
 					sh_iovalidfd(shp,fd);
@@ -1765,7 +1442,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 						sh_close(fn);
 					else
 					{
-						fd = sh_fcntl(fn,F_dupfd_cloexec,10);
+						fd = sh_fcntl(fn,F_DUPFD_CLOEXEC,10);
 						shp->sftable[fn] = shp->sftable[-1];
 						shp->fdstatus[fn] = shp->fdstatus[-1];
 						shp->fdstatus[fn] |= (fd<<8);
@@ -1821,7 +1498,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 						spold = shp->sftable[fx]; 
 						status = shp->fdstatus[fx];
 						sfclose(sp);
-						fd = sh_fcntl(fd, fn<3?F_DUPFD:F_dupfd_cloexec, fx);
+						fd = sh_fcntl(fd, fn<3?F_DUPFD:F_DUPFD_CLOEXEC, fx);
 						shp->sftable[fn]  = sh_iostream(shp,fd,fd);
 						shp->sftable[fx] = spold;
 					}
@@ -1845,7 +1522,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					void 	*arg= (void*)shp;
 					if(fn==fd)
 					{
-						fd = sh_fcntl(fn, F_dupfd_cloexec, fn);
+						fd = sh_fcntl(fn, F_DUPFD_CLOEXEC, fn);
 						close(fn);
 					}
 					if(trunc)
@@ -2054,7 +1731,7 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 		savefd = -1;
 	else
 	{
-		if((savefd = sh_fcntl(origfd, F_dupfd_cloexec, 10)) < 0 && errno!=EBADF)
+		if((savefd = sh_fcntl(origfd, F_DUPFD_CLOEXEC, 10)) < 0 && errno!=EBADF)
 		{
 			shp->toomany=1;
 			((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
@@ -2063,9 +1740,9 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 		if(savefd <0 && (sp=shp->sftable[origfd]) && (sfset(sp,0,0)&SF_STRING)) 
 		{
 			savestr = 1;
-			if((fd = open("/dev/null",O_RDONLY|O_cloexec)) < 10)
+			if((fd = open("/dev/null",O_RDONLY|O_CLOEXEC)) < 10)
 			{
-				savefd = sh_fcntl(fd, F_dupfd_cloexec, 10);
+				savefd = sh_fcntl(fd, F_DUPFD_CLOEXEC, 10);
 				close(fd);
 			}
 		}
@@ -2113,7 +1790,7 @@ void sh_vexsave(Shell_t *shp,int fn,int fd,Spawnvex_f vexfun, void *arg)
 		arg = shp;
 	if(fd<0)
 	{
-		fd = sh_fcntl(fn,F_dupfd_cloexec,10);
+		fd = sh_fcntl(fn,F_DUPFD_CLOEXEC,10);
 		if(fd >= shp->gd->lim.open_max)
 			 sh_iovalidfd(shp,fd);
 	}
@@ -2204,7 +1881,7 @@ void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 		sh_close(origfd);
 		if ((savefd = filemap[fd].save_fd) >= 0)
 		{
-			int dupflag = (shp->fdstatus[origfd]&IOCLEX)?F_dupfd_cloexec:F_DUPFD;
+			int dupflag = (shp->fdstatus[origfd]&IOCLEX)?F_DUPFD_CLOEXEC:F_DUPFD;
 			if(!savestr)
 				sh_fcntl(savefd, dupflag, origfd);
 			if(savefd==job.fd)
@@ -2982,20 +2659,11 @@ int sh_fcntl(register int fd, int op, ...)
 	va_start(ap, op);
 	arg =  va_arg(ap, int) ;
 	va_end(ap);
-#if F_dupfd_cloexec < 0
-	if (op == F_dupfd_cloexec)
-	{
-		newfd = fcntl(fd,F_DUPFD,arg);
-		if (newfd >= 0)
-			fcntl(newfd,F_SETFD,FD_CLOEXEC);
-	}
-	else
-#endif
 	newfd = fcntl(fd,op,arg);
 	if(newfd>=0) switch(op)
 	{
 	    case F_DUPFD:
-	    case F_dupfd_cloexec:
+	    case F_DUPFD_CLOEXEC:
 		if(shp->fdstatus[fd] == IOCLOSE)
 			shp->fdstatus[fd] = 0;
 		if(newfd>=shp->gd->lim.open_max)
@@ -3141,7 +2809,8 @@ bool sh_isdevfd(register const char *fd)
 	return(true);
 }
 
-#undef fchdir
+#ifndef _AST_INTERCEPT
+
 int sh_fchdir(int fd)
 {
 	int r,err=errno;
@@ -3167,3 +2836,4 @@ int sh_stat(const char* path,struct stat *statb)
 	return(r);
 }
 
+#endif /* _AST_INTERCEPT */

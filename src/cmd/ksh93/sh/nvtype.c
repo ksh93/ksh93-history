@@ -1781,3 +1781,11 @@ int	sh_outtype(Shell_t *shp,Sfio_t *out)
 	dtinsert(shp->var_base,L_ARGNOD);
 	return(0);
 }
+
+Namval_t *nv_typeparent(Namval_t *np)
+{
+	Namchld_t *fp;
+	if(fp = (Namchld_t*)nv_hasdisc(np,&chtype_disc))
+		return(fp->ptype->parent);
+	return(0);
+}

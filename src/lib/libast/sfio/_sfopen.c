@@ -107,7 +107,7 @@ char*		mode;		/* mode of the stream */
 				ctl = (ctl & ~(O_TEXT|O_BINARY|O_APPEND)) | oflags;
 				sysfcntlf(f->file, F_SETFL, ctl);
 			}
-#if !O_CLOEXEC
+#ifndef O_CLOEXEC
 			if (fflags & SF_FD_CLOEXEC)
 				SETCLOEXEC(f->file);
 #endif
@@ -232,8 +232,11 @@ int*		uflagp;
 		oflags |= O_BINARY;
 		continue;
 	case 'e' :
+#ifdef O_CLOEXEC
 		oflags |= O_CLOEXEC;
+#else
 		fflags |= SF_FD_CLOEXEC;
+#endif
 		continue;
 	case 'm' :
 		sflags |= SF_MTSAFE;

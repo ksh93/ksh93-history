@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -222,10 +222,8 @@ coopen(const char* path, int flags, const char* attributes)
 		ops[0] = PROC_FD_DUP(pio[0], 0, PROC_FD_PARENT);
 		ops[1] = PROC_FD_CLOSE(pio[1], PROC_FD_CHILD);
 		ops[2] = PROC_FD_CLOSE(pio[2], PROC_FD_CHILD);
-		ops[3] = 0;
-		#if 0
 		ops[3] = PROC_FD_CLOSE(pio[3], PROC_FD_PARENT);
-		#endif
+		ops[4] = 0;
 		sfsprintf(devfd, sizeof(devfd), "/dev/fd/%d", pio[0]);
 		flags = !access(devfd, F_OK);
 	}

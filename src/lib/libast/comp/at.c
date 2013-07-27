@@ -33,6 +33,7 @@
 
 #include <aso.h>
 #include <error.h>
+#include <sig.h>
 
 #ifndef ENOSYS
 #define ENOSYS	EINVAL
@@ -98,7 +99,7 @@ static unsigned int	_at_lock;
 		unsigned int	_at_tid; \
 		if (cwd != AT_FDCWD && *path != '/') \
 		{ \
-			sigcrit(SIG_REG_ALL); \
+			sigcritical(SIG_REG_ALL); \
 			_at_tid = asothreadid(); \
 			if (_at_lock == _at_tid) \
 				_at_tid = 0; \
@@ -108,7 +109,7 @@ static unsigned int	_at_lock;
 			{ \
 				if (_at_tid) \
 					asolock(&_at_lock, _at_tid, ASO_UNLOCK); \
-				sigcrit(SIG_REG_POP); \
+				sigcritical(SIG_REG_POP); \
 				return -1; \
 			} \
 		}
@@ -119,11 +120,11 @@ static unsigned int	_at_lock;
 #define ATEND() \
 		if (_at_dot >= 0) \
 		{ \
-			_at_ret = fchdir(_at_dot_); \
-			close(_at_dot_); \
+			_at_ret = fchdir(_at_dot); \
+			close(_at_dot); \
 			if (_at_tid) \
 				asolock(&_at_lock, _at_tid, ASO_UNLOCK); \
-			sigcrit(SIG_REG_POP); \
+			sigcritical(SIG_REG_POP); \
 			if (_at_ret) \
 				return -1; \
 		} \
@@ -138,7 +139,7 @@ static unsigned int	_at_lock;
 #undef	STUB
 
 int
-faccessat(int cwd, const char* path, mode_t mode, int flags)
+faccessat(int cwd, const char* path, int mode, int flags)
 {
 	int	r;
 
@@ -326,7 +327,7 @@ openat(int cwd, const char* path, int flags, ...)
 	va_list	ap;
 
 	va_start(ap, flags);
-	mode = (flags & O_CREAT) ? va_arg(ap, mode_t) : (mode_t)0;
+	mode = (flags & O_CREAT) ? (mode_t)va_arg(ap, int) : (mode_t)0;
 	va_end(ap);
 	ATBEG(cwd, path);
 	r = open(ATPATH(cwd, path), flags, mode);
@@ -340,10 +341,10 @@ openat(int cwd, const char* path, int flags, ...)
 
 #undef	STUB
 
-ssize_t
+int
 readlinkat(int cwd, const char* path, char* buf, size_t size)
 {
-	ssize_t	r;
+	int	r;
 
 	ATBEG(cwd, path);
 	r = readlink(ATPATH(cwd, path), buf, size);

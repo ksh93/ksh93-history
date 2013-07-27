@@ -49,6 +49,8 @@ union Value
 	int16_t			*sp;
 	double			*dp;	/* for floating point arithmetic */
 	Sfdouble_t		*ldp;	/* for long floating point arithmetic */
+	float			f;	/* for short floating point */
+	float			*fp;	/* for short floating point */
 	struct Namarray		*array;	/* for array node */
 	struct Namval		*np;	/* for Namval_t node */
 	union Value		*up;	/* for indirect node */
@@ -227,6 +229,7 @@ extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
 extern bool		nv_subsaved(Namval_t*);
 extern void		nv_typename(Namval_t*, Sfio_t*);
 extern void		nv_newtype(Namval_t*);
+extern Namval_t		*nv_typeparent(Namval_t*);
 extern bool		nv_istable(Namval_t*);
 extern size_t		nv_datasize(Namval_t*, size_t*);
 extern Namfun_t		*nv_mapchar(Namval_t*, const char*);

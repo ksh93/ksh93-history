@@ -123,4 +123,6 @@ bool -A a=( [2]=true [4]=false )
 [[ ${a[2]} == true ]] || err_exit 'associative arrary assignment failure'
 [[ ${#a[@]} == 2 ]] || err_exit ' bool -A a should only have two elements' 
 
+$SHELL  -uc 'i=1; bool b; ((b=((i==1)?(true):(false)) ));:'  || err_exit 'assignment to enum with ?: fails with set -u'
+
 exit $((Errors<125?Errors:125))

@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Research) 2013-04-29 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Research) 2013-07-24 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -1018,7 +1018,7 @@ find(Buf_t* buf, char* file, struct stat* st)
  */
 
 static unsigned long
-bind(Rule_t* r)
+bindfile(Rule_t* r)
 {
 	char*		s;
 	Buf_t*		buf;
@@ -1562,7 +1562,7 @@ make(Rule_t* r)
 		state.active++;
 	if (*r->name)
 	{
-		z = bind(r);
+		z = bindfile(r);
 		state.indent++;
 		report(-1, r->name, "make", r->time);
 	}
@@ -1601,7 +1601,7 @@ make(Rule_t* r)
 					{
 						q = rule(expand(buf, t));
 						attributes(q, v);
-						x = bind(q);
+						x = bindfile(q);
 						if (z < x)
 							z = x;
 						if (q->flags & RULE_error)

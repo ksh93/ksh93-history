@@ -27,8 +27,8 @@ CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
-HEADERSRC = ast.h ast_debug.h ast_dir.h ast_errorf.h ast_getopt.h \
-	ast_ioctl.h ast_intercept.h ast_namval.h ast_std.h ast_windows.h \
+HEADERSRC = ast.h ast_debug.h ast_dir.h ast_errorf.h ast_getopt.h ast_ioctl.h \
+	ast_intercept.h ast_namval.h ast_socket.h ast_std.h ast_windows.h \
 	ccode.h cdt.h cdtlib.h cmdarg.h debug.h dt.h error.h find.h ftw.h \
 	ftwalk.h fts.h fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h \
 	ip6.h lc.h ls.h magic.h mc.h mime.h mnt.h modecanon.h modex.h \
@@ -51,6 +51,8 @@ HEADEREXP = $(ID)_common.h
 HEADEROPT = fmtmsg.h libgen.h syslog.h
 
 HEADERSTD = dirent.h iconv.h nl_types.h stdio.h wchar.h wctype.h
+
+HEADERSYS = sys/socket.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 aso.3 ast.3 astsa.3 cdt.3 chr.3 compat.3 error.3 \
@@ -232,6 +234,7 @@ virtual		ast/stdio.h
 "ibm.risc"	:NOOPTIMIZE: regcomp.c
 "linux.i386-64*":NOOPTIMIZE: sfset.c
 "sol?.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c tmxfmt.c
+"sol*.sun4"	:NOOPTIMIZE: at.c
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
 "win32*-64*"	:NOOPTIMIZE: sfvprintf.c
 
@@ -250,6 +253,7 @@ virtual		ast/stdio.h
 if "$(PWD:B)" != "cc-*"
 
 $(INCLUDEDIR) :INSTALLPROTO: $(HEADEREXP) $(HEADERSRC) $(HEADERGEN)
+$(INCLUDEDIR)/sys :INSTALLPROTO: $(HEADERSYS)
 
 :INSTALLDIR: conf
 

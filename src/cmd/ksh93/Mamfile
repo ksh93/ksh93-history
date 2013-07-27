@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2013-05-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.7 2013-07-17
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -922,6 +922,11 @@ done init.o generated
 make io.o
 make sh/io.c
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
+make ${PACKAGE_ast_INCLUDE}/sys/socket.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_socket.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_socket.h dontcare
+done ${PACKAGE_ast_INCLUDE}/sys/socket.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/sys/socket.h implicit
 prev FEATURE/poll implicit
 prev FEATURE/dynamic implicit
 prev FEATURE/externs implicit

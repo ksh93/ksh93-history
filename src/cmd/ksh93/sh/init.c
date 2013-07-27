@@ -2105,9 +2105,13 @@ static void stat_init(Shell_t *shp)
 	np = create_svar(SH_SIG,"addr",0, fp);
 	nv_setsize(np,16);
 	np->nvalue.llp = (Sflong_t*)&sip->si_addr;
-	np = create_svar(SH_SIG,"value",0, fp);
+	np = create_svar(SH_SIG,"value",0,fp);
+	np = create_svar(SH_SIG,"value.int",0,fp);
+	nv_setsize(np,10);
+	np->nvalue.ip = (Sflong_t*)&(sip->si_value.sival_int);
+	np = create_svar(SH_SIG,"value.ptr",0,fp);
 	nv_setsize(np,16);
-	np->nvalue.llp = (Sflong_t*)&sip->si_value;
+	np->nvalue.llp = (Sflong_t*)&(sip->si_value.sival_ptr);
     }
 #endif
 

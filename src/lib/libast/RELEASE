@@ -1,3 +1,5 @@
+13-07-25 add ast/sys/socket.h => ast_socket.h => ../include/sys/socket.h for intercepts
+13-07-22 pathopen.c: fix PATH_DEV logic to preserve ksh sh_open() semantics
 13-07-19 fix features/fcntl.c to keep track of highest bit in o_local
 13-07-18 incorporate roland mainz' solaris compatibility and hugepage patches
 13-07-18 include/vmalloc.h: restore Vmethod_t callout function order for backwards binary compatibility

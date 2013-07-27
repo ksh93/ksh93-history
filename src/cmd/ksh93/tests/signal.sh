@@ -443,7 +443,7 @@ EOF)
 compound -a rtar
 function rttrap
 {
-	integer v=${.sh.sig.value}
+	integer v=${.sh.sig.value.int}
 	integer s=${#rtar[v][@]}
 	integer rtnum=$1
 	rtar[$v][$s]=(
@@ -504,5 +504,10 @@ while ! wait ; do true;done
 exp='typeset -C a=(typeset -l -E i=200.002)'
 got=$(typeset -p a)
 [[ $got == "$exp" ]] || err_exit "signals lost: got $got expected $exp" 
+
+float s=SECONDS
+(trap - INT; exec sleep 2) &  sleep .5;kill -sINT $!
+wait $!
+(( (SECONDS-s) < 1.8)) && err_exit "'trap - INT' causing trap to not be ignored"
 
 exit $((Errors<125?Errors:125))

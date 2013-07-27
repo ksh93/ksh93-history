@@ -243,6 +243,10 @@ if(sig==SIGBUS)
 	if(action>0)
 		return;
 	shp->trapnote |= flag;
+#ifdef AST_SERIAL_RESTART
+	if(flag&(SH_SIGSET|SH_SIGTRAP))
+		astserial(AST_SERIAL_RESTART, AST_SERIAL_except);
+#endif
 	if(sig <= shp->gd->sigmax)
 		shp->sigflag[sig] |= flag;
 	if(pp->mode==SH_JMPCMD && sh_isstate(shp,SH_STOPOK))
@@ -284,7 +288,7 @@ void sh_siginit(void *ptr)
 		}
 		tp++;
 	}
-	shp->gd->sigmax = n++;
+	shp->gd->sigmax = ++n;
 	shp->st.trapcom = (char**)calloc(n,sizeof(char*));
 	shp->sigflag = (unsigned char*)calloc(n,sizeof(char));
 	shp->gd->sigmsg = (char**)calloc(n,sizeof(char*));
@@ -688,6 +692,8 @@ void sh_done(void *ptr, register int sig)
 	if(sh_isoption(shp,SH_NOEXEC))
 		kiaclose((Lex_t*)shp->lex_context);
 #endif /* SHOPT_KIA */
+	if(shp->pwdfd >=0)
+		close(shp->pwdfd);
 	exit(savxit&SH_EXITMASK);
 }
 

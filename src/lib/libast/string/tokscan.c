@@ -63,6 +63,7 @@
 
 #include <ast.h>
 #include <tok.h>
+#include <ctype.h>
 
 static char	empty[1];
 

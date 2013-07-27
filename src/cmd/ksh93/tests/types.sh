@@ -839,4 +839,15 @@ Pt_t -A ar=([one]=(x=3 y=4) [two]=(x=5 y=6))
 ar=()
 [[ $(typeset -p ar) == 'Pt_t -A ar=()' ]] || err_exit 'ar=() for an associative array of Pt_t not correct'
 
+typeset -T Type=(
+	typeset x
+        integer  y=5
+        function x.get
+	{
+            ((.sh.value = ++_.y))
+        }
+    )
+Type obj
+[[ ${obj.x} == 6 ]] || err_exit '_ for type variable not set to type'
+
 exit $((Errors<125?Errors:125))

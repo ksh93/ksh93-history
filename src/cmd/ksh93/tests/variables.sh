@@ -679,5 +679,13 @@ x=$($SHELL -c 'foo=bar foobar=fbar; print -r -- ${!foo*}')
 
 [[ ${!.sh.sig@} == *.sh.sig.pid* ]]  ||  err_exit '.sh.sig.pid not in ${!.sh.sig@]}'
 [[ ${!.sh.sig@} == *.sh.sig.status* ]]  ||  err_exit '.sh.sig.status not in ${!.sh.sig@]}'
+[[ ${!.sh.sig@} == *.sh.sig.value.int* ]]  ||  err_exit '.sh.sig.value.int not in ${!.sh.sig@]}'
+[[ ${!.sh.sig@} == *.sh.sig.value.ptr* ]]  ||  err_exit '.sh.sig.value.ptr not in ${!.sh.sig@]}'
+
+unset x
+integer x=1
+[[ $(x+=3 command eval echo \$x) == 4 ]] || err_exit '+= assignment for environment variables for command special_built-in not working'
+(( $x == 1 )) || err_exit 'environment not restored afer command special_builtin'
+[[ $(x+=3 eval echo \$x) == 4 ]] || err_exit '+= assignment for environment variables for built-ins not working'
 
 exit $((Errors<125?Errors:125))

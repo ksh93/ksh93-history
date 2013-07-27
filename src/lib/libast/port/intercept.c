@@ -21,15 +21,13 @@
 ***********************************************************************/
 #pragma prototyped
 
-#define _AST_INTERCEPT_IMPLEMENT		1
+#define _AST_INTERCEPT_IMPLEMENT		2
 
 #include "astlib.h"
 
 #include <aso.h>
 #include <error.h>
-#if _sys_socket
 #include <sys/socket.h>
-#endif
 
 static const char	dot[] = ".";
 
@@ -50,7 +48,7 @@ Ast_global_t		ast_global =
 		do \
 		{ \
 			serial = asoget32(&GLOBAL(restart)); \
-		} while ((r = f) == -1 && errno == EINTR && serial != asoget32(&GLOBAL(restart))); \
+		} while ((r = f) == -1 && errno == EINTR && serial == astserial(AST_SERIAL_RESTART, AST_SERIAL_get)); \
 	} while (0)
 
 /* ast global/local data support */
@@ -118,7 +116,7 @@ astserial(int serial, uint32_t op)
 /* *at() intercepts */
 
 int
-ast_faccessat(int cwd, const char* path, mode_t mode, int flags)
+ast_faccessat(int cwd, const char* path, int mode, int flags)
 {
 	int	r;
 
@@ -203,7 +201,7 @@ ast_openat(int cwd, const char* path, int flags, ...)
 	va_list	ap;
 
 	va_start(ap, flags);
-	mode = (flags & O_CREAT) ? va_arg(ap, mode_t) : (mode_t)0;
+	mode = (flags & O_CREAT) ? (mode_t)va_arg(ap, int) : (mode_t)0;
 	va_end(ap);
 #if _ast_O_LOCAL && O_CLOEXEC >= _ast_O_LOCAL
 	if (flags & O_CLOEXEC)
@@ -225,9 +223,7 @@ ast_openat(int cwd, const char* path, int flags, ...)
 #endif
 	if (!path)
 		path = dot;
-#if _ast_O_LOCAL && O_DIRECTORY >= _ast_O_LOCAL
- what_happened_to_kiss:
-#endif
+ whither_kiss:
 	if (flags & O_INTERCEPT)
 		RESTART(r, openat(cwd, path, flags&~O_INTERCEPT, mode));
 	else
@@ -236,6 +232,13 @@ ast_openat(int cwd, const char* path, int flags, ...)
 	if (o_cloexec && r >= 0)
 		RESTART(o_cloexec, fcntl(r, F_SETFD, FD_CLOEXEC));
 #endif
+
+	/*
+	 * the O_DIRECTORY+O_SEARCH dance covers filesystems with files
+	 * that sometimes act like directories -- this consistently favors
+	 * ENOTDIR over EACCESS
+	 */
+
 #if _ast_O_LOCAL && O_DIRECTORY >= _ast_O_LOCAL
 	if (o_directory)
 	{
@@ -257,9 +260,15 @@ ast_openat(int cwd, const char* path, int flags, ...)
 		}
 		else if (errno == EACCES && !(flags & O_SEARCH) && O_SEARCH && O_SEARCH < _ast_O_LOCAL)
 		{
-			flags |= O_SEARCH;
-			goto what_happened_to_kiss;
+			flags |= O_SEARCH|O_INTERCEPT;
+			goto whither_kiss;
 		}
+	}
+#else
+	if (r < 0 && (flags & (O_DIRECTORY|O_SEARCH)) == O_DIRECTORY && O_SEARCH && O_SEARCH < _ast_O_LOCAL)
+	{
+		flags |= O_SEARCH|O_INTERCEPT;
+		goto whither_kiss;
 	}
 #endif
 	return r;
@@ -382,8 +391,6 @@ ast_fchdir(int fd)
 	int	r;
 
 	RESTART(r, fchdir(fd));
-	if (!r)
-		LOCAL(pwd) = fd;
 	return r;
 }
 
@@ -584,7 +591,7 @@ ast_open(const char* path, int flags, ...)
 	va_list	ap;
 
 	va_start(ap, flags);
-	mode = (flags & O_CREAT) ? va_arg(ap, mode_t) : (mode_t)0;
+	mode = (flags & O_CREAT) ? (mode_t)va_arg(ap, int) : (mode_t)0;
 	va_end(ap);
 	return ast_openat(LOCAL(pwd), path, flags, mode);
 }
@@ -776,6 +783,15 @@ ast_accept4(int fd, struct sockaddr* addr, socklen_t* len, int flags)
 	RESTART(r, accept(fd, addr, len));
 	SOCKTYPE(r, flags, r, -1);
 #endif
+	return r;
+}
+
+int
+ast_connect(int fd, struct sockaddr* addr, socklen_t len)
+{
+	int	r;
+
+	RESTART(r, connect(fd, addr, len));
 	return r;
 }
 

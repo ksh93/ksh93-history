@@ -257,6 +257,8 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			node.level = level;
 			node.nosub = 0;
 			node.nextop = *cp;
+			if(node.nextop == A_JMP)
+				node.nextop = ((unsigned char*)ep)[*((short*)roundptr(ep,cp+1,short))];
 			num = (*ep->fun)(&ptr,&node,VALUE,num);
 			if(node.emode&ARITH_ASSIGNOP)
 			{

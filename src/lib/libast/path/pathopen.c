@@ -158,19 +158,58 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 {
 	char*		b;
 	Pathdev_t	dev;
+	int		f;
 
 	b = canon ? canon : (char*)path;
 	if (pathdev(path, canon, size, flags, &dev) && dev.path.offset)
 	{
 		if (dev.fd >= 0)
-			return	dev.pid > 0 && dev.pid != getpid() ?
-				openat(AT_FDCWD, b, oflags, mode) :
-				b[dev.path.offset] ?
-				openat(dev.fd, b + dev.path.offset, oflags, mode) :
-				fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0);
+		{
+			if (dev.pid > 0 && dev.pid != getpid())
+			{
+				if (flags & PATH_DEV)
+					return access(b, F_OK) ? -1 : 1;
+				return openat(AT_FDCWD, b, oflags|O_INTERCEPT, mode);
+			}
+
+			/* dev.fd must be valid */
+
+			if ((f = fcntl(dev.fd, F_GETFL, 0)) < 0)
+				return -1;
+			if (flags & PATH_DEV)
+			{
+				if (b[dev.path.offset])
+					return faccessat(dev.fd, b + dev.path.offset, F_OK, 0) < 0 ? -1 : 1;
+				return 1;
+			}
+
+			/* F_GETFL must match oflags */
+
+			if (!(f & O_RDWR) && (f & O_ACCMODE) != (oflags & O_ACCMODE))
+			{
+				errno = EACCES;
+				return -1;
+			}
+
+			/* preserve open() semantics if possible (separate seek pointer) */
+
+			if (lseek(dev.fd, 0, SEEK_CUR) >= 0)
+			{
+
+				if (b[dev.path.offset])
+					return openat(dev.fd, b + dev.path.offset, oflags, mode);
+				else if ((!(oflags & O_CREAT) || !access(b, F_OK)) && (fd = openat(AT_FDCWD, b, oflags|O_INTERCEPT, mode)) >= 0)
+					return fd;
+
+				/* fall back to dup semantics -- the best we can do at this point */
+			}
+			return fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0);
+		}
 		else if (dev.prot.offset)
 		{
-			int			server = (flags&(O_CREAT|O_NOCTTY)) == (O_CREAT|O_NOCTTY);
+			int			server = (oflags&(O_CREAT|O_NOCTTY)) == (O_CREAT|O_NOCTTY);
+			int			prot;
+			int			type;
 			int			fd;
 			int			oerrno;
 			char*			p;
@@ -215,14 +254,26 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 				errno = ENOTDIR;
 				return -1;
 			}
-			if (flags == O_NONBLOCK)
-				return 1;
+			if (!dev.host.offset)
+			{
+				if (flags & PATH_DEV)
+					return 1;
+				errno = ENOENT;
+				return -1;
+			}
+			if (!dev.port.offset)
+				dev.port.size = 0;
 			p = fmtbuf(dev.host.size + dev.port.size + 2);
 			memcpy(p, b + dev.host.offset, dev.host.size);
 			q = p + dev.host.size;
 			*q++ = 0;
-			memcpy(q, b + dev.port.offset, dev.port.size);
-			q[dev.port.size] = 0;
+			if (dev.port.size)
+			{
+				memcpy(q, b + dev.port.offset, dev.port.size);
+				q[dev.port.size] = 0;
+			}
+			else
+				q = 0;
 			if (streq(p, "local"))
 				p = "localhost";
 			fd = getaddrinfo(p, q, &hint, &addr);
@@ -233,23 +284,29 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 				return -1;
 			}
 			oerrno = errno;
+			if (flags & PATH_DEV)
+			{
+				fd = 1;
+				goto done;
+			}
 			errno = 0;
 			fd = -1;
 			for (a = addr; a; a = a->ai_next)
 			{
 				/* some api's don't take the hint */
 		
-				if (!a->ai_protocol)
-					a->ai_protocol = hint.ai_protocol;
-				if (!a->ai_socktype)
-					a->ai_socktype = hint.ai_socktype;
-				while ((fd = socket(a->ai_family, a->ai_socktype, a->ai_protocol)) >= 0)
+				if (!(type = a->ai_socktype))
+					type = hint.ai_socktype;
+				if (oflags & O_CLOEXEC)
+					type |= SOCK_CLOEXEC;
+				if (!(prot = a->ai_protocol))
+					prot = hint.ai_protocol;
+				if ((fd = socket(a->ai_family, type, prot)) >= 0)
 				{
 					if (server && !bind(fd, a->ai_addr, a->ai_addrlen) && !listen(fd, 5) || !server && !connect(fd, a->ai_addr, a->ai_addrlen))
 						goto done;
 					close(fd);
 					fd = -1;
-					break;
 				}
 			}
 		 done:

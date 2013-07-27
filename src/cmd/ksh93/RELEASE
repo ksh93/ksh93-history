@@ -1,4 +1,12 @@
-13-07-18  --- Release ksh93v- ---
+13-07-24  --- Release ksh93v- ---
+13-07-24  A bug in which += assignments did not work for environment variables
+	  specified for non-special builtin commands has been fixed.
+13-07-24  The _ variable is new set as a reference to the type inside
+	  discipline functions for non-type variables in the type.
+13-07-23  A bug in the arithmetic assignment to an enum using a ?: operator
+	  with the nounset option has been fixed.
+13-07-22  The .sh.sig variable has been modified to treat .sh.value as a
+	  compound variable containing int and ptr.
 13-07-18  Assignments of the type name=(...) to array variables now preserve
 	  the array type and the variable type if any.
 13-07-18  If a PATH ends in ., and you are in the current directory and this

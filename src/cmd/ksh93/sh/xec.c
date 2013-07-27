@@ -631,6 +631,8 @@ static int set_instance(Shell_t *shp,Namval_t *nq, Namval_t *node, struct Namref
 	Namval_t	*np;
 	if(!nv_isattr(nq,NV_MINIMAL|NV_EXPORT|NV_ARRAY) && (np=(Namval_t*)nq->nvenv) && nv_isarray(np))
 		nq = np;
+	else if(nv_isattr(nq,NV_MINIMAL)==NV_MINIMAL && !nv_type(nq) && (np=nv_typeparent(nq)))
+		nq = np;
 	cp = nv_name(nq);
 	memset(nr,0,sizeof(*nr));
 	nr->np = nq;
@@ -1351,7 +1353,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 							/* do close-on-exec */
 							int fd;
 							for(fd=0; fd < shp->gd->lim.open_max; fd++)
-								if((shp->fdstatus[fd]&IOCLEX)&&fd!=shp->infd)
+								if((shp->fdstatus[fd]&IOCLEX)&&fd!=shp->infd && (fd!=shp->pwdfd))
 									sh_close(fd);
 						}
 						if(argn)

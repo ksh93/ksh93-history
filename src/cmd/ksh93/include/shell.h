@@ -282,10 +282,12 @@ extern void		*sh_waitnotify_20120720(Shwait_f,void*);
 #   endif
 #endif /* !_shtest_c */
 #ifndef _shio_h
+#ifndef _AST_INTERCEPT
 #   undef  chdir
 #   define chdir(a)		sh_chdir(a)	
 #   undef  fchdir
 #   define fchdir(a)		sh_fchdir(a)
+#endif
 #   ifndef HIST_MAX
 #       if _lib_lseek64
 #           undef  open64

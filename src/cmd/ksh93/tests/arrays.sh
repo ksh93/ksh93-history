@@ -741,4 +741,15 @@ typeset -A ar=([1]=foo [3]=bar)
 ar=()
 [[ $(typeset -p ar) == 'typeset -A ar=()' ]] || err_exit 'ar=() for associative array should preserve index array type'
 
+unset ar
+integer -a ar=( 2 3 4 )
+ar=()
+[[ $(typeset -p ar) == 'typeset -a -l -i ar' ]] || err_exit 'ar=() for index array should preserve attributes'
+
+unset ar
+integer -a ar=( 2 3 4 )
+integer -A ar=([1]=9 [3]=12)
+ar=()
+[[ $(typeset -p ar) == 'typeset -A -l -i ar=()' ]] || err_exit 'ar=() for associative array should preserve attributes'
+
 exit $((Errors<125?Errors:125))

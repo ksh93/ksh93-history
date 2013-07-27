@@ -482,9 +482,11 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 							nv_putsub(np, NIL(char*), 0, ARRAY_SCAN);
 							if(!ap->fun && !np->nvfun->next && !nv_type(np))
 							{
-								
+								int nvflag = np->nvflag;
+								int nvsize = np->nvsize;
 								_nv_unset(np,NV_EXPORT);
-								nv_onattr(np,NV_ARRAY);
+								np->nvflag = nvflag;
+								np->nvsize = nvsize;
 							}
 							else
 							{
@@ -500,13 +502,8 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 								ap->nelem--;
 							}
 						}
-						else if(nv_isattr(np,NV_BINARY|NV_NOFREE|NV_RAW)!=(NV_BINARY|NV_NOFREE|NV_RAW))
-						{
-							array = nv_isarray(np);
+						else if(nv_isattr(np,NV_BINARY|NV_NOFREE|NV_RAW)!=(NV_BINARY|NV_NOFREE|NV_RAW) && !nv_isarray(np))
 							_nv_unset(np,NV_EXPORT);
-							if(array)
-								nv_onattr(np,NV_ARRAY);
-						}
 					}
 					goto skip;
 				}
@@ -1633,6 +1630,12 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 #if SHOPT_FIXEDARRAY
 	Namarr_t	*ap;
 #endif /* SHOPT_FIXEDARRAY */
+	if((flags&NV_APPEND) && nv_isnull(np) && shp->var_tree->view)
+	{
+		Namval_t *mp = nv_search(np->nvname,shp->var_tree->view,0);
+		if(mp)
+			nv_clone(mp,np,0);
+	}
 	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY))
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 	/* The following could cause the shell to fork if assignment
@@ -1667,7 +1670,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		return;
 	}
 	up= &np->nvalue;
-	if(nv_isattr(np,NV_INT16P) == NV_INT16)
+	if(nv_isattr(np,NV_INT16P|NV_DOUBLE) == NV_INT16)
 	{
 		if(!np->nvalue.up || !nv_isarray(np))
 		{
@@ -1724,10 +1727,18 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				else
 					d = sh_arith(shp,sp);
 				if(!up->dp)
-					up->dp = new_of(double,0);
+				{
+					if(nv_isattr(np,NV_SHORT))
+						up->fp = new_of(float,0);
+					else
+						up->dp = new_of(double,0);
+				}
 				else if(flags&NV_APPEND)
 					od = *(up->dp);
-				*(up->dp) = od?d+od:d;
+				if(nv_isattr(np,NV_SHORT))
+					*(up->fp) = (float)od?d+od:d;
+				else
+					*(up->dp) = od?d+od:d;
 			}
 		}
 		else
@@ -2586,7 +2597,7 @@ void	_nv_unset(register Namval_t *np,int flags)
 		/* called from disc, assign the actual value */
 		nv_local=0;
 	}
-	if(nv_isattr(np,NV_INT16P) == NV_INT16)
+	if(nv_isattr(np,NV_INT16P|NV_DOUBLE) == NV_INT16)
 	{
 		np->nvalue.cp = nv_isarray(np)?Empty:0;
 		goto done;
@@ -2857,7 +2868,10 @@ char *nv_getval(register Namval_t *np)
 			}
 			else
 			{
-				d = *up->dp;
+				if(nv_isattr(np,NV_SHORT))
+					d = *up->fp;
+				else
+					d = *up->dp;
 				if(nv_isattr (np,NV_EXPNOTE))
 					format = "%.*g";
 				else if(nv_isattr (np,NV_HEXFLOAT))
@@ -2972,6 +2986,8 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 		{
 			if(nv_isattr(np, NV_LONG))
 	                       	r = *up->ldp;
+			else if(nv_isattr(np, NV_SHORT))
+	                       	r = *up->fp;
 			else
        	                	r = *up->dp;
 		}

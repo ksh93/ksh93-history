@@ -67,15 +67,15 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 	{
 		int apfd; /* attribute parent fd */
 		/* open parent node and then open a fd to the attribute directory */
-		if((apfd = openat(dir, path, O_RDONLY|O_NONBLOCK|O_cloexec))>=0)
+		if((apfd = openat(dir, path, O_RDONLY|O_NONBLOCK|O_CLOEXEC))>=0)
 		{
-			fd = openat(apfd, e_dot, O_XATTR|O_cloexec);
+			fd = openat(apfd, e_dot, O_XATTR|O_CLOEXEC);
 			close(apfd);
 		}
 	}
 	else
 #endif
-		fd = openat(dir, path, O_SEARCH|O_NONBLOCK|O_cloexec);
+		fd = openat(dir, path, O_DIRECTORY|O_NONBLOCK|O_CLOEXEC);
 
 	if(fd < 0)
 		return fd;
@@ -87,7 +87,7 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 	}
 
 	/* Move fd to a number > 10 and register the fd number with the shell */
-	shfd = sh_fcntl(fd, F_dupfd_cloexec, 10);
+	shfd = sh_fcntl(fd, F_DUPFD_CLOEXEC, 10);
 	savederrno=errno;
 	close(fd);
 	errno=savederrno;
@@ -329,11 +329,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 				if(shp->pwdfd >= 0)
 				{
 					sh_close(shp->pwdfd);
-#ifdef AT_FDCWD
 					shp->pwdfd = AT_FDCWD;
-#else
-					shp->pwdfd = -1;
-#endif
 				}
 			}
 		}

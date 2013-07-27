@@ -54,7 +54,7 @@ extern uint32_t		astserial(int, uint32_t);
 
 #undef	faccessat
 #define faccessat	ast_faccessat
-extern int		ast_faccessat(int, const char*, mode_t, int);
+extern int		ast_faccessat(int, const char*, int, int);
 
 #undef	fchmodat
 #define	fchmodat	ast_fchmodat
@@ -239,27 +239,6 @@ extern int		ast_symlink(const char*, const char*);
 #undef	unlink
 #define unlink		ast_unlink
 extern int		ast_unlink(const char*);
-
-/* socket intercepts -- prototypes done by <sys/socket.h>! */
-
-#if _sys_socket
-
-#undef	accept
-#define accept		ast_accept
-
-#undef	accept4
-#define accept4		ast_accept4
-#if !_lib_accept4
-extern int		ast_accept4(int, void*, void*, int);
-#endif
-
-#undef	socket
-#define socket		ast_socket
-
-#undef	socketpair
-#define socketpair	ast_socketpair
-
-#endif
 
 #endif
 
