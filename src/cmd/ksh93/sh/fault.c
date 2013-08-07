@@ -121,16 +121,7 @@ void	sh_fault(register int sig)
 		sfprintf(sfstdout,"childsig\n");
 #ifdef SIGWINCH
 	if(sig==SIGWINCH)
-	{
-		int rows=0, cols=0;
-		int32_t v;
-		astwinsize(2,&rows,&cols);
-		if(v = cols)
-			nv_putval(COLUMNS, (char*)&v, NV_INT32|NV_RDONLY);
-		if(v = rows)
-			nv_putval(LINES, (char*)&v, NV_INT32|NV_RDONLY);
-		shp->winch++;
-	}
+		shp->winch = 1;
 #endif  /* SIGWINCH */
 	trap = shp->st.trapcom[sig];
 if(sig==SIGBUS)
@@ -439,6 +430,17 @@ void	sh_chktrap(Shell_t* shp)
 	if(sh.intrap)
 		return;
 	shp->trapnote &= ~SH_SIGTRAP;
+	if(shp->winch)
+	{
+		int rows=0, cols=0;
+		int32_t v;
+		astwinsize(2,&rows,&cols);
+		if(v = cols)
+			nv_putval(COLUMNS, (char*)&v, NV_INT32|NV_RDONLY);
+		if(v = rows)
+			nv_putval(LINES, (char*)&v, NV_INT32|NV_RDONLY);
+		shp->winch = 0;
+	}
 	/* execute errexit trap first */
 	if(sh_isstate(shp,SH_ERREXIT) && shp->exitval)
 	{

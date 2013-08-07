@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -245,3 +245,86 @@ const struct shtable2 shtab_signals[] =
 #endif	/* SIGRES */
 	"",	0,	0
 };
+
+#ifdef _lib_sigaction
+    const struct shtable4 shtab_siginfo_codes[] =
+    {
+	{ SIGCHLD,	CLD_EXITED,	"EXITED"	},
+	{ SIGCHLD,	CLD_DUMPED,	"DUMPED"	},
+	{ SIGCHLD,	CLD_KILLED,	"KILLED"	},
+#   ifdef CLD_STOPPED
+	{ SIGCHLD,	CLD_STOPPED,	"STOPPED"	},
+#   endif
+#   ifdef CLD_CONTINUED
+	{ SIGCHLD,	CLD_CONTINUED,	"CONTINUED"	},
+#   endif
+#   ifdef CLD_TRAPPED
+	{ SIGCHLD,	CLD_TRAPPED,	"TRAPPED"	},
+#   endif
+#ifdef SIGPOLL
+#	ifdef POLL_IN
+	    { SIGPOLL,	POLL_IN,	"IN"	},
+#	endif
+#	ifdef POLL_OUT
+	    { SIGPOLL,	POLL_OUT,	"OUT"	},
+#	endif
+#	ifdef POLL_MSG
+	    { SIGPOLL,	POLL_MSG,	"MSG"	},
+#	endif
+#	ifdef POLL_ERR
+	    { SIGPOLL,	POLL_ERR,	"ERR"	},
+#	endif
+#	ifdef POLL_PRI
+	    { SIGPOLL,	POLL_PRI,	"PRI"	},
+#	endif
+#	ifdef POLL_HUP
+	    { SIGPOLL,	POLL_HUP,	"HUP"	},
+#	endif
+#endif
+	/*
+	 * entries with sig==0 must be at the end of the list
+	 * to prevent possible clashes with signal-specific
+	 * codes
+	 */
+#   ifdef SI_USER
+	{ 0,		SI_USER,	"USER"		},
+#   endif
+#   ifdef SI_QUEUE
+	{ 0,		SI_QUEUE,	"QUEUE"		},
+#   endif
+#   ifdef SI_TIMER
+	{ 0,		SI_TIMER,	"TIMER"		},
+#   endif
+#   ifdef SI_ASYNCIO
+	{ 0,		SI_ASYNCIO,	"ASYNCIO"	},
+#   endif
+#   ifdef SI_MESGQ
+	{ 0,		SI_MESGQ,	"MESGQ"		},
+#   endif
+#   ifdef SI_NOINFO
+	{ 0,		SI_NOINFO,	"NOINFO"	},
+#   endif
+#   ifdef SI_DTRACE
+	{ 0,		SI_DTRACE,	"DTRACE"	},
+#   endif
+#   ifdef SI_RCTL
+	{ 0,		SI_RCTL,	"RCTL"		},
+#   endif
+#   ifdef SI_LWP
+	{ 0,		SI_LWP,		"LWP"		},
+#   endif
+#   ifdef SI_KERNEL
+	{ 0,		SI_KERNEL,	"KERNEL"	},
+#   endif
+#   ifdef SI_SIGIO
+	{ 0,		SI_SIGIO,	"SIGIO"		},
+#   endif
+#   ifdef SI_TKILL
+	{ 0,		SI_TKILL,	"TKILL"		},
+#   endif
+#   ifdef SI_ASYNCNL
+	{ 0,		SI_ASYNCNL,	"ASYNCNL"	},
+#   endif
+	{ 0,		0,		NULL		}
+   };
+#endif /* _lib_sigaction */

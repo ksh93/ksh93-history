@@ -39,6 +39,20 @@ typedef struct Memdisc_s
 #define STR(x)		#x
 #define XTR(x)		STR(x)
 
+#define RESTARTMEM(a,f)	\
+	do \
+	{ \
+		a = (Void_t*)f; \
+		if (a == (Void_t*)(-1)) \
+			a = NIL(Void_t*); \
+	} while (a == NIL(Void_t*) && errno == EINTR)
+
+#define RESTARTSYS(r,f)	\
+	do \
+	{ \
+		r = (int)f; \
+	} while (r == -1 && errno == EINTR)
+
 #define GETMEMCHK(vm,caddr,csize,nsize,disc) \
 	/**/DEBUG_ASSERT(csize > 0 || nsize > 0); \
 	if((csize > 0 && !caddr) || (csize == 0 && nsize == 0)) \
@@ -83,10 +97,32 @@ static Vmemory_f	_Vmemoryf = 0;
  */
 
 #ifdef MADV_HUGEPAGE
-#define ADVISE(a,z)	((a)&&((z)>=8*_Vmpagesize)?madvise((a),(z),MADV_HUGEPAGE):0)
+#define ADVISE(v,a,z)	((a)&&((z)>=8*_Vmpagesize)?madvise((a),(z),MADV_HUGEPAGE):0)
 #else
-#define ADVISE(a,z)
+#define ADVISE(v,a,z)
 #endif
+
+/*
+ * report region v memory usage stats
+ */
+
+#define USAGE(v,a,z) \
+	if ((a) && (_Vmassert & VM_usage)) \
+	{ \
+		Vmstat_t	vs; \
+		if (_vmstat(v, &vs, z) >= 0) \
+			debug_printf(2, "vmalloc: %p %zu %s\n", (a), (z), vs.mesg); \
+	}
+
+/*
+ * return addr a size z from region v
+ */
+
+#undef	RETURN
+
+#define RETURN(v,a,z) \
+	if (a) { USAGE(v,a,z); } \
+	return (a)
 
 #if _mem_win32 /* getting memory on a window system */
 #if _PACKAGE_ast
@@ -100,11 +136,11 @@ static Void_t* win32mem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize
 	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(csize == 0)
 	{	caddr = (Void_t*)VirtualAlloc(0,nsize,MEM_COMMIT,PAGE_READWRITE);
-		return caddr;
+		RETURN(vm, caddr, nsize);
 	}
 	else if(nsize == 0)
 	{	(void)VirtualFree((LPVOID)caddr,0,MEM_RELEASE);
-		return caddr;
+		RETURN(vm, caddr, nsize);
 	}
 	else	return NIL(Void_t*);
 }
@@ -132,16 +168,21 @@ static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsize,
 
 	nsize -= csize; /* amount of new memory needed */
 
-	if(csize > 0 && (newm = sbrk(0)) != ((Vmuchar_t*)caddr + csize) )
-		newm = NIL(Void_t*); /* non-contiguous memory */
-	else if(!(newm = sbrk(nsize)) || newm == (Vmuchar_t*)(-1) )
-		newm = NIL(Void_t*); /* sbrk() failed */
-	else if(csize > 0 && newm != ((Vmuchar_t*)caddr + csize + nsize) )
+	if(csize > 0)
+	{	RESTARTMEM(newm, sbrk(0));
+		if(newm && newm != ((Vmuchar_t*)caddr + csize) )
+		{	newm = NIL(Void_t*); /* non-contiguous memory */
+			goto bad;
+		}
+	}
+	RESTARTMEM(newm, sbrk(nsize));
+	if(newm && csize > 0 && newm != ((Vmuchar_t*)caddr + csize + nsize) )
 		newm = NIL(Void_t*); /* non-contiguous memory again */
 
+ bad:
 	asolock(&_Vmsbrklock, key, ASO_UNLOCK);
 
-	return (newm && caddr) ? caddr : newm;
+	RETURN(vm, (newm && caddr) ? caddr : newm, nsize);
 }
 #endif /* _mem_sbrk */
 
@@ -182,27 +223,22 @@ static Void_t* safebrkmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsi
 				else	_Vmmemsbrk += nsize;
 			}
 			if(newm)
-			{	int flags = MAP_ANON|MAP_PRIVATE|MAP_FIXED;
-				newm = (Void_t*)mmap((Void_t*)newm, nsize, PROT_READ|PROT_WRITE, flags, -1, 0);
+				RESTARTMEM(newm, mmap((Void_t*)newm, nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE|MAP_FIXED, -1, 0));
+		}
+		else	RESTARTMEM(newm, mmap((Void_t*)_Vmmemsbrk, nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0));
+
+		if(newm)
+		{	if(csize > 0 && newm != ((Vmuchar_t*)caddr+csize)) /* new memory is not contiguous */
+			{	munmap((Void_t*)newm, nsize); /* remove it and wait for a call for new memory */
+				newm = NIL(Void_t*);
 			}
+			else	_Vmmemsbrk = newm+nsize;
 		}
-		else	newm = (Void_t*)mmap((Void_t*)_Vmmemsbrk, nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
-
-		if(!newm || newm == (Vmuchar_t*)(-1))
-			newm = NIL(Void_t*);
-		else if(csize > 0 && newm != ((Vmuchar_t*)caddr+csize)) /* new memory is not contiguous */
-		{	munmap((Void_t*)newm, nsize); /* remove it and wait for a call for new memory */
-			newm = NIL(Void_t*);
-		}
-		else	_Vmmemsbrk = newm+nsize;
 	}
-
-	if(newm == (Vmuchar_t*)(-1) )
-		newm = NIL(Vmuchar_t*);
 
 	asolock(&_Vmsbrklock, key, ASO_UNLOCK);
 
-	return (newm && caddr) ? caddr : newm;
+	RETURN(vm, (newm && caddr) ? caddr : newm, nsize);
 }
 #endif /* _mem_mmap_anon */
 
@@ -212,15 +248,13 @@ static Void_t* mmapanonmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t ns
 	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(csize == 0)
 	{	nsize = ROUND(nsize, _Vmpagesize);
-		caddr = (Void_t*)mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
-		if(caddr == (Void_t*)(-1))
-			caddr = NIL(Void_t*);
-		ADVISE(caddr, nsize);
-		return caddr;
+		RESTARTMEM(caddr, mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0));
+		ADVISE(vm, caddr, nsize);
+		RETURN(vm, caddr, nsize);
 	}
 	else if(nsize == 0)
 	{	(void)munmap(caddr, csize);
-		return caddr;
+		RETURN(vm, caddr, nsize);
 	}
 	else	return NIL(Void_t*);
 }
@@ -244,18 +278,16 @@ static Void_t* mmapzeromem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t ns
 	if(csize == 0)
 	{	nsize = ROUND(nsize, _Vmpagesize);
 		offset = asoaddoff(&mmdc->offset, nsize);
-		caddr = mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE, mmdc->fd, offset);
-		if(caddr == (Void_t*)(-1))
-			caddr = NIL(Void_t*);
-		ADVISE(caddr, nsize);
-		return caddr;
+		RESTARTMEM(caddr, mmap(NIL(Void_t*), nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE, mmdc->fd, offset));
+		ADVISE(vm, caddr, nsize);
+		RETURN(vm, caddr, nsize);
 	}
 	else if(nsize == 0)
 	{	Vmuchar_t	*addr = (Vmuchar_t*)sbrk(0);
 		if(addr < (Vmuchar_t*)caddr ) /* in sbrk space */
 			return NIL(Void_t*);
 		(void)munmap(caddr, csize);
-		return caddr;
+		RETURN(vm, caddr, nsize);
 	}
 	else	return NIL(Void_t*);
 }
@@ -269,7 +301,8 @@ static Void_t* mmapzeromeminit(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_
 	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(mmdc->fd != FD_INIT)
 		return NIL(Void_t*);
-	if((fd = open("/dev/zero", O_RDONLY|O_CLOEXEC)) < 0)
+	RESTARTSYS(fd, open("/dev/zero", O_RDONLY|O_CLOEXEC));
+	if(fd < 0)
 	{	mmdc->fd = FD_NONE;
 		return NIL(Void_t*);
 	}
@@ -285,11 +318,12 @@ static Void_t* mmapzeromeminit(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_
 		SETCLOEXEC(mmdc->fd);
 #endif
 	}
-	if(!(caddr = mmapzeromem(vm, caddr, csize, nsize, disc)))
+	RESTARTMEM(caddr, mmapzeromem(vm, caddr, csize, nsize, disc));
+	if(!caddr)
 	{	close(mmdc->fd);
 		mmdc->fd = FD_NONE;
 	}
-	return caddr;
+	RETURN(vm, caddr, nsize);
 }
 #endif /* _mem_mmap_zero */
 
@@ -298,10 +332,12 @@ static Void_t* mallocmem(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsiz
 {
 	GETMEMCHK(vm, caddr, csize, nsize, disc);
 	if(csize == 0)
-		return (Void_t*)malloc(nsize);
+	{	RESTARTMEM(caddr, malloc(nsize));
+		RETURN(vm, caddr, nsize);
+	}
 	else if(nsize == 0)
 	{	free(caddr);
-		return caddr;
+		RETURN(vm, caddr, nsize);
 	}
 	else	return NIL(Void_t*);
 }
@@ -380,6 +416,7 @@ Vmalloc_t* _vmheapinit(Vmalloc_t* vm)
 {	
 	Vmalloc_t		*heap;
 	unsigned int		status;
+	unsigned int		vm_assert;
 
 	/**/DEBUG_ASSERT(!vm /* called from _vmstart() in malloc.c */ || vm == Vmheap);
 
@@ -399,12 +436,16 @@ Vmalloc_t* _vmheapinit(Vmalloc_t* vm)
 		_vmoptions(3);
 	}
 
+	vm_assert = _Vmassert;
+	_Vmassert &= ~(VM_usage);
 	heap = vmopen(Vmheap->disc, VMHEAPMETH, VM_HEAPINIT);
+	_Vmassert = vm_assert;
+
 	if(!vm && heap != Vmheap)
 	{	if(heap)
-			write(9, "\n\nFATAL: _vmheapinit() != Vmheap\n\n", 34);
+			debug_printf(9, "\n\nFATAL: _vmheapinit() != Vmheap\n\n");
 		else
-			write(9, "\n\nFATAL: _vmheapinit() == 0\n\n", 29);
+			debug_printf(9, "\n\nFATAL: _vmheapinit() == 0\n\n");
 	}
 
 	/**/DEBUG_ASSERT(Init == HEAPINIT);

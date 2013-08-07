@@ -1550,16 +1550,11 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		}
 	}
 	sh_ioinit(shp);
-#ifdef AT_FDCWD
-       shp->pwdfd = sh_diropenat(shp, AT_FDCWD, e_dot, false);
-#else
-       /* Systems without AT_FDCWD/openat() do not use the |dir| argument */
-       shp->pwdfd = sh_diropenat(shp, -1, e_dot, false);
-#endif
+	shp->pwdfd = sh_diropenat(shp, AT_FDCWD, e_dot, false);
 #ifdef O_SEARCH
-       /* This should _never_ happen, guranteed by design and goat sacrifice */
-       if(shp->pwdfd < 0)
-               errormsg(SH_DICT,ERROR_system(1), "Can't obtain directory fd.");
+	/* This should _never_ happen, guranteed by design and goat sacrifice */
+	if(shp->pwdfd < 0)
+		errormsg(SH_DICT,ERROR_system(1), "Can't obtain directory fd.");
 #endif
 
 	/* initialize signal handling */
@@ -2058,11 +2053,23 @@ static void stat_init(Shell_t *shp)
 	svar_init(shp,SH_SIG,shtab_siginfo);
     }
 
+    static const char *siginfocode2str(int sig, int code)
+    {
+	const struct shtable4 *sc;
+	for(sc = shtab_siginfo_codes ; sc->str != NULL ; sc++)
+	{
+		if(((sc->sig == sig) || (sc->sig == 0)) && (sc->code == code))
+			return(sc->str);
+	}
+	return(NULL);
+    }
+
     void sh_setsiginfo(siginfo_t *sip)
     {
 	Namval_t	*np;
 	Namfun_t	*fp = SH_SIG->nvfun;
 	struct Svars	*sp;
+	const char	*sistr;
 	while(fp->disc->createf!=create_svar)
 		fp = fp->next;
 	if(!fp)
@@ -2080,19 +2087,10 @@ static void stat_init(Shell_t *shp)
 	np = create_svar(SH_SIG,"uid",0, fp);
 	np->nvalue.idp = &sip->si_uid;
 	np = create_svar(SH_SIG,"code",0, fp);
-	if(sip->si_signo==SIGCHLD) 
+	nv_offattr(np,NV_INTEGER);
+	if(sistr = siginfocode2str(sip->si_signo, sip->si_code))
 	{
-		nv_offattr(np,NV_INTEGER);
-		if(sip->si_code==CLD_EXITED)
-			np->nvalue.cp = "exited";
-		else if(sip->si_code==CLD_DUMPED)
-			np->nvalue.cp = "dumped";
-		else if(sip->si_code==CLD_KILLED)
-			np->nvalue.cp = "killed";
-		else if(sip->si_code==CLD_STOPPED)
-			np->nvalue.cp = "stopped";
-		else
-			np->nvalue.cp = "continued";
+		np->nvalue.cp = sistr;
 		nv_onattr(np,NV_NOFREE);
 	}
 	else
@@ -2108,7 +2106,7 @@ static void stat_init(Shell_t *shp)
 	np = create_svar(SH_SIG,"value",0,fp);
 	np = create_svar(SH_SIG,"value.int",0,fp);
 	nv_setsize(np,10);
-	np->nvalue.ip = (Sflong_t*)&(sip->si_value.sival_int);
+	np->nvalue.ip = &(sip->si_value.sival_int);
 	np = create_svar(SH_SIG,"value.ptr",0,fp);
 	nv_setsize(np,16);
 	np->nvalue.llp = (Sflong_t*)&(sip->si_value.sival_ptr);

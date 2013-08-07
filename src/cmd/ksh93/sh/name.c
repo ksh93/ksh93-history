@@ -750,6 +750,18 @@ static char *stack_extend(Shell_t *shp,const char *cname, char *cp, int n)
 	return((char*)name);
 }
 
+static Namval_t	*nv_parentnode(Namval_t *np)
+{
+	Namval_t *mp = np;
+	if(nv_istable(np))
+		return(nv_parent(np));
+	if(mp=nv_typeparent(np))
+		return(mp);
+	if((mp= (Namval_t*)np->nvenv))
+		return(mp);
+	return(np);
+}
+
 Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 {
 	Shell_t			*shp = dtuserdata(root,0,0);
@@ -918,6 +930,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			if(c)
 				*sp = c;
 			top = 0;
+			if(np && !nv_isattr(np,NV_MINIMAL) && shp->oldnp && !np->nvenv && shp->oldnp!=np)
+				np->nvenv = (char*)shp->oldnp;
+			shp->oldnp = np;
 			if(isref)
 			{
 #if SHOPT_FIXEDARRAY
@@ -944,6 +959,8 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					n = nv_refindex(np);
 					dim = nv_refdimen(np);
 #endif /* SHOPT_FIXEDARRAY */
+					if(shp->oldnp = nv_refoldnp(np))
+						shp->oldnp = (Namval_t*)shp->oldnp->nvenv;
 					np = nv_refnode(np);
 #if SHOPT_FIXEDARRAY
 					if(n)
@@ -1266,7 +1283,25 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				return(np);
 			cp++;
 			break;
+		    case '_':
+			if(cp[1]=='_' && (cp[2]==0 || cp[2]=='.') && shp->oldnp)
+			{
+				cp += 2;
+				dp->last = cp;
+				nvcache.ok = 0;
+				shp->oldnp = np = nv_parentnode(shp->oldnp);
+				if(*cp==0)
+					return(np);
+				sp = nv_name(np);
+				c = strlen(sp);
+				dp->nofree |= 1;
+				name = copystack(shp,(const char*)sp,cp,(const char*)0);
+				cp = (char*)name+c+1;
+				break;
+			}
+			/* fall through */
 		    default:
+			shp->oldnp = np;
 			dp->last = cp;
 			if((c = mbchar(cp)) && !isaletter(c))
 				return(np);
@@ -1670,16 +1705,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		return;
 	}
 	up= &np->nvalue;
-	if(nv_isattr(np,NV_INT16P|NV_DOUBLE) == NV_INT16)
-	{
-		if(!np->nvalue.up || !nv_isarray(np))
-		{
-			up = &u;
-			up->up = &np->nvalue;
-		}
-	}
 #if SHOPT_FIXEDARRAY
-	else if(np->nvalue.up && nv_isarray(np) && (ap=nv_arrayptr(np)) && !ap->fixed)
+	if(np->nvalue.up && nv_isarray(np) && (ap=nv_arrayptr(np)) && !ap->fixed)
 #else
 	else if(np->nvalue.up && nv_isarray(np) && nv_arrayptr(np))
 #endif /* SHOPT_FIXEDARRAY */
@@ -1832,9 +1859,13 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				if(nv_isattr (np, NV_SHORT))
 				{
 					int16_t s=0;
+					bool ptr=(nv_isattr(np,NV_INT16P)==NV_INT16P);
 					if(flags&NV_APPEND)
-						s = *up->sp;
-					*(up->sp) = s+(int16_t)l;
+						s = ptr?*up->sp:up->s;
+					if(ptr)
+						*(up->sp) = s+(int16_t)l;
+					else
+						up->s = s+(int16_t)l;
 					nv_onattr(np,NV_NOFREE);
 				}
 				else
@@ -3602,6 +3633,7 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 	np->nvalue.nrp = newof(0,struct Namref,1,sizeof(Dtlink_t));
 	np->nvalue.nrp->np = nq;
 	np->nvalue.nrp->root = hp;
+	np->nvalue.nrp->oldnp = shp->oldnp;
 	if(ep)
 	{
 #if SHOPT_FIXEDARRAY
@@ -3804,21 +3836,20 @@ char *nv_name(register Namval_t *np)
 	if(!nv_isattr(np,NV_MINIMAL|NV_EXPORT) && np->nvenv)
 	{
 		Namval_t *nq= shp->last_table, *mp= (Namval_t*)np->nvenv;
-		if(np==shp->last_table)
-			shp->last_table = 0;
-		if(nv_isarray(mp))
-			sfprintf(shp->strbuf,"%s[%s]",nv_name(mp),np->nvname);
-		else
-			sfprintf(shp->strbuf,"%s.%s",nv_name(mp),np->nvname);
-		shp->last_table = nq;
-		return(sfstruse(shp->strbuf));
+		if(!strchr(np->nvname,'.') ||  nv_type(mp) || (nv_isarray(mp) && (cp=nv_getsub(mp)) && strcmp(np->nvname,cp)==0))
+		{
+			if(np==shp->last_table)
+				shp->last_table = 0;
+			if(nv_isarray(mp))
+				sfprintf(shp->strbuf,"%s[%s]",nv_name(mp),np->nvname);
+			else
+				sfprintf(shp->strbuf,"%s.%s",nv_name(mp),np->nvname);
+			shp->last_table = nq;
+			return(sfstruse(shp->strbuf));
+		}
 	}
 	if(nv_istable(np))
-#if 1
 		shp->last_table = nv_parent(np);
-#else
-		shp->last_table = nv_create(np,0, NV_LAST,(Namfun_t*)0);
-#endif
 	else if(!nv_isref(np))
 	{
 	skip:
@@ -3875,6 +3906,8 @@ int nv_isnull(register Namval_t *np)
 		return(0);
 	if(np==IFSNOD)
 		return(1);
+	if(nv_isattr(np,NV_INT16)==NV_INT16 && !np->nvfun)
+		return(nv_isattr(np,NV_NOTSET)==NV_NOTSET);
  	if(!nv_attr(np) || nv_isattr(np,NV_NOTSET)!=NV_NOTSET)
 		return(!np->nvfun || !np->nvfun->disc || !nv_hasget(np));
 	return(0);

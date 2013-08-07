@@ -24,12 +24,17 @@
 
 #include <sys/ioctl.h>
 
+#if _AST_INTERCEPT_IMPLEMENT < 2
+
+#undef	ioctl
+#define ioctl		ast_ioctl
+
+#endif
+
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
 
-#undef	ioctl
-#define ioctl		ast_ioctl
 extern int		ast_ioctl(int, int, ...);
 
 #undef	extern

@@ -42,7 +42,7 @@ lib	mbtowc,mbrtowc,memalign,memchr,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
 lib	mount,on_exit,onexit,opendir,pathconf,pipe2
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
-lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
+lib	setpgid,setpgrp,setpgrp2,setregid,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec
 lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
 lib	strmode,strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog

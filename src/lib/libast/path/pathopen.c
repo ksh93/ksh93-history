@@ -183,7 +183,12 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 				return 1;
 			}
 
-			/* F_GETFL must match oflags */
+			/* a trailing path component means dev.fd must be a directory */
+
+			if (b[dev.path.offset])
+				return openat(dev.fd, b + dev.path.offset, oflags, mode);
+
+			/* the path boils down to just dev.fd -- F_GETFL must match oflags */
 
 			if (!(f & O_RDWR) && (f & O_ACCMODE) != (oflags & O_ACCMODE))
 			{
@@ -205,6 +210,8 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 			}
 			return fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0);
 		}
+		else if (dev.fd == AT_FDCWD)
+			return (flags & PATH_DEV) ? 1 : -1;
 		else if (dev.prot.offset)
 		{
 			int			server = (oflags&(O_CREAT|O_NOCTTY)) == (O_CREAT|O_NOCTTY);

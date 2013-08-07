@@ -47,11 +47,9 @@ eaccess(const char* path, register int flags)
 {
 #if _lib_faccessat && defined(AT_FDCWD) && defined(AT_EACCESS)
 	return faccessat(AT_FDCWD, path, flags, AT_EACCESS);
-#else
-#ifdef EFF_ONLY_OK
+#elif defined(EFF_ONLY_OK)
 	return access(path, flags|EFF_ONLY_OK);
-#else
-#if _lib_euidaccess
+#elif _lib_euidaccess
 	return euidaccess(path, flags);
 #else
 	register int	mode;
@@ -114,7 +112,17 @@ eaccess(const char* path, register int flags)
 		if (ngroups == -2)
 		{
 			if ((ngroups = getgroups(0, (gid_t*)0)) <= 0)
+			{
+#if defined(NGROUPS_MAX)
 				ngroups = NGROUPS_MAX;
+#elif defined(_SC_NGROUPS_MAX)
+				ngroups = (int)sysconf(_SC_NGROUPS_MAX);
+#elif defined(_POSIX_NGROUPS_MAX)
+				ngroups = _POSIX_NGROUPS_MAX;
+#else
+				ngroups = 32;
+#endif
+			}
 			if (!(groups = newof(0, gid_t, ngroups + 1, 0)))
 				ngroups = -1;
 			else
@@ -137,8 +145,6 @@ eaccess(const char* path, register int flags)
  nope:
 	errno = EACCES;
 	return -1;
-#endif
-#endif
 #endif
 }
 

@@ -178,7 +178,7 @@ $SHELL > $tmpfile <<- \EOF
 EOF
 {
 	read xpid pid
-	for stat in exited stopped continued exited
+	for stat in EXITED STOPPED CONTINUED EXITED
 	do	read pid1 pid2 status  || { err_exit "line with stopped continued or exited expected";break;} 
 		[[ $pid1 == $pid ]] || err_exit ".sh.sig.pid=$pid1 should be $pid"
 		[[ $pid2 == $pid ]] ||  err_exit "\$!=$pid1 should be $pid"

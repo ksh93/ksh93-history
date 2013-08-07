@@ -681,7 +681,7 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 {
 				{
 					if((flag&(NV_HOST|NV_INTEGER))!=NV_HOST) 
-						_nv_unset(np,0);
+						_nv_unset(np,NV_EXPORT);
 				}
 }
 			}

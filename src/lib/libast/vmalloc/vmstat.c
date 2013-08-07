@@ -33,7 +33,7 @@ void _STUB_vmstat(){}
 */
 
 #if __STD_C
-int vmstat(Vmalloc_t* vm, Vmstat_t* st)
+int _vmstat(Vmalloc_t* vm, Vmstat_t* st, size_t extra)
 #else
 int vmstat(vm, st)
 Vmalloc_t*	vm;
@@ -42,9 +42,32 @@ Vmstat_t*	st;
 {
 	Seg_t	*seg;
 	char	*bufp;
-	ssize_t	z, p;
+	ssize_t	p;
 	int	rv;
 
+	memset(st, 0, sizeof(Vmstat_t));
+	for(seg = vm->data->seg; seg; seg = seg->next)
+	{	st->n_seg += 1;
+		st->extent += seg->size;
+	}
+	if((rv = (*vm->meth.statf)(vm, st, extra != 0)) >= 0 )
+	{	
+		st->extent += extra;
+		debug_sprintf(st->mesg, sizeof(st->mesg), "region %p size=%zu segs=%zu packs=%zu busy=%zu%% cache=%zu/%zu", vm, st->extent, st->n_seg, st->n_pack, (st->s_busy * 100) / st->extent, st->s_cache, st->n_cache);
+		st->mode = vm->data->mode;
+	}
+
+	return rv;
+}
+
+#if __STD_C
+int vmstat(Vmalloc_t* vm, Vmstat_t* st)
+#else
+int vmstat(vm, st)
+Vmalloc_t*	vm;
+Vmstat_t*	st;
+#endif
+{
 	if(!st)
 		return _vmheapbusy();
 	if(!vm) /* getting stats for Vmregion */
@@ -52,69 +75,7 @@ Vmstat_t*	st;
 			return -1;
 		vm = Vmregion;
 	}
-
-	memset(st, 0, sizeof(Vmstat_t));
-	for(seg = vm->data->seg; seg; seg = seg->next)
-	{	st->n_seg += 1;
-		st->extent += seg->size;
-	}
-	if((rv = (*vm->meth.statf)(vm, st, 0)) >= 0 )
-	{	
-		bufp = st->mesg;
-		bufp = (*_Vmstrcpy)(bufp, "region(size", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->extent),-1), ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "segs", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_seg),-1), ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "packs", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_pack),-1), ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "\n\t\tbusy(n", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_busy),-1), ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "size", '=');
-		z = st->s_busy;
-		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->s_busy),-1), '[');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
-		bufp = (*_Vmstrcpy)(bufp, "]", ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "size+head", '=');
-		z = st->s_busy + st->n_busy*sizeof(Head_t);
-		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(z),-1), '[');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
-		bufp = (*_Vmstrcpy)(bufp, "]", ')');
-
-		bufp = (*_Vmstrcpy)(bufp, "\n\t\tfree(n", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_free),-1), ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "size", '=');
-		z = st->s_free;
-		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->s_free),-1), '[');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
-		bufp = (*_Vmstrcpy)(bufp, "]", ',');
-
-		bufp = (*_Vmstrcpy)(bufp, "size+head", '=');
-		z = st->s_free + st->n_free*sizeof(Head_t);
-		p = (ssize_t)((((double)z)/((double)st->extent))*100 + 0.5);
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(z),-1), '[');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(p),-1), '%');
-		bufp = (*_Vmstrcpy)(bufp, "]", ')');
-
-		bufp = (*_Vmstrcpy)(bufp, "\n\t\tcache(n", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->n_cache),-1), ',');
-		bufp = (*_Vmstrcpy)(bufp, "size", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VMLONG(st->s_cache),-1), ')');
-
-		*bufp = 0;
-
-		st->mode = vm->data->mode;
-	}
-
-	return rv;
+	return _vmstat(vm, st, 0);
 }
 
 #endif

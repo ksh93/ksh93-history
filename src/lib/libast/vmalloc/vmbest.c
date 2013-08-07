@@ -980,7 +980,7 @@ static int beststat(Vmalloc_t* vm, Vmstat_t* st, int local)
 		for(k = 0; k < best->pkcnt; ++k)
 			if(pack == best->list[k])
 				break;
-		if(k >= best->pkcnt || pack->lock)
+		if(k >= best->pkcnt || pack->lock && !local)
 			return -1;
 
 		for(endbp = ENDB(sgb); bp < endbp; bp = TRUENEXT(bp) )
@@ -1002,7 +1002,7 @@ static int beststat(Vmalloc_t* vm, Vmstat_t* st, int local)
 
 	/* adjust statistics for delayed free blocks and cached small blocks */
 	for(k = 0; k < best->pkcnt; ++k)
-	{	if(!(pack = best->list[k]) || pack->lock)
+	{	if(!(pack = best->list[k]) || pack->lock && !local)
 			return -1;
 
 		if((bp = pack->alloc) )

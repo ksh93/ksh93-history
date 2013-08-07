@@ -294,6 +294,12 @@ main()
 #ifdef O_SYNC
 	if (O_SYNC > o_local) o_local = O_SYNC;
 #endif
+#ifdef O_TEMPORARY
+	if (O_TEMPORARY > o_local) o_local = O_TEMPORARY;
+#endif
+#ifdef O_TMPFILE
+	if (O_TMPFILE > o_local) o_local = O_TMPFILE;
+#endif
 #ifdef O_XATTR
 	if (O_XATTR > o_local) o_local = O_XATTR;
 #endif

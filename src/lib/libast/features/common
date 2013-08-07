@@ -475,7 +475,7 @@ cat{
 	#define true	1
 	#endif
 }end
-tst key __thread -lpthread note{ __thread keyword exists and works with -lpthread }end execute{
+tst key___thread -lpthread note{ __thread keyword exists and works with -lpthread }end execute{
 	#include	<pthread.h>
 	
 	#define INITIAL		1

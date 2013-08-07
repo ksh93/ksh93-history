@@ -473,6 +473,10 @@ void _vmoptions(int boot)
 						trace = v;
 				}
 				break;
+			case 'u':		/* usage */
+				if (boot & 1)
+					_Vmassert |= VM_usage;
+				break;
 			case 'v':		/* verbose */
 				if (boot & 1)
 					_Vmassert |= VM_verbose;

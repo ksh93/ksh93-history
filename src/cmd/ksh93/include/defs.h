@@ -160,6 +160,7 @@ struct shared
 	Namval_t	*namespace;	/* current active namespace*/ \
 	Namval_t	*last_table;	/* last table used in last nv_open  */ \
 	Namval_t	*prev_table;	/* previous table used in nv_open  */ \
+	Namval_t	*oldnp;		/* last valid parent node  */ \
 	Sfio_t		*outpool;	/* ouput stream pool */ \
 	long		timeout;	/* read timeout */ \
 	long		curenv;		/* current subshell number */ \

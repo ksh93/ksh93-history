@@ -183,7 +183,12 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 					}
 				}
 				else if (flags & PATH_DEV)
+				{
 					r = s;
+					dev->fd = AT_FDCWD;
+					dev->prot.offset = 0;
+					dev->pid = -1;
+				}
 			}
 			else if (s[0] == 's' && s[1] == 'c' && s[2] == 't' && s[3] == 'p' && (s[4] == '/' || s[4] == 0) && (n = 4) ||
 				 s[0] == 't' && s[1] == 'c' && s[2] == 'p' && (s[3] == '/' || s[3] == 0) && (n = 3) ||

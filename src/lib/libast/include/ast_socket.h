@@ -19,6 +19,10 @@
 *                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
+/*
+ * the socket part of ast_intercept.h
+ */
+
 #ifndef _AST_SOCKET_H
 #define _AST_SOCKET_H	1
 
@@ -30,25 +34,32 @@
 
 #undef	accept
 #define accept		ast_accept
-extern int		ast_accept(int, struct sockaddr*, int);
 
 #undef	accept4
 #define accept4		ast_accept4
-extern int		ast_accept4(int, void*, void*, int);
 
 #undef	connect
 #define connect		ast_connect
-extern int		ast_connect(int, struct sockaddr*, int);
 
 #undef	socket
 #define socket		ast_socket
-extern int		ast_socket(int, int, int);
 
 #undef	socketpair
 #define socketpair	ast_socketpair
-extern int		ast_socketpair(int, int, int, int[2]);
 
 #endif
+
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
+extern int		ast_accept(int, struct sockaddr*, socklen_t*);
+extern int		ast_accept4(int, struct sockaddr*, socklen_t*, int);
+extern int		ast_connect(int, struct sockaddr*, socklen_t);
+extern int		ast_socket(int, int, int);
+extern int		ast_socketpair(int, int, int, int[2]);
+
+#undef extern
 
 #endif
 

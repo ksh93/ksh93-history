@@ -95,6 +95,7 @@ struct Namref
 {
 	Namval_t	*np;
 	Namval_t	*table;
+	Namval_t	*oldnp;
 	Dt_t		*root;
 	char		*sub;
 #if SHOPT_FIXEDARRAY
@@ -174,6 +175,7 @@ struct Ufunction
 #define nv_reftree(n)	((n)->nvalue.nrp->root)
 #define nv_reftable(n)	((n)->nvalue.nrp->table)
 #define nv_refsub(n)	((n)->nvalue.nrp->sub)
+#define nv_refoldnp(n)	((n)->nvalue.nrp->oldnp)
 #if SHOPT_FIXEDARRAY
 #   define nv_refindex(n)	((n)->nvalue.nrp->curi)
 #   define nv_refdimen(n)	((n)->nvalue.nrp->dim)

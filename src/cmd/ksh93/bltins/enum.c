@@ -18,8 +18,7 @@
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
-#include	<shell.h>
-#include	"name.h"
+#include	<defs.h>
 
 static const char enum_usage[] =
 "[-?@(#)$Id: enum (AT&T Research) 2013-04-29 $\n]"
@@ -98,6 +97,7 @@ USAGE_LICENSE
 struct Enum
 {
 	Namfun_t	hdr;
+	char		node[NV_MINSZ+sizeof(char*)];
 	int64_t		nelem;
 	bool		iflag;
 	const char	*values[1];
@@ -112,11 +112,7 @@ static int enuminfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *fp)
 	np = *(Namval_t**)(fp+1);
 	ep = (struct Enum*)np->nvfun;
 	if(strcmp(str,"default")==0)
-#if 0
-		sfprintf(out,"\b%s\b%c",ep->values[0],0);
-#else
 		sfprintf(out,"\b%s\b",ep->values[0]);
-#endif
 	else if(strcmp(str,"case")==0)
 	{
 		if(ep->iflag)
@@ -191,7 +187,33 @@ static Sfdouble_t get_nenum(register Namval_t* np, Namfun_t *fp)
 	return(nv_getn(np,fp));
 }
 
-const Namdisc_t ENUM_disc        = {  0, put_enum, get_enum, get_nenum, 0,0,clone_enum };
+static Namval_t* create_enum(Namval_t *np, const char *name, int flags, Namfun_t *fp)
+{
+	struct Enum	*ep = (struct Enum*)fp;
+	Namval_t	*mp; 
+	const char	*v;
+	int		i,n;
+	mp = nv_namptr(ep->node,0);
+	mp->nvenv = (char*)np;
+	for(i=0;v=ep->values[i];i++)
+	{
+		if(ep->iflag)
+			n = strcasecmp(v,name);
+		else
+			n = strcmp(v,name);
+		if(n==0)
+		{
+			mp->nvalue.s = i;
+			mp->nvname = (char*)v;
+			fp->last = (char*)(name+strlen(name));
+			return(mp);
+		}
+	}
+	error(ERROR_exit(1), "%s:  invalid enum constant for %s",name,nv_name(np));
+	return(mp);
+}
+
+const Namdisc_t ENUM_disc        = {  0, put_enum, get_enum, get_nenum, 0,create_enum,clone_enum };
 
 static int sh_outenum(Shell_t *shp, Sfio_t *iop, Namval_t *tp)
 {
@@ -232,7 +254,7 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 	bool			pflag=false, iflag=false;
 	int			i,n;
 	ssize_t			sz = -1;
-	Namval_t		*np, *tp;
+	Namval_t		*np, *tp, *mp;
 	Namarr_t		*ap;
 	char			*cp,*sp;
 	struct Enum		*ep;
@@ -296,6 +318,10 @@ int b_enum(int argc, char** argv, Shbltin_t *context)
 		sz += n*sizeof(char*);
 		if(!(ep = newof(0,struct Enum,1,sz)))
 			error(ERROR_system(1), "out of space");
+		mp = nv_namptr(ep->node,0);
+		mp->nvshell = shp;
+		nv_setsize(mp,10);
+		nv_onattr(mp, NV_UINT16);
 		ep->iflag = iflag;
 		ep->nelem = n;
 		cp = (char*)&ep->values[n+1];

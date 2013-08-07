@@ -1,4 +1,16 @@
-13-07-24  --- Release ksh93v- ---
+13-08-05  --- Release ksh93v- ---
+13-08-05  Fix a bug in which read -C could reference uninitialized memory.
+13-07-31  Fixed a bug with index arrays of short integer types in arrays
+	  inside types that could lead to a core dump.
+13-07-30  Fixed a bug with short integer arithemtic that could lead to a
+	  core dump.
+13-07-30 +An experimental change to each enumeration variable have subvariables
+	  for each enumeration constant.  ${enum.name} will expand to the
+	  numerical value of the enumeration name associatied with enum.
+13-07-30 +An experimental change to allow ${foo.__} to expand to the parent
+	  node for foo, or foo if foo doesn't have a parent.  There are no
+	  regression tests for .__ yet.
+13-07-26  Fixed a memory leak bug with `...`.
 13-07-24  A bug in which += assignments did not work for environment variables
 	  specified for non-special builtin commands has been fixed.
 13-07-24  The _ variable is new set as a reference to the type inside

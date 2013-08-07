@@ -27,6 +27,7 @@
 
 #include <aso.h>
 #include <error.h>
+#include <ast_ioctl.h>
 #include <sys/socket.h>
 
 static const char	dot[] = ".";
@@ -274,8 +275,8 @@ ast_openat(int cwd, const char* path, int flags, ...)
 	return r;
 }
 
-size_t
-ast_readlinkat(int cwd, const char* path, void* buf, size_t size)
+int
+ast_readlinkat(int cwd, const char* path, char* buf, size_t size)
 {
 	int	r;
 

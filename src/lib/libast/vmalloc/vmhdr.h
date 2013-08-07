@@ -130,7 +130,8 @@ typedef struct _seg_s	Seg_t;	/* the type of a raw memory segment	*/
 #define VM_debug	0x00080000	/* test=debug				*/
 #define VM_keep		0x00100000	/* disable free()			*/
 #define VM_pause	0x00200000	/* pause() on assertion failure		*/
-#define VM_verbose	0x00400000	/* verbose messages to standard error	*/
+#define VM_usage	0x00400000	/* usage stats at each getmemory	*/
+#define VM_verbose	0x00800000	/* verbose messages to standard error	*/
 
 #define VM_anon		0x01000000	/* MAP_ANON block allocator		*/
 #define VM_break	0x02000000	/* sbrk() block allocator		*/
@@ -430,6 +431,7 @@ extern ssize_t		_vmpagesize _ARG_((void)); /* get system page size	*/
 extern int		_vmboundaries _ARG_((void)); /* get mem boundaries	*/
 extern Vmalloc_t*	_vmopen _ARG_((Vmalloc_t*, Vmdisc_t*, Vmethod_t*, int));
 extern void		_vmoptions _ARG_((int)); /* VMALLOC_OPTIONS preferences	*/
+extern int		_vmstat _ARG_((Vmalloc_t*, Vmstat_t*, size_t)); /* internal vmstat() */
 
 _BEGIN_EXTERNS_
 

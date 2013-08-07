@@ -823,4 +823,16 @@ do	(( x[i].pid == x[0].pid )) && ((count++))
 done
 (( count==1 )) || err_exit 'x[i].pid==x[0].pid should be true only once'
 	
+#bug with short integers that causes core dumps
+$SHELL 2> /dev/null <<- \EOF || err_exit 'short integer bug causing core dumps'
+	typeset -s -i -a t
+	typeset -s -i p
+	(( p=2**17 )) # tape start position
+	(( t[p]+=13))
+	while (( t[p] != 0 ))
+	do 	((t[p]-=1 , p+=1))
+	done
+	exit 0
+EOF
+
 exit $((Errors<125?Errors:125))

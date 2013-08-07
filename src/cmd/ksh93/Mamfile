@@ -385,12 +385,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done deparse.o generated
 make enum.o
 make bltins/enum.c
-prev include/name.h implicit
-prev include/shell.h implicit
+prev include/defs.h implicit
 done bltins/enum.c
 meta enum.o %.c>%.o bltins/enum.c enum
 prev bltins/enum.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libshell"\" -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2013 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libshell]"\" -DSHOPT_FIXEDARRAY -D_BLD_shell -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -c bltins/enum.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libshell"\" -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2013 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libshell]"\" -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_PFSH -D_BLD_shell -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -DSHOPT_MULTIBYTE -c bltins/enum.c
 done enum.o generated
 make getopts.o
 make bltins/getopts.c
@@ -931,6 +930,7 @@ prev FEATURE/poll implicit
 prev FEATURE/dynamic implicit
 prev FEATURE/externs implicit
 prev include/timeout.h implicit
+prev include/builtins.h implicit
 prev include/edit.h implicit
 prev include/history.h implicit
 prev include/shnodes.h implicit
@@ -945,7 +945,7 @@ prev include/defs.h implicit
 done sh/io.c
 meta io.o %.c>%.o sh/io.c io
 prev sh/io.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_COSHELL -DSHOPT_DYNAMIC -DSHOPT_EDPREDICT -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_FIXEDARRAY -c sh/io.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_COSHELL -DSHOPT_DYNAMIC -DSHOPT_POLL -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_EDPREDICT -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_FIXEDARRAY -c sh/io.c
 done io.o generated
 make jobs.o
 make sh/jobs.c

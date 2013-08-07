@@ -593,16 +593,17 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	ep->e_fd = fd;
 	ep->e_multiline = sh_isoption(shp,SH_MULTILINE)!=0;
 #ifdef SIGWINCH
-	if(!(shp->sigflag[SIGWINCH]&SH_SIGFAULT))
+	if(shp->winch)
 	{
-		signal(SIGWINCH,sh_fault);
-		shp->sigflag[SIGWINCH] |= SH_SIGFAULT;
+		int rows=0, cols=0;
+		int32_t v;
+		astwinsize(2,&rows,&cols);
+		if(v = cols)
+			nv_putval(COLUMNS, (char*)&v, NV_INT32|NV_RDONLY);
+		if(v = rows)
+			nv_putval(LINES, (char*)&v, NV_INT32|NV_RDONLY);
+		shp->winch = 0;
 	}
-	pp = shp->st.trapcom[SIGWINCH];
-	shp->st.trapcom[SIGWINCH] = 0;
-	kill(getpid(),SIGWINCH);
-	shp->st.trapcom[SIGWINCH] = pp;
-	ep->sh->winch = 0;
 #endif
 #if SHOPT_EDPREDICT
 	ep->hlist = 0;

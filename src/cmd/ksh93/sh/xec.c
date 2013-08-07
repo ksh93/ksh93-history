@@ -3595,6 +3595,12 @@ static void sigreset(Shell_t *shp,int mode)
 	register int sig=shp->st.trapmax;
 	while(sig-- > 0)
 	{
+#ifdef SIGCLD
+#   if SIGCLD!=SIGCHLD
+		if(sig==SIGCLD)
+			continue;
+#   endif
+#endif
 		if(sig==SIGCHLD)
 			continue;
 		if(shp->sigflag[sig]&SH_SIGOFF)

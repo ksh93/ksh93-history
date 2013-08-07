@@ -850,4 +850,11 @@ typeset -T Type=(
 Type obj
 [[ ${obj.x} == 6 ]] || err_exit '_ for type variable not set to type'
 
+got=$($SHELL  2> /dev/null <<- \EOF || err_exit 'short integer arrays in types fails'
+	typeset -T X_t=(typeset -si -a arr=(7 8) )
+	X_t x
+	print -r -- $((x.arr[1]))
+EOF)
+[[ $got == 8 ]] || err_exit 'sort integer arrays in types not working correctly'
+
 exit $((Errors<125?Errors:125))

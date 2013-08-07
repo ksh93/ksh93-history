@@ -1,3 +1,9 @@
+13-08-06 tm/tvsleep.c: fix interrupted select() remaining time logic
+13-08-06 path/pathopen.c,pathdev.c: handle /dev/fd/ dir pseudo stat
+13-08-05 vmalloc/malloc.c: add VMALLOC_OPTIONS=usage => VM_usage
+13-08-01 path/pathopen.c: fix /dev/fd/<fd>/trailing-path bug that missed trailing-path
+13-07-31 features/lib: add setregid
+13-07-29 vmalloc/vmdcsystem.c: add EINTR restart checks for system getmemory
 13-07-25 add ast/sys/socket.h => ast_socket.h => ../include/sys/socket.h for intercepts
 13-07-22 pathopen.c: fix PATH_DEV logic to preserve ksh sh_open() semantics
 13-07-19 fix features/fcntl.c to keep track of highest bit in o_local

@@ -40,6 +40,7 @@
 #include	"shnodes.h"
 #include	"history.h"
 #include	"edit.h"
+#include	"builtins.h"
 #include	"timeout.h"
 #include	"FEATURE/externs"
 #include	"FEATURE/dynamic"
@@ -323,10 +324,12 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd, int fn)
 	}
 	if(status&IOREAD)
 	{
-		if(shp->bltinfun && shp->bltindata.bnode && !nv_isattr(shp->bltindata.bnode,BLT_SPC))
+		if(shp->bltinfun && shp->bltinfun!=b_read && shp->bltindata.bnode && !nv_isattr(shp->bltindata.bnode,BLT_SPC))
 			bp = 0;
 		else if(!(bp = (char *)malloc(IOBSIZE+1)))
 			return(NIL(Sfio_t*));
+		if(bp)
+			bp[IOBSIZE]=0;
 		flags |= SF_READ;
 		if(!(status&IOWRITE))
 			flags &= ~SF_WRITE;

@@ -440,70 +440,72 @@ got=$($SHELL <<- \EOF
 EOF)
 [[ $got == $'foo\nbar\nUSR2' ]] || err_exit 'the trap command not blocking trapped signals until trap command completes'
 
-compound -a rtar
-function rttrap
-{
-	integer v=${.sh.sig.value.int}
-	integer s=${#rtar[v][@]}
-	integer rtnum=$1
-	rtar[$v][$s]=(
-		integer pid=${.sh.sig.pid}
-		integer rtnum=$rtnum
-		typeset msg=${v}
-		)
-	return 0
-}
-trap 'rttrap 0' RTMIN
-trap 'rttrap 1' RTMIN+1
-trap 'rttrap 2' RTMIN+2
-trap 'rttrap 3' RTMIN+3
-trap 'rttrap 4' RTMIN+4
-trap 'rttrap 5' RTMIN+5
-trap 'rttrap 6' RTMIN+6
-trap 'rttrap 7' RTMIN+7
-typeset m # used in child processes
-integer pid=$$ p i numchildren=64
-( ( sleep 5; kill $$ 2> /dev/null) & ) &
-for (( p=0 ; p < numchildren ; p++ ))
-do	 {
-		sleep 1
-		for m in 'a' 'b' 'c' 'd' 'e' 'f'
-		do	print p=$p m=$m >> junk 
-			kill -q $((16#$m)) -s RTMIN+6 $pid
-			kill -q $((16#$m)) -s RTMIN+7 $pid
-			kill -q $((16#$m)) -s RTMIN+4 $pid
-			kill -q $((16#$m)) -s RTMIN+5 $pid
-			kill -q $((16#$m)) -s RTMIN+2 $pid
-			kill -q $((16#$m)) -s RTMIN+3 $pid
-			kill -q $((16#$m)) -s RTMIN   $pid
-			kill -q $((16#$m)) -s RTMIN+1 $pid
-		done
-	} &
-done
-while ! wait
-do	 true
-done
-:
-if 	(( ${#rtar[@]} != 6 ))
-then	err_exit "got  ${#rtar[@]} different signals, expected 6"
-fi
-for (( i=0xa ; i <= 0xf; i++ ))
-do	if 	(( ${#rtar[i][*]} != (numchildren*8) ))
-	then	err_exit  "got ${#rtar[$i][*]} signals with value $((i)) expected $((numchildren*8))"
+if      [[ ${SIG[RTMIN]} ]]
+then	compound -a rtar
+	function rttrap
+	{
+		integer v=${.sh.sig.value.int}
+		integer s=${#rtar[v][@]}
+		integer rtnum=$1
+		rtar[$v][$s]=(
+			integer pid=${.sh.sig.pid}
+			integer rtnum=$rtnum
+			typeset msg=${v}
+			)
+		return 0
+	}
+	trap 'rttrap 0' RTMIN
+	trap 'rttrap 1' RTMIN+1
+	trap 'rttrap 2' RTMIN+2
+	trap 'rttrap 3' RTMIN+3
+	trap 'rttrap 4' RTMIN+4
+	trap 'rttrap 5' RTMIN+5
+	trap 'rttrap 6' RTMIN+6
+	trap 'rttrap 7' RTMIN+7
+	typeset m # used in child processes
+	integer pid=$$ p i numchildren=64
+	( ( sleep 5; kill $$ 2> /dev/null) & ) &
+	for (( p=0 ; p < numchildren ; p++ ))
+	do	 {
+			sleep 1
+			for m in 'a' 'b' 'c' 'd' 'e' 'f'
+			do	print p=$p m=$m >> junk 
+				kill -q $((16#$m)) -s RTMIN+6 $pid
+				kill -q $((16#$m)) -s RTMIN+7 $pid
+				kill -q $((16#$m)) -s RTMIN+4 $pid
+				kill -q $((16#$m)) -s RTMIN+5 $pid
+				kill -q $((16#$m)) -s RTMIN+2 $pid
+				kill -q $((16#$m)) -s RTMIN+3 $pid
+				kill -q $((16#$m)) -s RTMIN   $pid
+				kill -q $((16#$m)) -s RTMIN+1 $pid
+			done
+		} &
+	done
+	while ! wait
+	do	 true
+	done
+	:
+	if 	(( ${#rtar[@]} != 6 ))
+	then	err_exit "got  ${#rtar[@]} different signals, expected 6"
 	fi
-done
-
-SIG1=RTMIN+1 SIG2=RTMIN+2
-compound a=(float i=0)
-trap "((a.i+=.00001));(kill -q0 -$SIG2 $$) & :" $SIG1
-trap '((a.i+=1))' $SIG2
-for	((j=0;j<200;j++))
-do	kill -q0 -$SIG1 $$ &
-done
-while ! wait ; do true;done
-exp='typeset -C a=(typeset -l -E i=200.002)'
-got=$(typeset -p a)
-[[ $got == "$exp" ]] || err_exit "signals lost: got $got expected $exp" 
+	for (( i=0xa ; i <= 0xf; i++ ))
+	do	if 	(( ${#rtar[i][*]} != (numchildren*8) ))
+		then	err_exit  "got ${#rtar[$i][*]} signals with value $((i)) expected $((numchildren*8))"
+		fi
+	done
+	
+	SIG1=RTMIN+1 SIG2=RTMIN+2
+	compound a=(float i=0)
+	trap "((a.i+=.00001));(kill -q0 -$SIG2 $$) & :" $SIG1
+	trap '((a.i+=1))' $SIG2
+	for	((j=0;j<200;j++))
+	do	kill -q0 -s $SIG1 $$ &
+	done
+	while ! wait ; do true;done
+	exp='typeset -C a=(typeset -l -E i=200.002)'
+	got=$(typeset -p a)
+	[[ $got == "$exp" ]] || err_exit "signals lost: got $got expected $exp" 
+fi
 
 float s=SECONDS
 (trap - INT; exec sleep 2) &  sleep .5;kill -sINT $!

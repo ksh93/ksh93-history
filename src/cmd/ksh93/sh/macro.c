@@ -2117,6 +2117,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			}
 			sfputc(stkp,c);
 		}
+		sfputc(stkp,' ');
 		c = stktell(stkp);
 		str=stkfreeze(stkp,1);
 		/* disable verbose and don't save in history file */

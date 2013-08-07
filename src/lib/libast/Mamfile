@@ -422,6 +422,7 @@ done state.o generated
 make intercept.o
 make port/intercept.c
 prev sys/socket.h implicit
+prev include/ast_ioctl.h implicit
 prev include/error.h implicit
 make include/aso.h implicit
 make ast_aso.h implicit
@@ -2520,6 +2521,7 @@ make tvsleep.o
 make tm/tvsleep.c
 prev sys/socket.h implicit
 prev FEATURE/tvlib implicit
+prev include/error.h implicit
 prev include/tm.h implicit
 prev tv.h implicit
 done tm/tvsleep.c

@@ -811,6 +811,8 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			if(fp = nv_stack(np,NIL(Namfun_t*)))
 				free((void*)fp);
 			np->nvfun = 0;
+			if(!nv_isattr(np,NV_MINIMAL))
+				np->nvenv = 0;
 			return;
 		}
 		for(xp=fp->next; xp; xp = xp->next)
@@ -1213,6 +1215,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 			if(nq && mq)
 			{
 				register struct nvdir *odir=0,*dp = (struct nvdir*)dir;
+				char *nvenv = mq->nvenv;
 				if(dp->table==nq)
 				{
 					dp = dp->prev; 
@@ -1220,6 +1223,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 					dir = dp;
 				}
 				nv_clone(nq,mq,flags|NV_RAW);
+				mq->nvenv = nvenv;
 				if(flags&NV_MOVE)
 					nv_delete(nq,walk.root,0);
 				if(odir)

@@ -79,10 +79,7 @@ int	b_trap(int argc,char *argv[],Shbltin_t *context)
 			{
 				++argv;
 				if(*action=='-' && action[1]==0)
-				{
 					clear++;
-					dflag++;
-				}
 				/*
 				 * NOTE: 2007-11-26: workaround for tests/signal.sh
 				 * if function semantics can be worked out then it
@@ -161,7 +158,7 @@ int	b_trap(int argc,char *argv[],Shbltin_t *context)
 			else if(clear)
 			{
 				sh_sigclear(shp,sig);
-				if(dflag && !(shp->sigflag[sig]&SH_SIGOFF))
+				if(dflag) 
 					signal(sig,SIG_DFL);
 			}
 			else

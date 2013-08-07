@@ -504,9 +504,12 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 					nv_addnode(nr,1);
 				if(pp->strsize<0)
 					continue;
-				_nv_unset(nr,0);
-				if(!nv_isattr(nr,NV_MINIMAL))
-					nv_delete(nr,shp->last_root,0);
+				if(nr != (Namval_t*)np->nvenv)
+				{
+					_nv_unset(nr,0);
+					if(!nv_isattr(nr,NV_MINIMAL))
+						nv_delete(nr,shp->last_root,0);
+				}
 			}
 			else if(nv_isattr(nq,NV_RDONLY) && !nq->nvalue.cp && !nv_isattr(nq,NV_INTEGER))
 				errormsg(SH_DICT,ERROR_exit(1),e_required,nq->nvname,nv_name(mp));
@@ -1231,7 +1234,7 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 			{
 				nq->nvalue.cp = pp->data+offset;
 				sp = (char*)np->nvalue.cp;
-				if(nv_isattr(np,NV_INT16P) ==NV_INT16)
+				if(!nv_isarray(np) && nv_isattr(np,NV_INT16P) ==NV_INT16)
 				{
 					sp= (char*)&np->nvalue;
 					nv_onattr(nq,NV_INT16P);
