@@ -548,15 +548,16 @@ execute()
 	*)	noteout=$stderr ;;
 	esac
 	if	test "" != "$cross"
-	then	crossexec $cross "$@" 9>&$noteout
+	then	crossexec $cross "$@" $tmp.u 9>&$noteout
 		_execute_=$?
 	elif	test -d /NextDeveloper
-	then	"$@" <&$nullin >&$nullout 9>&$noteout
+	then	"$@" $tmp.u <&$nullin >&$nullout 9>&$noteout
 		_execute_=$?
-		"$@" <&$nullin | cat
-	else	"$@" 9>&$noteout
+		"$@" $tmp.u <&$nullin | cat
+	else	"$@" $tmp.u 9>&$noteout
 		_execute_=$?
 	fi
+	rm -rf $tmp.u* > /dev/null 2>&1
 	return $_execute_
 }
 
@@ -716,7 +717,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2013-07-17 $
+@(#)$Id: iffe (AT&T Research) 2013-08-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -1025,8 +1026,11 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		but does not define a macro.]
 	[+(\aexpression\a)?Equivalent to \bexp -\b \aexpression\a.]
 }
-[+?Code block names may be prefixed by \bno\b to invert the test sense. The
-	block names are:]{
+[+?Code block names may be prefixed by \bno\b to invert the test sense. Any
+	block that is eventually executed as a command will have a single
+	command argument set to a temp file prefix that may be used to
+	generate temp files for the test. The temp files/dirs are removed
+	after the block execution. The block names are:]{
 	[+cat?The block is copied to the output file.]
 	[+compile?The block is compiled (\bcc -c\b).]
 	[+cross?The block is executed as a shell script using \bcrossexec\b(1)
@@ -1297,7 +1301,7 @@ case $debug in
 	fi
 	;;
 esac
-trap "rm -f $core $tmp*" 0
+trap "rm -rf $core $tmp*" 0
 if	(:>$tmp.c) 2>/dev/null
 then	rm -f $tmp.c
 else	echo "$command: cannot create tmp files in current dir" >&2

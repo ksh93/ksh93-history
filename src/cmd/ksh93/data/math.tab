@@ -1,6 +1,6 @@
-# <return type: i:integer f:floating-point> <#floating-point-args> <function-name> [<alias> ...]
-# <function-name>l variants are handled by features/math.sh
-# @(#)math.tab (AT&T Research) 2010-10-26
+# <return type: i:integer f:floating-point> [<typed-arg-bitmask> <#floating-point-args> <function-name> [<alias> ...]
+# <function-name>l and <function-name>f variants are handled by features/math.sh
+# @(#)math.tab (AT&T Research) 2013-08-11
 f 1 acos
 f 1 acosh
 f 1 asin
@@ -55,8 +55,8 @@ f 1 log1p
 f 1 log2
 f 1 logb
 f 1 nearbyint
-f 2 nextafter
-f 2 nexttoward
+f 3 2 nextafter
+f 1 2 nexttoward
 f 2 pow
 f 2 remainder
 f 1 rint

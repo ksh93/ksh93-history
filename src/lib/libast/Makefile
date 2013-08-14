@@ -42,8 +42,8 @@ HEADERSRC = ast.h ast_debug.h ast_dir.h ast_errorf.h ast_getopt.h ast_ioctl.h \
 HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
 	$(ID)_api.h $(ID)_aso.h $(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_fddir.h \
 	$(ID)_float.h $(ID)_fs.h $(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h \
-	$(ID)_ndbm.h $(ID)_param.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h \
-	$(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h $(ID)_sizeof.h \
+	$(ID)_ndbm.h $(ID)_param.h $(ID)_socket.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h \
+	$(ID)_tty.h $(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h $(ID)_sizeof.h \
 	$(HEADERSTD:/^/$(ID)_/)
 
 HEADEREXP = $(ID)_common.h
@@ -72,9 +72,11 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	memhash.c memsum.c strhash.c strkey.c strsum.c \
 	stracmp.c strnacmp.c \
 	ccmap.c ccmapid.c ccnative.c \
-	chresc.c chrtoi.c streval.c strexpr.c strmatch.c strcopy.c \
+	chresc.c chrtoi.c streval.c strexpr.c strmatch.c \
 	modelib.h modei.c modex.c strmode.c \
-	strlcat.c strlcpy.c strlook.c strncopy.c strsearch.c strpsearch.c \
+	stpcpy.c stpncpy.c strlcat.c strlcpy.c \
+	strcopy.c strncopy.c \
+	strlook.c strsearch.c strpsearch.c \
 	stresc.c stropt.c strtape.c strpcmp.c strnpcmp.c strvcmp.c strnvcmp.c \
 	tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathopen.c pathpath.c \

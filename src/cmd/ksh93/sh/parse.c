@@ -1456,6 +1456,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 	int	assignment = 0;
 	int	key_on = (!(flag&SH_NOIO) && sh_isoption(lexp->sh,SH_KEYWORD));
 	int	procsub=0,associative=0;
+	Namval_t *np=0;
 	if((argp=lexp->arg) && (argp->argflag&ARG_ASSIGN) && argp->argval[0]=='[')
 	{
 		flag |= SH_ARRAY;
@@ -1503,6 +1504,11 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 						last = cp;
 					stkseek(stkp,ARGVAL);
 					sfwrite(stkp,argp->argval,last-argp->argval);
+					sfputc(stkp,0);
+					sfseek(stkp,(Sfoff_t)-1,SEEK_CUR);
+					
+					if(np && np->nvalue.bfp!=(Nambfp_f)b_alias && strchr(stkptr(stkp,ARGVAL),'['))
+						sfputc(stkp,'@');
 					ap=(struct argnod*)stkfreeze(stkp,1);
 					ap->argflag = ARG_RAW;
 					ap->argchn.ap = 0;
@@ -1522,7 +1528,6 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			if(argno>=0 && argno++==cmdarg && !(flag&SH_ARRAY) && *argp->argval!='/')
 			{
 				/* check for builtin command */
-				Namval_t *np=0;
 				if(*argp->argval!='_' || argp->argval[1]!='.')
 					np=nv_bfsearch(argp->argval,lexp->sh->fun_tree, (Namval_t**)&t->comnamq,(char**)0);
 				if(cmdarg==0)

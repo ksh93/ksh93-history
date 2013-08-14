@@ -19,45 +19,53 @@
 *                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
-#include "asohdr.h"
-
+#pragma prototyped
 /*
- * construct a non-zero thread-specific ID without the high-bit
- * thread local storage confined to this function
+ * stpncpy implementation
  */
 
-static __thread unsigned int	_AsoThreadId;	/* thread local ID		*/
+#define stpncpy		______stpncpy
 
-static unsigned int		_AsoThreadCount = 0; /* known thread count	*/
-static unsigned int		_AsoKey = 0;	/* key to construct thread ids	*/
+#include <ast.h>
 
-#define HIGHBIT		(~((~((unsigned int)0)) >> 1) )
-#define PRIME		17109811
-#define HALFINT		(sizeof(int)*8/2)
+#undef	stpncpy
 
-unsigned int
-asothreadid(void)
+#undef	_def_map_ast
+#include <ast_map.h>
+
+#if _lib_stpncpy
+
+NoN(stpncpy)
+
+#else
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+/*
+ * |stpncpy| - like |strncpy()| but returns the end of the buffer
+ *
+ * Copy s2 to s1, truncating or '\0'-padding to always copy n
+ * bytes, return position of string terminator ('\0') in
+ * destination buffer or if s1 is not '\0'-terminated, s1+n.
+ *
+ * See http://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
+ */
+
+extern char*
+stpncpy(char *t, const char *f, size_t n)
 {
-	unsigned int	hash;
+	const char*	e = f + n;
 
-	if(_AsoKey == 0) /* use process-id (usually < 16-bits) */
-	{	_AsoKey = (unsigned int)getpid();
-
-		/* hashing low bytes to help spread the ids out */
-		hash = ((_AsoKey >> 16)&0xff) + 31;
-		hash = hash*PRIME + ((_AsoKey >>  8)&0xff) + 31;
-		hash = hash*PRIME + ((_AsoKey >>  0)&0xff) + 31;
-
-		/* key is pid in high bits + hash in low bits */
-		_AsoKey = ((_AsoKey & ((1<<HALFINT)-1)) << HALFINT) | (hash & 07777);
-		_AsoKey = _AsoKey == 0 ? 0xabcd0000 : _AsoKey; /* _AsoKey must != 0 */
-	}
-
-	if(_AsoThreadId == 0) /* if thread-specific ID has not been defined yet */
-	{	if((_AsoThreadId = _AsoKey + asoaddint(&_AsoThreadCount,1)) == 0 )
-			_AsoThreadId = _AsoKey; /* too many threads were generated! */
-		_AsoThreadId &= ~HIGHBIT; 
-	}
-
-	return _AsoThreadId;
+	while (f < e)
+		if (!(*t++ = *f++))
+		{
+			if (n = e - f)
+				memset(t, 0, n);
+			return t - 1;
+		}
+	return t;
 }
+
+#endif

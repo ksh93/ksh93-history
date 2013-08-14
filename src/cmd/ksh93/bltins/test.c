@@ -616,7 +616,7 @@ skip:
 				if((maxgroups=getgroups(0,(gid_t*)0)) <= 0)
 				{
 					/* pre-POSIX system */
-					maxgroups=NGROUPS_MAX;
+					maxgroups=shgd->lim.ngroups_max;
 				}
 			}
 			groups = (gid_t*)stkalloc(shp->stk,(maxgroups+1)*sizeof(gid_t));

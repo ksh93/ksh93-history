@@ -144,7 +144,7 @@ int	b_trap(int argc,char *argv[],Shbltin_t *context)
 					free(arg);
 				continue;
 			}
-			if(sig>shp->gd->sigmax)
+			if(sig>=shp->gd->sigmax)
 			{
 				errormsg(SH_DICT,2,e_trap,arg);
 				return(1);
@@ -261,7 +261,7 @@ endopts:
 	}
 	if(flag&S_FLAG)
 	{
-		if((sig=sig_number(shp,signame)) < 0 || sig > shp->gd->sigmax)
+		if((sig=sig_number(shp,signame)) < 0 || sig >= shp->gd->sigmax)
 		{
 			shp->exitval = 2;
 			errormsg(SH_DICT,ERROR_exit(1),e_nosignal,signame);

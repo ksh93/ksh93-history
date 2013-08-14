@@ -888,7 +888,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, char* end, struct sta
 					t++;
 				e = "application/x-ms-";
 				ep->mime = vmnewof(mp->vm, ep->mime, char, strlen(t), strlen(e));
-				e = strcopy(ep->mime, e);
+				e = stpcpy(ep->mime, e);
 				while ((c = *t++) && c != '.' && c != ' ')
 					*e++ = isupper(c) ? tolower(c) : c;
 				*e = 0;

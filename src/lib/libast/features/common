@@ -476,6 +476,9 @@ cat{
 	#endif
 }end
 tst key___thread -lpthread note{ __thread keyword exists and works with -lpthread }end execute{
+	#ifdef __MACH__
+	(
+	#endif
 	#include	<pthread.h>
 	
 	#define INITIAL		1

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -184,6 +184,7 @@ struct _sffmt_s
 #define SF_NEW		0	/* new stream				*/
 #define SF_SETFD	(-1)	/* about to set the file descriptor 	*/
 #define SF_MTACCESS	(-2)	/* starting a multi-threaded stream	*/
+#define SF_TMPFILE	(-3)	/* sftmp() switching from buf to file	*/
 
 #define SF_BUFSIZE	8192	/* default buffer size			*/
 #define SF_UNBOUND	(-1)	/* unbounded buffer size		*/

@@ -182,7 +182,7 @@ if(sig==SIGBUS)
 			}
 			/* mark signal and continue */
 			shp->trapnote |= SH_SIGSET;
-			if(sig <= shp->gd->sigmax)
+			if(sig < shp->gd->sigmax)
 				shp->sigflag[sig] |= SH_SIGSET;
 #if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
 			if(abortsig(sig))
@@ -238,7 +238,7 @@ if(sig==SIGBUS)
 	if(flag&(SH_SIGSET|SH_SIGTRAP))
 		astserial(AST_SERIAL_RESTART, AST_SERIAL_except);
 #endif
-	if(sig <= shp->gd->sigmax)
+	if(sig < shp->gd->sigmax)
 		shp->sigflag[sig] |= flag;
 	if(pp->mode==SH_JMPCMD && sh_isstate(shp,SH_STOPOK))
 	{
@@ -283,10 +283,11 @@ void sh_siginit(void *ptr)
 	shp->st.trapcom = (char**)calloc(n,sizeof(char*));
 	shp->sigflag = (unsigned char*)calloc(n,sizeof(char));
 	shp->gd->sigmsg = (char**)calloc(n,sizeof(char*));
+	shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
 	for(tp=shtab_signals; sig=tp->sh_number; tp++)
 	{
 		n = (sig>>SH_SIGBITS);
-		if((sig &= ((1<<SH_SIGBITS)-1)) > (shp->gd->sigmax+1))
+		if((sig &= ((1<<SH_SIGBITS)-1)) > (shp->gd->sigmax))
 			continue;
 		sig--;
 		if(n&SH_SIGRUNTIME)
@@ -320,8 +321,6 @@ void	sh_sigtrap(Shell_t *shp,register int sig)
 		}
 		else
 		{
-			if(!shp->siginfo)
-				shp->siginfo = (void**)calloc(sizeof(void*),shp->gd->sigmax);
 			flag |= SH_SIGFAULT;
 			if(sig==SIGALRM && fun!=SIG_DFL && fun!=(sh_sigfun_t)sh_fault)
 				signal(sig,fun);
@@ -338,7 +337,7 @@ void	sh_sigdone(Shell_t *shp)
 {
 	register int 	flag, sig = shgd->sigmax;
 	shp->sigflag[0] |= SH_SIGFAULT;
-	for(sig=shgd->sigmax; sig>0; sig--)
+	while(--sig>=0)
 	{
 		flag = shp->sigflag[sig];
 		if((flag&(SH_SIGDONE|SH_SIGIGNORE|SH_SIGINTERACTIVE)) && !(flag&(SH_SIGFAULT|SH_SIGOFF)))
@@ -758,7 +757,7 @@ void sh_siglist(register Shell_t *shp,Sfio_t *iop,register int flag)
 	if(flag<=0)
 	{
 		/* not all signals may be defined, so initialize */
-		for(sig=shp->gd->sigmax; sig>=0; sig--)
+		for(sig=shp->gd->sigmax-1; sig>=0; sig--)
 			names[sig] = 0;
 		for(sig=SH_DEBUGTRAP; sig>=0; sig--)
 			traps[sig] = 0;
@@ -791,7 +790,7 @@ void sh_siglist(register Shell_t *shp,Sfio_t *iop,register int flag)
 		{
 			if(!(trap=trapcom[sig]))
 				continue;
-			if(sig > shp->gd->sigmax || !(sname=(char*)names[sig]))
+			if(sig >= shp->gd->sigmax || !(sname=(char*)names[sig]))
 				sname = sig_name(shp,sig,name,1);
 			sfprintf(iop,trapfmt,sh_fmtq(trap),sname);
 		}
@@ -805,7 +804,7 @@ void sh_siglist(register Shell_t *shp,Sfio_t *iop,register int flag)
 	else
 	{
 		/* print all the signal names */
-		for(sig=1; sig <= shp->gd->sigmax; sig++)
+		for(sig=1; sig < shp->gd->sigmax; sig++)
 		{
 			if(!(sname=(char*)names[sig]))
 			{

@@ -154,15 +154,19 @@ freeaddrinfo(struct addrinfo* ap)
 #endif
 
 int
-pathopen(int fd, const char* path, char* canon, size_t size, int flags, int oflags, mode_t mode)
+pathopen(int dfd, const char* path, char* canon, size_t size, int flags, int oflags, mode_t mode)
 {
 	char*		b;
 	Pathdev_t	dev;
 	int		f;
+	int		fd;
+	int		oerrno;
 
 	b = canon ? canon : (char*)path;
 	if (pathdev(path, canon, size, flags, &dev) && dev.path.offset)
 	{
+		oerrno = errno;
+		oflags |= dev.oflags;
 		if (dev.fd >= 0)
 		{
 			if (dev.pid > 0 && dev.pid != getpid())
@@ -208,7 +212,9 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 
 				/* fall back to dup semantics -- the best we can do at this point */
 			}
-			return fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0);
+			if ((fd = fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0)) < 0)
+				return -1;
+			goto adjust;
 		}
 		else if (dev.fd == AT_FDCWD)
 			return (flags & PATH_DEV) ? 1 : -1;
@@ -217,8 +223,6 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 			int			server = (oflags&(O_CREAT|O_NOCTTY)) == (O_CREAT|O_NOCTTY);
 			int			prot;
 			int			type;
-			int			fd;
-			int			oerrno;
 			char*			p;
 			char*			q;
 			struct addrinfo		hint;
@@ -290,7 +294,6 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 					errno = ENOTDIR;
 				return -1;
 			}
-			oerrno = errno;
 			if (flags & PATH_DEV)
 			{
 				fd = 1;
@@ -316,10 +319,18 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 					fd = -1;
 				}
 			}
-		 done:
+		done:
 			freeaddrinfo(addr);
-			if (fd >= 0)
-				errno = oerrno;
+			if (fd < 0)
+				return -1;
+		adjust:
+			if (dev.oflags && (f = fcntl(fd, F_GETFL, 0)) >= 0 && (dev.oflags & f) != dev.oflags && fcntl(fd, F_SETFL, f|dev.oflags) < 0)
+			{
+				close(fd);
+				errno = EINVAL;
+				return -1;
+			}
+			errno = oerrno;
 			return fd;
 		}
 	}
@@ -328,5 +339,5 @@ pathopen(int fd, const char* path, char* canon, size_t size, int flags, int ofla
 		errno = ENODEV;
 		return -1;
 	}
-	return openat(fd, b, oflags, mode);
+	return openat(dfd, b, oflags|dev.oflags, mode);
 }

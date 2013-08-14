@@ -86,13 +86,13 @@ key(void* handle, Sffmt_t* fp, const char* arg, char** ps, Sflong_t* pn)
 	{
 		*ps = s = fmtbuf(32);
 		if (state->vs.mode & VM_DBCHECK)
-			s = strcopy(s, "DBCHECK|");
+			s = stpcpy(s, "DBCHECK|");
 		if (state->vs.mode & VM_DBABORT)
-			s = strcopy(s, "DBABORT|");
+			s = stpcpy(s, "DBABORT|");
 		if (state->vs.mode & VM_HEAPINIT)
-			s = strcopy(s, "HEAPINIT|");
+			s = stpcpy(s, "HEAPINIT|");
 		if (state->vs.mode & VM_MEMORYF)
-			s = strcopy(s, "MEMORYF|");
+			s = stpcpy(s, "MEMORYF|");
 		if (s > *ps)
 			*(s - 1) = 0;
 		else

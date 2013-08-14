@@ -140,8 +140,9 @@ char e_version[]	= "\n@(#)$Id: Version "
     extern char	**environ;
 #endif
 
-#undef	getconf
-#define getconf(x)	strtol(astconf(x,NiL,NiL),NiL,0)
+#ifndef        getconf
+#   define getconf(x)     strtol(astconf(x,NiL,NiL),NiL,0)
+#endif
 
 struct seconds
 {
@@ -1920,6 +1921,7 @@ struct Svars
 	Shell_t		*sh;
 	Namval_t	*parent;
 	char		*nodes;
+	size_t		dsize;
 	int		numnodes;
 	int		current;
 };
@@ -1948,7 +1950,7 @@ static Namval_t *create_svar(Namval_t *np,const char *name,int flag,Namfun_t *fp
 	for(i=0; i < sp->numnodes; i++)
 	{
 		nq = nv_namptr(sp->nodes,i);
-		if((n==0||memcmp(name,nq->nvname,n)==0) && nq->nvname[n]==0)
+		if((n==0||strncmp(name,nq->nvname,n)==0) && nq->nvname[n]==0)
 			goto found;
 	}
 	nq = 0;
@@ -2037,6 +2039,7 @@ static void stat_init(Shell_t *shp)
 	n=svar_init(shp,SH_STATS,shtab_stats);
 	shgd->stats = (int*)calloc(sizeof(int),n+1);
 	sp = (struct Svars*)SH_STATS->nvfun->next;
+	sp->dsize = (n+1)*sizeof(shgd->stats[0]);
 	for(i=0; i < n; i++)
 	{
 		np = nv_namptr(sp->nodes,i);
@@ -2050,7 +2053,10 @@ static void stat_init(Shell_t *shp)
 #ifdef _lib_sigaction
     static void siginfo_init(Shell_t *shp)
     {
+	struct Svars	*sp;
 	svar_init(shp,SH_SIG,shtab_siginfo);
+	sp = (struct Svars*)SH_STATS->nvfun->next;
+	sp->dsize = sizeof(siginfo_t);
     }
 
     static const char *siginfocode2str(int sig, int code)

@@ -69,7 +69,7 @@ const struct shtable2 shtab_signals[] =
 #   endif	/* SIGCLD */
 #else
 #   ifdef SIGCLD
-	"CLD",		VAL(SIGCLD,SH_SIGFAULT),			S("Death of Child"),
+	"CHLD",		VAL(SIGCLD,SH_SIGFAULT),			S("Death of Child"),
 #   endif	/* SIGCLD */
 #endif	/* SIGCHLD */
 #ifdef SIGCONT
@@ -261,6 +261,32 @@ const struct shtable2 shtab_signals[] =
 #   ifdef CLD_TRAPPED
 	{ SIGCHLD,	CLD_TRAPPED,	"TRAPPED"	},
 #   endif
+#ifdef SIGILL
+#	ifdef POLL_IN
+	    { SIGILL,	POLL_IN,	"IN"	},
+#	endif
+#	ifdef ILL_ILLOPC
+	    { SIGILL,	ILL_ILLOPC,	"ILLOPC"	},
+#	endif
+#	ifdef ILL_ILLOPN
+	    { SIGILL,	ILL_ILLOPN,	"ILLOP"	},
+#	endif
+#	ifdef ILL_ADR
+	    { SIGILL,	ILL_ADR,	"ADR"	},
+#	endif
+#	ifdef ILL_TRP
+	    { SIGILL,	ILL_TRP,	"TRP"	},
+#	endif
+#	ifdef ILL_PRVOPC
+	    { SIGILL,	ILL_PRVOPC,	"PRVOPC" },
+#	endif
+#	ifdef ILL_COPROC
+	    { SIGILL,	ILL_COPROC,	"COPROC"	},
+#	endif
+#	ifdef ILL_BADSTK
+	    { SIGILL,	ILL_BADSTK,	"BADSTK"	},
+#	endif
+#endif
 #ifdef SIGPOLL
 #	ifdef POLL_IN
 	    { SIGPOLL,	POLL_IN,	"IN"	},
@@ -287,43 +313,43 @@ const struct shtable2 shtab_signals[] =
 	 * codes
 	 */
 #   ifdef SI_USER
-	{ 0,		SI_USER,	"USER"		},
+	{ 0,		SI_USER,	"SI_USER"		},
 #   endif
 #   ifdef SI_QUEUE
-	{ 0,		SI_QUEUE,	"QUEUE"		},
+	{ 0,		SI_QUEUE,	"SI_QUEUE"		},
 #   endif
 #   ifdef SI_TIMER
-	{ 0,		SI_TIMER,	"TIMER"		},
+	{ 0,		SI_TIMER,	"SI_TIMER"		},
 #   endif
 #   ifdef SI_ASYNCIO
-	{ 0,		SI_ASYNCIO,	"ASYNCIO"	},
+	{ 0,		SI_ASYNCIO,	"SI_ASYNCIO"	},
 #   endif
 #   ifdef SI_MESGQ
-	{ 0,		SI_MESGQ,	"MESGQ"		},
+	{ 0,		SI_MESGQ,	"SI_MESGQ"		},
 #   endif
 #   ifdef SI_NOINFO
-	{ 0,		SI_NOINFO,	"NOINFO"	},
+	{ 0,		SI_NOINFO,	"SI_NOINFO"	},
 #   endif
 #   ifdef SI_DTRACE
-	{ 0,		SI_DTRACE,	"DTRACE"	},
+	{ 0,		SI_DTRACE,	"SI_DTRACE"	},
 #   endif
 #   ifdef SI_RCTL
-	{ 0,		SI_RCTL,	"RCTL"		},
+	{ 0,		SI_RCTL,	"SI_RCTL"		},
 #   endif
 #   ifdef SI_LWP
-	{ 0,		SI_LWP,		"LWP"		},
+	{ 0,		SI_LWP,		"SI_LWP"		},
 #   endif
 #   ifdef SI_KERNEL
-	{ 0,		SI_KERNEL,	"KERNEL"	},
+	{ 0,		SI_KERNEL,	"SI_KERNEL"	},
 #   endif
 #   ifdef SI_SIGIO
-	{ 0,		SI_SIGIO,	"SIGIO"		},
+	{ 0,		SI_SIGIO,	"SI_SIGIO"		},
 #   endif
 #   ifdef SI_TKILL
-	{ 0,		SI_TKILL,	"TKILL"		},
+	{ 0,		SI_TKILL,	"SI_TKILL"		},
 #   endif
 #   ifdef SI_ASYNCNL
-	{ 0,		SI_ASYNCNL,	"ASYNCNL"	},
+	{ 0,		SI_ASYNCNL,	"SI_ASYNCNL"	},
 #   endif
 	{ 0,		0,		NULL		}
    };

@@ -1,3 +1,16 @@
+13-08-11 features/lib: add `lib fdatasync,fssync,sync' tests
+13-08-11 features/fcntl.c: another round for { O_DIRECTORY O_SEARCH }, stabilize ast extension values
+13-08-11 port/intercept.c: add RATIFY() to check for paths with embeded directory fd refs
+13-08-11 convert strcopy() usage to stpcpy(); strncopy() will not change
+13-08-08 path/pathcanon.c: add PATH_ABSOLUTE to canonicalize relative path to absolute (rooted) path
+13-08-08 comp/resolvepath.c: now a veneer to pathdev+PATH_ABSOLUTE...
+13-08-08 string/stpcpy.c,string/stpncpy.c: add { stpcpy() stpncpy() } emulations
+13-08-08 include/ast.h,path/pathcanon.c: add { /dev/file@flag1,.../path /dev/file@flag1,..././path } to pathdev
+13-08-08 port/intercept.c: handle O_ASYNC anomalies in ast_openat()
+13-08-07 sfio.h,sftmp.c: add SF_TMPFILE notification for sftmp() switch from buf to file
+13-08-07 include/ast.h: add getconf("string") macro using astconf()
+13-08-07 features/fcntl.c: add more macro guards to cover diffs between iffe time and compile time
+13-08-07 features/limits.c: { _POSIX_NAME_MAX _POSIX_PATH_MAX } failsafes for systems (like darwin) that omit them
 13-08-06 tm/tvsleep.c: fix interrupted select() remaining time logic
 13-08-06 path/pathopen.c,pathdev.c: handle /dev/fd/ dir pseudo stat
 13-08-05 vmalloc/malloc.c: add VMALLOC_OPTIONS=usage => VM_usage

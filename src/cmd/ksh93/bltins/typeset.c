@@ -34,6 +34,7 @@
  */
 
 #include	"defs.h"
+#include	<ast_float.h>
 #include	<error.h>
 #include	"path.h"
 #include	"name.h"
@@ -259,6 +260,7 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 				isfloat = true;
 				if(n=='E')
 				{
+					tdata.argnum = (flag&NV_LONG)?LDBL_DIG:(isshort?FLT_DIG:DBL_DIG);
 					flag &= ~NV_HEXFLOAT;
 					flag |= NV_EXPNOTE;
 				}
@@ -534,6 +536,7 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 	char *last = 0;
 	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN|NV_STATIC|NV_MOVE));
 	int r=0, ref=0, comvar=(flag&NV_COMVAR),iarray=(flag&NV_IARRAY);
+	size_t len;
 	Shell_t *shp =tp->sh;
 	if(!shp->prefix)
 	{
@@ -641,7 +644,10 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 				path_alias(np,path_absolute(shp,nv_name(np),NIL(Pathcomp_t*)));
 				continue;
 			}
-			np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|((iarray|(nvflags&(NV_REF|NV_NOADD)==NV_REF))?NV_FARRAY:0));
+			if(shp->nodelist && (len=strlen(name)) && name[len-1]=='@')
+				np = *shp->nodelist++;
+			else
+				np = nv_open(name,troot,nvflags|((nvflags&NV_ASSIGN)?0:NV_ARRAY)|((iarray|(nvflags&(NV_REF|NV_NOADD)==NV_REF))?NV_FARRAY:0));
 			if(!np)
 				continue;
 			if(nv_isnull(np) && !nv_isarray(np) && nv_isattr(np,NV_NOFREE))
@@ -665,7 +671,11 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 				print_value(sfstdout,np,tp);
 				continue;
 			}
+#if 0
+			if(flag==NV_ASSIGN && !ref && tp->aflag!='-' && (shp->nodelist || !strchr(name,'=')))
+#else
 			if(flag==NV_ASSIGN && !ref && tp->aflag!='-' && !strchr(name,'='))
+#endif
 			{
 				if(troot!=shp->var_tree && (nv_isnull(np) || !print_namval(sfstdout,np,0,tp)))
 				{

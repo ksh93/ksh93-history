@@ -19,48 +19,41 @@
 *                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
 /*
- * the socket part of ast_intercept.h
+ * stpcpy implementation
  */
 
-#ifndef _AST_SOCKET_H
-#define _AST_SOCKET_H	1
+#define stpcpy		______stpcpy
 
-#if _sys_socket
+#include <ast.h>
 
-#include <../include/sys/socket.h>	/* the real <sys/socket.h> */
+#undef	stpcpy
 
-#if _AST_INTERCEPT_IMPLEMENT < 2
+#undef	_def_map_ast
+#include <ast_map.h>
 
-#undef	accept
-#define accept		ast_accept
+#if _lib_stpcpy
 
-#undef	accept4
-#define accept4		ast_accept4
+NoN(stpcpy)
 
-#undef	connect
-#define connect		ast_connect
+#else
 
-#undef	socket
-#define socket		ast_socket
-
-#undef	socketpair
-#define socketpair	ast_socketpair
-
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
 #endif
 
-#if _BLD_ast && defined(__EXPORT__)
-#define extern		__EXPORT__
-#endif
+/*
+ * copy f into t, return a pointer to the end of t ('\0')
+ */
 
-extern int		ast_accept(int, struct sockaddr*, socklen_t*);
-extern int		ast_accept4(int, struct sockaddr*, socklen_t*, int);
-extern int		ast_connect(int, struct sockaddr*, socklen_t);
-extern int		ast_socket(int, int, int);
-extern int		ast_socketpair(int, int, int, int[2]);
-
-#undef extern
-
-#endif
+extern char*
+stpcpy(register char* t, register const char* f)
+{
+	if (!f)
+		return t;
+	while (*t++ = *f++);
+	return t - 1;
+}
 
 #endif

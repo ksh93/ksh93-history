@@ -318,12 +318,6 @@ main()
 	printf("#define strhash		_ast_strhash\n");
 	printf("#undef	strkey\n");
 	printf("#define strkey		_ast_strkey\n");
-	printf("#undef	strlcat\n");
-	printf("#define strlcat		_ast_strlcat\n");
-	printf("extern size_t		strlcat(char*, const char*, size_t);\n");
-	printf("#undef	strlcpy\n");
-	printf("#define strlcpy		_ast_strlcpy\n");
-	printf("extern size_t		strlcpy(char*, const char*, size_t);\n");
 	printf("#undef	strlook\n");
 	printf("#define strlook		_ast_strlook\n");
 	printf("#undef	strmatch\n");

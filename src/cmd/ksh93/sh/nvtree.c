@@ -28,6 +28,7 @@
  */
 
 #include	"defs.h"
+#include	<ast_float.h>
 #include	"name.h"
 #include	"argnod.h"
 #include	"lexstates.h"
@@ -195,7 +196,7 @@ void *nv_diropen(Namval_t *np,const char *name, void *context)
 		{
 			char *cp = nv_name(dp->hp);
 			c = strlen(cp);
-			if(memcmp(name,cp,c) || name[c]!='[')
+			if(strncmp(name,cp,c) || name[c]!='[')
 				dp->hp = (Namval_t*)dtnext(dp->root,dp->hp);
 			else
 			{
@@ -279,7 +280,7 @@ static Namval_t *nextnode(struct nvdir *dp)
 {
 	if(dp->nextnode)
 		return((*dp->nextnode)(dp->hp,dp->root,dp->fun));
-	if(dp->len && memcmp(dp->data, dp->hp->nvname, dp->len))
+	if(dp->len && strncmp(dp->data, dp->hp->nvname, dp->len))
 		return(0);
 	return((Namval_t*)dtnext(dp->root,dp->hp));
 }
@@ -344,7 +345,7 @@ char *nv_dirnext(void *dir)
 					dp->hp = (*dp->nextnode)(np,(Dt_t*)0,dp->fun);
 			}
 			shp->last_table = last_table;
-			if(!dp->len || memcmp(cp,dp->data,dp->len)==0)
+			if(!dp->len || strncmp(cp,dp->data,dp->len)==0)
 			{
 				if((nfp=nextdisc(np)) && (nfp->disc->getval||nfp->disc->getnum) && nv_isvtree(np) && strcmp(cp,dp->data))
 					nfp = 0;
@@ -569,7 +570,16 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 			}
 		        if(val==NV_INTEGER && nv_isattr(np,NV_INTEGER))
 			{
-				if(nv_size(np) != 10)
+				int size=10;
+				if(nv_isattr(np,NV_DOUBLE|NV_EXPNOTE)==(NV_DOUBLE|NV_EXPNOTE))
+				{
+					size = DBL_DIG;
+					if(nv_isattr(np,NV_LONG))
+						size = LDBL_DIG;
+					else if(nv_isattr(np,NV_SHORT))
+						size = FLT_DIG;
+				}
+				if(nv_size(np) != size)
 				{
 					if(nv_isattr(np, NV_DOUBLE)== NV_DOUBLE)
 						cp = "precision";
@@ -1096,7 +1106,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 				if(argv[1])
 				{
 					ssize_t r = (cp-argv[0]) + strlen(cp);
-					if(argv[1][r]=='.' && memcmp(argv[0],argv[1],r)==0)
+					if(argv[1][r]=='.' && strncmp(argv[0],argv[1],r)==0)
 						wp->flags &= ~NV_COMVAR;
 				}
 				outval(cp,arg,wp);
@@ -1186,7 +1196,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 		mp = np;
 	name = stkfreeze(shp->stk,1);
 	shp->last_root = 0;
-	if(shp->last_table && !nv_type(shp->last_table) && (cp=nv_name(shp->last_table)) && (len=strlen(cp))  && memcmp(name,cp,len)==0 && name[len]=='.')
+	if(shp->last_table && !nv_type(shp->last_table) && (cp=nv_name(shp->last_table)) && (len=strlen(cp))  && strncmp(name,cp,len)==0 && name[len]=='.')
 		name += len+1;
 	len = strlen(name);
 	dir = nv_diropen(mp,name,(void*)shp);

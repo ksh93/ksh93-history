@@ -41,7 +41,7 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize
 /*
  * we'd like as many symbols as possible defined
  * the standards push the vendors the other way
- * but don't provide guard that lets everything through
+ * but don't provide guards that lets everything through
  * so each vendor adds their own guard
  * many now include something like <standards.h> to
  * get it straight in one place -- <sys/types.h> should
@@ -333,6 +333,14 @@ int main()
 
 #include "conflim.h"
 
+	printf("\n");
+
+	printf("#ifndef _POSIX_NAME_MAX\n");
+	printf("#define _POSIX_NAME_MAX		14\n");
+	printf("#endif\n");
+	printf("#ifndef _POSIX_PATH_MAX\n");
+	printf("#define _POSIX_PATH_MAX		256\n");
+	printf("#endif\n");
 	printf("\n");
 
 	return 0;

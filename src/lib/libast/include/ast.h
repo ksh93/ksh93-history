@@ -107,13 +107,14 @@ struct _sfio_s;
 #define ASTCONF_AST		0x2000
 
 /*
- * pathcanon() flags and info
+ * pathcanon()/pathdev() flags and info
  */
 
 #define PATH_PHYSICAL		0x01
 #define PATH_DOTDOT		0x02
 #define PATH_EXISTS		0x04
 #define PATH_DEV		0x08
+#define PATH_ABSOLUTE		0x10	/* NOTE: shared with pathaccess() below */
 #define PATH_VERIFIED(n) (((n)&01777)<<5)
 
 typedef struct Pathpart_s
@@ -130,17 +131,19 @@ typedef struct Pathdev_s
 	Pathpart_t	host;
 	Pathpart_t	port;
 	Pathpart_t	path;
+	int		oflags;
+	int		unused[5];
 } Pathdev_t;
 
 /*
  * pathaccess() flags
  */
 
-#define PATH_READ	004
-#define PATH_WRITE	002
-#define PATH_EXECUTE	001
-#define	PATH_REGULAR	010
-#define PATH_ABSOLUTE	020
+#define PATH_READ	0x04
+#define PATH_WRITE	0x02
+#define PATH_EXECUTE	0x01
+#define	PATH_REGULAR	0x08
+/* NOTE: PATH_ABSOLUTE shared with pathcanon()/pathdev() above */
 
 /*
  * touch() flags
@@ -218,6 +221,7 @@ typedef struct
  */
 
 #define elementsof(x)	(sizeof(x)/sizeof(x[0]))
+#define getconf(x)	strtol(astconf((x),NiL,NiL),NiL,0)
 #define integralof(x)	(((char*)(x))-((char*)0))
 #define newof(p,t,n,x)	((p)?(t*)realloc((char*)(p),sizeof(t)*(n)+(x)):(t*)calloc(1,sizeof(t)*(n)+(x)))
 #define oldof(p,t,n,x)	((p)?(t*)realloc((char*)(p),sizeof(t)*(n)+(x)):(t*)malloc(sizeof(t)*(n)+(x)))

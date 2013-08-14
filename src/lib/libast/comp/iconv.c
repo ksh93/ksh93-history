@@ -1099,7 +1099,7 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 	if (!(cc = newof(0, Conv_t, 1, strlen(to) + strlen(fr) + 2)))
 		return (iconv_t)(-1);
 	cc->to.name = (char*)(cc + 1);
-	cc->from.name = strcopy(cc->to.name, to) + 1;
+	cc->from.name = stpcpy(cc->to.name, to) + 1;
 	strcpy(cc->from.name, fr);
 	cc->cvt = (iconv_t)(-1);
 

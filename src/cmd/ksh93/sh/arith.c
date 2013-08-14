@@ -502,8 +502,12 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		r = nv_getnum(np);
 		if(nv_isattr(np,NV_INTEGER|NV_BINARY)==(NV_INTEGER|NV_BINARY))
 			lvalue->isfloat= (r!=(Sflong_t)r);
+		else if(nv_isattr(np,(NV_DOUBLE|NV_SHORT))==(NV_DOUBLE|NV_SHORT))
+			lvalue->isfloat=2;
+		else if(nv_isattr(np,(NV_DOUBLE|NV_LONG))==(NV_DOUBLE|NV_LONG))
+			lvalue->isfloat=3;
 		else if(nv_isattr(np,NV_DOUBLE)==NV_DOUBLE)
-			lvalue->isfloat=1;
+			lvalue->isfloat=4;
 		if((lvalue->emode&ARITH_ASSIGNOP) && nv_isarray(np))
 			lvalue->nosub = nv_aindex(np)+1;
 		return(r);

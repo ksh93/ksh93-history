@@ -43,6 +43,45 @@ Ast_global_t		ast_global =
 #define LOCAL(f)	(ast.f)		/* to thread or not		*/
 #define GLOBAL(f)	(ast_global.f)	/* process global		*/
 
+#ifdef _fd_pid_dir_fmt
+#define DEVFD(p, f, r) \
+	if (p >= 0) \
+	{ \
+		char	buf[256]; \
+		sfsprintf(buf, sizeof(buf), _fd_pid_dir_fmt, p, f, "", ""); \
+		if ((r = open(buf, O_RDONLY)) < 0) \
+			return -1; \
+	} \
+	else \
+		r = f
+#else
+#define DEVFD(p, f, r) \
+	r = f
+#endif
+
+#define RATIFY(p,d) \
+	do \
+	{ \
+		Pathdev_t	dev; \
+		if (!p) \
+		{ \
+			errno = EFAULT; \
+			return -1; \
+		} \
+		else if (!*p) \
+		{ \
+			errno = EINVAL; \
+			return -1; \
+		} \
+		else if (pathdev(p, NiL, 0, PATH_DEV, &dev) && dev.fd >= 0 && dev.path.offset) \
+		{ \
+			DEVFD(dev.pid, dev.fd, d); \
+			path += dev.path.offset; \
+		} \
+		else \
+			d = LOCAL(pwd); \
+	} while (0)
+
 #define RESTART(r,f)	\
 	do { \
 		uint32_t	serial; \
@@ -226,7 +265,27 @@ ast_openat(int cwd, const char* path, int flags, ...)
 		path = dot;
  whither_kiss:
 	if (flags & O_INTERCEPT)
+	{
+		flags &= ~O_INTERCEPT;
 		RESTART(r, openat(cwd, path, flags&~O_INTERCEPT, mode));
+#ifdef O_ASYNC
+		if (r >= 0 && (flags & O_ASYNC))
+		{
+			int	x;
+			int	f;
+
+			RESTART(f, fcntl(r, F_GETFL, 0));
+			if (f >= 0 && !(f & O_ASYNC))
+			{
+				f |= O_ASYNC;
+				RESTART(x, fcntl(r, F_SETFL, f));
+			}
+#ifdef F_SETOWN
+			RESTART(x, fcntl(r, F_SETOWN, getuid()));
+#endif
+		}
+#endif
+	}
 	else
 		RESTART(r, pathopen(cwd, path, NiL, 0, 0, flags|O_INTERCEPT, mode));
 #if _ast_O_LOCAL && O_CLOEXEC >= _ast_O_LOCAL
@@ -307,46 +366,68 @@ ast_unlinkat(int cwd, const char* path, int flags)
 int
 ast_access(const char* path, int mode)
 {
-	int	r;
+	const char*	opath = path;
+	int		d;
+	int		r;
 
-	RESTART(r, faccessat(LOCAL(pwd), path, mode, 0));
+	RATIFY(path, d);
+	if (!*path)
+	{
+		path = opath;
+		d = LOCAL(pwd);
+	}
+	RESTART(r, faccessat(d, path, mode, 0));
 	return r;
 }
 
 int
 ast_chdir(const char* path)
 {
+	int	d;
 	int	r;
 	int	fd;
 
-	if (path && *path != '/')
+	RATIFY(path, d);
+	if (!*path)
+		RESTART(r, fchdir(d));
+	else if (*path == '/')
+		RESTART(r, chdir(path));
+	else
 	{
-		RESTART(fd, openat(LOCAL(pwd), path, O_SEARCH));
+		RESTART(fd, openat(d, path, O_SEARCH));
 		if (fd < 0)
 			return fd;
 		RESTART(r, fchdir(fd));
 		close(fd);
 	}
-	else
-		RESTART(r, chdir(path));
 	return r;
 }
 
 int
 ast_chmod(const char* path, mode_t mode)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, fchmodat(LOCAL(pwd), path, mode, 0));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, fchmodat(d, path, mode, 0));
+	else
+		RESTART(r, fchmod(d, mode));
 	return r;
 }
 
 int
 ast_chown(const char* path, uid_t owner, gid_t group)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, fchownat(LOCAL(pwd), path, owner, group, 0));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, fchownat(d, path, owner, group, 0));
+	else
+		RESTART(r, fchown(d, owner, group));
 	return r;
 }
 
@@ -380,9 +461,17 @@ ast_dup2(int ff, int ft)
 int
 ast_eaccess(const char* path, int mode)
 {
-	int	r;
+	const char*	opath = path;
+	int		d;
+	int		r;
 
-	RESTART(r, faccessat(LOCAL(pwd), path, mode, AT_EACCESS));
+	RATIFY(path, d);
+	if (!*path)
+	{
+		path = opath;
+		d = LOCAL(pwd);
+	}
+	RESTART(r, faccessat(d, path, mode, AT_EACCESS));
 	return r;
 }
 
@@ -524,18 +613,28 @@ ast_ioctl(int fd, int op, ...)
 int
 ast_lchmod(const char* path, mode_t mode)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, fchmodat(LOCAL(pwd), path, mode, AT_SYMLINK_NOFOLLOW));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, fchmodat(d, path, mode, AT_SYMLINK_NOFOLLOW));
+	else
+		RESTART(r, fchmod(d, mode));
 	return r;
 }
 
 int
 ast_lchown(const char* path, uid_t owner, gid_t group)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, fchownat(LOCAL(pwd), path, owner, group, AT_SYMLINK_NOFOLLOW));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, fchownat(d, path, owner, group, AT_SYMLINK_NOFOLLOW));
+	else
+		RESTART(r, fchown(d, owner, group));
 	return r;
 }
 
@@ -544,6 +643,7 @@ ast_link(const char* path, const char* linkpath)
 {
 	int	r;
 
+	/* HERE RATIFY() 2 paths */
 	RESTART(r, linkat(LOCAL(pwd), path, LOCAL(pwd), linkpath, 0));
 	return r;
 }
@@ -551,36 +651,65 @@ ast_link(const char* path, const char* linkpath)
 int
 ast_lstat(const char* path, struct stat* st)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, fstatat(LOCAL(pwd), path, st, AT_SYMLINK_NOFOLLOW));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, fstatat(d, path, st, AT_SYMLINK_NOFOLLOW));
+	else
+		RESTART(r, fstat(d, st));
 	return r;
 }
 
 int
 ast_mkdir(const char* path, mode_t mode)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, mkdirat(LOCAL(pwd), path, mode));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, mkdirat(d, path, mode));
+	else
+	{
+		errno = ENOTDIR;
+		r = -1;
+	}
 	return r;
 }
 
 int
 ast_mkfifo(const char* path, mode_t mode)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, mkfifoat(LOCAL(pwd), path, mode));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, mkfifoat(d, path, mode));
+	else
+	{
+		errno = ENOTDIR;
+		r = -1;
+	}
 	return r;
 }
 
 int
 ast_mknod(const char* path, mode_t mode, dev_t dev)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, mknodat(LOCAL(pwd), path, mode, dev));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, mknodat(d, path, mode, dev));
+	else
+	{
+		errno = ENOTDIR;
+		r = -1;
+	}
 	return r;
 }
 
@@ -600,7 +729,7 @@ ast_open(const char* path, int flags, ...)
 int
 ast_creat(const char* path, mode_t mode)
 {
-	return ast_open(path, O_CREAT|O_WRONLY|O_TRUNC, mode);
+	return ast_openat(LOCAL(pwd), path, O_CREAT|O_WRONLY|O_TRUNC, mode);
 }
 
 int
@@ -647,18 +776,34 @@ ast_pipe2(int fds[2], int flags)
 int
 ast_readlink(const char* path, char* buf, size_t size)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, readlinkat(LOCAL(pwd), path, buf, size));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, readlinkat(d, path, buf, size));
+	else
+	{
+		errno = EINVAL;
+		r = -1;
+	}
 	return r;
 }
 
 int
 ast_remove(const char* path)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, unlinkat(LOCAL(pwd), path, 0));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, unlinkat(d, path, 0));
+	else
+	{
+		errno = EINVAL;
+		r = -1;
+	}
 	return r;
 }
 
@@ -667,6 +812,7 @@ ast_rename(const char* oldpath, const char* newpath)
 {
 	int	r;
 
+	/* HERE RATIFY() 2 paths */
 	RESTART(r, renameat(LOCAL(pwd), oldpath, LOCAL(pwd), newpath));
 	return r;
 }
@@ -674,39 +820,64 @@ ast_rename(const char* oldpath, const char* newpath)
 int
 ast_rmdir(const char* path)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, unlinkat(LOCAL(pwd), path, AT_REMOVEDIR));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, unlinkat(d, path, AT_REMOVEDIR));
+	else
+	{
+		errno = ENOTDIR;
+		r = -1;
+	}
 	return r;
 }
 
 int
 ast_stat(const char* path, struct stat* st)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, fstatat(LOCAL(pwd), path, st, 0));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, fstatat(d, path, st, 0));
+	else
+		RESTART(r, fstat(d, st));
 	return r;
 }
 
 int
 ast_symlink(const char* path, const char* linkpath)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, symlinkat(path, LOCAL(pwd), linkpath));
+	RATIFY(linkpath, d);
+	if (*linkpath)
+		RESTART(r, symlinkat(path, d, linkpath));
+	else
+	{
+		errno = EINVAL;
+		r = -1;
+	}
 	return r;
 }
 
 int
 ast_truncate(const char* path, off_t size)
 {
+	int	d;
 	int	r;
 	int	fd;
 
-	if (path && *path != '/')
+	RATIFY(path, d);
+	if (!*path)
+		RESTART(r, ftruncate(d, size));
+	else if (*path != '/')
 	{
-		RESTART(fd, openat(LOCAL(pwd), path, O_WRONLY));
+		RESTART(fd, openat(d, path, O_WRONLY));
 		if (fd < 0)
 			return -1;
 		RESTART(r, ftruncate(fd, size));
@@ -720,9 +891,17 @@ ast_truncate(const char* path, off_t size)
 int
 ast_unlink(const char* path)
 {
+	int	d;
 	int	r;
 
-	RESTART(r, unlinkat(LOCAL(pwd), path, 0));
+	RATIFY(path, d);
+	if (*path)
+		RESTART(r, unlinkat(d, path, 0));
+	else
+	{
+		errno = EINVAL;
+		r = -1;
+	}
 	return r;
 }
 

@@ -584,6 +584,8 @@ bool job_reap(register int sig)
 			{
 				if(shp->st.trapcom[SIGCHLD])
 					shp->sigflag[SIGCHLD] =  SH_SIGTRAP;
+				else
+					pw->p_flag &= ~P_BG;
 			}
 			if(pw->p_pgrp==0)
 				pw->p_flag &= ~P_NOTIFY;
@@ -1887,7 +1889,7 @@ static struct process *job_unpost(Shell_t* shp,register struct process *pwtop,in
 	sfsync(sfstderr);
 #endif /* DEBUG */
 	pwtop = pw = job_byjid((int)pwtop->p_job);
-	if(!pw || pw->p_flag&P_BG) 
+	if(!pw || (pw->p_flag&P_BG)) 
 		return(pw);
 	for(; pw && (pw->p_flag&P_DONE)&&(notify||!(pw->p_flag&P_NOTIFY)||pw->p_env); pw=pw->p_nxtproc);
 	if(pw)
@@ -1996,7 +1998,7 @@ static void job_free(register int n)
 static char *job_sigmsg(Shell_t *shp,int sig)
 {
 	static char signo[40];
-	if(sig<=shgd->sigmax && shgd->sigmsg[sig])
+	if(sig<shgd->sigmax && shgd->sigmsg[sig])
 		return(shgd->sigmsg[sig]);
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
 	if(sig>=shp->gd->sigruntime[SH_SIGRTMIN] && sig<=shp->gd->sigruntime[SH_SIGRTMAX])

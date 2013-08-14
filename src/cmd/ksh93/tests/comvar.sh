@@ -602,7 +602,6 @@ exp=$'typeset -C x=(z=a\\=\'b c\')'
 got=$(typeset -p x)
 [[ $got == "$exp" ]] || err_exit "typeset -p failed -- expected '$exp', got '$got'"
 idempotent  exp x
-
 x=(typeset -C -a y;float z=2)
 got=$(print -C x)
 expected='(typeset -C -a y;typeset -l -E z=2)'
@@ -652,10 +651,13 @@ unset c
 compound c
 compound -a c.a=( [1]=( aa=1 ) )
 compound -a c.b=( [2]=( bb=2 ) )
+let 1
 typeset -m "c.b[9]=c.a[1]"
 exp='typeset -C c=(typeset -C -a a;typeset -C -a b=( [2]=(bb=2;);[9]=(aa=1)))'
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to another index fails'
+let 1
 idempotent exp c
+let 1
 
 unset c
 compound c
@@ -664,113 +666,13 @@ compound -A c.b=( [2]=( bb=2 ) )
 typeset -m "c.b[9]=c.a[1]"
 exp='typeset -C c=(typeset -C -a a;typeset -C -A b=( [2]=(bb=2;);[9]=(aa=1)))'
 [[ $(typeset -p c) == "$exp" ]] || err_exit 'moving compound indexed array element to a compound associative array element fails'
-idempotent exp c
-
-zzz=(
-	foo=(
-		bar=4
-	)
-)
-[[ $(set | grep "^zzz\.") ]] && err_exit 'set displays compound variables incorrectly'
-
-typeset -A stats
-stats[1]=(a=1 b=2)
-stats[2]=(a=1 b=2)
-stats[1]=(c=3 d=4)
-(( ${#stats[@]} == 2 )) || err_exit "stats[1] should contain 2 element not ${#stats[@]}"
-
-integer i=1
-foo[i++]=(x=3 y=4)
-[[ ${foo[1].x} == 3 ]] || err_exit "\${foo[1].x} should be 3"
-[[ ${foo[1].y} == 4 ]] || err_exit "\${foo[1].y} should be 4"
-
-# ${!x.} caused core dump in ks93u and earlier
-{ $SHELL -c 'compound x=(y=1); : ${!x.}' ; ((!$?));} || err_exit '${!x.} not working'
-
-$SHELL -c 'typeset -A a=([b]=c)' 2> /dev/null || err_exit 'typeset -A a=([b]=c) fails'
-
-compound -a a
-compound c=( name="container1" )
-a[4]=c 
-[[ ${a[4]} == $'(\n\tname=container1\n)' ]] || err_exit 'assignment of compound variable to compound array element not working'
 
 unset c
-compound  c
-compound  -a c.board
-for ((i=2; i < 4; i++))
-do	c.board[1][$i]=(foo=bar)
-done
-exp=$'(\n\ttypeset -C -a board=(\n\t\ttypeset -a [1]=(\n\t\t\t[2]=(\n\t\t\t\tfoo=bar\n\t\t\t)\n\t\t\t[3]=(\n\t\t\t\tfoo=bar\n\t\t\t)\n\t\t)\n\t)\n)'
-[[ "$(print -v c)" == "$exp" ]] || err_exit 'compound variable assignment to two dimensional array not working'
-idempotent -v exp c
-
-unset zz
-zz=()
-zz.[foo]=abc
-zz.[2]=def
-exp='typeset -C zz=([2]=def;foo=abc)'
-[[ $(typeset -p zz) == "$exp" ]] || err_exit 'expansion of compound variables with non-identifiers not working'
-(
-	typeset -i zz.[3]=123
-	exec 2>& 3-
-	exp='typeset -C zz=([2]=def;typeset -i [3]=123;foo=abc)'
-	[[ $(typeset -p zz) == "$exp" ]] || err_exit 'expansion of compound variables with non-identifiers not working in subshells'
-)  3>&2 2> /dev/null || err_exit 'syntax errors expansion of compound variables with non-identifiers'
-#idempotent  exp c
-
-unset xx
-xx=(foo=bar)
-xx=()
-[[ $xx == $'(\n)' ]] || err_exit 'xx=() not unsetting previous value'
-
-a=(foo=bar)
-[[ ${a[0].foo} == "${a.foo}" ]] || err_exit 'a[0].foo should be equal to a.foo'
-a[0].foo=bam
-[[ ${a[0].foo} == "${a.foo}" ]] || err_exit 'a[0].foo should be equal to a.foo after assignment to a[0].foo'
-
-exp='typeset -C c=(typeset -l -E y1=2.34)'
-float y1=2.34
 compound c
-typeset -m c.y1=y1
-[[ $(typeset -p c) == "$exp" ]] || err_exit 'typeset -m not preserving attributes'
-idempotent exp c
+compound -a c.car
+integer c.cari=0
+typeset -i c.car[c.cari++].int=99
+typeset -i c.car[c.cari++].int=44
+(( c.cari == 2 )) || err_exit "c.car has ${c.cari} array should have two elements"
 
-compound -a ar=(( float i=4 ) ( float i=7 ) ( float i=2 ) ( float i=1 ) ( float i=24 ) ( float i=-1 ) )
-set -s -Aar -Ki:n
-exp='typeset -C -a ar=((typeset -l -E i=-1) (typeset -l -E i=1) (typeset -l -E i=2) (typeset -l -E i=4) (typeset -l -E i=7) (typeset -l -E i=24))'
-[[ $(typeset -p ar) == "$exp" ]] || err_exit 'set -s -Aar -Ki:n for compound variable float array failed'
-compound -a ar=((i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
-set -s -Aar -Ki:n
-[[ $(typeset -p ar) == "${exp//typeset -l -E /}" ]] || err_exit 'set -s -Aar -Ki:n for compound var
-idempotent exp c
-iable array failed'
-set -s -Aar -Ki:nr
-exp='typeset -C -a ar=((i=24) (i=7) (i=4) (i=2) (i=1) (i=-1))'
-[[ $(typeset -p ar) == "$exp" ]] || err_exit 'set -s -Aar -Ki:nr for compound variable float array failed'
-#idempotent exp ar
-compound -a ar=((i=4) (i=7) (i=2) (i=1) (i=24) (i=-1) )
-unset ar[2]
-set -s -Aar -Ki
-exp='typeset -C -a ar=((i=-1) (i=1) (i=24) (i=4) (i=7))'
-[[ $(typeset -p ar) == "$exp" ]]|| err_exit 'sparse array not sorting correctly'
-
-compound  y
-compound  y.x
-compound y.x.ca
-exp='typeset -C y=(x=(typeset -C ca))'
-[[ $(typeset -p y) == "$exp" ]] || err_exit 'compound variable with empty compound variable not displaying correctly'
-idempotent exp y
-
-unset c
-compound c=( compound -a ar=(
-	[4]=(
-		compound b1=( bool pollin='true' )
-		compound b2
-		compound b3=( bool pollin='false' )
-	)
-))
-exp='typeset -C c=(typeset -C -a ar=( [4]=(b1=(_Bool pollin=true;);typeset -C b2;b3=(_Bool pollin=false))))'
-[[ $(typeset -p c) == "$exp" ]] || err_exit 'compound variable with empty and non-empty sub-variables not displaying correctly'
-idempotent exp c
-
-exit $((Errors<125?Errors:125))
+exit

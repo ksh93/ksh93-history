@@ -1152,11 +1152,28 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			{
 				int dupfd,toclose= -1;
 				io_op[2] = '&';
-				if((fd=fname[0])>='0' && fd<='9')
+				if((fd=fname[0])>='0' && (fd=='{' || fd<='9'))
 				{
 					char *number = fname;
 					int f;
-					dupfd = strtol(fname,&number,10);
+					if(fd=='{')
+					{
+						np = 0;
+						if(number=strchr(fname,'}'))
+						{
+							*number = 0;
+							np = nv_open(fname+1,shp->var_tree,NV_NOASSIGN|NV_VARNAME|NV_NOFAIL);
+							*number++ = '}';
+						}
+						if(!np)
+						{
+							message = e_file;
+							goto fail;
+						}
+						dupfd = nv_getnum(np);
+					}
+					else
+						dupfd = strtol(fname,&number,10);
 #ifdef SPAWN_cwd
 					if(vex && (f=spawnvex_get(vc,dupfd,0))>=0)
 						dupfd = f;
@@ -1599,6 +1616,8 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 		if(traceon)
 			sfprintf(sfstderr,"< %s\n",name);
 		sfputr(outfile,name,'\n');
+		off = sftell(outfile);
+		outfile->_data[off] = 0;
 	}
 	else
 	{

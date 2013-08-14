@@ -165,11 +165,11 @@ static LONGLONG _aso_InterlockedCompareExchange64_init(LONGLONG volatile* p, LON
 	return _aso_InterlockedCompareExchange64(p, o, n);
 }
 
-static LONGLONG _aso_InterlockedAdd64_init(LONGLONG volatile*, LONGLONG);
+static LONGLONG _aso_InterlockedExchangeAdd64_init(LONGLONG volatile*, LONGLONG);
 
-_aso_InterlockedAdd64_f _aso_InterlockedAdd64 = _aso_InterlockedAdd64_init;
+_aso_InterlockedExchangeAdd64_f _aso_InterlockedExchangeAdd64 = _aso_InterlockedExchangeAdd64_init;
 
-static LONGLONG _aso_InterlockedAdd64_32(LONGLONG volatile* p, LONGLONG n)
+static LONGLONG _aso_InterlockedExchangeAdd64_32(LONGLONG volatile* p, LONGLONG n)
 {
 	LONGLONG	o;
 
@@ -180,11 +180,11 @@ static LONGLONG _aso_InterlockedAdd64_32(LONGLONG volatile* p, LONGLONG n)
 	return o;
 }
 
-static LONGLONG _aso_InterlockedAdd64_init(LONGLONG volatile* p, LONGLONG n)
+static LONGLONG _aso_InterlockedExchangeAdd64_init(LONGLONG volatile* p, LONGLONG n)
 {
-	if (!(_aso_InterlockedAdd64 = (_aso_InterlockedAdd64_f)getsymbol(MODULE_kernel, "InterlockedAdd64")))
-		_aso_InterlockedAdd64 = _aso_InterlockedAdd64_32;
-	return _aso_InterlockedAdd64(p, n);
+	if (!(_aso_InterlockedExchangeAdd64 = (_aso_InterlockedExchangeAdd64_f)getsymbol(MODULE_kernel, "InterlockedExchangeAdd64")))
+		_aso_InterlockedExchangeAdd64 = _aso_InterlockedExchangeAdd64_32;
+	return _aso_InterlockedExchangeAdd64(p, n);
 }
 
 #endif

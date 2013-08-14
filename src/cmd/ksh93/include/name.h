@@ -133,6 +133,7 @@ struct Ufunction
 #define NV_PARAM	NV_NODISC	/* expansion use positional params */
 
 /* This following are for use with nodes which are not name-values */
+#define NV_DECL		0x20000000
 #define NV_TYPE		0x1000000
 #define NV_STATIC	0x2000000
 #define NV_COMVAR	0x4000000

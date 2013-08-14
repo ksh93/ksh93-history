@@ -1168,7 +1168,9 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					if(OPTIMIZE)
 						flgs |= NV_TAGGED;
 #endif
-					sh_setlist(shp,argp,flgs,tp);
+					if(np && nv_isattr(np,BLT_DCL))
+						flgs |= NV_DECL;
+					shp->nodelist = sh_setlist(shp,argp,flgs,tp);
 					if(np==shp->typeinit)
 						shp->typeinit = 0;
 					shp->envlist = argp;
@@ -2710,11 +2712,18 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				Namval_t *oldnspace = shp->namespace;
 				int offset = stktell(stkp);
 				int	flag=NV_NOASSIGN|NV_NOARRAY|NV_VARNAME;
-				if(cp)
-					errormsg(SH_DICT,ERROR_exit(1),e_ident,fname);
+				char	*sp,*xp;
 				sfputc(stkp,'.');
 				sfputr(stkp,fname,0);
-				np = nv_open(stkptr(stkp,offset),shp->var_tree,flag);
+				xp=stkptr(stkp,offset);
+				for(sp=xp+1;sp;)
+				{
+					if(sp = strchr(sp,'.'))
+						*sp = 0;
+					np = nv_open(xp,shp->var_tree,flag);
+					if(sp)
+						*sp++ = '.';
+				}
 				offset = stktell(stkp);
 				if(nv_istable(np))
 					root = nv_dict(np);

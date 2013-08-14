@@ -30,6 +30,7 @@
  *	move ..'s to the front
  *	/.. preserved (for pdu and newcastle hacks)
  *	FS_3D handles ...
+ *	if (flags&PATH_ABSOLUTE) then pwd prepended to relative paths
  *	if (flags&PATH_PHYSICAL) then symlinks resolved at each component
  *	if (flags&PATH_DOTDOT) then each .. checked for access
  *	if (flags&PATH_EXISTS) then path must exist at each component
@@ -95,14 +96,22 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 	int		n;
 	int		loop;
 	int		oerrno;
+	int		inplace;
 	Pathdev_t	nodev;
 #if defined(FS_3D)
 	long		visits = 0;
 #endif
 
 	oerrno = errno;
+	if (dev)
+	{
+		dev->oflags = 0;
+		dev->path.offset = 0;
+	}
+	else
+		dev = &nodev;
 
-	/* lazy here -- we will never produce a path longer than strlen(path)+1 */
+	/* lazy here -- we will never (modulo PATH_ABSOLUTE) produce a path longer than strlen(path)+1 */
 
 	if (canon)
 	{
@@ -116,10 +125,9 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 	}
 	else if (!size)
 		size = strlen(path);
-	if (dev)
-		dev->path.offset = 0;
-	else
-		dev = &nodev;
+	p = (char*)path;
+	inplace = p == canon;
+ again:
 	if (*path == '/')
 	{
 		if (path[1] == '/' && *astconf("PATH_LEADING_SLASHES", NiL, NiL) == '1')
@@ -138,7 +146,7 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 			return (char*)canon + 1;
 		}
 		r = 0;
-		p = s = (char*)path;
+		s = (char*)path;
 		if (size > 16 && s[1] == 'p' && s[2] == 'r' && s[3] == 'o' && s[4] == 'c' && s[5] == '/')
 		{
 			NEXT(s, 6);
@@ -148,7 +156,14 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 				dev->pid = -1;
 			}
 			else
+#ifdef _fd_pid_dir_fmt
 				DIGITS(s, dev->pid);
+#else
+			{
+				errno = ENOENT;
+				return 0;
+			}
+#endif
 			if (s[0] == '/')
 			{
 				NEXT(s, 1);
@@ -168,26 +183,106 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 		else if (size > 8 && s[1] == 'd' && s[2] == 'e' && s[3] == 'v' && s[4] == '/')
 		{
 			NEXT(s, 5);
-			if (s[0] == 'f' && s[1] == 'd' && (s[2] == '/' || s[2] == 0))
+			if (s[0] == 'f')
 			{
-				NEXT(s, 2);
-				if (*s)
+				if (s[1] == 'd' && (s[2] == '/' || s[2] == 0))
 				{
-					DIGITS(s, dev->fd);
-					if (*s == '/' || *s == 0)
+					NEXT(s, 2);
+					if (*s)
 					{
-						NEXT(s, 0);
+						DIGITS(s, dev->fd);
+						if (*s == '/' || *s == 0)
+						{
+							NEXT(s, 0);
+							r = s;
+							dev->prot.offset = 0;
+							dev->pid = -1;
+						}
+					}
+					else if (flags & PATH_DEV)
+					{
 						r = s;
+						dev->fd = AT_FDCWD;
 						dev->prot.offset = 0;
 						dev->pid = -1;
 					}
 				}
-				else if (flags & PATH_DEV)
+				else if (s[1] == 'i' && s[2] == 'l' && s[3] == 'e' && s[4] == '@')
 				{
-					r = s;
-					dev->fd = AT_FDCWD;
-					dev->prot.offset = 0;
-					dev->pid = -1;
+					if (!*(s += 5))
+					{
+						if (flags & PATH_DEV)
+							return 0;
+					}
+					for (;;)
+					{
+						if (s[0] == 'a' && s[1] == 's' && s[2] == 'y' && s[3] == 'n' && s[4] == 'c' && (s[5] == ',' || s[5] == '/'))
+						{
+#ifdef O_ASYNC
+							s += 5;
+							dev->oflags |= O_ASYNC;
+#else
+							errno = ENXIO;
+							return 0;
+#endif
+						}
+						else if (s[0] == 'd' && s[1] == 'i' && s[2] == 'r' && s[3] == 'e' && s[4] == 'c' && s[5] == 't')
+						{
+							if (s[6] == ',' || s[6] == '/')
+							{
+#ifdef O_DIRECT
+								s += 6;
+								dev->oflags |= O_DIRECT;
+#else
+								errno = ENXIO;
+								return 0;
+#endif
+							}
+							else if (s[6] == 'o' && s[7] == 'r' && s[8] == 'y' && (s[8] == ',' || s[8] == '/'))
+							{
+#ifdef O_DIRECTORY
+								s += 8;
+								dev->oflags |= O_DIRECTORY;
+#else
+								errno = ENXIO;
+								return 0;
+#endif
+							}
+						}
+						else if (s[0] == 'n' && s[1] == 'o' && s[2] == 'n' && s[3] == 'b' && s[4] == 'l' && s[5] == 'o' && s[6] == 'c' && s[7] == 'k' && (s[8] == ',' || s[8] == '/'))
+						{
+#ifdef O_NONBLOCK
+							s += 8;
+							dev->oflags |= O_NONBLOCK;
+#else
+							errno = ENXIO;
+							return 0;
+#endif
+						}
+						else if (s[0] == 's' && s[1] == 'y' && s[2] == 'n' && s[3] == 'c' && (s[4] == ',' || s[4] == '/'))
+						{
+#ifdef O_ASYNC
+							s += 4;
+							dev->oflags |= O_ASYNC;
+#else
+							errno = ENXIO;
+							return 0;
+#endif
+						}
+						else
+						{
+							errno = EINVAL;
+							return 0;
+						}
+						if (s[0] == '/')
+						{
+							if (s[1] == '.' && s[2] == '/' && s[3])
+								s += 3;
+							path = (const char*)s;
+							goto again;
+						}
+						s++;
+					}
 				}
 			}
 			else if (s[0] == 's' && s[1] == 'c' && s[2] == 't' && s[3] == 'p' && (s[4] == '/' || s[4] == 0) && (n = 4) ||
@@ -297,6 +392,19 @@ pathdev(const char* path, char* canon, size_t size, int flags, Pathdev_t* dev)
 	p = t = r = canon;
 	v = t + ((flags >> 5) & 01777);
 	s = (char*)path;
+	if ((flags & PATH_ABSOLUTE) && *s != '/')
+	{
+		if (inplace)
+		{
+			n = strlen(path);
+			s = fmtbuf(n + 1);
+			memcpy(s, path, n);
+		}
+		if (!getcwd(t, size - strlen(path)))
+			return 0;
+		t += strlen(t);
+		*t++ = '/';
+	}
 	for (;;)
 		switch (*t++ = *s++)
 		{

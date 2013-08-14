@@ -54,12 +54,8 @@
 #endif
 #endif
 
-extern __thread unsigned int	_AsoThreadId;
-
 #undef __MANGLE__
 #define __MANGLE__ __LINKAGE__
-
-#define asothreadid()	(_AsoThreadId ? _AsoThreadId : _asothreadid())
 
 #if _BLD_aso && defined(__EXPORT__)
 #define extern	extern __EXPORT__
@@ -72,7 +68,7 @@ extern unsigned int		asoactivecpu(void);
 extern int			asolock(unsigned int volatile*, unsigned int, int);
 extern int			asorelax(long);
 extern int			asoyield(void);
-extern unsigned int		_asothreadid(void);
+extern unsigned int		asothreadid(void);
 
 #define asocaschar(p,o,n)	asocas8((uint8_t volatile*)p,o,n)
 #define asogetchar(p)		asoget8((uint8_t volatile*)p)

@@ -1,3 +1,4 @@
+13-08-11 strcopy() => stpcpy()
 13-07-17 tr.c: finally handle ``tr -Cd "[=e=]" <<<"1e2é3"''-- how about a posix equivalence class api
 13-07-16 cp.c: limit st_size>0 logic to S_ISREG() files
 13-05-01 vmstate.c: update for new vmalloc snarf

@@ -592,7 +592,7 @@ as if the \f2varname\^\fP\f3()\fP syntax were used to define it.
 .I Functions\^
 below.)
 .TP
-\f3namespace\fP \f2identifier\^\fP \f3{\fP \f2list\^\fP \f3;}\fP
+\f3namespace\fP \f2varname\^\fP \f3{\fP \f2list\^\fP \f3;}\fP
 .br
 Defines or uses the name space
 .I identifier\^
@@ -5978,6 +5978,11 @@ When an enumeration variable is used in arithmetic expression, its value
 is the index into the array that defined it starting from index 0.
 Enumeration strings can be used in an arithmetic expression when comparing
 against an enumeration variable.
+Also, each non-subscripted enumeration variable followed by
+.B .name
+where name is one of the enumeration names expands to the index
+corresponding to
+.BR name .
 .sp .5
 The enum
 .B _Bool

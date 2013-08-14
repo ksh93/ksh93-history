@@ -333,8 +333,8 @@ elif	aso note{ winix Interlocked }end link{
 		{
 			LONG		i = 0;
 			return InterlockedCompareExchange(&i, 1, 0) != 0 ||
-			       InterlockedIncrement(&i) != 1 ||
-			       InterlockedDecrement(&i) != 2;
+			       InterlockedExchangeAdd(&i,1) != 1 ||
+			       InterlockedExchangeAdd(&i,-1) != 2;
 		}
 	}end && {
 		#include <ast_windows.h>
@@ -360,7 +360,7 @@ elif	aso note{ winix Interlocked }end link{
 		#else
 
 		typedef LONGLONG (*_aso_InterlockedCompareExchange64_f)(LONGLONG volatile*, LONGLONG, LONGLONG);
-		typedef LONGLONG (*_aso_InterlockedAdd64_f)(LONGLONG volatile*, LONGLONG);
+		typedef LONGLONG (*_aso_InterlockedExchangeAdd64_f)(LONGLONG volatile*, LONGLONG);
 
 		#if _BLD_aso && defined(__EXPORT__)
 		#define extern		extern __EXPORT__
@@ -370,15 +370,15 @@ elif	aso note{ winix Interlocked }end link{
 		#endif
 
 		extern _aso_InterlockedCompareExchange64_f	_aso_InterlockedCompareExchange64;
-		extern _aso_InterlockedAdd64_f			_aso_InterlockedAdd64;
+		extern _aso_InterlockedExchangeAdd64_f		_aso_InterlockedExchangeAdd64;
 
 		#undef extern
 
 		#define asocas64(p,o,n)		_aso_InterlockedCompareExchange64((LONGLONG volatile*)(p),n,o)
-		#define asoadd64(p,n)		_aso_InterlockedAdd64((LONGLONG volatile*)(p),n)
-		#define asosub64(p,n)		_aso_InterlockedAdd64((LONGLONG volatile*)(p),-(n))
-		#define asoinc64(p)		_aso_InterlockedAdd64((LONGLONG volatile*)(p),1)
-		#define asodec64(p)		_aso_InterlockedAdd64((LONGLONG volatile*)(p),-1)
+		#define asoadd64(p,n)		_aso_InterlockedExchangeAdd64((LONGLONG volatile*)(p),n)
+		#define asosub64(p,n)		_aso_InterlockedExchangeAdd64((LONGLONG volatile*)(p),-(n))
+		#define asoinc64(p)		_aso_InterlockedExchangeAdd64((LONGLONG volatile*)(p),1)
+		#define asodec64(p)		_aso_InterlockedExchangeAdd64((LONGLONG volatile*)(p),-1)
 
 		#if _ast_sizeof_pointer == 8
 		#define asocasptr(p,o,n)	((void*)_aso_InterlockedCompareExchange64((LONGLONG volatile*)(p),asointegralof(n),asointegralof(o)))

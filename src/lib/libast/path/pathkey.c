@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -117,7 +117,7 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 		 */
 
 		if (attr)
-			attr = strcopy(attr, "PREROOT='");
+			attr = stpcpy(attr, "PREROOT='");
 #if FS_PREROOT
 		if (k = getenv(PR_BASE))
 		{
@@ -132,7 +132,7 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 		{
 			n = memsum(k, strlen(k), n);
 			if (attr)
-				attr = strcopy(attr, k);
+				attr = stpcpy(attr, k);
 		}
 #endif
 #if _UWIN
@@ -141,7 +141,7 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 			k = "/64";
 			n = memsum(k, strlen(k), n);
 			if (attr)
-				attr = strcopy(attr, k);
+				attr = stpcpy(attr, k);
 		}
 #endif
 
@@ -150,12 +150,12 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 		 */
 
 		if (attr)
-			attr = strcopy(attr, "' UNIVERSE='");
+			attr = stpcpy(attr, "' UNIVERSE='");
 		if (k = astconf("UNIVERSE", NiL, NiL))
 		{
 			n = memsum(k, strlen(k), n);
 			if (attr)
-				attr = strcopy(attr, k);
+				attr = stpcpy(attr, k);
 		}
 
 		/*
@@ -262,7 +262,7 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 					*attr++ = ' ';
 					while ((*attr++ = *k++) != '=');
 					*attr++ = '\'';
-					attr = strcopy(attr, k);
+					attr = stpcpy(attr, k);
 					*attr++ = '\'';
 				}
 				else
@@ -271,7 +271,7 @@ pathkey_20100601(const char* lang, const char* tool, const char* apath, char* ke
 			}
 		if (attr)
 		{
-			attr = strcopy(attr, " ATTRIBUTES='PREROOT UNIVERSE");
+			attr = stpcpy(attr, " ATTRIBUTES='PREROOT UNIVERSE");
 			for (c = 0; c < elementsof(env); c++)
 				if (k = env[c])
 				{

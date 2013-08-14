@@ -29,7 +29,7 @@ Command=${0##*/}
 integer Errors=0
 
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
-trap "cd /; rm -rf $tmp" EXIT
+#AHA# trap "cd /; rm -rf $tmp" EXIT
 
 integer n=2
 

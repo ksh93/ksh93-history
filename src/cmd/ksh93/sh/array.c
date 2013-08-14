@@ -1482,7 +1482,8 @@ static bool array_fixed_init(Namval_t *np, char *sub, char *cp)
 	fp->max = (int*)(fp+1);
 	fp->incr = fp->max+n;
 	fp->cur = fp->incr+n;
-	fp->max[0] = (int)sh_arith(shp,(char*)sub);
+	if((fp->max[0] = (int)sh_arith(shp,(char*)sub))<=0)
+		errormsg(SH_DICT,ERROR_exit(1),"%s: fixed array dimension must be > 0",nv_name(np));
 	for(n=1,ep=cp;*ep=='['; ep=cp)
 	{
 		cp = nv_endsubscript(np,ep,0,np->nvshell);

@@ -287,7 +287,7 @@ struct argnod *nv_onlist(struct argnod *arg, const char *name)
  * Perform parameter assignment for a linked list of parameters
  * <flags> contains attributes for the parameters
  */
-void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Namval_t *typ)
+Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Namval_t *typ)
 {
 	register char	*cp;
 	register Namval_t *np, *mp;
@@ -296,7 +296,7 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 	int		traceon = (sh_isoption(shp,SH_XTRACE)!=0);
 	int		array = (flags&(NV_ARRAY|NV_IARRAY));
 	Namarr_t	*ap;
-	Namval_t	node;
+	Namval_t	node, **nodelist=0, **nlp=0;
 	struct Namref	nr;
 	int		maketype = flags&NV_TYPE;
 	struct sh_type	shtp;
@@ -323,6 +323,15 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 	}
 	else
 		shp->prefix_root = shp->first_root = 0;
+	if(flags&NV_DECL)
+	{
+		struct argnod *ap;
+		int n=0;
+		for(ap=arg;ap; ap=ap->argnxt.ap)
+			n++;
+		nlp = nodelist = (Namval_t**)stkalloc(shp->stk,(n+1)*sizeof(Namval_t*));
+		nodelist[n] = 0;
+	}
 	for(;arg; arg=arg->argnxt.ap)
 	{
 		shp->used_pos = 0;
@@ -368,6 +377,8 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 					}
 				}
 				np = nv_open(cp,shp->var_tree,flag|NV_ASSIGN);
+				if(nlp)
+					*nlp++ = np;
 				if((arg->argflag&ARG_APPEND) && (tp->tre.tretyp&COMMSK)==TCOM && tp->com.comset && !nv_isvtree(np) && (((ap=nv_arrayptr(np)) && !ap->fun && !nv_opensub(np))  || (!ap && nv_isarray(np) && tp->com.comarg && !((mp=nv_search(tp->com.comarg->argval,shp->fun_tree,0)) && nv_isattr(mp,BLT_DCL)))))
 				{
 					if(tp->com.comarg)
@@ -622,6 +633,8 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 			mp = 0;
 		}
 		np = nv_open(cp,shp->prefix_root?shp->prefix_root:shp->var_tree,flags);
+		if(nlp)
+			*nlp++ = np;
 		if(!np->nvfun && (flags&NV_NOREF))
 		{
 			if(shp->used_pos)
@@ -683,6 +696,7 @@ void sh_setlist(Shell_t *shp,register struct argnod *arg,register int flags, Nam
 			}
 		}
 	}
+	return(nodelist);
 }
 
 /*
@@ -773,6 +787,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 	int			copy=0,isref,top=0,noscope=(flags&NV_NOSCOPE);
 	int			nofree=0, level=0, zerosub=0;
 	Namarr_t		*ap;
+	Namval_t		*qp=0;
 	if(root==shp->var_tree)
 	{
 		if(dtvnext(root))
@@ -1251,6 +1266,8 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				}
 				nv_onattr(np,nofree);
 				nofree  = 0;
+				if(np)
+					qp = np;
 				if(c=='.' && (fp=np->nvfun))
 				{
 					for(; fp; fp=fp->next)
@@ -1301,7 +1318,8 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			}
 			/* fall through */
 		    default:
-			shp->oldnp = np;
+			shp->oldnp = np?nq:qp;
+			qp = 0;
 			dp->last = cp;
 			if((c = mbchar(cp)) && !isaletter(c))
 				return(np);
@@ -3836,7 +3854,9 @@ char *nv_name(register Namval_t *np)
 	if(!nv_isattr(np,NV_MINIMAL|NV_EXPORT) && np->nvenv)
 	{
 		Namval_t *nq= shp->last_table, *mp= (Namval_t*)np->nvenv;
-		if(!strchr(np->nvname,'.') ||  nv_type(mp) || (nv_isarray(mp) && (cp=nv_getsub(mp)) && strcmp(np->nvname,cp)==0))
+		if(mp && mp->nvname==0 || *mp->nvname==0)
+			mp = 0;
+		if(mp && (!strchr(np->nvname,'.') ||  (np->nvfun && nv_type(mp)) || (nv_isarray(mp) && (cp=nv_getsub(mp)) && strcmp(np->nvname,cp)==0)))
 		{
 			if(np==shp->last_table)
 				shp->last_table = 0;

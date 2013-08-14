@@ -548,9 +548,9 @@ static Namval_t *create_type(Namval_t *np,const char *name,int flag,Namfun_t *fp
 	{
 		char *base =  (char*)np-(NV_MINSZ-sizeof(Dtlink_t));
 		size_t m=strlen(np->nvname);
-		while((nq=nv_namptr(base,++i)) && memcmp(nq->nvname,np->nvname,m)==0)
+		while((nq=nv_namptr(base,++i)) && strncmp(nq->nvname,np->nvname,m)==0)
 		{
-			if(nq->nvname[m]=='.' && memcmp(name,&nq->nvname[m+1],n)==0 && nq->nvname[m+n+1]==0)
+			if(nq->nvname[m]=='.' && strncmp(name,&nq->nvname[m+1],n)==0 && nq->nvname[m+n+1]==0)
 				goto found;
 		}
 		nq = 0;

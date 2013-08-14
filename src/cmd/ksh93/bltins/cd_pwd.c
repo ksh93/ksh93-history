@@ -41,7 +41,7 @@
 /*
  * Invalidate path name bindings to relative paths
  */
-static void rehash(register Namval_t *np,void *data)
+static void rehash_path(register Namval_t *np,void *data)
 {
 	Pathcomp_t *pp = (Pathcomp_t*)np->nvalue.cp;
 	NOT_USED(data);
@@ -56,7 +56,7 @@ static void rehash(register Namval_t *np,void *data)
 int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 {
 	int fd,shfd;
-	int savederrno=errno;
+	int savederrno;
 	struct stat fs;
 #ifndef O_XATTR
 	NOT_USED(xattr);
@@ -70,7 +70,9 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 		if((apfd = openat(dir, path, O_RDONLY|O_NONBLOCK|O_CLOEXEC))>=0)
 		{
 			fd = openat(apfd, e_dot, O_XATTR|O_CLOEXEC);
+			savederrno = errno;
 			close(apfd);
+			errno = savederrno;
 		}
 	}
 	else
@@ -79,12 +81,6 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path, bool xattr)
 
 	if(fd < 0)
 		return fd;
-	if (!fstat(fd, &fs) && !S_ISDIR(fs.st_mode))
-	{
-		close(fd);
-		errno = ENOTDIR;
-		return -1;
-	}
 
 	/* Move fd to a number > 10 and register the fd number with the shell */
 	shfd = sh_fcntl(fd, F_DUPFD_CLOEXEC, 10);
@@ -418,7 +414,7 @@ success:
 	nv_putval(pwdnod,dir,NV_RDONLY);
 	nv_onattr(pwdnod,NV_NOFREE|NV_EXPORT);
 	shp->pwd = pwdnod->nvalue.cp;
-	nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
+	nv_scan(shp->track_tree,rehash_path,(void*)0,NV_TAGGED,NV_TAGGED);
 	path_newdir(shp,shp->pathlist);
 	path_newdir(shp,shp->cdpathlist);
 	if(oldpwd)

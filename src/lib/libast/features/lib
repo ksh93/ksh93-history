@@ -31,7 +31,8 @@ lib	BSDsetpgrp
 lib	_cleanup
 lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
 lib	execlp,execve,execvp,execvpe
-lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync
+lib	fchmod,fcntl,fmtmsg,fnmatch,fork
+lib	fsync,fdatasync,fssync,sync
 lib	getaddrinfo netdb.h netinet/in.h -lsocket
 lib	getconf,getdents,getdirentries,getdtablesize,getdate
 lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
@@ -46,6 +47,7 @@ lib	setpgid,setpgrp,setpgrp2,setregid,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec
 lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
 lib	strmode,strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog
+lib	stpcpy,stpncpy,strlcat,strlcpy
 lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
 lib	ftruncate,truncate
 lib	creat64,ftruncate64,lseek64,open64,truncate64 -D_LARGEFILE64_SOURCE fcntl.h unistd.h
