@@ -1220,7 +1220,11 @@ extern Mstats_t		F0(_ast_mstats, void) { return mstats(); }
  *	(void)_vmkeep(r);
  */
 
-int
+#if defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
+extern int
 #if __STD_C
 _vmkeep(int v)
 #else
@@ -1237,6 +1241,8 @@ int	v;
 		_Vmassert &= ~VM_keep;
 	return r;
 }
+
+#undef	extern
 
 #if USE_NATIVE
 

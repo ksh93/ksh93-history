@@ -1,4 +1,29 @@
-13-08-12  --- Release ksh93v- ---
+13-08-27  --- Release ksh93v- ---
+13-08-27 +enum constants can have .DIG, .MAX, or .MIN sub-variables.
+13-08-26 +Floating variables can be following by DIG, MAX, MIN, EPSILON, 
+	  INT_MAX, INT_MIN, or MAX_10_EXP to give values correspong to
+ 	  the floating type of the variable.
+13-08-26 +Integer variables can be followed by .DIG, .MAX, or .MIN in
+	  arithmetic expression so give the values corresponding to that
+	  integer type.
+13-08-26 +Added 12 math constants such as E, PI, and SQRT2.
+13-08-23  Documented __ in sh.1 man page.
+13-08-22  Fixed __ to work in nested types.
+13-08-22  A bug in which print -v .sh.stats did not work within a namespace
+	  has been fixed.
+13-08-21  enumeration subvariables introduce in 13-07-30 can now be used
+	  with enum arrays and reference to enum array elements.
+13-08-20  A bug in arithemtic with variables used in an arithmetic expression
+	  inside a namespace has been fixed.
+13-08-19  A bug in which compound variables created in a namespace did not
+	  display correctly outside of the namespace has been fixed. 
+13-08-19 +The variable .sh.pwdfd which expands to the file descriptor number
+	  corresponding to $PWD has been added.
+13-08-15  A bug in which copying the .sh.stats and .sh.siginfo variables
+	  gave values that could vary has been fixed.
+13-08-14  A bug in which unknow starup options, for example ksh --foobarbla
+	  would cause the shell to core dump has been fied.
+13-08-14  A bug in which {n}<&0 did not work after <<< string hs been fixed.
 13-08-12  A bug in which background jobs where not removed after the
 	  user was notified about completion has been fixed.
 13-08-11  A bug in which subscripts were evaluated twice for subscripts
@@ -6,7 +31,7 @@
 13-08-11 +namespace was modified so that namespace names can be a compound
 	  variable rather than just an identifier and namespace are no
 	  longer nested.
-13-08-07  typeset -p (and print -v) now display the sort attribute for
+13-08-07  typeset -p (and print -v) now display the short attribute for
 	  typeset -sF and typeset -sE.
 13-08-06 +You can now use the redirection <& {n} whic is the same as <& $n.
 13-08-05  Fix a bug in which read -C could reference uninitialized memory.

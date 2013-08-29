@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -32,6 +32,7 @@
 #define vmfree(v,p)
 #define vmnewof(v,o,t,n,x)	(t*)_vm_resize(v,(void*)o,sizeof(t)*(n)+(x))
 #define vmopen(a,b,c)		_vm_open()
+#define vmresize(v,p,n,f)	_vm_resize(v,p,n)
 
 #define VM_CHUNK		(32*1024)
 #define VM_ALIGN		16

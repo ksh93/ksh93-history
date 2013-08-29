@@ -1551,9 +1551,9 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		}
 	}
 	sh_ioinit(shp);
-	shp->pwdfd = sh_diropenat(shp, AT_FDCWD, e_dot, false);
-#ifdef O_SEARCH
-	/* This should _never_ happen, guranteed by design and goat sacrifice */
+	shp->pwdfd = sh_diropenat(shp, AT_FDCWD, e_dot);
+#if O_SEARCH
+	/* This should _never_ happen, guaranteed by design and goat sacrifice */
 	if(shp->pwdfd < 0)
 		errormsg(SH_DICT,ERROR_system(1), "Can't obtain directory fd.");
 #endif
@@ -1921,6 +1921,7 @@ struct Svars
 	Shell_t		*sh;
 	Namval_t	*parent;
 	char		*nodes;
+	void		*data;
 	size_t		dsize;
 	int		numnodes;
 	int		current;
@@ -1965,11 +1966,43 @@ found:
 	return(nq);
 }
 
+static Namfun_t *clone_svar(Namval_t* np,Namval_t *mp,int flags,Namfun_t *fp)
+{
+	Shell_t		*shp=(Shell_t*)np->nvshell;
+	struct Svars	*dp, *sp=(struct Svars*)fp;
+	register int	i;
+	char		*cp;
+	Sfdouble_t	d;
+	dp = (struct Svars*)malloc(fp->dsize+sp->dsize+sizeof(void**));
+	memcpy((void*)dp,(void*)sp,fp->dsize);
+	dp->nodes = (char*)(dp+1);
+	dp->data = (void*)((char*)dp + fp->dsize+sizeof(void**));
+	memcpy(dp->data,sp->data,sp->dsize);
+	dp->hdr.nofree = (flags&NV_RDONLY?1:0);
+	for(i=dp->numnodes;--i >=0;)
+	{
+		np = nv_namptr(sp->nodes,i);
+		mp = nv_namptr(dp->nodes,i);
+		nv_offattr(mp,NV_RDONLY);
+		if(np->nvalue.cp>=(char*)sp->data && np->nvalue.cp < (char*)sp->data + sp->dsize)
+			mp->nvalue.cp = (char*)(dp->data) + ( np->nvalue.cp-(char*)sp->data);
+		else if(nv_isattr(np,NV_INTEGER))
+		{
+			d = nv_getnum(np);
+			nv_putval(mp,(char*)&d, NV_DOUBLE);
+		}
+		else if(cp = nv_getval(np))
+			nv_putval(mp,cp,0);
+	}
+	return(&dp->hdr);
+}
+
 static const Namdisc_t svar_disc =
 {
 	0, 0, 0, 0, 0,
 	create_svar,
-	0, 0,
+	clone_svar,
+	0,
 	next_svar
 };
 
@@ -1992,7 +2025,7 @@ static Namfun_t	 svar_child_fun =
 	&svar_child_disc, 1, 0, sizeof(Namfun_t)
 };
 
-static int svar_init(Shell_t *shp, Namval_t *pp, const Shtable_t* tab)
+static int svar_init(Shell_t *shp, Namval_t *pp, const Shtable_t* tab, size_t extra)
 {
 	int		i,nnodes=0;
 	struct Svars	*sp;
@@ -2000,7 +2033,7 @@ static int svar_init(Shell_t *shp, Namval_t *pp, const Shtable_t* tab)
 	Namfun_t	*fp;
 	while(*tab[nnodes].sh_name)
 		nnodes++;
-	sp = newof(0,struct Svars,1,nnodes*NV_MINSZ+sizeof(Namfun_t)+sizeof(void*));
+	sp = newof(0,struct Svars,1,nnodes*NV_MINSZ+sizeof(Namfun_t)+sizeof(void*)+extra);
 	sp->nodes = (char*)(sp+1);
 	fp = (Namfun_t*)((char*)sp->nodes +nnodes*NV_MINSZ);
 	memset(fp,0,sizeof(Namfun_t));
@@ -2036,9 +2069,10 @@ static void stat_init(Shell_t *shp)
 	Namval_t 	*np;
 	struct Svars	*sp;
 	int 		i,n;
-	n=svar_init(shp,SH_STATS,shtab_stats);
+	n=svar_init(shp,SH_STATS,shtab_stats,0);
 	shgd->stats = (int*)calloc(sizeof(int),n+1);
 	sp = (struct Svars*)SH_STATS->nvfun->next;
+	sp->data = (void*)shgd->stats;
 	sp->dsize = (n+1)*sizeof(shgd->stats[0]);
 	for(i=0; i < n; i++)
 	{
@@ -2051,12 +2085,13 @@ static void stat_init(Shell_t *shp)
 #endif /* SHOPT_STATS */
 
 #ifdef _lib_sigaction
+#   define SIGNAME_MAX	32
     static void siginfo_init(Shell_t *shp)
     {
 	struct Svars	*sp;
-	svar_init(shp,SH_SIG,shtab_siginfo);
-	sp = (struct Svars*)SH_STATS->nvfun->next;
-	sp->dsize = sizeof(siginfo_t);
+	svar_init(shp,SH_SIG,shtab_siginfo,sizeof(siginfo_t)+SIGNAME_MAX);
+	sp = (struct Svars*)SH_SIG->nvfun->next;
+	sp->dsize = sizeof(siginfo_t)+SIGNAME_MAX;
     }
 
     static const char *siginfocode2str(int sig, int code)
@@ -2076,18 +2111,24 @@ static void stat_init(Shell_t *shp)
 	Namfun_t	*fp = SH_SIG->nvfun;
 	struct Svars	*sp;
 	const char	*sistr;
+	char		*signame;
 	while(fp->disc->createf!=create_svar)
 		fp = fp->next;
 	if(!fp)
 		return;
 	sp = (struct Svars*)fp;
+	sp->data = (void*)((char*)sp + fp->dsize);
+	signame = (char*)sp->data+sizeof(siginfo_t);
+	memcpy(sp->data,sip,sizeof(siginfo_t));
+	sip = (siginfo_t*)sp->data;
 	np = create_svar(SH_SIG,"signo",0, fp);
 	np->nvalue.ip = &sip->si_signo;
 	np = create_svar(SH_SIG,"name",0, fp);
 	sh_siglist(sp->sh,sp->sh->strbuf,sip->si_signo+1);
 	sfseek(sp->sh->strbuf,(Sfoff_t)-1,SEEK_END);
 	sfputc(sp->sh->strbuf,0);
-	nv_putval(np,sfstruse(sp->sh->strbuf),NV_RDONLY);
+	strncpy(signame,sfstruse(sp->sh->strbuf),SIGNAME_MAX);
+	np->nvalue.cp = signame;
 	np = create_svar(SH_SIG,"pid",0, fp);
 	np->nvalue.idp = &sip->si_pid;
 	np = create_svar(SH_SIG,"uid",0, fp);
@@ -2244,6 +2285,7 @@ static Init_t *nv_init(Shell_t *shp)
 	DOTSHNOD->nvalue.cp = Empty;
 	nv_onattr(DOTSHNOD,NV_RDONLY);
 	SH_LINENO->nvalue.llp = &shp->st.lineno;
+	SH_PWDFD->nvalue.ip = &shp->pwdfd;
 	VERSIONNOD->nvalue.nrp = newof(0,struct Namref,1,0);
         VERSIONNOD->nvalue.nrp->np = SH_VERSIONNOD;
         VERSIONNOD->nvalue.nrp->root = nv_dict(DOTSHNOD);

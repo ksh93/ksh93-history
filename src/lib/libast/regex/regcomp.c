@@ -2097,7 +2097,7 @@ grp(Cenv_t* env, int parno)
 			switch (c)
 			{
 			case ')':
-				if (!(env->flags & REG_LITERAL))
+				if (!(env->flags & (REG_LITERAL|REG_SHELL)))
 				{
 					env->error = REG_BADRPT;
 					return 0;
@@ -2530,7 +2530,7 @@ grp(Cenv_t* env, int parno)
 	}
 	c = token(env);
 	env->parnest--;
-	if (c != T_CLOSE && (!(env->flags & REG_LITERAL) || c != ')'))
+	if (c != T_CLOSE && (c != ')' || !(env->flags & (REG_LITERAL|REG_SHELL))))
 	{
 		env->error = REG_EPAREN;
 		goto nope;
@@ -3393,7 +3393,7 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 		p->re_nsub /= 2;
 	if (env.flags & REG_DELIMITED)
 	{
-		p->re_npat = env.cursor - env.pattern + 1;
+		p->re_npat = env.cursor - (unsigned char*)pattern + 1;
 		if (*env.cursor == env.delimiter)
 			p->re_npat++;
 		else if (env.flags & REG_MUSTDELIM)

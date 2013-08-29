@@ -10,7 +10,7 @@ valgrindflags='--xml=yes --log-file=/dev/null --track-origins=yes --read-var-inf
 
 USAGE=$'
 [-s8?
-@(#)$Id: shtests (AT&T Research) 2013-07-16 $
+@(#)$Id: shtests (AT&T Research) 2013-08-24 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?shtests - ksh regression test harness]
@@ -39,10 +39,10 @@ USAGE=$'
 [t!:time?Include the current date/time in the test identification
     messages.]
 [u:utf8?Run the test scripts in the ast-specific C.UTF-8 locale.]
-[v!:vmalloc_options?Run tests with \bVMALLOC_OPTIONS=abort\b. Test
+[v!:vmalloc-options?Run tests with \bVMALLOC_OPTIONS=abort\b. Test
     script names matching \b'$timesensitive$'\b are run with
     \bVMALLOC_OPTIONS\b unset.]
-[V:valgrind?Set \b--novmalloc_options\b and run the test scripts with
+[V:valgrind?Set \b--novmalloc-options\b and run the test scripts with
     \bvalgrind\b(1) on \bksh\b. If \b$SHELL-g\b exists and is executable
     than it is used instead of \b$SHELL\b.]
 [x:trace?Enable script execution trace.]

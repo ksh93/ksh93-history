@@ -17,7 +17,6 @@
 *                  David Korn <dgk@research.att.com>                   *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
 /*
  * Shell arithmetic - uses streval library
  *   David Korn
@@ -59,6 +58,320 @@ static Namval_t FunNode =
 	"?",
 };
 
+struct Mathconst
+{
+	char		name[9];
+	Sfdouble_t  	value;
+};
+
+#ifndef M_1_PIl
+#   define M_1_PIl	0.3183098861837906715377675267450287L
+#endif
+#ifndef M_2_PIl
+#   define M_2_PIl	0.6366197723675813430755350534900574L
+#endif
+#ifndef M_2_SQRTPIl
+#   define M_2_SQRTPIl	1.1283791670955125738961589031215452L
+#endif
+#ifndef M_El
+#   define M_El		2.7182818284590452353602874713526625L
+#endif
+#ifndef M_LOG2El
+#   define M_LOG2El	1.4426950408889634073599246810018921L
+#endif
+#ifndef M_LOG10El
+#   define M_LOG10El	0.4342944819032518276511289189166051L
+#endif
+#ifndef M_LN2l
+#   define M_LN2l	0.6931471805599453094172321214581766L
+#endif
+#ifndef M_LN10l
+#   define M_LN10l	2.3025850929940456840179914546843642L
+#endif
+#ifndef M_PIl
+#   define M_PIl	3.1415926535897932384626433832795029L
+#endif
+#ifndef M_PI_2l
+#   define M_PI_2l	1.5707963267948966192313216916397514L
+#endif
+#ifndef M_PI_4l
+#   define M_PI_4l	0.7853981633974483096156608458198757L
+#endif
+#ifndef M_SQRT2l
+#   define M_SQRT2l	1.4142135623730950488016887242096981L	
+#endif
+#ifndef M_SQRT1_2l
+#   define M_SQRT1_2l	0.7071067811865475244008443621048490L
+#endif
+
+/* The firs three entries cann't be moved or it will break the code */
+static const struct Mathconst Mtable[]=
+{
+	"1_PI",		M_1_PIl,
+	"2_PI",		M_2_PIl,
+	"2_SQRTPI",	M_2_SQRTPIl,
+	"E",		M_El,
+	"LOG2E",	M_LOG2El,
+	"LOG10E",	M_LOG10El,
+	"LN2",		M_LN2l,
+	"PI",		M_PIl,
+	"PI_2",		M_PI_2l,
+	"PI_4",		M_PI_4l,
+	"SQRT2",	M_SQRT2l,
+	"SQRT1_2",	M_SQRT1_2l,
+	0,		0
+};
+
+typedef struct Intconst_s
+{
+	const char	name[4];
+	short		ss;
+	unsigned short	us;
+	int		si;
+	unsigned int	ui;
+	Sflong_t	sl;
+	Sfulong_t	ul;
+} Intconst_t;
+
+typedef struct Fltconst_s
+{
+	const char	name[12];
+	float		f;
+	double		d;
+	Sfdouble_t	l;
+} Fltconst_t;
+
+static const Intconst_t	intconst[] =
+{
+	{
+		"DIG",
+		USHRT_DIG,	USHRT_DIG,
+		UINT_DIG,	UINT_DIG,
+#ifdef LLONG_DIG
+		ULLONG_DIG,	ULLONG_DIG,
+#else
+		ULONG_DIG,	ULONG_DIG,
+#endif
+	},
+	{
+		"MAX",
+		SHRT_MAX,	USHRT_MAX,
+		INT_MAX,	UINT_MAX,
+#ifdef LLONG_MAX
+		LLONG_MAX,	ULLONG_MAX,
+#else
+		LONG_MAX,	ULONG_MAX,
+#endif
+	},
+	{
+		"MIN",
+		SHRT_MIN,	0,
+		INT_MIN,	0,
+#ifdef LLONG_MIN
+		LLONG_MIN,	0,
+#else
+		LONG_MIN,	0,
+#endif
+	},
+};
+
+static const Fltconst_t	fltconst[] =
+{
+	{
+		"DIG",
+		FLT_DIG,
+		DBL_DIG, 
+#ifdef LDBL_DIG
+		LDBL_DIG,
+#else
+		DBL_DIG,
+#endif
+	},
+	{
+		"EPSILON",
+		FLT_EPSILON,
+		DBL_EPSILON, 
+#ifdef LDBL_EPSILON
+		LDBL_EPSILON,
+#else
+		DBL_EPSILON,
+#endif
+	},
+	{
+		"INT_MAX",
+		FLT_INTMAX_MAX,
+		DBL_INTMAX_MAX, 
+#ifdef LDBL_INTMAX_MAX
+		LDBL_INTMAX_MAX,
+#else
+		DBL_INTMAX_MAX,
+#endif
+	},
+	{
+		"INT_MIN",
+		FLT_INTMAX_MIN,
+		DBL_INTMAX_MIN, 
+#ifdef LDBL_INTMAX_MIN
+		LDBL_INTMAX_MIN,
+#else
+		DBL_INTMAX_MIN,
+#endif
+	},
+	{
+		"MAX",
+		FLT_MAX,
+		DBL_MAX, 
+#ifdef LDBL_MAX
+		LDBL_MAX,
+#else
+		DBL_MAX,
+#endif
+	},
+	{
+		"MAX_10_EXP",
+		FLT_MAX_10_EXP,
+		DBL_MAX_10_EXP, 
+#ifdef LDBL_MAX_10_EXP
+		LDBL_MAX_10_EXP,
+#else
+		DBL_MAX_10_EXP,
+#endif
+	},
+	{
+		"MAX_EXP",
+		FLT_MAX_EXP,
+		DBL_MAX_EXP, 
+#ifdef LDBL_MAX_EXP
+		LDBL_MAX_EXP,
+#else
+		DBL_MAX_EXP,
+#endif
+	},
+	{
+		"MIN",
+		FLT_MIN,
+		DBL_MIN, 
+#ifdef LDBL_MIN
+		LDBL_MIN,
+#else
+		DBL_MIN,
+#endif
+	},
+	{
+		"MIN_10_EXP",
+		FLT_MIN_10_EXP,
+		DBL_MIN_10_EXP, 
+#ifdef LDBL_MIN_10_EXP
+		LDBL_MIN_10_EXP,
+#else
+		DBL_MIN_10_EXP,
+#endif
+	},
+	{
+		"MIN_EXP",
+		FLT_MIN_EXP,
+		DBL_MIN_EXP, 
+#ifdef LDBL_MIN_EXP
+		LDBL_MIN_EXP,
+#else
+		DBL_MIN_EXP,
+#endif
+	},
+	{
+		"UINT_MAX",
+		FLT_UINTMAX_MAX,
+		DBL_UINTMAX_MAX, 
+#ifdef LDBL_UINTMAX_MAX
+		LDBL_UINTMAX_MAX,
+#else
+		DBL_UINTMAX_MAX,
+#endif
+	},
+	{
+		"UINT_MIN",
+		0,
+		0, 
+		0,
+	},
+};
+
+static Namval_t	*check_limits(Shell_t *shp, char *cp)
+{
+	static Namval_t	node;
+	static Sfdouble_t dd;
+	Namval_t	*np;
+	char		*ep;
+	int 		n;
+	if(!(ep=strrchr(cp,'.')))
+		return(0);
+	*ep = 0;
+	np = nv_open(cp, shp->var_tree, NV_VARNAME|NV_NOADD|NV_NOFAIL);
+	*ep++ = '.';
+	if(!np || !nv_isattr(np,NV_INTEGER))
+		return(0);
+	if(nv_isattr (np,NV_DOUBLE)==NV_DOUBLE)
+	{
+		const Fltconst_t *fp = fltconst;
+		n = sizeof(fltconst)/sizeof(Fltconst_t);
+		for(; n>0; fp++,n--)
+		{
+			if(strcmp(fp->name,ep)==0)
+				break;
+		}
+		if(n>=0)
+		{
+			node = *np;
+			node.nvalue.ldp = &dd;
+			if(nv_isattr(np,NV_SHORT))
+				*node.nvalue.fp = fp->f; 
+			else if(nv_isattr(np,NV_LONG))
+				*node.nvalue.ldp = fp->l; 
+			else
+				*node.nvalue.dp = fp->d; 
+			return(&node);
+		}
+	}
+	else
+	{
+		const Intconst_t *ip = intconst;
+		n = sizeof(intconst)/sizeof(Intconst_t);
+		for(; n-->=0; ip++)
+		{
+			if(strcmp(ip->name,ep)==0)
+				break;
+		}
+		if(n>=0)
+		{
+			int unsign = nv_isattr(np,NV_LTOU);
+			node = *np;
+			node.nvalue.ldp = &dd;
+			if(nv_isattr(np,NV_SHORT))
+			{
+				if(unsign)
+					node.nvalue.u = ip->us; 
+				else
+					node.nvalue.s = ip->ss; 
+			}
+			else if(nv_isattr(np,NV_LONG))
+			{
+				if(unsign)
+					*node.nvalue.llp = ip->ul; 
+				else
+					*node.nvalue.llp = ip->sl; 
+			}
+			else
+			{
+				if(unsign)
+					*node.nvalue.ip = ip->ui; 
+				else
+					*node.nvalue.ip = ip->ul; 
+			}
+			return(&node);
+		}
+	}
+	return(0);
+}
+
 static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
 {
 	register int flag = lvalue->flag;
@@ -81,7 +394,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		/* do binding to node now */
 		int d = cp[flag];
 		cp[flag] = 0;
-		if((!(np = nv_open(cp,shp->var_tree,assign|NV_VARNAME|NV_NOADD|NV_NOFAIL)) || nv_isnull(np)) && sh_macfun(shp,cp, offset = stktell(shp->stk)))
+		if((!(np = nv_open(cp,root,assign|NV_VARNAME|NV_NOADD|NV_NOFAIL)) || nv_isnull(np)) && sh_macfun(shp,cp, offset = stktell(shp->stk)))
 		{
 			Fun = sh_arith(shp,sub=stkptr(shp->stk,offset));
 			FunNode.nvalue.ldp = &Fun;
@@ -90,8 +403,13 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			cp[flag] = d;
 			return(&FunNode);
 		}
-		if(!np && assign)
-			np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
+		if(!np)
+		{
+			if(assign)
+				np = nv_open(cp,root,assign|NV_VARNAME);
+			else
+				np = check_limits(shp,cp);
+		}
 		cp[flag] = d;
 		if(!np)
 			return(0);
@@ -356,7 +674,29 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				}
 				else
 				{
+					const struct Mathconst *mp=0;
 					np = 0;
+#if 1
+					if(strchr("ELPS12",**ptr))
+					{
+						for(mp=Mtable; *mp->name; mp++)
+						{
+							if(strcmp(mp->name,*ptr)==0)
+								break;
+						}
+					}
+					if(mp && *mp->name)
+					{
+						r = mp->value;
+						lvalue->isfloat=4;
+						goto skip2;
+					}
+#endif
+#if SHOPT_NAMESPACE
+
+					if(shp->namespace && !(lvalue->emode&ARITH_COMP))
+						root = nv_dict(shp->namespace);
+#endif /* SHOPT_NAMESPACE */
 					if(shp->namref_root && !(lvalue->emode&ARITH_COMP))
 						np = nv_open(*ptr,shp->namref_root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|NV_NOSCOPE|NV_NOADD|dot);
 					if(!np)
@@ -368,12 +708,17 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 						lvalue->flag =  str-lvalue->value;
 					}
 				}
+			skip2:
 				if(saveptr != stkptr(shp->stk,0))
 					stkset(shp->stk,saveptr,offset);
 				else
 					stkseek(shp->stk,offset);
 			}
 			*str = c;
+#if 1
+			if(lvalue->isfloat==4)
+				break;
+#endif
 			if(!np && lvalue->value)
 				break;
 			lvalue->value = (char*)np;
@@ -410,6 +755,19 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					val++;
 			}
 			r = strtonll(val,&str, &lastbase,-1);
+			if(*str=='_')
+			{
+				if((r==1||r==2) && strcmp(str,"_PI")==0)
+				{
+					r = Mtable[(int)r-1].value;
+					str +=3;
+				}
+				else if(r==2 && strcmp(str,"_SQRTPI")==0)
+				{
+					r = Mtable[2].value;
+					str +=7;
+				}
+			}
 			if(*str=='8' || *str=='9')
 			{
 				lastbase=10;

@@ -184,6 +184,8 @@ cat{
 
 #if __MACH__
 #undef  _POSIX_SOURCE
+#undef  _POSIX_C_SOURCE
+#undef  _XOPEN_SOURCE
 #endif
 
 }end

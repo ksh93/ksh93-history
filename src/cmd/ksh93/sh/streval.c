@@ -382,10 +382,10 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				num = (Sflong_t)(sp[-1]) % (Sflong_t)(num);
 			break;
 		    case A_DIV:
-			if(type==1 || tp[-1]==1)
+			if(type || tp[-1])
 			{
 				num = sp[-1]/num;
-				type = 1;
+				type = type>tp[-1]?type:tp[-1];
 			}
 			else if((Sfulong_t)(num<0?-num:num)==0)
 				arith_error(e_divzero,ep->expr,ep->emode);
@@ -906,12 +906,14 @@ again:
 					vp->errstr = pos;
 				ERROR(vp,op==A_LIT?e_charconst:e_synbad);
 			}
-			if(op==A_DIG || op==A_LIT)
+			if(op==A_DIG || op==A_LIT || lvalue.isfloat==4)
 			{
 				sfputc(shp->stk,A_PUSHN);
 				if(vp->staksize++>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize;
 				stkpush(shp->stk,vp,d,Sfdouble_t);
+				if(lvalue.isfloat==4)
+					lvalue.isfloat = 3;
 				sfputc(shp->stk,lvalue.isfloat);
 			}
 	

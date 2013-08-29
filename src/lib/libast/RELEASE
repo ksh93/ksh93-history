@@ -1,3 +1,17 @@
+13-08-26 features/float: fix (FLT|DBL|LDBL)_*_(MIN|MAX) algorithm to not use exact powers of 2!!
+13-08-25 path/pathcanon.c: finalize //@// extended/hidden attribute namespace *for testing*
+13-08-24 include/fts.h,misc/fts.c: make preparations for FTS.fts_dirfd, fdopendir(), fgetcwd(), openat(), fstatat()
+13-08-23 path/pathcanon.c: add PATH_DROP_LEAD_SLASH2 and PATH_DROP_TAIL_SLASH to unify ast c14n
+13-08-23 features/float: add (FLT|DBL|LDBL)_EPSILON logic
+13-08-22 features/lib,include/ast_std.h,comp/qsort.c,comp/qsort_r.c: add { qsort qsort_r } from Bentley/McIlroy code
+13-08-22 misc/getcwd.c: now a wrapper call to fgetcwd(AT_FDCWD)
+13-08-21 regex/regdecomp.c: fix REG_SHELL decompilation bug
+13-08-21 regex/regcomp.c: fix REG_SHELL ~(A)(...) parse bug that didn't treat second ')' as closing paren
+13-08-20 misc/fgetcwd.c: add, inspired by olga
+13-08-17 path/pathcanon.c: /dev/file/flag[,flag...]:[/]path for relative and absolute paths
+13-08-17 port/intercept.c: move pathdev() intercepts to ast_*at() and make ast_*[!at]() call ast_*at() counterpart
+13-08-15 features/lib,features/dirent,port/intercept.c: add ast_opendir() and fdopendir() tests
+13-08-14 features/atdev: additional support for comp/at.c emulation on frankenstein systems
 13-08-11 features/lib: add `lib fdatasync,fssync,sync' tests
 13-08-11 features/fcntl.c: another round for { O_DIRECTORY O_SEARCH }, stabilize ast extension values
 13-08-11 port/intercept.c: add RATIFY() to check for paths with embeded directory fd refs

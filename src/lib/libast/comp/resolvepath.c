@@ -45,5 +45,5 @@ resolvepath(const char* file, char* path, size_t size)
 {
 	char*	s;
 
-	return (s = pathdev(file, path, size, PATH_PHYSICAL|PATH_ABSOLUTE|PATH_DOTDOT|PATH_EXISTS, NiL)) ? (s - path) : -1;
+	return (s = pathdev(AT_FDCWD, file, path, size, PATH_PHYSICAL|PATH_ABSOLUTE|PATH_DOTDOT|PATH_EXISTS, NiL)) ? (s - path) : -1;
 }

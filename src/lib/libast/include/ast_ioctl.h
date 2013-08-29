@@ -31,6 +31,8 @@
 
 #endif
 
+#if _AST_INTERCEPT_IMPLEMENT > 0
+
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
@@ -38,5 +40,7 @@
 extern int		ast_ioctl(int, int, ...);
 
 #undef	extern
+
+#endif
 
 #endif

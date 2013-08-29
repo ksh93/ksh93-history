@@ -27,6 +27,8 @@ cat{
 
 #endif
 
+#if _AST_INTERCEPT_IMPLEMENT > 0
+
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
@@ -38,6 +40,8 @@ extern int		ast_socket(int, int, int);
 extern int		ast_socketpair(int, int, int, int[2]);
 
 #undef extern
+
+#endif
 
 #endif
 }end

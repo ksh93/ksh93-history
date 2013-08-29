@@ -1,3 +1,5 @@
+13-08-11 ls.c: move from src/cmd/std
+13-08-11 join.c: drop setlocale() call already done by optget()
 13-08-11 strcopy() => stpcpy()
 13-07-17 tr.c: finally handle ``tr -Cd "[=e=]" <<<"1e2é3"''-- how about a posix equivalence class api
 13-07-16 cp.c: limit st_size>0 logic to S_ISREG() files

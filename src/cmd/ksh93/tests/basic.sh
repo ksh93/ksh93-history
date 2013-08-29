@@ -362,7 +362,7 @@ then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'proc
 		[[ $got == $exp ]] ||  err_exit 'assignments after command substitution not treated as arguments'
 	fi
 fi
-[[ $($SHELL -r 'command -p :' 2>&1) == *restricted* ]]  || err_exit 'command -p not restricted'
+[[ $($SHELL -cr 'command -p :' 2>&1) == *restricted* ]]  || err_exit 'command -p not restricted'
 print cat >  $tmp/scriptx
 chmod +x $tmp/scriptx
 [[ $($SHELL -c "print foo | $tmp/scriptx ;:" 2> /dev/null ) == foo ]] || err_exit 'piping into script fails'

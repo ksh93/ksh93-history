@@ -1171,6 +1171,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 							goto fail;
 						}
 						dupfd = nv_getnum(np);
+						np = 0;
 					}
 					else
 						dupfd = strtol(fname,&number,10);
@@ -1183,7 +1184,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 						toclose = dupfd;
 						number++;
 					}
-					if(*number || dupfd > IOUFD)
+					if(*number)
 					{
 						message = e_file;
 						goto fail;
@@ -1196,8 +1197,23 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 							shp->subdup |= 1<<fn;
 						dupfd = sffileno(sfstdout);
 					}
-					else if(shp->sftable[dupfd])
+					else if(sp=shp->sftable[dupfd])
+					{
+						char *tmpname;
+						if((sfset(sp,0,0)&SF_STRING) && (tmpname = pathtemp(NiL ,NiL,NiL,"sf",&f)))
+						{
+							Sfoff_t last = sfseek(sp,(Sfoff_t)0,SEEK_END);
+				
+							unlink(tmpname);
+							free(tmpname);
+							write(f, sp->_data, (size_t)last);
+							lseek(f,(Sfoff_t)0,SEEK_SET);
+
+							sfclose(sp);
+							sp = sfnew(sp,NULL,-1,f,SF_READ);
+						}
 						sfsync(shp->sftable[dupfd]);
+					}
 					if(dupfd!=1 && fn < 10)
 						shp->subdup &= ~(1<<fn);
 				}

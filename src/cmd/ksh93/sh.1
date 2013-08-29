@@ -1596,6 +1596,12 @@ the new type is derived from the type of the first variable (See
 .I "Type Variables"\^
 below.).
 .TP
+.B __
+When following a variable name and
+.B .
+this expands to the parent of variable when variable is a compound variable
+or type instance.  If variable is a simple variable it expands to variable.
+.TP
 .B !
 The process id or the pool name and job number of the last background command
 invoked or the most recent job put in the background with the
@@ -1682,6 +1688,21 @@ each function.
 An indexed array which stores the most recent match and sub-pattern
 matches after conditional pattern matches that match and after
 variables expansions using the operators
+.TP
+.B .sh.pgrp
+The current process group of this shell.
+.TP
+.B .sh.pwdfd
+The file descriptor number for the present working directory.
+.TP
+.B .sh.sig
+Set when executing a trap to the information contained in the
+siginfo_t structure (See
+.IR siginfo (2)
+for a description of this structure.)
+.TP
+.B .sh.version
+The current version of this shell.
 .BR # ,
 .BR % ,
 or
@@ -1834,6 +1855,26 @@ to 1.
 .PD
 .RE
 .PP
+The following
+variables
+are used by the shell:
+.RS
+.PD 0
+.TP
+.B
+.SM CDPATH
+The search path for the
+.B cd
+command.
+.TP
+.B
+.SM COLUMNS
+If this variable is set,
+the value is used to define the width of the edit window
+for the shell edit modes and for printing
+.B select
+.PD
+.RE
 The following
 variables
 are used by the shell:
@@ -3091,6 +3132,80 @@ attribute.
 Assigning a floating point number to a
 variable whose type is an integer causes the fractional
 part to be truncated.
+.PP
+Inside an arithmetic expression,
+all integer and floating point variables can be following by
+.BR .MIN ,
+.BR .MAX ,
+or
+.BR .DIG 
+to give the maximum value, mininum value, or number of significant
+digits for variables of that type.
+.PP
+Floating point variables can be also followed by
+.B .INT_MAX
+or
+.B .INT_MIN
+to give the largest or smallest integers represented by that type.
+.PP
+Floating point variables can also be followed by
+.B .EPSILON
+to give the distance to the next floating point number of that type.
+Floating point variables can be followed by
+.B MAX_10_EXP
+to give the maximum base 10 exponent that can be represented by
+that type.
+.PP
+Inside an arithmetic expression, the following constants are
+recongnized and are of type
+.BR typeset -lE .
+.RS
+.PD 0
+.TP
+.B NaN
+Not a number.  It is case insensitive.
+.TP
+.B Inf
+Infinity.  It is case insensitive.
+.TP
+.B E
+.TP
+.B PI
+.TP
+.B 1_PI
+1.0/PI.
+.TP
+.B 2_PI
+2.0/PI.
+.TP
+.B PI_2
+PI/2.0
+.TP
+.B PI_4
+PI/4.0.
+.TP
+.B SQRTPI
+sqrt(PI).
+.TP
+.B SQRT2
+sqrt(2.0).
+.TP
+.B SQRT1_2
+sqrt(1./2.)
+.TP
+.B LOGE
+log(E)
+.TP
+.B LOG10E
+log10(E)
+.TP
+.B LN2
+log(2.0)
+.TP
+.B LOG2E
+log2(E)
+.PD
+.RE
 .PP
 .SS Array Sorting.
 The \fB\-s\fP option of the \fBset\fP built-in command can be used to sort
@@ -8281,6 +8396,7 @@ lseek(2),
 paste(1),
 pathconf(2),
 pipe(2),
+sigsetinfo(2),
 sysconf(2),
 umask(2),
 ulimit(2),

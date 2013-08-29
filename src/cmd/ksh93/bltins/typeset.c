@@ -256,11 +256,15 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 			case 'F':
 			case 'X':
 				if(!opt_info.arg || (tdata.argnum = opt_info.num) <0)
-					tdata.argnum = (n=='X'?2*sizeof(Sfdouble_t):10);
-				isfloat = true;
-				if(n=='E')
 				{
-					tdata.argnum = (flag&NV_LONG)?LDBL_DIG:(isshort?FLT_DIG:DBL_DIG);
+					if(n=='X')
+						tdata.argnum = 2*((flag&NV_LONG)?sizeof(Sfdouble_t):(isshort?sizeof(float):sizeof(double)));
+					else
+						tdata.argnum = (flag&NV_LONG)?LDBL_DIG:(isshort?FLT_DIG:DBL_DIG);
+				}
+				isfloat = true;
+				if (n=='E')
+				{
 					flag &= ~NV_HEXFLOAT;
 					flag |= NV_EXPNOTE;
 				}
@@ -687,7 +691,7 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 			}
 			if(!nv_isarray(np) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
 			{
-				if(comvar || (shp->last_root==shp->var_tree && (tp->tp || (!shp->st.real_fun && (nvflags&NV_STATIC)) || (!(flag&(NV_EXPORT|NV_RDONLY)) && nv_isattr(np,(NV_EXPORT|NV_IMPORT))==(NV_EXPORT|NV_IMPORT)))))
+				if(comvar || (shp->last_root==shp->var_tree && ((tp->tp && tp->tp!=nv_type(np)) || (!shp->st.real_fun && (nvflags&NV_STATIC)) || (!(flag&(NV_EXPORT|NV_RDONLY)) && nv_isattr(np,(NV_EXPORT|NV_IMPORT))==(NV_EXPORT|NV_IMPORT)))))
 {
 				{
 					if((flag&(NV_HOST|NV_INTEGER))!=NV_HOST) 

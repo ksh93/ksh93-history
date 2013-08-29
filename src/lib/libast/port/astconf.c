@@ -335,7 +335,14 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 		error(-6, "astconf synthesize name=%s path=%s value=%s fp=%p%s", fp->name, path, value, fp, state.synthesizing ? " SYNTHESIZING" : "");
 #endif
 	if (state.synthesizing)
+	{
+		if (fp && fp->op < 0 && value && *value)
+		{
+			n = strlen(value);
+			goto ok;
+		}
 		return null;
+	}
 	if (!state.data)
 	{
 		char*		se;
@@ -1552,7 +1559,15 @@ astgetconf(const char* name, const char* path, const char* value, int flags, Err
 char*
 astconf(const char* name, const char* path, const char* value)
 {
+#if DEBUG_astconf
+	char*	r;
+
+	r = astgetconf(name, path, value, 0, 0);
+	error(-1, "astconf(%s,%s,%s) => '%s'", name, path, value, r);
+	return r;
+#else
 	return astgetconf(name, path, value, 0, 0);
+#endif
 }
 
 /*

@@ -31,8 +31,8 @@ lib	BSDsetpgrp
 lib	_cleanup
 lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
 lib	execlp,execve,execvp,execvpe
-lib	fchmod,fcntl,fmtmsg,fnmatch,fork
-lib	fsync,fdatasync,fssync,sync
+lib	fchmod,fcntl,fdopendir,fmtmsg,fnmatch,fork
+lib	fsync,fdatasync,sync,syncfs
 lib	getaddrinfo netdb.h netinet/in.h -lsocket
 lib	getconf,getdents,getdirentries,getdtablesize,getdate
 lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
@@ -41,7 +41,7 @@ lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
 lib	htons,htonl sys/types.h sys/socket.h netinet/in.h
 lib	mbtowc,mbrtowc,memalign,memchr,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
-lib	mount,on_exit,onexit,opendir,pathconf,pipe2
+lib	mount,on_exit,onexit,opendir,pathconf,pipe2,qsort,qsort_r
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setregid,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec
@@ -53,7 +53,7 @@ lib	ftruncate,truncate
 lib	creat64,ftruncate64,lseek64,open64,truncate64 -D_LARGEFILE64_SOURCE fcntl.h unistd.h
 lib	fstat64,lstat64,stat64 -D_LARGEFILE64_SOURCE sys/stat.h
 lib	fstatvfs64,statvfs64 -D_LARGEFILE64_SOURCE sys/statvfs.h
-lib	opendir64,readdir64,rewinddir64,seekdir64,telldir64,closedir64 -D_LARGEFILE64_SOURCE dirent.h
+lib	fdopendir64,opendir64,readdir64,rewinddir64,seekdir64,telldir64,closedir64 -D_LARGEFILE64_SOURCE dirent.h
 lib	accept4,socketpair sys/socket.h
 
 lib	faccessat,fchmodat,fchownat,fstatat,linkat,mkdirat,mkfifoat,mknodat,openat,readlinkat,renameat,symlinkat,unlinkat -D_ATFILE_SOURCE fcntl.h unistd.h

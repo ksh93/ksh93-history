@@ -66,7 +66,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	$(HEADERSRC) \
 	state.c intercept.c transition.c \
 	dirlib.h opendir.c readdir.c rewinddir.c seekdir.c telldir.c \
-	getcwd.c fastfind.c \
+	fgetcwd.c getcwd.c fastfind.c \
 	hashlib.h hashalloc.c hashdump.c hashfree.c hashlast.c \
 	hashlook.c hashscan.c hashsize.c hashview.c hashwalk.c \
 	memhash.c memsum.c strhash.c strkey.c strsum.c \
@@ -119,6 +119,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strcasecmp.c strncasecmp.c strerror.c \
 	mktemp.c tmpnam.c fsync.c \
 	execlp.c execve.c execvp.c execvpe.c spawnveg.c spawnvex.c \
+	qsort.c qsort_r.c \
 	vfork.c killpg.c \
 	hsearch.c tsearch.c \
 	getlogin.c putenv.c setenv.c unsetenv.c \

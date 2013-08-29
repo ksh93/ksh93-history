@@ -29,7 +29,7 @@ Command=${0##*/}
 integer Errors=0
 
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
-#AHA# trap "cd /; rm -rf $tmp" EXIT
+trap "cd /; rm -rf $tmp" EXIT
 
 integer n=2
 
@@ -856,5 +856,24 @@ got=$($SHELL  2> /dev/null <<- \EOF || err_exit 'short integer arrays in types f
 	print -r -- $((x.arr[1]))
 EOF)
 [[ $got == 8 ]] || err_exit 'sort integer arrays in types not working correctly'
+
+typeset -T p_t=(
+	integer fd
+	compound events=( bool pollin=false)
+)
+compound c
+p_t -A c.p
+c.p[2]=(fd=0 events=( bool pollin=true))
+[[ ${c.p[2].events.pollin} == true ]] || err_exit 'c.p[2]=(fd=0 events=( bool pollin=true)) does not set pollin to true'
+
+typeset -T xx_t=(
+    integer i=2
+    function printi { print -r -- ${_.i}.${_.__.i} ;}
+)
+typeset -T yy_t=( integer i=3; xx_t x)
+yy_t y
+[[ $(y.x.printi) == 2.3 ]] || err_exit 'discipline function with nested type using _.__ not working as command substitution'
+[[ ${y.x.printi} == 2.3 ]] || err_exit 'discipline function with nested type us
+ing _.__ not working as ${var.function}'
 
 exit $((Errors<125?Errors:125))

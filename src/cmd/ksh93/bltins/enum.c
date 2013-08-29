@@ -209,6 +209,19 @@ static Namval_t* create_enum(Namval_t *np, const char *name, int flags, Namfun_t
 			return(mp);
 		}
 	}
+	if(strcmp(name,"MAX")==0 || strcmp(name,"MIN")==0 || strcmp(name,"DIG")==0)
+	{
+			if(name[2]=='X')
+				i--;
+			else if(name[2]=='G')
+				i = i<100?(i<10?1:2):(i<1000?3:4);
+			else
+				i = 0;
+			mp->nvalue.s = i;
+			mp->nvname = (char*)name;
+			fp->last = (char*)(name+strlen(name));
+			return(mp);
+	}
 	error(ERROR_exit(1), "%s:  invalid enum constant for %s",name,nv_name(np));
 	return(mp);
 }

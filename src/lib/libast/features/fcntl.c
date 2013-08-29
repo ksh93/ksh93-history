@@ -439,27 +439,39 @@ main(int argc, char** argv)
 		printf("#endif\n");
 
 	}
-#ifdef O_CLOEXEC
+
 	printf("#ifndef O_CLOEXEC\n");
+#ifdef O_CLOEXEC
 	printf("#define O_CLOEXEC		%012o	/* %s */\n", (int)O_CLOEXEC, ORIGIN_FAILSAFE);
-	printf("#endif\n");
 #else
 	o_local_use = o_local >> 2;
 	printf("#define O_CLOEXEC		%012o	/* %s */\n", o_local_use, ORIGIN_EXTENSION);
 #endif
+	printf("#endif\n");
+
 #ifndef	O_NOCTTY
 #ifdef	TIOCNOTTY
+	printf("#ifndef O_NOCTTY\n");
 	o_local_use = o_local >> 3;
 	printf("#define O_NOCTTY		%012o	/* %s */\n", o_local_use, ORIGIN_EXTENSION);
+	printf("#endif\n");
 #endif
 #endif
 #ifndef	O_NONBLOCK
 	printf("#ifndef O_NONBLOCK\n");
 	printf("#ifdef  O_NDELAY\n");
+#ifdef O_NDELAY
 	printf("#define O_NONBLOCK		%012o	/* O_NDELAY */\n", (int)O_NDELAY);
+#else
+	printf("#define O_NONBLOCK		O_NDELAY\n");
+#endif
 	printf("#else\n");
 	printf("#ifdef  FNDELAY\n");
+#ifdef FNDELAY
 	printf("#define O_NONBLOCK		%012o	/* FNDELAY */\n", FNDELAY);
+#else
+	printf("#define O_NONBLOCK		FNDELAY\n");
+#endif
 	printf("#else\n");
 	o_local_use = o_local >> 4;
 	printf("#define O_NONBLOCK		%012o	/* %s */\n", o_local_use, ORIGIN_EXTENSION);
@@ -507,12 +519,16 @@ main(int argc, char** argv)
 #if !defined(SOCK_CLOEXEC) || !defined(SOCK_NONBLOCK)
 	printf("\n");
 #ifndef SOCK_CLOEXEC
+	printf("#ifndef SOCK_CLOEXEC\n");
 	printf("#define _ast_SOCK_CLOEXEC	1\n");
 	printf("#define SOCK_CLOEXEC		02000000 /* %s */\n", ORIGIN_EXTENSION);
+	printf("#endif\n");
 #endif
 #ifndef SOCK_NONBLOCK
+	printf("#ifndef SOCK_NONBLOCK\n");
 	printf("#define _ast_SOCK_NONBLOCK	1\n");
 	printf("#define SOCK_NONBLOCK		04000	/* %s */\n", ORIGIN_EXTENSION);
+	printf("#endif\n");
 #endif
 #endif
 
@@ -572,7 +588,7 @@ main(int argc, char** argv)
 	printf("#define extern	__EXPORT__\n");
 	printf("#endif\n");
 	printf("#if !_lib_faccessat\n");
-	printf("extern int	faccessat(int, const char*, int, int);\n");
+	printf("extern int	faccessat(int, const char*, mode_t, int);\n");
 	printf("#endif\n");
 	printf("#if !_lib_fchmodat\n");
 	printf("extern int	fchmodat(int, const char*, mode_t, int);\n");
@@ -600,7 +616,7 @@ main(int argc, char** argv)
 	printf("extern int	openat(int, const char*, int, ...);\n");
 	printf("#endif\n");
 	printf("#if !_lib_readlinkat\n");
-	printf("extern int	readlinkat(int, const char*, char*, size_t);\n");
+	printf("extern ssize_t	readlinkat(int, const char*, char*, size_t);\n");
 	printf("#endif\n");
 	printf("#if !_lib_renameat\n");
 	printf("extern int	renameat(int, const char*, int, const char*);\n");

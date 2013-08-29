@@ -1045,7 +1045,12 @@ char *path_relative(Shell_t *shp,register const char* file)
 	}
 	if(*pwd==0 && *fp == '/')
 	{
-		while(*++fp=='/');
+		/* //@// exposed here and in b_pwd() -- rats */
+		do
+		{
+			if (fp[0] == '/' && fp[1] == '/' && fp[2] == '@' && fp[3] == '/' && fp[4] == '/')
+				return((char*)file);
+		} while(*++fp=='/');
 		if(*fp)
 			return((char*)fp);
 		return((char*)e_dot);

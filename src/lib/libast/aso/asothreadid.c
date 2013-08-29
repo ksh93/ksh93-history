@@ -23,7 +23,8 @@
 
 /*
  * construct a non-zero thread-specific ID without the high-bit
- * thread local storage confined to this function
+ * thread local storage confined to this function as some systems
+ * that support __thread may not support extern __thread in dlls
  */
 
 static __thread unsigned int	_AsoThreadId;	/* thread local ID		*/

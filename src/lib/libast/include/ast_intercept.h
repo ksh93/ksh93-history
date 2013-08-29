@@ -190,7 +190,11 @@
 #undef	unlink
 #define unlink		ast_unlink
 
-#endif /* _AST_INTERCEPT_IMPLEMENT */
+/* socket intercepts done by <sys/socket.h> intercept header */
+
+#endif
+
+#if _AST_INTERCEPT_IMPLEMENT > 0
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
@@ -198,18 +202,6 @@
 
 extern uint32_t		astserial(int, uint32_t);
 
-extern int		ast_faccessat(int, const char*, int, int);
-extern int		ast_fchmodat(int, const char*, mode_t, int);
-extern int		ast_fchownat(int, const char*, uid_t, gid_t, int);
-extern int		ast_fstatat(int, const char*, struct stat*, int);
-extern int		ast_linkat(int, const char*, int, const char*, int);
-extern int		ast_mkdirat(int, const char*, mode_t);
-extern int		ast_mkfifoat(int, const char*, mode_t);
-extern int		ast_mknodat(int, const char*, mode_t, dev_t);
-extern int		ast_openat(int, const char*, int, ...);
-extern int		ast_readlinkat(int, const char*, char*, size_t);
-extern int		ast_symlinkat(const char*, int, const char*);
-extern int		ast_unlinkat(int, const char*, int);
 extern int		ast_access(const char*, int);
 extern int		ast_chdir(const char*);
 extern int		ast_chmod(const char*, mode_t);
@@ -228,21 +220,36 @@ extern int		ast_ftruncate(int, off_t);
 extern int		ast_lchmod(const char*, mode_t);
 extern int		ast_lchown(const char*, uid_t, gid_t);
 extern int		ast_link(const char*, const char*);
-extern int		ast_lstat(const char*, struct stat*);
 extern int		ast_mkdir(const char*, mode_t);
 extern int		ast_mkfifo(const char*, mode_t);
 extern int		ast_mknod(const char*, mode_t, dev_t);
 extern int		ast_open(const char*, int, ...);
 extern int		ast_pipe(int[2]);
 extern int		ast_pipe2(int[2], int);
-extern int		ast_readlink(const char*, char*, size_t);
+extern ssize_t		ast_readlink(const char*, char*, size_t);
 extern int		ast_remove(const char*);
 extern int		ast_rename(const char*, const char*);
 extern int		ast_rmdir(const char*);
-extern int		ast_stat(const char*, struct stat*);
 extern int		ast_symlink(const char*, const char*);
+extern int		ast_stat(const char*, struct stat*);
 extern int		ast_unlink(const char*);
+
+extern int		ast_faccessat(int, const char*, mode_t, int);
+extern int		ast_fchmodat(int, const char*, mode_t, int);
+extern int		ast_fchownat(int, const char*, uid_t, gid_t, int);
+extern int		ast_fstatat(int, const char*, struct stat*, int);
+extern int		ast_linkat(int, const char*, int, const char*, int);
+extern int		ast_lstat(const char*, struct stat*);
+extern int		ast_mkdirat(int, const char*, mode_t);
+extern int		ast_mkfifoat(int, const char*, mode_t);
+extern int		ast_mknodat(int, const char*, mode_t, dev_t);
+extern int		ast_openat(int, const char*, int, ...);
+extern ssize_t		ast_readlinkat(int, const char*, char*, size_t);
+extern int		ast_symlinkat(const char*, int, const char*);
+extern int		ast_unlinkat(int, const char*, int);
 
 #undef	extern
 
-#endif /* _AST_INTERCEPT */
+#endif
+
+#endif

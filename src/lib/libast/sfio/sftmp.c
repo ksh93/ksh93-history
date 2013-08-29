@@ -358,7 +358,7 @@ Sfdisc_t*	disc;
 	/* announce change of status */
 	f->disc = NIL(Sfdisc_t*);
 	if(_Sfnotify)
-		(*_Sfnotify)(f, SF_SETFD, (void*)((long)f->file));
+		(*_Sfnotify)(f, SF_TMPFILE, (void*)((long)f->file));
 
 	/* erase all traces of newf */
 	newf.data = newf.endb = newf.endr = newf.endw = NIL(uchar*);

@@ -448,7 +448,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optcd[] =
-"[-1c?\n@(#)$Id: cd (AT&T Research) 2012-07-10 $\n]"
+"[-1c?\n@(#)$Id: cd (AT&T Research) 2013-08-18 $\n]"
 USAGE_LICENSE
 "[+NAME?cd - change working directory ]"
 "[+DESCRIPTION?\bcd\b changes the current working directory of the "
@@ -484,16 +484,15 @@ USAGE_LICENSE
 	"\bPATH_RESOLVE\b.  If \bPATH_RESOLVE\b is \bphysical\b, "
 	"then the behavior will be as if \b-P\b were specified.  Otherwise, "
 	"the behavior will be as if  \b-L\b were specified.]"
-"[f]#[dirfd?Path is relative to this directory fd.]"
+"[f?The directory path is relative to the open file descriptor \adirfd\a.]#[dirfd]"
 "[L?Handle each pathname component \b..\b in a logical fashion by moving "
 	"up one level by name in the present working directory.]"
 "[P?The present working directory is first converted to an absolute pathname "
 	"that does not contain symbolic link components and symbolic name "
 	"components are expanded in the resulting directory name.]"
-#ifdef O_XATTR
-"[@?Change into the hidden attribute directory of a file or directory.  The "
-       "\bCDPATH\b environment variable is being ignored.]"
-#endif
+"[@?Change into the hidden attribute directory of \adirectory\a which may also be "
+	"a file. \bCDPATH\b is ignored. Hidden attribute directories are file "
+	"system and operating system specific.]"
 "\n"
 "\n[directory]\n"
 "old new\n"
@@ -1703,10 +1702,10 @@ USAGE_LICENSE
 "[C?Compound variable.  Each \aname\a will be a compound variable.  If "
 	"\avalue\a names a compound variable it will be copied to \aname\a. "
 	"Otherwise if the variable already exists, it will first be unset.]"
-"[E]#?[n:=10?Floating point number represented in scientific notation. "
+"[E]#?[n:=\avar\a.DIG?Floating point number represented in scientific notation. "
 	"\an\a specifies the number of significant figures when the "
 	"value is expanded.]"
-"[F]#?[n:=10?Floating point.  \an\a is the number of places after the "
+"[F]#?[n:=\avar\a.DIG?Floating point.  \an\a is the number of places after the "
 	"decimal point when the value is expanded.]"
 "[H?Hostname mapping.  Each \aname\a holds a native pathname.  Assigning a "
 	"UNIX format pathname will cause it to be converted to a pathname "

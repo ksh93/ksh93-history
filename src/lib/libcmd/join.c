@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: join (AT&T Research) 2009-12-10 $\n]"
+"[-?\n@(#)$Id: join (AT&T Research) 2013-08-11 $\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "
@@ -187,7 +187,6 @@ init(void)
 	register Join_t*	jp;
 	register int		i;
 
-	setlocale(LC_ALL, "");
 	if (jp = newof(0, Join_t, 1, 0))
 	{
 		if (jp->mb = mbwide())

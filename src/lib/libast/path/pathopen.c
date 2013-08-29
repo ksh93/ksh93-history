@@ -163,7 +163,9 @@ pathopen(int dfd, const char* path, char* canon, size_t size, int flags, int ofl
 	int		oerrno;
 
 	b = canon ? canon : (char*)path;
-	if (pathdev(path, canon, size, flags, &dev) && dev.path.offset)
+	if (!pathdev(dfd, path, canon, size, flags, &dev))
+		b = (char*)path;
+	else if (dev.path.offset)
 	{
 		oerrno = errno;
 		oflags |= dev.oflags;
@@ -176,18 +178,36 @@ pathopen(int dfd, const char* path, char* canon, size_t size, int flags, int ofl
 				return openat(AT_FDCWD, b, oflags|O_INTERCEPT, mode);
 			}
 
+			/* check for auxilliary directory fd which must be closed before returning */
+
+			if (dev.oflags & O_INTERCEPT)
+			{
+				if (!*(b += dev.path.offset))
+					b = ".";
+				if (flags & PATH_DEV)
+					f = faccessat(dev.fd, b, F_OK, 0) ? -1 : 1;
+				else
+					f = openat(dev.fd, b, oflags, mode);
+				close(dev.fd);
+				return f;
+			}
+
+			/* prevent getting here again with this path */
+
+			oflags |= O_INTERCEPT;
+
 			/* dev.fd must be valid */
 
 			if ((f = fcntl(dev.fd, F_GETFL, 0)) < 0)
 				return -1;
 			if (flags & PATH_DEV)
 			{
-				if (b[dev.path.offset])
-					return faccessat(dev.fd, b + dev.path.offset, F_OK, 0) < 0 ? -1 : 1;
-				return 1;
+				if (!b[dev.path.offset])
+					return 1;
+				return faccessat(dev.fd, b + dev.path.offset, F_OK, 0) < 0 ? -1 : 1;
 			}
 
-			/* a trailing path component means dev.fd must be a directory */
+			/* a trailing path component means dev.fd must be a directory -- easy */
 
 			if (b[dev.path.offset])
 				return openat(dev.fd, b + dev.path.offset, oflags, mode);
@@ -200,21 +220,29 @@ pathopen(int dfd, const char* path, char* canon, size_t size, int flags, int ofl
 				return -1;
 			}
 
-			/* preserve open() semantics if possible (separate seek pointer) */
+			/* preserve open() semantics if possible */
 
-			if (lseek(dev.fd, 0, SEEK_CUR) >= 0)
+			if (oflags & (O_DIRECTORY|O_SEARCH))
+				return openat(dev.fd, ".", oflags|O_INTERCEPT, mode);
+#if O_XATTR
+			if ((f = openat(dev.fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR)) >= 0)
 			{
-
-				if (b[dev.path.offset])
-					return openat(dev.fd, b + dev.path.offset, oflags, mode);
-				else if ((!(oflags & O_CREAT) || !access(b, F_OK)) && (fd = openat(AT_FDCWD, b, oflags|O_INTERCEPT, mode)) >= 0)
-					return fd;
-
-				/* fall back to dup semantics -- the best we can do at this point */
+				fd = openat(f, "..", oflags|O_INTERCEPT, mode);
+				close(f);
+				return fd;
 			}
-			if ((fd = fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0)) < 0)
-				return -1;
-			goto adjust;
+#endif
+
+			/* see if the filesystem groks .../[<pid>]/<fd>/... paths */
+
+			if ((!(oflags & O_CREAT) || !access(b, F_OK)) && (fd = openat(AT_FDCWD, b, oflags|O_INTERCEPT, mode)) >= 0)
+				return fd;
+
+			/* stuck with dup semantics -- the best we can do at this point */
+
+			if ((fd = fcntl(dev.fd, (oflags & O_CLOEXEC) ? F_DUPFD_CLOEXEC : F_DUPFD, 0)) >= 0)
+				goto adjust;
+			return -1;
 		}
 		else if (dev.fd == AT_FDCWD)
 			return (flags & PATH_DEV) ? 1 : -1;
@@ -333,11 +361,13 @@ pathopen(int dfd, const char* path, char* canon, size_t size, int flags, int ofl
 			errno = oerrno;
 			return fd;
 		}
+		else
+			b += dev.path.offset;
 	}
 	if (flags & PATH_DEV)
 	{
 		errno = ENODEV;
 		return -1;
 	}
-	return openat(dfd, b, oflags|dev.oflags, mode);
+	return openat(dfd, b, oflags|dev.oflags|O_INTERCEPT, mode);
 }

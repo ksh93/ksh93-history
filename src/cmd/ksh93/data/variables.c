@@ -101,6 +101,7 @@ const struct shtable2 shtab_variables[] =
 	".sh.math",	0,				(char*)0,
 	".sh.pool",	0,				(char*)0,
 	".sh.pgrp",	0,				(char*)0,
+	".sh.pwdfd",	NV_INTEGER,			(char*)0,
 	".sh.sig",	0,				(char*)0,
 	".sh.op_astbin",NV_NOFREE,			(char*)e_astbin,
 	"SH_OPTIONS",	0,				(char*)0,
@@ -127,7 +128,7 @@ const Shtable_t	shtab_siginfo[] =
 	"signo",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
 	"status",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
 	"uid",		NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
-	"value",	NV_RDONLY|NV_MINIMAL|NV_NOFREE,
+	"value",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_NODISC,
 	"value.int",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER,
 	"value.ptr",	NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER|NV_LONG,
 	"",			0

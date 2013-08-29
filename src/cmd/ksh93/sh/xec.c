@@ -1143,11 +1143,20 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 #if SHOPT_NAMESPACE
 							if(shp->namespace)
 							{
+								char	*sp,*xp;
 								if(!shp->strbuf2)
 									shp->strbuf2 = sfstropen();
 								sfprintf(shp->strbuf2,"%s%s%c",NV_CLASS,nv_name(shp->namespace),0);
 								shp->prefix = strdup(sfstruse(shp->strbuf2));
-								nv_open(shp->prefix,shp->var_base,NV_VARNAME);
+								xp = shp->prefix+strlen(NV_CLASS);
+								for(sp=xp+1;sp;)
+								{
+									if(sp = strchr(sp,'.'))
+										*sp = 0;
+									nv_open(shp->prefix,shp->var_base,NV_VARNAME);
+									if(sp)
+										*sp++ = '.';
+								}
 							}
 							else
 #endif /* SHOPT_NAMESPACE */

@@ -609,7 +609,7 @@ void sh_exit(register int xno)
 {
 	Shell_t *shp = sh_getinterp();
 	register struct checkpt *pp = (struct checkpt*)shp->jmplist;
-	if(pp->mode == SH_JMPIO && xno!=ERROR_NOEXEC)
+	if(pp && pp->mode == SH_JMPIO && xno!=ERROR_NOEXEC)
 		pp->mode = SH_JMPERREXIT;
 	sh_exit_20120720(shp,xno);
 }

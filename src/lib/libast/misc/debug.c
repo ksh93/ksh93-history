@@ -392,24 +392,25 @@ debug_vsprintf(char* buf, size_t siz, register const char* format, va_list ap)
 }
 
 ssize_t
-debug_vprintf(int fd, const char* format, va_list ap)
+debug_sprintf(char* buf, size_t siz, const char* format, ...)
 {
 	ssize_t		n;
-	char		buf[16*1024];
-
-	n = debug_vsprintf(buf, sizeof(buf), format, ap);
-	return write(fd, buf, n);
-}
-
-ssize_t
-debug_sprintf(char* buf, size_t n, const char* format, ...)
-{
 	va_list		ap;
 
 	va_start(ap, format);
-	n = debug_vsprintf(buf, n, format, ap);
+	n = debug_vsprintf(buf, siz, format, ap);
 	va_end(ap);
 	return n;
+}
+
+ssize_t
+debug_vprintf(int fd, const char* format, va_list ap)
+{
+	ssize_t		n;
+	char		buf[4*1024];
+
+	n = debug_vsprintf(buf, sizeof(buf), format, ap);
+	return write(fd, buf, n);
 }
 
 ssize_t

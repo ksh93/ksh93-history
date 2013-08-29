@@ -506,4 +506,14 @@ redirect {fd}< $tmp
 [[ $(< ~{$fd}/foo) == hello ]] 2> /dev/null || err_exit "~{$fd}/foo not working"
 { cd /dev/fd/$fd/ ;} 2> /dev/null || err_exit "Cannot cd to /dev/fd/$fd/"
 
+(
+	Errors=0
+	redirect {n}> $tmp/foo; print foobar >&{n} > $tmp/foo
+	[[ $(<$tmp/foo) == foobar ]] || err_exit '>& {n} not working for write'
+	{ got=$( redirect {n}< $tmp/foo; cat <&{n} ) ;} 2> /dev/null
+	[[ $got == foobar ]] || err_exit  ' <& {n} not working for read'
+	exit $((Errors))
+) & wait $!
+((Errors += $?))
+
 exit $((Errors<125?Errors:125))

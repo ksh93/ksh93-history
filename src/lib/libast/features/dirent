@@ -140,8 +140,12 @@ cat <<!
 	#endif
 
 	#if _lib_opendir64
-	#if !defined(opendir)
-	#define opendir		opendir64
+	#define _ast_opendir	opendir64
+	#undef	opendir
+	#define opendir		_ast_opendir
+	#if _lib_fdopendir64
+	#undef	fdopendir
+	#define fdopendir	fdopendir64
 	#endif
 	#if _typ_DIR64 && !defined(DIR)
 	#define DIR		DIR64
@@ -293,3 +297,24 @@ elif ( _sys_dir ) {
 	#endif
 }
 endif
+
+cat{
+	#if _AST_INTERCEPT_IMPLEMENT < 2
+
+	#undef	opendir
+	#define opendir		ast_opendir
+
+	#endif
+
+	#if _AST_INTERCEPT_IMPLEMENT > 0
+
+	#if _BLD_ast && defined(__EXPORT__)
+	#define extern		__EXPORT__
+	#endif
+
+	extern DIR*	ast_opendir(const char*);
+
+	#undef extern
+
+	#endif
+}end

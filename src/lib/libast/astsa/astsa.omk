@@ -20,14 +20,14 @@ ASTSA_CFLAGS = $(ASTSA_OPTIMIZE) $(ASTSA_DEFS) -I.
 
 ASTSA_AST_OBJ = \
 	ast.o chresc.o error.o fmtbuf.o fmtip4.o fmtip6.o optget.o \
-	strcopy.o strdup.o strmatch.o strtoip4.o strtoip6.o
+	qsort.o strcopy.o strdup.o strmatch.o strtoip4.o strtoip6.o
 
 ASTSA_ASO_OBJ = \
 	aso.o
 
 ASTSA_CDT_OBJ = \
 	dtclose.o dtdisc.o dthash.o dtlist.o dtmethod.o \
-	dtopen.o dtstrhash.o dttree.o dtview.o dtwalk.o
+	dtnew.o dtopen.o dtstrhash.o dttree.o dtview.o dtwalk.o
 
 ASTSA_SFIO_OBJ = \
 	sfstr.o

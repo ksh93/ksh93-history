@@ -110,4 +110,32 @@ namespace sp1
 exp=$'(\n\t[4]=(\n\t\t_Bool b=true\n\t)\n)'
 [[ $(print -v .sp1.c) == "$exp" ]] || err_exit 'print -v .sp1.c where sp1 is a namespace and c a compound variable not correct'
 
+namespace com.foo
+{
+	compound container=(compound -a a; integer i=2)
+	exp=$(print -v container)
+}
+[[ $(print -v .com.foo.container) == "${.com.foo.exp}" ]] || err_exit 'compound variables defined in a namespace not expanded the same outside and inside'
+
+namespace a.b
+{
+	typeset -T x_t=(
+		integer i=5
+		function pi { printf "%d\n" $((_.i+_.i)); }
+	)
+}
+.a.b.x_t var
+[[ $(var.pi) == 10 ]] || print -u2 'discipline functions for types in namespace not working'
+
+namespace com.foo.test1
+{
+	typeset -T x_t=(
+		integer i=9
+		function pr { printf "%d/%d\n" _.i _.__.j ; }
+	)
+	typeset -T y_t=( x_t x ; integer j=5 )
+}
+.com.foo.test1.y_t v
+[[ $(v.x.pr) == 9/5 ]] || err_exit  '_.__ not working with nested types in a namespace'
+
 exit $((Errors<125?Errors:125))

@@ -32,6 +32,7 @@
 #include	"name.h"
 #include	"argnod.h"
 #include	"lexstates.h"
+#include	"variables.h"
 
 struct nvdir
 {
@@ -249,8 +250,9 @@ void *nv_diropen(Namval_t *np,const char *name, void *context)
 			{
 				Namarr_t *ap;
 				Namval_t *mp = nv_open(name,shp->var_tree,NV_VARNAME|NV_NOADD|NV_NOFAIL);
-				if(mp && (ap=nv_arrayptr(mp)) && !ap->fun && !ap->flags && (c=nv_aindex(mp))>=0)
-					nv_putsub(np,NULL,c,0);
+				int sub;
+				if(mp && (ap=nv_arrayptr(mp)) && !ap->fun && !ap->flags && (sub=nv_aindex(mp))>=0)
+					nv_putsub(np,NULL,sub,0);
 				dp->root = (Dt_t*)np;
 			}
 			if(nfp)
@@ -1170,7 +1172,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 	int n=0, noscope=(flags&NV_NOSCOPE);
 	Namarr_t *arp = nv_arrayptr(np);
 	Dt_t	*save_tree = shp->var_tree, *last_root;
-	Namval_t	*mp=0;
+	Namval_t	*mp=0, *table;
 	char		*xpname = xp?stkcopy(shp->stk,nv_name(xp)):0;
 	walk.shp = shp;
 	if(xp)
@@ -1184,7 +1186,9 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 		shp->last_root = nv_dict(shp->last_table);
 	if(shp->last_root)
 		shp->var_tree = shp->last_root;
+	table = shp->last_table;
 	sfputr(shp->stk,nv_name(np),-1);
+	shp->last_table = table;
 	if(arp && !(arp->flags&ARRAY_SCAN) && (subscript = nv_getsub(np)))
 	{
 		mp = nv_opensub(np);
@@ -1196,7 +1200,7 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 		mp = np;
 	name = stkfreeze(shp->stk,1);
 	shp->last_root = 0;
-	if(shp->last_table && !nv_type(shp->last_table) && (cp=nv_name(shp->last_table)) && (len=strlen(cp))  && strncmp(name,cp,len)==0 && name[len]=='.')
+	if(shp->last_table && !nv_type(shp->last_table) && (cp=nv_name(shp->last_table)) && strcmp(cp,".sh") && (len=strlen(cp))  && strncmp(name,cp,len)==0 && name[len]=='.')
 		name += len+1;
 	len = strlen(name);
 	dir = nv_diropen(mp,name,(void*)shp);
@@ -1286,6 +1290,8 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 
 Namfun_t *nv_isvtree(Namval_t *np)
 {
+	if(np==SH_STATS || np==SH_SIG)
+		return((Namfun_t*)1);
 	if(np)
 		return(nv_hasdisc(np,&treedisc));
 	return(0);

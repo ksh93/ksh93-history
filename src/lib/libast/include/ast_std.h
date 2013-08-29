@@ -313,6 +313,18 @@ extern int		truncate64(const char*, off64_t);
 
 #endif
 
+typedef int (*Qsortcmp_f)(const void*, const void*);
+typedef int (*Qsortcmp_r_f)(const void*, const void*, void*);
+
+#if !defined(qsort) && !_lib_qsort
+#define	qsort		_ast_qsort
+extern void		qsort(void*, size_t, size_t, Qsortcmp_f);
+#endif
+#if !defined(qsort_r) && !_lib_qsort_r
+#define	qsort_r		_ast_qsort_r
+extern void		qsort_r(void*, size_t, size_t, Qsortcmp_r_f, void*);
+#endif
+
 #if !defined(remove)
 extern int		remove(const char*);
 #endif

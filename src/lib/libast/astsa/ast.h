@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -53,6 +53,8 @@
 #define STR_GROUP	020		/* (|&) inside [@|&](...) only	*/
 
 typedef int (*Error_f)(void*, void*, int, ...);
+typedef int (*Qsortcmp_f)(const void*, const void*);
+typedef int (*Qsortcmp_r_f)(const void*, const void*, void*);
 
 typedef struct
 {
@@ -159,6 +161,8 @@ extern int		astwinsize(int, int*, int*);
 extern int		chresc(const char*, char**);
 extern char*		fmtbuf(size_t);
 extern char*		fmtip4(uint32_t, int);
+#define	qsort		_ast_qsort
+extern void		qsort(void*, size_t, size_t, Qsortcmp_f);
 extern char*		strcopy(char*, const char*);
 extern int		strmatch(const char*, const char*);
 extern int		strtoip4(const char*, char**, uint32_t*, unsigned char*);

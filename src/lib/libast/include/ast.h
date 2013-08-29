@@ -110,12 +110,16 @@ struct _sfio_s;
  * pathcanon()/pathdev() flags and info
  */
 
-#define PATH_PHYSICAL		0x01
-#define PATH_DOTDOT		0x02
-#define PATH_EXISTS		0x04
-#define PATH_DEV		0x08
-#define PATH_ABSOLUTE		0x10	/* NOTE: shared with pathaccess() below */
-#define PATH_VERIFIED(n) (((n)&01777)<<5)
+#define PATH_PHYSICAL		0x001
+#define PATH_DOTDOT		0x002
+#define PATH_EXISTS		0x004
+#define PATH_DEV		0x008
+#define PATH_ABSOLUTE		0x010	/* NOTE: shared with pathaccess() below */
+#define PATH_CANON		0x020
+#define PATH_DROP_HEAD_SLASH2	0x040
+#define PATH_DROP_TAIL_SLASH	0x080
+#define PATH_VERIFIED(n)	(((n)&0xfffff)<<12)
+#define PATH_GET_VERIFIED(n)	(((n)>>12)&0xfffff)
 
 typedef struct Pathpart_s
 {
@@ -126,13 +130,12 @@ typedef struct Pathpart_s
 typedef struct Pathdev_s
 {
 	int		fd;
+	int		oflags;
 	pid_t		pid;
 	Pathpart_t	prot;
 	Pathpart_t	host;
 	Pathpart_t	port;
 	Pathpart_t	path;
-	int		oflags;
-	int		unused[5];
 } Pathdev_t;
 
 /*
@@ -327,7 +330,7 @@ extern char*		pathcat(char*, const char*, int, const char*, const char*);
 extern char*		pathcat_20100601(const char*, int, const char*, const char*, char*, size_t);
 extern int		pathcd(const char*, const char*);
 extern int		pathcheck(const char*, const char*, Pathcheck_t*);
-extern char*		pathdev(const char*, char*, size_t, int, Pathdev_t*);
+extern char*		pathdev(int, const char*, char*, size_t, int, Pathdev_t*);
 extern int		pathexists(char*, int);
 extern char*		pathfind(const char*, const char*, const char*, char*, size_t);
 extern int		pathgetlink(const char*, char*, int);

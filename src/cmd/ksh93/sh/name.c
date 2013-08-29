@@ -561,7 +561,7 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 						if(!nv_isnull(np) && np->nvalue.cp!=Empty && !nv_isvtree(np))
 							sub=1;
 					}
-					else if(((np->nvalue.cp && np->nvalue.cp!=Empty)||nv_isvtree(np)|| nv_arrayptr(np)) && !nv_type(np))
+					else if(((np->nvalue.cp && np->nvalue.cp!=Empty)||nv_isvtree(np)|| nv_arrayptr(np)) && !nv_type(np) && nv_isattr(np,NV_MINIMAL|NV_EXPORT)!=NV_MINIMAL)
 					{
 						_nv_unset(np,NV_EXPORT);
 						if(ap && ap->fun)
@@ -771,7 +771,7 @@ static Namval_t	*nv_parentnode(Namval_t *np)
 		return(nv_parent(np));
 	if(mp=nv_typeparent(np))
 		return(mp);
-	if((mp= (Namval_t*)np->nvenv))
+	if((mp= (Namval_t*)np->nvenv) && !nv_isattr(np,NV_EXPORT))
 		return(mp);
 	return(np);
 }
@@ -998,7 +998,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				{
 					if(flags&NV_ARRAY)
 					{
-						Namarr_t *ap = nv_arrayptr(np);
+						ap = nv_arrayptr(np);
 						nq = nv_opensub(np);
 						if((flags&NV_ASSIGN) && (!nq || nv_isnull(nq)))
 							ap->nelem++;
@@ -1101,11 +1101,8 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					{
 						Namval_t *table;
 #if SHOPT_FIXEDARRAY
-						Namarr_t *ap = nv_arrayptr(np);
+						ap = nv_arrayptr(np);
 #endif /* SHOPT_FIXEDARRAY */
-#if 0
-						int scan = ap?(ap->flags&ARRAY_SCAN):0;
-#endif
 						n = mode|nv_isarray(np);
 						if(!mode && (flags&NV_ARRAY) && ((c=sp[1])=='*' || c=='@') && sp[2]==']')
 						{
@@ -1206,10 +1203,13 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					dp->last = cp;
 					if(nv_isarray(np) && (c=='[' || c=='.' || (flags&NV_ARRAY)))
 					{
+						Namval_t *tp;
 					addsub:
 						sp = cp;
 						nq = 0;
-						if(ap && nv_type(np))
+						if((tp=nv_type(np)) && nv_hasdisc(np,&ENUM_disc))
+							goto enumfix;
+						if(ap && ap->table && tp)
 							nq = nv_search(sub,ap->table,0);
 						if(!nq && !(nq = nv_opensub(np)))
 						{
@@ -1268,6 +1268,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				nofree  = 0;
 				if(np)
 					qp = np;
+			enumfix:
 				if(c=='.' && (fp=np->nvfun))
 				{
 					for(; fp; fp=fp->next)
@@ -1291,6 +1292,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 									nv_putsub(np,NIL(char*),0,ARRAY_UNDEF);
 								return(np);
 							}
+							goto enumfix;
 						}
 					}
 				}

@@ -724,7 +724,7 @@ prev include/defs.h implicit
 done sh/arith.c
 meta arith.o %.c>%.o sh/arith.c arith
 prev sh/arith.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FIXEDARRAY -DSHOPT_POLL -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c sh/arith.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_FIXEDARRAY -DSHOPT_POLL -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_COSHELL -c sh/arith.c
 done arith.o generated
 make args.o
 make sh/args.c
@@ -1025,6 +1025,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done name.o generated
 make nvtree.o
 make sh/nvtree.c
+prev include/variables.h implicit
 prev include/lexstates.h implicit
 prev include/argnod.h implicit
 prev include/name.h implicit
@@ -1033,7 +1034,7 @@ prev include/defs.h implicit
 done sh/nvtree.c
 meta nvtree.o %.c>%.o sh/nvtree.c nvtree
 prev sh/nvtree.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FIXEDARRAY -DSHOPT_MULTIBYTE -D_API_ast=20130625 -D_PACKAGE_ast -D_BLD_shell -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_PFSH -c sh/nvtree.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FIXEDARRAY -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_BLD_shell -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c sh/nvtree.c
 done nvtree.o generated
 make parse.o
 make sh/parse.c

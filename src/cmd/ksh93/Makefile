@@ -232,7 +232,8 @@ test.% : %.sh COSHELL_OPTIONS=separate $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=2) $(*:O=3) 2>/dev/null ||
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=4:P=L!:D)
-	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(SHTESTSFLAGS) $(*:O=1:P=A)
+	KSH=$(SHTESTSSHELL:-$(*:O=2:P=A))
+	SHELL=$KSH $KSH $(*:O=4:B) $(SHTESTSFLAGS) $(*:O=1:P=A)
 
 if RELEASE
 

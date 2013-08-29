@@ -230,7 +230,7 @@ struct shared
 	int		xargexit; \
 	int		nenv; \
 	int		lexsize; \
-	int		sigval; \
+	Sflong_t	sigval; \
 	mode_t		mask; \
 	Env_t		*env; \
 	void		*init_context; \
@@ -466,7 +466,7 @@ extern int 		sh_whence(char**,int);
 #if SHOPT_NAMESPACE
     extern Namval_t	*sh_fsearch(Shell_t*,const char *,int);
 #endif /* SHOPT_NAMESPACE */
-extern int		sh_diropenat(Shell_t*, int, const char*, bool);
+extern int		sh_diropenat(Shell_t*, int, const char*);
 
 #ifndef ERROR_dictionary
 #   define ERROR_dictionary(s)	(s)
