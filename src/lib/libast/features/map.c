@@ -105,7 +105,7 @@ main()
 #if !_WINIX
 	printf("#undef	fgetcwd\n");
 	printf("#define fgetcwd		_ast_fgetcwd\n");
-	printf("extern char*		fgetcwd(fd, char*, size_t);\n");
+	printf("extern char*		fgetcwd(int, char*, size_t);\n");
 	printf("#undef	getcwd\n");
 	printf("#define getcwd		_ast_getcwd\n");
 	printf("extern char*		getcwd(char*, size_t);\n");

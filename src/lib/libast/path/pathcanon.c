@@ -73,6 +73,27 @@ pathcanon_20100601(char* path, size_t size, int flags)
 
 #endif
 
+/*
+ * NAMED_XATTR
+ *
+ *	0:disabled
+ *	1:enabled if O_XATTR!=0
+ *
+ * /dev/file/xattr@relative-path/file//@//?(attr)
+ * /dev/file/xattr@/absolute-path/file//@//?(attr)
+ *
+ * names the xattr file "attr" for "file" or the xattr dir for "file"
+ * neither "relative-path/file" nor "absolute-path/file" may contain "//@//"
+ * so pathcanon() "relative-path/file" and "absolute-path/file" before
+ * constructing a /dev/file/xattr@/...//@// path
+ */
+
+#define NAMED_XATTR	1	/* /dev/file/xattr@...//@// named xattr dir 0:disabled 1:enabled */
+
+#if NAMED_XATTR && !O_XATTR
+#undef	NAMED_XATTR
+#endif
+
 #define NEXT(s,n) \
 	do { \
 		for (s += n;; s++) \
@@ -106,6 +127,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	register int	dots;
 	char*		v;
 	char*		x;
+	char*		y;
 	char*		z;
 	char*		a;
 	char*		b;
@@ -141,7 +163,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	p = (char*)path;
 	inplace = p == canon;
  again:
-	r = 0;
+	r = x = 0;
 	if (path[0] == '/')
 	{
 		for (s = (char*)path; s[1] == '/'; s++);
@@ -222,98 +244,127 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 						dev->pid = -1;
 					}
 				}
-				else if (s[1] == 'i' && s[2] == 'l' && s[3] == 'e' && (s[4] == '/' || s[4] == 0))
+				else if (s[1] == 'i' && s[2] == 'l' && s[3] == 'e' && s[4] == '/')
 				{
 					NEXT(s, 4);
-					for (;;)
+					if (s[0] == 'f' && s[1] == 'l' && s[2] == 'a' && s[3] == 'g' && s[4] == 's' && s[5] == '@')
 					{
-						if (s[0] == 'a' && s[1] == 's' && s[2] == 'y' && s[3] == 'n' && s[4] == 'c' && (s[5] == ',' || s[5] == ':'))
+						s += 6;
+						for (;;)
 						{
+							if (s[0] == 'a' && s[1] == 's' && s[2] == 'y' && s[3] == 'n' && s[4] == 'c' && (s[5] == ',' || s[5] == '@'))
+							{
 #ifdef O_ASYNC
-							s += 5;
-							dev->oflags |= O_ASYNC;
+								s += 5;
+								dev->oflags |= O_ASYNC;
 #else
-							errno = ENXIO;
-							return 0;
+								errno = ENXIO;
+								return 0;
 #endif
-						}
-						else if (s[0] == 'd' && s[1] == 'i' && s[2] == 'r' && s[3] == 'e' && s[4] == 'c' && s[5] == 't')
-						{
-							if (s[6] == ',' || s[6] == ':')
+							}
+							else if (s[0] == 'd' && s[1] == 'i' && s[2] == 'r' && s[3] == 'e' && s[4] == 'c' && s[5] == 't')
 							{
+								if (s[6] == ',' || s[6] == '@')
+								{
 #ifdef O_DIRECT
-								s += 6;
-								dev->oflags |= O_DIRECT;
+									s += 6;
+									dev->oflags |= O_DIRECT;
 #else
-								errno = ENXIO;
-								return 0;
+									errno = ENXIO;
+									return 0;
 #endif
-							}
-							else if (s[6] == 'o' && s[7] == 'r' && s[8] == 'y' && (s[9] == ',' || s[9] == ':'))
-							{
+								}
+								else if (s[6] == 'o' && s[7] == 'r' && s[8] == 'y' && (s[9] == ',' || s[9] == '@'))
+								{
 #ifdef O_DIRECTORY
-								s += 9;
-								dev->oflags |= O_DIRECTORY;
+									s += 9;
+									dev->oflags |= O_DIRECTORY;
+#else
+									errno = ENXIO;
+									return 0;
+#endif
+								}
+								else
+								{
+									errno = EINVAL;
+									return 0;
+								}
+							}
+							else if (s[0] == 'n' && s[1] == 'o' && s[2] == 'n' && s[3] == 'b' && s[4] == 'l' && s[5] == 'o' && s[6] == 'c' && s[7] == 'k' && (s[8] == ',' || s[8] == '@'))
+							{
+#ifdef O_NONBLOCK
+								s += 8;
+								dev->oflags |= O_NONBLOCK;
 #else
 								errno = ENXIO;
 								return 0;
 #endif
 							}
-							else
+							else if (s[0] == 's' && s[1] == 'y' && s[2] == 'n' && s[3] == 'c' && (s[4] == ',' || s[4] == '@'))
+							{
+#ifdef O_SYNC
+								s += 4;
+								dev->oflags |= O_SYNC;
+#else
+								errno = ENXIO;
+								return 0;
+#endif
+							}
+							else if (s[0] == 'x' && s[1] == 'a' && s[2] == 't' && s[3] == 't' && s[4] == 'r' && (s[5] == ',' || s[5] == '@'))
+							{
+#ifdef O_XATTR
+								s += 5;
+								dev->oflags |= O_XATTR;
+#else
+								errno = ENXIO;
+								return 0;
+#endif
+							}
+							else if (*s != '@')
 							{
 								errno = EINVAL;
 								return 0;
 							}
+							if (*s++ == '@')
+								break;
 						}
-						else if (s[0] == 'n' && s[1] == 'o' && s[2] == 'n' && s[3] == 'b' && s[4] == 'l' && s[5] == 'o' && s[6] == 'c' && s[7] == 'k' && (s[8] == ',' || s[8] == ':'))
+						dev->fd = -1;
+						dev->pid = -1;
+						dev->prot.offset = 0;
+						if (!s[0] && (flags & PATH_DEV))
 						{
-#ifdef O_NONBLOCK
-							s += 8;
-							dev->oflags |= O_NONBLOCK;
-#else
-							errno = ENXIO;
-							return 0;
-#endif
+							dev->fd = AT_FDCWD;
+							dev->path.offset = s - p;
 						}
-						else if (s[0] == 's' && s[1] == 'y' && s[2] == 'n' && s[3] == 'c' && (s[4] == ',' || s[4] == ':'))
+						else if (!(flags & PATH_CANON))
 						{
-#ifdef O_ASYNC
-							s += 4;
-							dev->oflags |= O_ASYNC;
-#else
-							errno = ENXIO;
-							return 0;
-#endif
+							flags &= ~PATH_DEV;
+							path = (const char*)s;
+							if (!canon)
+								dev->path.offset = s - p;
+							goto again;
+						}
+						r = s;
+					}
+					else if (s[0] == 'x' && s[1] == 'a' && s[2] == 't' && s[3] == 't' && s[4] == 'r' && s[5] == '@')
+					{
+						s += 6;
+						dev->fd = -1;
+						dev->pid = -1;
+						dev->prot.offset = 0;
+#if NAMED_XATTR
+						r = s;
+						if (!s[0] && (flags & PATH_DEV))
+						{
+							dev->fd = AT_FDCWD;
+							dev->path.offset = s - p;
 						}
 						else
-						{
-							errno = EINVAL;
-							return 0;
-						}
-						if (s[0] == ':')
-						{
-							if (*++s)
-							{
-								flags &= ~PATH_DEV;
-								path = (const char*)s;
-								if (!canon)
-								{
-									dev->path.offset = s - p;
-									dev->fd = -1;
-									dev->pid = -1;
-									dev->prot.offset = 0;
-								}
-								goto again;
-							}
-							break;
-						}
-						s++;
-					}
-					if (!s[0] && (flags & PATH_DEV))
-					{
-						r = s;
-						dev->fd = AT_FDCWD;
-						dev->pid = -1;
+							x = r;
+#else
+						errno = ENXIO;
+						return 0;
+#endif
 					}
 				}
 			}
@@ -365,7 +416,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 				else if (flags & PATH_DEV)
 				{
 					dev->host.offset = 0;
-					dev->fd = -1;
+					dev->fd = AT_FDCWD;
 					dev->pid = -1;
 					r = s;
 				}
@@ -395,7 +446,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	}
 	else
 		dev->fd = -1;
-	if (r)
+	if (r && (!x || canon))
 	{
 		if (!(t = canon))
 		{
@@ -404,56 +455,54 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 		}
 		for (s = p; s < r && (*t = *s++); t++);
 		dev->path.offset = t - canon;
-		if (!*t && (!(flags & PATH_PHYSICAL) || dev->fd < 0))
+		if (!x && !*t && (!(flags & PATH_PHYSICAL) || dev->fd < 0))
 			return t;
 	}
 	else if (!canon)
 	{
-		for (t = (char*)path; r = strchr(t, '@'); t = r + 1)
-			if ((r - t) >= 2 && r[-2] == '/' && r[-1] == '/' && r[1] == '/' && r[2] == '/')
-			{
-#if O_XATTR
-				char	buf[2*PATH_MAX];
+#if NAMED_XATTR
+		if (x)
+			for (t = x; r = strchr(t, '@'); t = r + 1)
+				if ((r - t) >= 2 && r[-2] == '/' && r[-1] == '/' && r[1] == '/' && r[2] == '/')
+				{
+					char	buf[2*PATH_MAX];
 
-				t = r - 2;
-				r = (char*)path;
-				if (t == r)
-				{
-					buf[0] = *path == '/' ? '/' : '.';
-					buf[1] = 0;
+					t = r - 2;
+					r = x;
+					if (t == r)
+					{
+						buf[0] = *path == '/' ? '/' : '.';
+						buf[1] = 0;
+					}
+					else
+					{
+						memcpy(buf, r, t - r);
+						for (r = buf + (t - r); r > buf && *(r - 1) == '/'; r--);
+						*r = 0;
+					}
+					if ((dev->fd = openat(dfd, buf, O_INTERCEPT|O_RDONLY|O_CLOEXEC|dev->oflags)) < 0)
+						r = 0;
+					else if ((n = openat(dev->fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR)) < 0)
+					{
+						r = 0;
+						close(dev->fd);
+						dev->fd = -1;
+					}
+					else
+					{
+						dev->oflags |= O_INTERCEPT;
+						close(dev->fd);
+						if (dev == &nodev)
+							close(n);
+						dev->fd = n;
+						for (r = t + 3; *r == '/'; r++);
+						dev->pid = -1;
+						dev->path.offset = r - (char*)path;
+						return r + strlen(r);
+					}
+					break;
 				}
-				else
-				{
-					memcpy(buf, r, t - r);
-					for (r = buf + (t - r); r > buf && *(r - 1) == '/'; r--);
-					*r = 0;
-				}
-				if ((dev->fd = openat(dfd, buf, O_INTERCEPT|O_RDONLY|O_CLOEXEC|dev->oflags)) < 0)
-					r = 0;
-				else if ((n = openat(dev->fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR)) < 0)
-				{
-					r = 0;
-					close(dev->fd);
-					dev->fd = -1;
-				}
-				else
-				{
-					dev->oflags |= O_INTERCEPT;
-					close(dev->fd);
-					if (dev == &nodev)
-						close(n);
-					dev->fd = n;
-					for (r = t + 3; *r == '/'; r++);
-					dev->pid = -1;
-					dev->path.offset = r - (char*)path;
-					return r + strlen(r);
-				}
-				break;
-#else
-				errno = ENOTDIR;
-				return 0;
 #endif
-			}
 		if (flags & PATH_DEV)
 		{
 			errno = ENODEV;
@@ -475,24 +524,26 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	b = s;
 	r = t;
 	v = p + PATH_GET_VERIFIED(flags);
-	if ((flags & PATH_ABSOLUTE) && dev->fd < 0 && *s != '/' || (flags & PATH_PHYSICAL) && dev->fd >= 0)
+	if ((flags & PATH_ABSOLUTE) && dev->fd < 0 && (x && *x != '/' || *s != '/') || (flags & PATH_PHYSICAL) && dev->fd >= 0)
 	{
 		if (inplace)
 		{
 			/* XXX -- TODO -- avoid fmtbuf() by sliding this part to the right and adjusting fgetcwd() size below */
-			n = strlen(path);
-			x = fmtbuf(n + 1);
-			memcpy(x, path, n + 1);
+			z = x ? s : (char*)path;
+			n = strlen(z) + 1;
+			a = fmtbuf(n);
+			memcpy(a, z, n);
 		}
 		else
-			x = (char*)path;
-		z = dev->fd >= 0 ? p : t;
+			a = (char*)path;
+		z = (x || dev->fd < 0) ? t : p;
 		if (fgetcwd(dev->fd >= 0 ? dev->fd : AT_FDCWD, z, size - strlen(r)))
 		{
-			t = r = z;
+			r = t = z;
 			t += strlen(t);
-			*t++ = '/';
-			s = x;
+			if ((t - z) > 1)
+				*t++ = '/';
+			s = a;
 			v = t;
 			if (dev->fd >= 0)
 			{
@@ -506,7 +557,8 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	if (!(flags & PATH_DROP_HEAD_SLASH2) && s[0] == '/' && s[1] == '/')
 	{
 		for (a = s + 2; *a == '/'; a++);
-		if (a[0] == '@' && a[1] == '/' && a[2] == '/')
+#if NAMED_XATTR
+		if (!x && a[0] == '@' && a[1] == '/' && a[2] == '/')
 		{
 			if ((a - s) >= 4)
 			{
@@ -515,9 +567,12 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 			}
 		}
 		else
+#endif
 			*t++ = *s++;
 	}
-	x = 0;
+#if NAMED_XATTR
+	z = 0;
+#endif
 	for (;;)
 		switch (*t++ = *s++)
 		{
@@ -528,7 +583,10 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 			s--;
 			/*FALLTHROUGH*/
 		case '/':
-			for (a = s; *s == '/'; s++);
+#if NAMED_XATTR
+			a = s;
+#endif
+			for (; *s == '/'; s++);
 			switch (dots)
 			{
 			case 1:
@@ -551,34 +609,51 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					}
 					*(t - 2) = '.';
 				}
-				if (t - 5 < r)
+#if NAMED_XATTR
+				if ((t - 3) == z)
 				{
-					if (t - 4 == r)
-						t = r + 1;
-					else
-						r = t;
+					z = 0;
+					if ((t -= 8) == p)
+						t++;
+					memmove(canon, x, t - x);
+					t -= x - canon;
+					r = canon;
+					x = 0;
+					dev->path.offset = 0;
+					t[0] = '/';
+					t[1] = '.';
+					t[2] = 0;
+					if (access(canon, 0) && errno == ENOTDIR)
+						while (t > r && *(t - 1) != '/')
+							t--;
 				}
 				else
+#endif
+				if ((t - 5) >= r)
 					for (t -= 5; t > r && *(t - 1) != '/'; t--);
+				else if ((t - 4) == r)
+					t = r + 1;
+				else
+					r = t;
 				break;
 			case 3:
 				r = t;
 				break;
 			default:
-				if ((flags & PATH_PHYSICAL) && loop < 32 && (t - 1) > canon)
+				if ((flags & PATH_PHYSICAL) && loop < 32 && (t - 1) > (x ? x : canon))
 				{
 					char	buf[PATH_MAX];
 
 					c = *(t - 1);
 					*(t - 1) = 0;
-					dots = pathgetlink(canon, buf, sizeof(buf));
+					dots = pathgetlink(x ? x : canon, buf, sizeof(buf));
 					*(t - 1) = c;
 					if (dots > 0)
 					{
 						loop++;
 						strcpy(buf + dots, s - (*s != 0));
 						if (*buf == '/')
-							p = r = canon;
+							p = r = x ? x : canon;
 						v = s = t = p;
 						strcpy(p, buf);
 					}
@@ -626,14 +701,23 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					t--;
 				*t = 0;
 				errno = oerrno;
-				if (x && !(flags & PATH_CANON))
+#if NAMED_XATTR
+				if (!z)
 				{
-#if O_XATTR
-					r = x - 5;
+					if (x && t > x)
+					{
+						memmove(canon, x, t - x + 1);
+						t -= x - canon;
+						dev->path.offset = 0;
+					}
+				}
+				else if (!(flags & PATH_CANON))
+				{
+					r = z - 5;
 					if (r == canon)
 						r++;
 					*r = 0;
-					dev->fd = openat(dfd, canon, O_INTERCEPT|O_RDONLY|O_CLOEXEC|dev->oflags);
+					dev->fd = openat(dfd, x, O_INTERCEPT|O_RDONLY|O_CLOEXEC|dev->oflags);
 					*r = '/';
 					if (dev->fd < 0)
 						t = 0;
@@ -651,16 +735,14 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 							close(n);
 						dev->fd = n;
 						dev->pid = -1;
-						dev->path.offset = x - canon;
+						dev->path.offset = z - canon;
 					}
-#else
-					errno = ENOTDIR;
-					t = 0;
-#endif
 				}
+#endif
 				return t;
+#if NAMED_XATTR
 			case '@':
-				if (!x && s > a && s[1] == '/' && s[2] == '/')
+				if (x && !z && s > a && s[1] == '/' && s[2] == '/')
 				{
 					for (s += 3; *s == '/'; s++);
 					if (dots == 1 && t == r)
@@ -672,9 +754,10 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					*t++ = '@';
 					*t++ = '/';
 					*t++ = '/';
-					r = x = t;
+					r = z = t;
 				}
 				break;
+#endif
 			}
 			dots = 0;
 			p = t;

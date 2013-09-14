@@ -32,11 +32,7 @@
 
 #include <ast.h>
 #include <ctype.h>
-
 #include <ccode.h>
-#if !_PACKAGE_astsa
-#include <regex.h>
-#endif
 
 int
 chrexp(register const char* s, char** p, int* m, register int flags)
@@ -47,18 +43,21 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 	const char*		b;
 	char*			r;
 	int			n;
-	int			w;
+	int			x;
+	bool			u;
+	bool			w;
 
-	w = 0;
+	u = w = 0;
 	for (;;)
 	{
 		b = s;
 		switch (c = mbchar(s))
 		{
 		case 0:
-			s--;
+			s = b;
 			break;
 		case '\\':
+			b = s;
 			switch (c = *s++)
 			{
 			case '0': case '1': case '2': case '3':
@@ -153,9 +152,13 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 				c = CC_vt;
 				break;
 			case 'u':
+				u = 1;
+			case 'w':
 				q = s + 4;
 				goto wex;
 			case 'U':
+				u = 1;
+			case 'W':
 				q = s + 8;
 			wex:
 				if (!(flags & FMT_EXP_WIDE))
@@ -165,9 +168,10 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 			case 'x':
 				q = s + 2;
 			hex:
-				b = e = s;
+				e = s;
 				n = 0;
 				c = 0;
+				x = 0;
 				while (!e || !q || s < q)
 				{
 					switch (*s)
@@ -191,47 +195,100 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 							break;
 						e = 0;
 						s++;
-						if (w && *s == 'U' && *(s + 1) == '+')
+						if (w && (*s == 'U' || *s == 'W') && *(s + 1) == '+')
 							s += 2;
 						continue;
+					case '-':
+						if (e)
+							break;
+						if (*(s + 1) != '}' && *(s + 1) != ']')
+						{
+							if (!*(s + 1) || *(s + 2) != '}' && *(s + 2) != ']')
+								break;
+							x = *(unsigned char*)(s + 1);
+							s += 2;
+						}
+						else
+						{
+							x = -1;
+							s++;
+						}
+						/*FALLTHROUGH*/
 					case '}':
 					case ']':
 						if (!e)
-							s++;
+							e = ++s;
 						break;
 					default:
 						break;
 					}
 					break;
 				}
-				if (n <= 2 && !(flags & FMT_EXP_CHAR) || n > 2 && (w = 1) && !(flags & FMT_EXP_WIDE))
+				if (e)
 				{
-					c = '\\';
-					s = b;
+					if (n < 8 || n == 8 && c >= 0)
+					{
+						if (!w)
+						{
+							if (n > 2)
+							{
+								if (!(flags & FMT_EXP_WIDE))
+									goto noexpand;
+								w = 1;
+							}
+							else if (!(flags & FMT_EXP_CHAR))
+								goto noexpand;
+							else
+								break;
+						}
+						if (!mbwide())
+							w = 0;
+						if (c <= 0x7f)
+							break;
+						if (u)
+						{
+							uint32_t	i = c;
+							wchar_t		o;
+
+							if (!utf32invalid(i) && utf32stowcs(&o, &i, 1) > 0)
+							{
+								c = o;
+								break;
+							}
+						}
+						else if (w || c <= ast.byte_max)
+							break;
+					}
+					if (x)
+					{
+						c = x;
+						w = 0;
+						break;
+					}
 				}
-				break;
+				/*FALLTHROUGH*/
 			case 0:
-				s--;
-				break;
+				goto noexpand;
 			}
 			break;
 		default:
 			if ((s - b) > 1)
 				w = 1;
 			break;
+		noexpand:
+			s = b;
+			w = 0;
+			c = '\\';
+			break;
 		}
 		break;
 	}
- normal:
-	if (p)
-		*p = (char*)s;
+ done:
 	if (m)
 		*m = w;
+	if (p)
+		*p = (char*)s;
 	return c;
- noexpand:
-	c = '\\';
-	s--;
-	goto normal;
 }
 
 int

@@ -54,8 +54,7 @@
 #define FTS_TOP		0x00000100	/* don't traverse subdirectories	*/
 #define FTS_XDEV	0x00000200	/* don't cross mount points		*/
 #define FTS_WALK	0x00001000	/* 8 ftwalk() compatibility flag bits	*/
-#define FTS_FD		0x00100000	/* pathnames arg is fd pointer array	*/
-#define FTS_XATTR	0x00200000	/* traverse extended attributes too	*/
+#define FTS_XATTR	0x00100000	/* traverse extended attributes too	*/
 
 #define FTS_COMFOLLOW	FTS_META
 
@@ -158,6 +157,7 @@ extern int	fts_flags(void);
 extern int	fts_local(FTSENT*);
 extern int	fts_notify(int(*)(FTS*, FTSENT*, void*), void*);
 extern FTS*	fts_open(char* const*, int, int(*)(FTSENT* const*, FTSENT* const*));
+extern FTS*	fts_openat(int, char* const*, int, int(*)(FTSENT* const*, FTSENT* const*));
 extern FTSENT*	fts_read(FTS*);
 extern int	fts_set(FTS*, FTSENT*, int);
 

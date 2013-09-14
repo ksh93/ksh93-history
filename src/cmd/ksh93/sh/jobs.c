@@ -201,21 +201,21 @@ static void setsiginfo(Shell_t *shp,siginfo_t* info, struct process *pw)
 	info->si_uid = shp->gd->userid;
 	info->si_pid = pw->p_pid;
 	info->si_code = CLD_EXITED;
-	info->si_value.sival_int = 0;
+	info->si_value.sival_ptr = 0;
 	if(WIFSTOPPED(pw->p_wstat))
 	{
 		info->si_code = CLD_STOPPED;
-		info->si_value.sival_int = WSTOPSIG(pw->p_wstat);
+		info->si_value.sival_ptr = pointerof(WSTOPSIG(pw->p_wstat));
 	}
 	else if (WIFCONTINUED(pw->p_wstat))
 		info->si_code = CLD_CONTINUED;
 	else if (WIFSIGNALED(pw->p_wstat))
 	{
-		info->si_value.sival_int = WTERMSIG(pw->p_wstat);
+		info->si_value.sival_ptr = pointerof(WTERMSIG(pw->p_wstat));
 		info->si_code = WTERMCORE(pw->p_wstat)?CLD_DUMPED:CLD_KILLED;
 	}
 	else 
-		info->si_value.sival_int = WEXITSTATUS(pw->p_wstat);
+		info->si_value.sival_ptr = pointerof(WEXITSTATUS(pw->p_wstat));
 	sh_setsiginfo(info);
 }
 
@@ -1182,9 +1182,12 @@ int job_kill(register struct process *pw,register int sig)
 		goto error;
 	shp = pw->p_shp;
 #if _lib_sigqueue
-	sig_val.sival_int = shp->sigval;
+	if(sig&JOB_QQFLAG)
+		sig_val.sival_ptr = pointerof(shp->sigval);
+	else
+		sig_val.sival_int = (int)shp->sigval;
 #endif
-	sig &= ~JOB_QFLAG;
+	sig &= ~(JOB_QFLAG|JOB_QQFLAG);
 #ifdef SIGTSTP
 	stopsig = (sig==SIGSTOP||sig==SIGTSTP||sig==SIGTTIN||sig==SIGTTOU);
 #else
@@ -1218,6 +1221,11 @@ int job_kill(register struct process *pw,register int sig)
 					if(pid==0)
 						goto no_sigqueue;
 					r = sigqueue(pid,sig,sig_val);
+					if(r<0 && errno==EAGAIN)
+					{
+						asoyield();
+						r = -2;
+					}
 				}
 				else
 					r = kill(pid,sig);
@@ -1245,7 +1253,14 @@ int job_kill(register struct process *pw,register int sig)
 		if(pid>=0)
 		{
 			if(qflag)
+			{
 				r = sigqueue(pid,sig,sig_val);
+				if(r<0 && errno=EAGAIN)
+				{
+					asoyield();
+					r = -2;
+				}
+			}
 			else
 				r = kill(pid,sig);
 		}
@@ -1292,15 +1307,17 @@ int job_kill(register struct process *pw,register int sig)
 		if(errno == EPERM)
 			msg = sh_translate(e_access);
 		sfprintf(sfstderr,"kill: %s: %s\n",job_string, msg);
-		r = 2;
+		r = 1;
 	}
 	sh_delay(.001);
 	job_unlock();
+	if(r==-2)
+		r = 2;
 	return(r);
 no_sigqueue:
 	msg = sh_translate("queued signals require positive pids");
 	sfprintf(sfstderr,"kill: %s: %s\n",job_string, msg);
-	return(2);
+	return(1);
 }
 
 /*

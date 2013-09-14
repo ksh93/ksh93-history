@@ -123,7 +123,8 @@ void	sh_subtmpfile(Shell_t *shp)
 		else if(errno!=EBADF)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
 		/* popping a discipline forces a /tmp file create */
-		sfdisc(sfstdout,SF_POPDISC);
+		if(shp->comsub != 1)
+			sfdisc(sfstdout,SF_POPDISC);
 		if((fd=sffileno(sfstdout))<0)
 		{
 			/* unable to create the /tmp file so use a pipe */
@@ -640,6 +641,19 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		}
 		else
 		{
+			if(comsub!=1 && shp->spid)
+			{
+				int c = shp->exitval;
+				job_wait(shp->spid);
+				if(shp->exitval==ERROR_NOENT)
+				{
+					shp->exitval = c;
+					exitset(shp);
+				}
+				if(shp->pipepid==shp->spid)
+					shp->spid = 0;
+				shp->pipepid = 0;
+			}
 			/* move tmp file to iop and restore sfstdout */
 			iop = sfswap(sfstdout,NIL(Sfio_t*));
 			if(!iop)

@@ -123,6 +123,16 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		dir = nv_getval(opwdnod);
 	if(!dir || *dir==0)
 		errormsg(SH_DICT,ERROR_exit(1),argc==2?e_subst+4:e_direct);
+	if (xattr)
+	{
+		if(!shp->strbuf2)
+			shp->strbuf2 = sfstropen();
+		j = sfprintf(shp->strbuf2,"%s",dir);
+		dir = sfstruse(shp->strbuf2);
+		pathcanon(dir, j + 1, 0);
+		sfprintf(shp->strbuf, "/dev/file/xattr@%s//@//", dir);
+		dir = sfstruse(shp->strbuf);
+	}
 #if _WINIX
 	if(*dir != '/' && (dir[1]!=':'))
 #else
@@ -140,30 +150,23 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		if(!oldpwd)
 			oldpwd = path_pwd(shp,1);
 	}
-	if(dirfd==shp->pwdfd && *dir=='.' )
+	if(dirfd==shp->pwdfd && *dir!='/')
 	{
-		/* test for leading .. */
+		/* check for leading .. */
 
-		dp = dir;
-		while (*dp == '.')
-			if (*++dp == '/')
-				while (*++dp == '/');
-			else
-			{
-				if (*dp == '.' && (!*++dp || *dp == '/'))
-				{
-					sfprintf(shp->strbuf, "%s/%s%s", oldpwd, dir, xattr ? "//@//" : "");
-					dir = sfstruse(shp->strbuf);
-					pathcanon(dir, PATH_MAX, 0);
-					xattr = false;
-				}
-				break;
-			}
-	}
-	if (xattr)
-	{
-		sfprintf(shp->strbuf,"%s//@//",dir);
-		dir = sfstruse(shp->strbuf);
+		char *cp;
+
+		j = sfprintf(shp->strbuf,"%s",dir);
+		cp = sfstruse(shp->strbuf);
+		pathcanon(cp, j + 1, 0);
+		if(cp[0]=='.' && cp[1]=='.' && (cp[2]=='/' || cp[2]==0))
+		{
+			if(!shp->strbuf2)
+				shp->strbuf2 = sfstropen();
+			j = sfprintf(shp->strbuf2,"%s/%s",oldpwd,cp);
+			dir = sfstruse(shp->strbuf2);
+			pathcanon(dir, j + 1, 0);
+		}
 	}
 	rval = -1;
 	do

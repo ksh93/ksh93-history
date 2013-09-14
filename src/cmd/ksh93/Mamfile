@@ -724,7 +724,7 @@ prev include/defs.h implicit
 done sh/arith.c
 meta arith.o %.c>%.o sh/arith.c arith
 prev sh/arith.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_FIXEDARRAY -DSHOPT_POLL -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_COSHELL -c sh/arith.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FIXEDARRAY -DSHOPT_POLL -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c sh/arith.c
 done arith.o generated
 make args.o
 make sh/args.c
@@ -1241,6 +1241,8 @@ make data/strdata.c
 make FEATURE/math implicit
 meta FEATURE/math features/%.sh>FEATURE/% features/math.sh math
 make features/math.sh
+make LDBL_LLONG_MIN implicit
+done LDBL_LLONG_MIN dontcare virtual
 make data/math.tab implicit
 done data/math.tab
 done features/math.sh dontcare

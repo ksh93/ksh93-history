@@ -605,7 +605,7 @@ int sh_iomovefd(Shell_t *shp,register int fdold)
 		return(fdold);
 	fdnew = sh_iomovefd(shp,sh_fcntl(fdold,F_DUPFD_CLOEXEC,10));
 	shp->fdstatus[fdnew] = (shp->fdstatus[fdold]|IOCLEX);
-	sh_close(fdold);
+	close(fdold);
 	shp->fdstatus[fdold] = IOCLOSE;
 	return(fdnew);
 }
@@ -1632,8 +1632,8 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 		if(traceon)
 			sfprintf(sfstderr,"< %s\n",name);
 		sfputr(outfile,name,'\n');
-		off = sftell(outfile);
-		outfile->_data[off] = 0;
+		sfputc(outfile,0);
+		outfile->_next--;
 	}
 	else
 	{

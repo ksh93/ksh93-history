@@ -331,12 +331,17 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 	else if(!nq || !isblocked(bp,type))
 	{
 		Dt_t *root = sh_subfuntree(shp,1);
+		Namval_t	*pp=0;
 		int n;
 		Namarr_t *ap;
 		block(bp,type);
 		nv_disc(np,handle,NV_POP);
+		if(!nv_isattr(np,NV_MINIMAL))
+			pp = (Namval_t*)np->nvenv;
 		nv_putv(np, val, flags, handle);
 		if(shp->subshell)
+			goto done;
+		if(pp && nv_isarray(pp))
 			goto done;
 		if(nv_isarray(np) && (ap=nv_arrayptr(np)) && ap->nelem>0)
 			goto done;
@@ -1134,7 +1139,19 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 			cp = sp; 
 	}
 	if(!cp)
-		return(var?nv_search(name,root,0):0);
+	{
+		if(!var)
+			return(0);
+#if SHOPT_NAMESPACE
+		if(shp->namespace)
+		{
+			sfprintf(shp->strbuf,"%s.%s%c",nv_name(shp->namespace),name,0);
+			if(np = nv_search(sfstruse(shp->strbuf),root,0))
+				return(np);
+		}
+#endif /*SHOPT_NAMESPACE */
+		return(nv_search(name,root,0));
+	}
 	sfputr(shp->stk,name,0);
 	dname = cp+1;
 	cp = stkptr(shp->stk,offset) + (cp-name); 

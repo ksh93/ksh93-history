@@ -1555,11 +1555,17 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 						if(*np->nvname=='.')
 						{
 							char *ep;
+							bool type=0;
 							cp = np->nvname+1;
 							if(memcmp(cp,"sh.type.",8)==0)
-								cp += 8;
-							if(ep = strchr(cp,'.'))
 							{
+								cp += 8;
+								type = true;
+							}
+							if(ep = strrchr(cp,'.'))
+							{
+								if(type)
+									while(--ep>cp && *ep!='.');
 								*ep = 0;
 								namespace = nv_search(cp-1,shp->var_base,HASH_NOSCOPE);
 								*ep = '.';
@@ -1753,7 +1759,11 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 					if(shp->pipepid)
 						shp->pipepid = parent;
 					else
+					{
 						job_wait(parent);
+						if(parent==shp->spid)
+							shp->spid = 0;
+					}
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
 #ifdef SPAWN_cwd
@@ -4054,7 +4064,7 @@ int sh_funscope_20120720(Shell_t *shp,int argn, char *argv[],int(*fun)(void*),vo
 							np->nvalue.nrp->np = nq;
 						else
 						{
-							np->nvalue.nrp->np = (Namval_t*)((Sflong_t)(*nq->nvalue.ldp));
+							np->nvalue.nrp->np = (Namval_t*)pointerof((Sflong_t)(*nq->nvalue.ldp));
 							nv_onattr(nq,NV_LDOUBLE);
 						}
 						nv_onattr(np,NV_REF|NV_NOFREE);

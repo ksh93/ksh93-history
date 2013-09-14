@@ -32,10 +32,10 @@ uint dtstrhash(uint h, char* args, int n)
 
 #if _ast_sizeof_int == 8 /* 64-bit hash */
 #define	FNV_PRIME	((1<<40) + (1<<8) + 0xb3)
-#define FNV_OFFSET	14695981039346656037
+#define FNV_OFFSET	0x8000000000000000
 #else /* 32-bit hash */
 #define	FNV_PRIME	((1<<24) + (1<<8) + 0x93)
-#define FNV_OFFSET	2166136261
+#define FNV_OFFSET	0x811c9dc5
 #endif
 	h = (h == 0 || h == (uint)~0) ? FNV_OFFSET : h;
 	if(n <= 0) /* see discipline key definition for == 0 */

@@ -136,6 +136,14 @@ int b_test(int argc, char *argv[],Shbltin_t *context)
 		}
 	}
 	not = c_eq(cp,'!');
+	if(not && c_eq(argv[2],'(') && argc<=7 && c_eq(argv[argc-1],')'))
+	{
+		int i;
+		for(i=2; i < argc; i++)
+			tdata.av[i] = tdata.av[i+1];
+		tdata.av[i] = 0;
+		argc -=2;
+	}
 	/* posix portion for test */
 	switch(argc)
 	{

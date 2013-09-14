@@ -569,4 +569,6 @@ $SHELL 2> /dev/null <<- \EOF && err_exit 'unset variable with set -u on does not
 	exit
 EOF
 
+[[ $($SHELL -vc : 2>&1) == : ]] || err_exit 'incorrect output with ksh -v' 
+
 exit $((Errors<125?Errors:125))

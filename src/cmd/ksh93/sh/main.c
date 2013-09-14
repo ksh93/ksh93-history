@@ -256,11 +256,18 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 			i |= 2;
 			sh_offoption(shp,SH_NOEXEC);
 		}
+		if(sh_isoption(shp,SH_VERBOSE))
+		{
+			i |= 4;
+			sh_offoption(shp,SH_VERBOSE);
+		}
 		sh_trap(shp,"enum _Bool=(false true) ;",0);
 		if(i&1)
 			sh_onoption(shp,SH_XTRACE);
 		if(i&2)
 			sh_onoption(shp,SH_NOEXEC);
+		if(i&4)
+			sh_onoption(shp,SH_VERBOSE);
 		shp->st.cmdname = error_info.id = command;
 		sh_offstate(shp,SH_PROFILE);
 		if(rshflag)

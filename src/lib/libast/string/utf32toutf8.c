@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,24 +14,61 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
+*                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
+*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
 /*
- *  national.h -  definitions for multibyte character sets
+ * Glenn Fowler
+ * AT&T Research
  *
- *   David Korn
- *   AT&T Labs
- *
+ * convert utf32 to utf8 in s
+ * s must have room for at least UTF8_LEN_MAX bytes
+ * return value is the number of chars placed in s
+ * thanks Tom Duff
  */
 
-#if SHOPT_MULTIBYTE
+#include <ast.h>
 
-#   ifndef MARKER
-#	define MARKER		0xdfff	/* Must be invalid character */
-#   endif
+typedef struct Utf8_s
+{
+	uint32_t	range;
+	unsigned short	prefix;
+	unsigned short	shift;
+} Utf8_t;
 
-    extern int sh_strchr(const char*,const char*,size_t);
+static const Utf8_t	ops[] =
+{
+	{ 0x00000080, 0x00,  0 },
+	{ 0x00000800, 0xc0,  6 },
+	{ 0x00010000, 0xe0, 12 },
+	{ 0x00200000, 0xf0, 18 },
+	{ 0x04000000, 0xf8, 24 },
+	{ 0x80000000, 0xfc, 30 }
+};
 
-#endif /* SHOPT_MULTIBYTE */
+int
+utf32toutf8(register char* s, register uint32_t w)
+{
+	register int	i;
+	char*		b;
+
+	for (i = 0; i < elementsof(ops); i++)
+		if (w < ops[i].range)
+		{
+			b = s;
+			*s++ = ops[i].prefix | (w >> ops[i].shift);
+			switch (ops[i].shift)
+			{
+			case 30:	*s++ = 0x80 | ((w >> 24) & 0x3f);
+			case 24:	*s++ = 0x80 | ((w >> 18) & 0x3f);
+			case 18:	*s++ = 0x80 | ((w >> 12) & 0x3f);
+			case 12:	*s++ = 0x80 | ((w >>  6) & 0x3f);
+			case  6:	*s++ = 0x80 | (w & 0x3f);
+			}
+			return s - b;
+		}
+	return 0;
+}

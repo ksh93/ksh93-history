@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -36,6 +36,8 @@
 #include <ctype.h>
 #include <mc.h>
 #include <namval.h>
+#include <iconv.h>
+#include <codeset.h>
 
 #if ( _lib_wcwidth || _lib_wctomb ) && _hdr_wctype
 #include <wctype.h>
@@ -213,11 +215,11 @@ native_setlocale(int category, const char* locale)
  * wctomb() uses DL1...DR1
  */
 
-#define DEBUG_MB_CUR_MAX	7
+#define DEBUG_LEN_MAX	7
 
-#if DEBUG_MB_CUR_MAX < MB_LEN_MAX
-#undef	DEBUG_MB_CUR_MAX
-#define DEBUG_MB_CUR_MAX	MB_LEN_MAX
+#if DEBUG_LEN_MAX < MB_LEN_MAX
+#undef	DEBUG_LEN_MAX
+#define DEBUG_LEN_MAX	MB_LEN_MAX
 #endif
 
 #define DL0	'<'
@@ -555,94 +557,17 @@ sjis_mbtowc(register wchar_t* p, register const char* s, size_t n)
 static int
 utf8_wctomb(char* u, wchar_t w) 
 {
-	return u ? wc2utf8(u, w) : 0;
+	return u ? utf32toutf8(u, w) : 0;
 }
 
 #endif
-
-static const uint32_t		utf8mask[] =
-{
-	0x00000000,
-	0x00000000,
-	0xffffff80,
-	0xfffff800,
-	0xffff0000,
-	0xffe00000,
-	0xfc000000,
-};
-
-static const signed char	utf8tab[256] =
-{
-	0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6,-1,-1,
-};
-
-static int
-utf8_mbtowc(wchar_t* wp, const char* str, size_t n)
-{
-	register unsigned char*	sp = (unsigned char*)str;
-	register int		m;
-	register int		i;
-	register int		c;
-	register wchar_t	w = 0;
-
-	if (!sp || !n)
-		return 0;
-	if ((m = utf8tab[*sp]) > 0)
-	{
-		if (m > n)
-			return -1;
-		if (wp)
-		{
-			if (m == 1)
-			{
-				*wp = *sp;
-				return 1;
-			}
-			w = *sp & ((1<<(8-m))-1);
-			for (i = m - 1; i > 0; i--)
-			{
-				c = *++sp;
-				if ((c&0xc0) != 0x80)
-					goto invalid;
-				w = (w<<6) | (c&0x3f);
-			}
-			if (!(utf8mask[m] & w) || w >= 0xd800 && (w <= 0xdfff || w >= 0xfffe && w <= 0xffff))
-				goto invalid;
-			*wp = w;
-		}
-		return m;
-	}
-	if (!*sp)
-		return 0;
- invalid:
-#ifdef EILSEQ
-	errno = EILSEQ;
-#endif
-	ast.mb_sync = (const char*)sp - str;
-	return -1;
-}
 
 static int
 utf8_mblen(const char* str, size_t n)
 {
-	wchar_t		w;
+	uint32_t	u;
 
-	return utf8_mbtowc(&w, str, n);
+	return utf8toutf32(&u, str, n);
 }
 
 static const unsigned char	utf8_wcw[] =
@@ -2224,13 +2149,25 @@ set_ctype(Lc_category_t* cp)
 {
 	ast.mb_sync = 0;
 	ast.mb_alpha = (Isw_f)iswalpha;
+	if (ast.mb_uc2wc != (void*)(-1))
+	{
+		if (ast.mb_uc2wc)
+			iconv_close((iconv_t)ast.mb_uc2wc);
+		ast.mb_uc2wc = (void*)(-1);
+	}
+	if (ast.mb_wc2uc != (void*)(-1))
+	{
+		if (ast.mb_wc2uc)
+			iconv_close((iconv_t)ast.mb_wc2uc);
+		ast.mb_wc2uc = (void*)(-1);
+	}
 #if AHA
 	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
 		sfprintf(sfstderr, "locale setf %17s %16s\n", cp->name, locales[cp->internal]->name);
 #endif
 	if (locales[cp->internal]->flags & LC_debug)
 	{
-		ast.mb_cur_max = DEBUG_MB_CUR_MAX;
+		ast.mb_cur_max = DEBUG_LEN_MAX;
 		ast.mb_len = debug_mblen;
 		ast.mb_towc = debug_mbtowc;
 		ast.mb_width = debug_wcwidth;
@@ -2239,9 +2176,9 @@ set_ctype(Lc_category_t* cp)
 	}
 	else if ((locales[cp->internal]->flags & LC_utf8) && !(ast.locale.set & AST_LC_test))
 	{
-		ast.mb_cur_max = 6;
+		ast.mb_cur_max = UTF8_LEN_MAX;
 		ast.mb_len = utf8_mblen;
-		ast.mb_towc = utf8_mbtowc;
+		ast.mb_towc = utf8towc;
 		if ((locales[cp->internal]->flags & LC_local) || !(ast.mb_width = wcwidth))
 			ast.mb_width = utf8_wcwidth;
 		ast.mb_conv = utf8_wctomb;
@@ -2280,6 +2217,15 @@ set_ctype(Lc_category_t* cp)
 		}
 #endif
 	}
+	if (locales[cp->internal]->flags & LC_utf8)
+		ast.locale.set |= AST_LC_utf8;
+	else
+		ast.locale.set &= ~AST_LC_utf8;
+	ast.byte_max = ast.mb_cur_max == 1 && strcmp(codeset(CODESET_ctype), "US-ASCII") ? 0xff : 0x7f;
+#if AHA || 1
+	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
+		sfprintf(sfstderr, "locale setf %17s %16s %16s %16s codeset=%s mb_cur_max=%d byte_max=0x%02x set=0x%08x\n", cp->name, locales[cp->internal]->name, "", "", codeset(CODESET_ctype), ast.mb_cur_max, ast.byte_max, ast.locale.set);
+#endif
 	return 0;
 }
 
@@ -2356,6 +2302,7 @@ static const Unamval_t	options[] =
 	"setlocale",		AST_LC_setlocale,
 	"test",			AST_LC_test,
 	"translate",		AST_LC_translate,
+	"unicode",		AST_LC_unicode,
 	0,			0
 };
 
@@ -2523,7 +2470,7 @@ single(int category, Lc_t* lc, unsigned int flags)
 			sfprintf(sfstderr, " MB_CUR_MAX=%d%s%s%s%s%s"
 				, ast.mb_cur_max
 				, ast.mb_len == debug_mblen ? " debug_mblen" : ast.mb_len == utf8_mblen ? " utf8_mblen" : ast.mb_len == mblen ? " mblen" : ""
-				, ast.mb_towc == debug_mbtowc ? " debug_mbtowc" : ast.mb_towc == utf8_mbtowc ? " utf8_mbtowc" : ast.mb_towc == mbtowc ? " mbtowc"
+				, ast.mb_towc == debug_mbtowc ? " debug_mbtowc" : ast.mb_towc == utf8towc ? " utf8towc" : ast.mb_towc == mbtowc ? " mbtowc"
 #ifdef mb_state
 					: ast.mb_towc == sjis_mbtowc ? " sjis_mbtowc"
 #endif

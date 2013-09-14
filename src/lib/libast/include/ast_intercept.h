@@ -76,6 +76,9 @@
 #undef	readlinkat
 #define readlinkat	ast_readlinkat
 
+#undef	renameat
+#define renameat 	ast_renameat
+
 #undef	symlinkat
 #define symlinkat	ast_symlinkat
 
@@ -244,6 +247,7 @@ extern int		ast_mkdirat(int, const char*, mode_t);
 extern int		ast_mkfifoat(int, const char*, mode_t);
 extern int		ast_mknodat(int, const char*, mode_t, dev_t);
 extern int		ast_openat(int, const char*, int, ...);
+extern int		ast_renameat(int, const char*, int, const char*);
 extern ssize_t		ast_readlinkat(int, const char*, char*, size_t);
 extern int		ast_symlinkat(const char*, int, const char*);
 extern int		ast_unlinkat(int, const char*, int);

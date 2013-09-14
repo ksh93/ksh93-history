@@ -305,7 +305,9 @@ size_t	size;	/* buffer size, -1 for default size */
 #if _mmap_worthy
 	if(f->bits&SF_MMAP)
 	{	if(f->data)
-		{	SFMUNMAP(f,f->data,f->endb-f->data);
+		{	if(f->getr && (f->mode&SF_GETR) && f->next)
+				f->next[-1] = f->getr;
+			SFMUNMAP(f,f->data,f->endb-f->data);
 			f->data = NIL(uchar*);
 		}
 	} else
@@ -319,6 +321,8 @@ size_t	size;	/* buffer size, -1 for default size */
 
 	f->flags &= ~SF_MALLOC;
 	f->bits  &= ~SF_MMAP;
+	f->mode &= ~SF_GETR;
+	f->getr = 0;
 
 	/* pure read/string streams must have a valid string */
 	if((f->flags&(SF_RDWR|SF_STRING)) == SF_RDSTR &&

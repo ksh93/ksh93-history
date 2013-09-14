@@ -444,7 +444,7 @@ if      [[ ${SIG[RTMIN]} ]]
 then	compound -a rtar
 	function rttrap
 	{
-		integer v=${.sh.sig.value.int}
+		integer v=${.sh.sig.value.q}
 		integer s=${#rtar[v][@]}
 		integer rtnum=$1
 		rtar[$v][$s]=(
@@ -516,8 +516,8 @@ compound c=(compound -a car; integer cari=0)
 trap 'c.car[c.cari++]=.sh.sig' USR1
 kill -q4 -s USR1 $$
 kill -q5 -s USR1 $$
-(( c.car[0].value.int == 4 )) || err_exit "\${c.car[0].value.int} is  ${c.car[0].value.int} but should be 4"
-(( c.car[1].value.int == 5 )) || err_exit "\${c.car[1].value.int} is  ${c.car[1].value.int} but should be 5"
-[[ ${c.car[1].value.int} == 5 ]]
+(( c.car[0].value.q == 4 )) || err_exit "\${c.car[0].value.q} is  ${c.car[0].value.q} but should be 4"
+(( c.car[1].value.q == 5 )) || err_exit "\${c.car[1].value.q} is  ${c.car[1].value.q} but should be 5"
+[[ ${c.car[1].value.q} == 5 ]]
 
 exit $((Errors<125?Errors:125))

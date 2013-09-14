@@ -573,7 +573,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 		   case S_MBYTE:
 			if(val==0)
 				val = (char*)(cp-1);
-			if(sh_strchr(ifs,(char*)cp-1)>=0)
+			if(sh_strchr(ifs,(char*)cp-1,cpmax-cp+1)>=0)
 			{
 				c = mbsize((char*)cp-1);
 				if(name)
@@ -670,7 +670,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 #if SHOPT_MULTIBYTE
 			if(c==S_MBYTE)
 			{
-				if(sh_strchr(ifs,(char*)cp-1)>=0)
+				if(sh_strchr(ifs,(char*)cp-1,cpmax-cp+1)>=0)
 				{
 					if((c = mbsize((char*)cp-1))>1)
 						cp += (c-1);

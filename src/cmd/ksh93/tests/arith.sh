@@ -835,4 +835,7 @@ $SHELL 2> /dev/null <<- \EOF || err_exit 'short integer bug causing core dumps'
 	exit 0
 EOF
 
+float x
+((x.HOGWARDS_IN_THE_SKY ==0 )) || err_exit 'x.HOGWARDS_IN_THE_SKY is unknown and should have value 0'
+
 exit $((Errors<125?Errors:125))

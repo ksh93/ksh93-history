@@ -38,8 +38,18 @@
 #include <ccode.h>
 #include <ctype.h>
 #include <iconv.h>
+#include <error.h>
+#include <codeset.h>
 
-#include "lclib.h"
+#define CC_ICONV		(-1)
+#define CC_U16			(-2)
+#define CC_U16BE		(-3)
+#define CC_U16LE		(-4)
+#define CC_U32			(-5)
+#define CC_U32BE		(-6)
+#define CC_U32LE		(-7)
+#define CC_UTF			(-8)
+#define CC_UME			(-9)
 
 #if !_lib_iconv_open
 
@@ -91,6 +101,8 @@ static int			freeindex;
 static const char		name_local[] = "local";
 static const char		name_native[] = "native";
 
+#define UTF32			0	/* UTF-32 callouts need to be coded!! */
+
 static const _ast_iconv_list_t	codes[] =
 {
 	{
@@ -132,20 +144,58 @@ static const _ast_iconv_list_t	codes[] =
 	{
 	"ucs",
 	"utf?(-)16?(be)",
-	"unicode runes",
+	"native unicode 16 runes",
 	"UTF-%s",
 	"16",
-	CC_UCS,
+	CC_U16,
+	},
+
+	{
+	"ucs-be",
+	"utf?(-)16be",
+	"little endian unicode 16 runes",
+	"UTF-%sBE",
+	"16",
+	CC_U16BE,
 	},
 
 	{
 	"ucs-le",
 	"utf?(-)16le",
-	"little endian unicode runes",
+	"little endian unicode 16 runes",
 	"UTF-%sLE",
 	"16",
-	CC_SCU,
+	CC_U16LE,
 	},
+
+#if UTF32
+	{
+	"utf-32",
+	"utf?(-)32",
+	"native unicode 32 runes",
+	"UTF-%s",
+	"32",
+	CC_U32,
+	},
+
+	{
+	"utf-32be",
+	"utf?(-)32be",
+	"big endian unicode 32 runes",
+	"UTF-%sBE",
+	"32",
+	CC_U32BE,
+	},
+
+	{
+	"utf-32le",
+	"utf?(-)32le",
+	"little endian unicode 32 runes",
+	"UTF-%sLE",
+	"32",
+	CC_U32LE,
+	},
+#endif
 
 	{ 0 },
 };
@@ -176,7 +226,7 @@ _win_codeset(const char* name)
 	char		tmp[128];
 
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_codeset name=%s\n", error_info.id, error_info.trace, __LINE__, name);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_codeset name=%s\n", error_info.id, error_info.trace, __LINE__, name);
 #endif
 	if (name == name_native)
 		return CP_ACP;
@@ -239,7 +289,7 @@ static _ast_iconv_t
 _win_iconv_open(register Conv_t* cc, const char* t, const char* f)
 {
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv_open f=%s t=%s\n", error_info.id, error_info.trace, __LINE__, f, t);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv_open f=%s t=%s\n", error_info.id, error_info.trace, __LINE__, f, t);
 #endif
 	if ((cc->from.index = _win_codeset(f)) < 0)
 		return (_ast_iconv_t)(-1);
@@ -269,7 +319,7 @@ _win_iconv(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 	LPWSTR	ub;
 
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv from=0x%04x to=0x%04x\n", error_info.id, error_info.trace, __LINE__, cc->from.index, cc->to.index);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv from=0x%04x to=0x%04x\n", error_info.id, error_info.trace, __LINE__, cc->from.index, cc->to.index);
 #endif
 	if (cc->from.index == cc->to.index || cc->from.index != CP_UCS2 && cc->to.index == 0)
 	{
@@ -386,7 +436,7 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _wi
 				if (!(tz = WideCharToMultiByte(cc->to.index, 0, (LPCWSTR)ub, fz, *tb, tz, 0, 0)))
 					goto nope;
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv *fn=%u fz=%u[%u] *tn=%u tz=%u\n", error_info.id, error_info.trace, __LINE__, *fn, fz, fz * sizeof(WCHAR), *tn, tz);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _win_iconv *fn=%u fz=%u[%u] *tn=%u tz=%u\n", error_info.id, error_info.trace, __LINE__, *fn, fz, fz * sizeof(WCHAR), *tn, tz);
 #endif
 			}
 			if (ub != (LPWSTR)*fb)
@@ -420,6 +470,7 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 	const _ast_iconv_list_t*		bp;
 	register int				c;
 	register char*				e;
+	int					cc;
 	ssize_t					sub[2];
 	char					buf[16];
 #if DEBUG_TRACE
@@ -441,6 +492,11 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 #if DEBUG_TRACE
 if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name m=\"%s\"\n", error_info.id, error_info.trace, __LINE__, m);
 #endif
+	if (m == name_native)
+	{
+		cc = CC_NATIVE;
+		goto native;
+	}
 	for (;;)
 	{
 #if DEBUG_TRACE
@@ -469,6 +525,7 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 	}
 	if (cp = bp)
 	{
+		cc = cp->ccode;
 		if (cp->canon)
 		{
 			if (cp->index)
@@ -480,32 +537,40 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 			else
 				m = "1";
 			b += sfsprintf(b, e - b, cp->canon, m);
+			if (cc == CC_UTF && *m != '8')
+				cc = CC_ICONV;
 		}
-		else if (cp->ccode == CC_NATIVE)
+		else if (cc == CC_NATIVE)
 		{
-			if ((locales[AST_LC_CTYPE]->flags & LC_default) || !locales[AST_LC_CTYPE]->charset || !(m = locales[AST_LC_CTYPE]->charset->code) || streq(m, "iso8859-1"))
-				switch (CC_NATIVE)
-				{
-				case CC_EBCDIC:
-					m = (const char*)"EBCDIC";
-					break;
-				case CC_EBCDIC_I:
-					m = (const char*)"EBCDIC-I";
-					break;
-				case CC_EBCDIC_O:
-					m = (const char*)"EBCDIC-O";
-					break;
-				default:
-					m = (const char*)"ISO-8859-1";
-					break;
-				}
+		native:
+			switch (CC_NATIVE)
+			{
+			case CC_EBCDIC:
+				m = (const char*)"EBCDIC";
+				break;
+			case CC_EBCDIC_I:
+				m = (const char*)"EBCDIC-I";
+				break;
+			case CC_EBCDIC_O:
+				m = (const char*)"EBCDIC-O";
+				break;
+			default:
+				m = codeset(CODESET_ctype);
+				if (streq(m, "UTF-8"))
+					cc = CC_UTF;
+				else if (streq(m, "US-ASCII"))
+					cc = CC_ASCII;
+				else
+					cc = CC_ICONV;
+				break;
+			}
 			b += sfsprintf(b, e - b, "%s", m);
 		}
 		*b = 0;
 #if DEBUG_TRACE
-if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, cp->ccode, o);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, cc, o);
 #endif
-		return cp->ccode;
+		return cc;
 	}
 	while (b < e && (c = *m++))
 	{
@@ -855,11 +920,11 @@ bin2ume(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 }
 
 /*
- * convert ucs-2 to bin with no byte swap
+ * convert utf-16 to bin with no byte swap
  */
 
 static size_t
-ucs2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+u16n2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 {
 	register unsigned char*		f;
 	register unsigned char*		fe;
@@ -900,11 +965,11 @@ ucs2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 }
 
 /*
- * convert bin to ucs-2 with no byte swap
+ * convert bin to utf-16 with no byte swap
  */
 
 static size_t
-bin2ucs(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+bin2u16n(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 {
 	register unsigned char*		f;
 	register unsigned char*		fe;
@@ -946,11 +1011,11 @@ bin2ucs(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 }
 
 /*
- * convert ucs-2 to bin with byte swap
+ * convert utf-16 to bin with byte swap
  */
 
 static size_t
-scu2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+u16s2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 {
 	register unsigned char*		f;
 	register unsigned char*		fe;
@@ -991,11 +1056,11 @@ scu2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 }
 
 /*
- * convert bin to ucs-2 with byte swap
+ * convert bin to utf-16 with byte swap
  */
 
 static size_t
-bin2scu(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+bin2u16s(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 {
 	register unsigned char*		f;
 	register unsigned char*		fe;
@@ -1036,6 +1101,52 @@ bin2scu(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 	RETURN(e, n, fn);
 }
 
+#if UTF32
+/*
+ * convert utf-32 to bin with no byte swap
+ */
+
+static size_t
+u32n2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+{
+	errno = ENOSYS:
+	return (size_t)(-1);
+}
+
+/*
+ * convert bin to utf-32 with no byte swap
+ */
+
+static size_t
+bin2u32n(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+{
+	errno = ENOSYS:
+	return (size_t)(-1);
+}
+
+/*
+ * convert utf-32 to bin with byte swap
+ */
+
+static size_t
+u32s2bin(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+{
+	errno = ENOSYS:
+	return (size_t)(-1);
+}
+
+/*
+ * convert bin to utf-32 with byte swap
+ */
+
+static size_t
+bin2u32s(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
+{
+	errno = ENOSYS:
+	return (size_t)(-1);
+}
+#endif
+
 /*
  * open a character code conversion map from f to t
  */
@@ -1060,7 +1171,7 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 		f = name_native;
 
 	/*
-	 * the ast identify is always (iconv_t)(0)
+	 * the ast identity is always (iconv_t)(0)
 	 */
 
 	if (t == f)
@@ -1068,7 +1179,7 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 	fc = _ast_iconv_name(f, fr, sizeof(fr));
 	tc = _ast_iconv_name(t, to, sizeof(to));
 #if DEBUG_TRACE
-if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", error_info.id, error_info.trace, __LINE__, f, fr, fc, t, to, tc);
+if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", error_info.id, error_info.trace, __LINE__, f, fr, fc, t, to, tc);
 #endif
 	if (fc != CC_ICONV && fc == tc || streq(fr, to))
 		return (iconv_t)(0);
@@ -1127,13 +1238,47 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 		case CC_UME:
 			cc->from.fun = ume2bin;
 			break;
-		case CC_UCS:
-			cc->from.fun = ucs2bin;
+		case CC_U16:
+			cc->from.fun = u16n2bin;
 			break;
-		case CC_SCU:
-			cc->from.fun = scu2bin;
+		case CC_U16BE:
+#if _ast_intswap
+			cc->from.fun = u16s2bin;
+#else
+			cc->from.fun = u16n2bin;
+#endif
 			break;
+		case CC_U16LE:
+#if _ast_intswap
+			cc->from.fun = u16n2bin;
+#else
+			cc->from.fun = u16s2bin;
+#endif
+			break;
+#if UTF32
+		case CC_U32:
+			cc->from.fun = u32n2bin;
+			break;
+		case CC_U32BE:
+#if _ast_intswap
+			cc->from.fun = u32s2bin;
+#else
+			cc->from.fun = u32n2bin;
+#endif
+			break;
+		case CC_U32LE:
+#if _ast_intswap
+			cc->from.fun = u32n2bin;
+#else
+			cc->from.fun = u32s2bin;
+#endif
+			break;
+#endif
 		case CC_ASCII:
+#if 0
+			if (conformance(0, 0))
+				cc->from.fun = usascii2bin;
+#endif
 			break;
 		default:
 			if (fc < 0)
@@ -1149,13 +1294,47 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 		case CC_UME:
 			cc->to.fun = bin2ume;
 			break;
-		case CC_UCS:
-			cc->to.fun = bin2ucs;
+		case CC_U16:
+			cc->to.fun = bin2u16n;
 			break;
-		case CC_SCU:
-			cc->to.fun = bin2scu;
+		case CC_U16BE:
+#if _ast_intswap
+			cc->to.fun = bin2u16s;
+#else
+			cc->to.fun = bin2u16n;
+#endif
 			break;
+		case CC_U16LE:
+#if _ast_intswap
+			cc->to.fun = bin2u16n;
+#else
+			cc->to.fun = bin2u16s;
+#endif
+			break;
+#if UTF32
+		case CC_U32:
+			cc->to.fun = bin2u32n;
+			break;
+		case CC_U32BE:
+#if _ast_intswap
+			cc->to.fun = bin2u32s;
+#else
+			cc->to.fun = bin2u32n;
+#endif
+			break;
+		case CC_U32LE:
+#if _ast_intswap
+			cc->to.fun = bin2u32n;
+#else
+			cc->to.fun = bin2u32s;
+#endif
+			break;
+#endif
 		case CC_ASCII:
+#if 0
+			if (conformance(0, 0))
+				cc->from.fun = bin2usascii;
+#endif
 			break;
 		default:
 			if (tc < 0)
@@ -1456,7 +1635,7 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, Iconv_disc_t*
 	void*			handle = 0;
 
 #if DEBUG_TRACE
-	error(DEBUG_TRACE-1, "AHA#%d iconv_move", __LINE__);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move\n", error_info.id, error_info.trace, __LINE__);
 #endif
 	/*
 	 * the old api had optional size_t* instead of Iconv_disc_t*
@@ -1490,7 +1669,7 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, Iconv_disc_t*
 	for (;;)
 	{
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move ff=%d fn=%I*d fl=%d tf=%d tn=%I*d tl=%d\n", error_info.id, error_info.trace, __LINE__, ff, sizeof(fn), fn, fl, tf, sizeof(tn), tn, tl);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move ff=%d fn=%I*d fl=%d tf=%d tn=%I*d tl=%d\n", error_info.id, error_info.trace, __LINE__, ff, sizeof(fn), fn, fl, tf, sizeof(tn), tn, tl);
 #endif
 		if (checksig && (*checksig)(handle))
 		{
@@ -1508,6 +1687,8 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d ico
 				else
 					for (j = fn; --j >= i;)
 						sfungetc(ip, fb[j]);
+				if (fn)
+					sfclrerr(ip);
 			}
 			if (n != SF_UNBOUND)
 				n = -((ssize_t)(n & (((size_t)(~0))>>1)));
@@ -1515,12 +1696,12 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d ico
 			    (!(fb = (char*)sfreserve(ip, n == SF_UNBOUND ? (-fn - 1) : n, locked = 0)) || !(fo = sfvalue(ip))))
 			{
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move count=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(fn), n == SF_UNBOUND ? (-fn - 1) : n);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move count=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(fn), n == SF_UNBOUND ? (-fn - 1) : n);
 #endif
 				break;
 			}
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move count=%I*d fn=%I*d fo=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(fn), n == SF_UNBOUND ? (-fn - 1) : n, sizeof(fn), fn, sizeof(fo), fo);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move count=%I*d fn=%I*d fo=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(fn), n == SF_UNBOUND ? (-fn - 1) : n, sizeof(fn), fn, sizeof(fo), fo);
 #endif
 			if (fn == fo)
 			{
@@ -1532,7 +1713,7 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d ico
 				fn = fo;
 			fs = fb;
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fl=%d fb=%p fn=%I*d\n", error_info.id, error_info.trace, __LINE__, fl, fb, sizeof(fn), fn);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fl=%d fb=%p fn=%I*d\n", error_info.id, error_info.trace, __LINE__, fl, fb, sizeof(fn), fn);
 #endif
 		}
 		if (tf || !tn)
@@ -1561,16 +1742,16 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d ico
 			else
 				tn = to;
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move tl=%d tb=%p tn=%I*d\n", error_info.id, error_info.trace, __LINE__, tl, tb, sizeof(tn), tn);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move tl=%d tb=%p tn=%I*d\n", error_info.id, error_info.trace, __LINE__, tl, tb, sizeof(tn), tn);
 #endif
 		}
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move r=%I*d fl=%d fs=%p fn=%I*d tl=%d ts=%p tn=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(r), r, fl, fs, sizeof(fn), fn, tl, ts, sizeof(tn), tn);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move r=%I*d fl=%d fs=%p fn=%I*d tl=%d ts=%p tn=%I*d\n", error_info.id, error_info.trace, __LINE__, sizeof(r), r, fl, fs, sizeof(fn), fn, tl, ts, sizeof(tn), tn);
 #endif
 		if (_ast_iconv(cd, &fs, &fn, &ts, &tn) == (size_t)(-1))
 		{
 #if DEBUG_TRACE
-if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fl=%d fs=%p fn=%I*d tl=%d ts=%p tn=%I*d errno=%d\n", error_info.id, error_info.trace, __LINE__, fl, fs, sizeof(fn), fn, tl, ts, sizeof(tn), tn, errno);
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fl=%d fs=%p fn=%I*d tl=%d ts=%p tn=%I*d errno=%d\n", error_info.id, error_info.trace, __LINE__, fl, fs, sizeof(fn), fn, tl, ts, sizeof(tn), tn, errno);
 #endif
 			if (errno == E2BIG)
 			{
@@ -1616,6 +1797,9 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d ico
 			ft += i;
 		}
 	}
+#if DEBUG_TRACE
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d iconv_move fb=%p fn=%zu\n", error_info.id, error_info.trace, __LINE__, fb, fn);
+#endif
 	if (fb)
 	{
 		if (locked)
@@ -1630,6 +1814,8 @@ if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d ico
 		sfwrite(op, tb, i);
 		r += i;
 	}
+	if (fn)
+		sfclrerr(ip);
 	if (e)
 		*e = disc->errors;
 	return r;

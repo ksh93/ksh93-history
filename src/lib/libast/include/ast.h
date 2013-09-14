@@ -219,6 +219,11 @@ typedef struct
 #define mbxfrm(t,f,n)	(mbcoll()?(*ast.mb_xfrm)((char*)(t),(char*)(f),n):0)
 #define mbalpha(w)	(ast.mb_alpha?(*ast.mb_alpha)(w):isalpha((w)&0xff))
 
+#define UTF8_LEN_MAX	6	/* UTF-8 only uses 5 */
+
+/* the converse does not always hold! */
+#define utf32invalid(u)	((u)>0x0010FFFF||(u)>=0x0000D800&&(u)<=0x0000DFFF||(u)>=0xFFFE&&(u)<=0xFFFF)
+
 /*
  * common macros
  */
@@ -397,7 +402,14 @@ extern intmax_t		strtonll(const char*, char**, char*, int);
 extern int		struid(const char*);
 extern int		struniq(char**, int);
 extern int		strvcmp(const char*, const char*);
-extern int		wc2utf8(char*, uint32_t);
+
+extern int		utf32toutf8(char*, uint32_t);
+extern int		utf8toutf32(uint32_t*, const char*, size_t);
+extern int		utf8toutf32v(uint32_t*, const char*);
+extern int		utf8towc(wchar_t*, const char*, size_t);
+
+extern ssize_t		utf32stowcs(wchar_t*, uint32_t*, size_t);
+extern ssize_t		wcstoutf32s(uint32_t*, wchar_t*, size_t);
 
 #undef			extern
 

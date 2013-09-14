@@ -21,6 +21,8 @@
 ***********************************************************************/
 #pragma prototyped
 
+#include <ast_standards.h>
+
 #define _AST_INTERCEPT_IMPLEMENT		2
 
 #include "astlib.h"

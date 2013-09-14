@@ -2040,11 +2040,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	struct slnod            *saveslp = mp->shp->st.staklist;
 	struct _mac_		savemac;
 	int			savtop = stktell(stkp);
-	char			lastc=0, *savptr = stkfreeze(stkp,0);
-#if SHOPT_MULTIBYTE
-	const Lc_t		*lc=lcinfo(LC_CTYPE)->lc;
-	wchar_t			lastw=0;
-#endif /* SHOPT_MULTIBYTE */
+	char			*savptr = stkfreeze(stkp,0);
 	ssize_t                 len;
 	int			was_history = sh_isstate(mp->shp,SH_HISTORY);
 	int			was_verbose = sh_isstate(mp->shp,SH_VERBOSE);
@@ -2185,19 +2181,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	mp->ifsp = nv_getval(np);
 	stkset(stkp,savptr,savtop);
 	newlines = 0;
-	if(type==3 && mp->shp->spid)
-	{
-		c = mp->shp->exitval;
-		job_wait(mp->shp->spid);
-		if(mp->shp->exitval==ERROR_NOENT)
-		{
-			mp->shp->exitval = c;
-			exitset(mp->shp);
-		}
-		if(mp->shp->pipepid==mp->shp->spid)
-			mp->shp->spid = 0;
-		mp->shp->pipepid = 0;
-	}
 	/* read command substitution output and put on stack or here-doc */
 	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
 	sfset(sp, SF_WRITE|SF_PUBLIC|SF_SHARE,0);
@@ -2239,7 +2222,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		c = dp-str;
 #endif /* SHOPT_CRNL */
 		/* delay appending trailing new-lines */
-		for(nextnewlines=0; c-->0 && str[c]=='\n'; nextnewlines++);
+		for(nextnewlines=0; c>0 && str[c-1]=='\n'; c--, nextnewlines++);
 		if(c < 0)
 		{
 			newlines += nextnewlines;
@@ -2254,42 +2237,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			else
 				sfnputc(stkp,'\n',newlines);
 		}
-		else if(lastc)
-		{
-			char mb[8];
-			mb[0] = lastc;
-			len = 1;
-#if SHOPT_MULTIBYTE
-			if(lastw)
-				len = mbconv(mb, lastw);
-			lastw = 0;
-#endif /* SHOPT_MULTIBYTE */
-			lastc = 0;
-			mac_copy(mp,mb,len);
-		}
 		newlines = nextnewlines;
-		if(++c < bufsize)
-			str[c] = 0;
-		else
-		{
-			len = 1;
-
-			/* can't write past buffer so save last character */
-#if SHOPT_MULTIBYTE
-			if ((lc->flags & LC_utf8)==0 && (len = mbsize(str))>1)
-			{
-				len = mb2wc(lastw,str,len);
-				if (len < 0)
-				{
-					lastw = 0;
-					len = 1;
-				}
-			}
-#endif /* SHOPT_MULTIBYTE */
-			c -= len;
-			lastc = str[c];
-			str[c] = 0;
-		}
 		mac_copy(mp,str,c);
 	}
 	if(was_interactive)
@@ -2304,19 +2252,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		else
 			sfnputc(stkp,'\n',newlines);
 	}
-	if(lastc)
-	{
-		char mb[8];
-		mb[0] = lastc;
-		len = 1;
-#if SHOPT_MULTIBYTE
-		if(lastw)
-			len = mbconv(mb, lastw);
-		lastw = 0;
-#endif /* SHOPT_MULTIBYTE */
-		lastc = 0;
-		mac_copy(mp,mb,len);
-	}
 	sfclose(sp);
 	return;
 }
@@ -2328,6 +2263,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register size_
 {
 	register char		*state;
 	register const char	*cp=str;
+	register const char	*ep=cp+size;
 	register int		c,n,nopat,len;
 	Stk_t			*stkp=mp->shp->stk;
 	int			oldpat = mp->pattern;
@@ -2360,7 +2296,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register size_
 		while(size-->0)
 		{
 #if SHOPT_MULTIBYTE
-			if(mbwide() && (len=mbsize(cp))>1)
+			if((len=mbnsize(cp,ep-cp))>1)
 			{
 				cp += len;
 				size -= (len-1);
@@ -2439,7 +2375,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register size_
 		{
 			n=state[c= *(unsigned char*)cp++];
 #if SHOPT_MULTIBYTE
-			if(mbwide() && n!=S_MBYTE && (len=mbsize(cp-1))>1)
+			if(n!=S_MBYTE && (len=mbnsize(cp-1,ep-cp+1))>1)
 			{
 				sfwrite(stkp,cp-1, len);
 				cp += --len;
@@ -2460,9 +2396,9 @@ static void mac_copy(register Mac_t *mp,register const char *str, register size_
 #if SHOPT_MULTIBYTE
 				if(n==S_MBYTE)
 				{
-					if(sh_strchr(mp->ifsp,cp-1)<0)
+					if(sh_strchr(mp->ifsp,cp-1,ep-cp+1)<0)
 						continue;
-					n = mbsize(cp-1) - 1;
+					n = mbnsize(cp-1,ep-cp+1) - 1;
 					if(n==-2)
 						n = 0;
 					cp += n;
@@ -2475,9 +2411,9 @@ static void mac_copy(register Mac_t *mp,register const char *str, register size_
 					while(size>0 && ((n=state[c= *(unsigned char*)cp++])==S_SPACE||n==S_NL))
 						size--;
 #if SHOPT_MULTIBYTE
-					if(n==S_MBYTE && sh_strchr(mp->ifsp,cp-1)>=0)
+					if(n==S_MBYTE && sh_strchr(mp->ifsp,cp-1,ep-cp+1)>=0)
 					{
-						n = mbsize(cp-1) - 1;
+						n = mbnsize(cp-1,ep-cp+1) - 1;
 						if(n==-2)
 							n = 0;
 						cp += n;

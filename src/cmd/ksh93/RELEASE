@@ -1,4 +1,37 @@
-13-08-27  --- Release ksh93v- ---
+13-09-13  --- Release ksh93v- ---
+13-09-13 +The signal .sh.value variable is now a compound variable with the name
+	  value.q corresponding to kill -q signed-integer and value.Q corresponding
+	  to kill -Q unsigned-large-integer.
+13-09-13  A bug in $(...) command substitution that corrupted a trailing
+          multibyte character in non-UTF-8 locales has been fixed.
+13-09-13  Eliminted extranesous output of standard error when ksh is invoked
+	  with the -v (verbose) option.
+13-09-10  A bug in finding a function defined inside a type that was defined
+	  in a namespace has been fixed.
+13-09-10  A bug in the binding of function local variables inside arithmeitc
+	  expression inside namespaces was fixed.
+13-09-10 +A -Q option was added to kill to pass integers as large as pointers.
+	  The -q option now only accepts integers as large as typeset -i. 
+13-09-09  A bug in command substitution has been fixed.
+13-09-09  Qualified print format "%([no]unicode)q" added to prefer \u[...]
+	  over \w[...] and override LC_OPTIONS=unicode.
+13-09-04 +\w[hex] locale-specific code point literals have been added.
+13-09-04 +The float(f) math function was added.
+13-09-04 +The int(f) math function was fixed to return 0 for floating point
+	  numbers larger than the maximum integer.
+13-09-04  A bug in which assigning a compound indexed array a value of () did
+	  not preserve the -C attribute has been fixed.
+13-09-04  kill -q can now pass numbers as large as typeset -li and
+	  .sh.sig.value is typeset -i rather than a compound variable.
+13-09-04  kill -q yields the processor and returns 2 when siqueue fails with
+	  EAGAIN and yield.
+13-09-03  A bug in which $((x.xxx)) where x is a floating point variable and
+	  xxx is not one of the known extensions yields a random value has
+	  been fixed.  It now is unset which has value 0 when set -u is off.
+13-09-03  A bug in overriding discipline functions for types defined in
+	  namespaces has been fixed.
+13-09-03  A bug which on some systems caused a core dump for large <<< here
+	  documents has been fixed.
 13-08-27 +enum constants can have .DIG, .MAX, or .MIN sub-variables.
 13-08-26 +Floating variables can be following by DIG, MAX, MIN, EPSILON, 
 	  INT_MAX, INT_MIN, or MAX_10_EXP to give values correspong to

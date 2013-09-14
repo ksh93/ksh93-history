@@ -138,4 +138,53 @@ namespace com.foo.test1
 .com.foo.test1.y_t v
 [[ $(v.x.pr) == 9/5 ]] || err_exit  '_.__ not working with nested types in a namespace'
 
+namespace a.b
+{
+	function f1 { print OK ; }
+	function f2 { f1 ; }
+	[[ $(f2) == OK ]] 2> /dev/null || err_exit 'function defined in namespace not found when referenced by another function in the namespace'
+}
+
+namespace org.terror
+{
+	typeset -T x_t=(
+		function method_a { print xxx; }
+	)
+	function main
+	{
+		x_t x1
+		x_t x2=(
+			function method_a { print yyy; }
+		)
+		x1.method_a
+    		x2.method_a
+	}
+	[[ $(main 2> /dev/null)  == $'xxx\nyyy' ]] || err_exit 'discipline override type defined in namespace not working'
+}
+
+namespace a.b
+{
+	function f
+	{
+		integer i=1
+		typeset s=abcd
+		[[ $(print "${s:i++:1}") == b ]] || err_exit 'binding function local variables in functions defined in namespace not working'
+	}
+	f
+}
+
+namespace a.b
+{
+	typeset -T y_t=(
+		integer i=9
+		function px { p "${_.i}"; }
+	)
+        function p { printf "%q\n" "$1" ;}
+	y_t x
+	[[ $(x.px 2> /dev/null) == 9 ]] || err_exit 'function defined in type not found from within a namespace'
+}
+[[ $(.a.b.x.px 2> /dev/null) == 9 ]] || err_exit 'function defined in type no
+t found from outside a.b namespace'
+
+
 exit $((Errors<125?Errors:125))

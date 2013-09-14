@@ -675,4 +675,11 @@ typeset -i c.car[c.cari++].int=99
 typeset -i c.car[c.cari++].int=44
 (( c.cari == 2 )) || err_exit "c.car has ${c.cari} array should have two elements"
 
+unset c
+compound c
+compound -a c.c=( [4][5]=(integer i=5))
+c.c=()
+exp=$'(\n\ttypeset -C -a c\n)'
+[[ $(print -v c) == "$exp" ]] || err_exit 'setting compound array c.c=() does not preserve -C attribute'
+
 exit

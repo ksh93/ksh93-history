@@ -679,8 +679,8 @@ x=$($SHELL -c 'foo=bar foobar=fbar; print -r -- ${!foo*}')
 
 [[ ${!.sh.sig@} == *.sh.sig.pid* ]]  ||  err_exit '.sh.sig.pid not in ${!.sh.sig@]}'
 [[ ${!.sh.sig@} == *.sh.sig.status* ]]  ||  err_exit '.sh.sig.status not in ${!.sh.sig@]}'
-[[ ${!.sh.sig@} == *.sh.sig.value.int* ]]  ||  err_exit '.sh.sig.value.int not in ${!.sh.sig@]}'
-[[ ${!.sh.sig@} == *.sh.sig.value.ptr* ]]  ||  err_exit '.sh.sig.value.ptr not in ${!.sh.sig@]}'
+[[ ${!.sh.sig@} == *.sh.sig.value.q* ]]  ||  err_exit '.sh.sig.value.q not in ${!.sh.sig@]}'
+[[ ${!.sh.sig@} == *.sh.sig.value.Q* ]]  ||  err_exit '.sh.sig.value.Q not in ${!.sh.sig@]}'
 
 unset x
 integer x=1

@@ -110,8 +110,7 @@ static Vmemory_f	_Vmemoryf = 0;
 	if ((a) && (_Vmassert & VM_usage)) \
 	{ \
 		Vmstat_t	vs; \
-		if (_vmstat(v, &vs, z) >= 0) \
-			debug_printf(2, "vmalloc: %p %zu %s\n", (a), (z), vs.mesg); \
+		debug_printf(2, "vmalloc: %p %zu %s\n", (a), (z), _vmstat(v, &vs, z) >= 0 ? vs.mesg : "init"); \
 	}
 
 /*

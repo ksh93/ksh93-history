@@ -1,5 +1,20 @@
+13-09-12 misc/fgetcwd.c: fix stat corruption bug on systems without fdopendir()
+13-09-12 path/pathcanon.c: fix bug that added extra / when fgetcwd() returned /
+13-09-09 comp/setlocale.c,port/codeset.c: consistent handling of US-ASCII + conformance(0,0) across all os's
+13-09-09 string/utf8towc.c,string/wctoutf8.c: add { utf8toutf32() utf8towc() wctoutf8() }
+13-09-07 include/ast_std.c,comp/setlocale.c,string/stresc.c: add ast.byte_max for single byte locales
+13-09-06 comp/iconv.c: add sfclrerr() to iconv_move() if all input chars not consumed
+13-09-06 port/codeset.h,port/codeset.c: internal api for retrieving locale codeset names
+13-09-04 string/chresc.c,stresc.c: add \w[hex] support -- thanks Roland
+13-09-04 string/utf32stowcs.c,string/wcstoutf32s.c: add -- thanks Roland
+13-09-04 sfio/sfsetbuf.c: fix bug where SF_GETR mode was not cleared causing subsequent memory corruption
+13-09-04 vmalloc/vmopen.c,vmdcsystem.c,vmstat.c: temporarily set vm->meth.meth=0 to disable vmstat() during init
+13-09-04 port/intercept.c: include <ast_standards.h> to ensure fdopendir() prototype if _lib_fdopendir
+13-09-04 include/ast_std.h,comp/setlocale.c: add LC_OPTIONS=unicode and AST_LC_unicode
+13-09-01 path/pathcanon.c: O_* flags dev path: /dev/file/flags@flag[,flag...]@[/]path
+13-09-01 path/pathcanon.c: limit NAMED_XATTR paths to /dev/file/xattr@canonical-path//@//[remainder]
+13-08-29 cdt/dtstrhash.c: change sign-bit hitting fnv constants to hex to silence unsigned warnings
 13-08-26 features/float: fix (FLT|DBL|LDBL)_*_(MIN|MAX) algorithm to not use exact powers of 2!!
-13-08-25 path/pathcanon.c: finalize //@// extended/hidden attribute namespace *for testing*
 13-08-24 include/fts.h,misc/fts.c: make preparations for FTS.fts_dirfd, fdopendir(), fgetcwd(), openat(), fstatat()
 13-08-23 path/pathcanon.c: add PATH_DROP_LEAD_SLASH2 and PATH_DROP_TAIL_SLASH to unify ast c14n
 13-08-23 features/float: add (FLT|DBL|LDBL)_EPSILON logic

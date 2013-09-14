@@ -313,7 +313,7 @@ static Namval_t	*check_limits(Shell_t *shp, char *cp)
 	{
 		const Fltconst_t *fp = fltconst;
 		n = sizeof(fltconst)/sizeof(Fltconst_t);
-		for(; n>0; fp++,n--)
+		for(; n-->0; fp++)
 		{
 			if(strcmp(fp->name,ep)==0)
 				break;
@@ -692,11 +692,6 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 						goto skip2;
 					}
 #endif
-#if SHOPT_NAMESPACE
-
-					if(shp->namespace && !(lvalue->emode&ARITH_COMP))
-						root = nv_dict(shp->namespace);
-#endif /* SHOPT_NAMESPACE */
 					if(shp->namref_root && !(lvalue->emode&ARITH_COMP))
 						np = nv_open(*ptr,shp->namref_root,NV_NOREF|NV_NOASSIGN|NV_VARNAME|NV_NOSCOPE|NV_NOADD|dot);
 					if(!np)
@@ -853,7 +848,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		}
 		if(lvalue->userfn && (ap=nv_arrayptr(np)) && (ap->flags&ARRAY_UNDEF))
 		{
-			r = (Sfdouble_t)((Sflong_t)np);
+			r = (Sfdouble_t)integralof(np);
 			lvalue->isfloat=3;
 			return(r);
 		}

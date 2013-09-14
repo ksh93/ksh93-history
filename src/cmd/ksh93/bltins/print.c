@@ -69,17 +69,18 @@ struct printmap
 	size_t		size;
 	char		*name;
 	char		map[3];
-	const char	*description;
 };
 
 static const struct printmap  Pmap[] =
 {
-	3,	"csv",	"q+",	"Equivalent to %#q",
-	4,	"html",	"H",	"Equivalent to %H",
-	3,	"ere",	"R",	"Equivalent to %R",
-	7,	"pattern","P",	"Equivalent to %#P",
-	3,	"url",	"H+",	"Equivalent to %#H",
-	0,	0,	0,
+	3,	"csv",		"#q",
+	3,	"ere",		"R",
+	4,	"html",		"H",
+	9,	"nounicode",	"0q",
+	7,	"pattern",	"P",
+	7,	"unicode",	"+q",
+	3,	"url",		"#H",
+	0,	0,		0,
 };
 
 
@@ -154,9 +155,7 @@ static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 	const struct printmap *pm;
 	char c='%';
 	for(pm=Pmap;pm->size>0;pm++)
-	{
-		sfprintf(sp, "[+%c(%s)q?%s.]",c,pm->name,pm->description);
-	}
+		sfprintf(sp, "[+%c(%s)q?Equivalent to %%%s.]",c,pm->name,pm->map);
 	return(1);
 }
 
@@ -421,9 +420,11 @@ static char strformat(char *s)
                         s = p;
 #if SHOPT_MULTIBYTE
 #if defined(FMT_EXP_WIDE)
+			if(c<0) /* conversion failed => empty string */
+				continue;
 			if(w)
 			{
-				t += mbwide() ? mbconv(t, c) : wc2utf8(t, c);
+				t += mbconv(t, c);
 				continue;
 			}
 #else
@@ -799,9 +800,20 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 				const char *fp = mapformat(fe);
 				if(fp)
 				{
+					if (!isalpha(*fp))
+						switch (*fp++)
+						{
+						case '#':
+							fe->flags |= SFFMT_ALTER;
+							break;
+						case '+':
+							fe->flags |= SFFMT_SIGN;
+							break;
+						case '0':
+							fe->flags |= SFFMT_ZERO;
+							break;
+						}
 					format = *fp;
-					if(fp[1])
-						fe->flags |=SFFMT_ALTER;
 				}
 			}
 		case 'b':
@@ -980,7 +992,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		value->s = fmthtml(shp,value->s, fe->flags);
 		break;
 	case 'q':
-		value->s = sh_fmtqf(value->s, !!(fe->flags & SFFMT_ALTER), fold);
+		value->s = sh_fmtqf(value->s, fe->flags, fold);
 		break;
 	case 'P':
 		s = fmtmatch(value->s);

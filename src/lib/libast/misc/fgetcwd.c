@@ -43,11 +43,6 @@ NoN(fgetcwd)
 #define ERANGE			E2BIG
 #endif
 
-#if !_lib_fdopendir
-#undef	fstatat
-#define	fstatat(d,f,s,o)	lstat(f,s)
-#endif
-
 #define ERROR(e)		{ errno = e; goto error; }
 
 /*
@@ -70,9 +65,7 @@ fgetcwd(int fd, char* buf, size_t len)
 	register char*	p;
 	register char*	s;
 	DIR*		dirp = 0;
-#if _lib_fdopendir
 	int		dd;
-#endif
 	int		f = FS3D_OFF;
 	int		n;
 	int		x;
@@ -145,7 +138,7 @@ fgetcwd(int fd, char* buf, size_t len)
 	*p = 0;
 	n = elementsof(env);
 #if !_lib_fdopendir
-	if (fd != AT_FDCWD && fchdir(fd))
+	if ((dd = fd) != AT_FDCWD && fchdir(dd))
 		ERROR(errno);
 #endif
 	for (;;)
@@ -212,7 +205,7 @@ fgetcwd(int fd, char* buf, size_t len)
 			*--p = '/';
 		while ((p -= namlen) <= (buf + 1))
 		{
-			x = (buf + len - 1) - (p += namlen);
+			x = (buf + len - 1) - (p + namlen);
 			s = buf + len;
 			if (extra < 0 || !(buf = newof(buf, char, len += PATH_MAX, extra)))
 				ERROR(ERANGE);
@@ -223,6 +216,13 @@ fgetcwd(int fd, char* buf, size_t len)
 		if (n < elementsof(env))
 		{
 			memcpy(p, env[n].path, namlen);
+			break;
+		}
+		if (namlen == 1 && entry->d_name[0] == '.')
+		{
+			p = buf + len - 1;
+			*p = 0;
+			*--p = '/';
 			break;
 		}
 		memcpy(p, entry->d_name, namlen);
@@ -244,7 +244,12 @@ fgetcwd(int fd, char* buf, size_t len)
 	if (env[0].path)
 		free(env[0].path);
 	env[0].path = strdup(buf);
-	closedir(dirp);
+#if !_lib_fdopendir
+	if (dd != AT_FDCWD)
+		fchdir(dd);
+#endif
+	if (dirp)
+		closedir(dirp);
 	if (f != FS3D_OFF)
 		fs3d(f);
 	return buf;
@@ -254,7 +259,8 @@ fgetcwd(int fd, char* buf, size_t len)
 	if (dirp)
 		closedir(dirp);
 #if !_lib_fdopendir
-	fchdir(fd);
+	if (dd != AT_FDCWD)
+		fchdir(dd);
 #endif
 	if (f != FS3D_OFF)
 		fs3d(f);

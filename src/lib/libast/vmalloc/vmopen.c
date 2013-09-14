@@ -52,7 +52,7 @@ int		mode;	/* type of region		*/
 	ssize_t		algn, incr, vdsz, vmsz, sgsz, size;
 	Vmuchar_t	*addr, *base;
 	Seg_t		*seg = (Seg_t*)Version; /* stop compiler's warning */
-	int		rv, initheap = 0;
+	int		rv, mt, initheap = 0;
 	/**/DEBUG_COUNT(N_open);
 
 	if(mode & VM_HEAPINIT)
@@ -70,6 +70,8 @@ int		mode;	/* type of region		*/
 	vmp = &vmproto; /* avoid memory allocation at the start */
 	memset(vmp, 0, sizeof(Vmalloc_t));
 	memcpy(&vmp->meth, meth, sizeof(Vmethod_t));
+	mt = vmp->meth.meth;
+	vmp->meth.meth = 0;
 	vmp->data = &vdproto;
 	memset(vmp->data, 0, sizeof(Vmdata_t) );
 	vmp->data->mode = mode;
@@ -151,6 +153,7 @@ int		mode;	/* type of region		*/
 		vd->lock = 0;
 	}
 	vmp->data = vd;
+	vmp->meth.meth = mt;
 
 	/* now make the region handle */
 	if(vmo)

@@ -158,6 +158,8 @@ extern char*		strerror(int);
 #define AST_LC_LANG		255
 
 #define AST_LC_internal		1
+#define AST_LC_unicode		(1L<<24)
+#define AST_LC_utf8		(1L<<25)
 #define AST_LC_test		(1L<<26)
 #define AST_LC_setenv		(1L<<27)
 #define AST_LC_find		(1L<<28)
@@ -256,8 +258,12 @@ typedef struct
 	int		(*mb_alpha)(wchar_t);
 
 	int		pwd;
+	int		byte_max;
 
-	char		pad[936 - sizeof(void*) - sizeof(int)];
+	void*		mb_uc2wc;
+	void*		mb_wc2uc;
+
+	char		pad[936 - sizeof(void*) - 2 * sizeof(int) - 2 * sizeof(void*)];
 
 } _Ast_info_t;
 

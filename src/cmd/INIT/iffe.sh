@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2013-07-17 # update in USAGE too #
+version=2013-08-11 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -4045,6 +4045,9 @@ $std
 $usr
 $pre
 $inc
+#ifdef _IFFE_type
+$v i;
+#else
 typedef int (*_IFFE_fun)();
 #ifdef _IFFE_extern
 _BEGIN_EXTERNS_
@@ -4052,6 +4055,7 @@ extern int $v();
 _END_EXTERNS_
 #endif
 static _IFFE_fun i=(_IFFE_fun)$v;int main(){return ((unsigned int)i)^0xaaaa;}
+#endif
 "
 					d=-D_IFFE_extern
 					if	compile $cc -c $tmp.c <&$nullin >&$nullout
@@ -4079,8 +4083,10 @@ static _IFFE_fun i=(_IFFE_fun)$v;int main(){return ((unsigned int)i)^0xaaaa;}
 								;;
 							esac
 						fi
-					else	case $intrinsic in
-						'')	copy $tmp.c "
+					else	if	compile $cc -D_IFFE_type -c $tmp.c <&$nullin >&$nullout
+						then	c=1
+						else	case $intrinsic in
+							'')	copy $tmp.c "
 $tst
 $ext
 $std
@@ -4092,13 +4098,15 @@ extern int foo();
 _END_EXTERNS_
 static int ((*i)())=foo;int main(){return(i==0);}
 "
-							compile $cc -c $tmp.c <&$nullin >&$nullout
-							intrinsic=$?
-							;;
-						esac
+								compile $cc -c $tmp.c <&$nullin >&$nullout
+								intrinsic=$?
+								;;
+							esac
+							c=$intrinsic
+						fi
 						case $o in
-						mth)	report $intrinsic 1 "$v() in math lib" "$v() not in math lib" "default for function $v()" ;;
-						*)	report $intrinsic 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()" ;;
+						mth)	report $c 1 "$v() in math lib" "$v() not in math lib" "default for function $v()" ;;
+						*)	report $c 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()" ;;
 						esac
 					fi
 					;;

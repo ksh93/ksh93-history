@@ -93,6 +93,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+13-08-11 iffe.sh: executed blocks now have a single argument that is a tmp file prefix
+13-08-11 iffe.sh: fix intrinsic function test to rule out type names
 13-07-17 iffe.sh: add '^#include.*iffe --include-first' for *.c feature test macro initialization
 13-07-17 package.sh: refix 13-06-17 fix to check both $CC and $CCFLAGS
 13-06-24 add -lsocket => -lsocket -lnsl for systems that don't have it in -lc

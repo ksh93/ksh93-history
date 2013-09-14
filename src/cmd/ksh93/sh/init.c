@@ -2117,7 +2117,7 @@ static void stat_init(Shell_t *shp)
 	if(!fp)
 		return;
 	sp = (struct Svars*)fp;
-	sp->data = (void*)((char*)sp + fp->dsize);
+	sp->data = (void*)((char*)sp + fp->dsize + sizeof(void*));
 	signame = (char*)sp->data+sizeof(siginfo_t);
 	memcpy(sp->data,sip,sizeof(siginfo_t));
 	sip = (siginfo_t*)sp->data;
@@ -2151,11 +2151,11 @@ static void stat_init(Shell_t *shp)
 	nv_setsize(np,16);
 	np->nvalue.llp = (Sflong_t*)&sip->si_addr;
 	np = create_svar(SH_SIG,"value",0,fp);
-	np = create_svar(SH_SIG,"value.int",0,fp);
+	np = create_svar(SH_SIG,"value.q",0,fp);
 	nv_setsize(np,10);
 	np->nvalue.ip = &(sip->si_value.sival_int);
-	np = create_svar(SH_SIG,"value.ptr",0,fp);
-	nv_setsize(np,16);
+	np = create_svar(SH_SIG,"value.Q",0,fp);
+	nv_setsize(np,10);
 	np->nvalue.llp = (Sflong_t*)&(sip->si_value.sival_ptr);
     }
 #endif

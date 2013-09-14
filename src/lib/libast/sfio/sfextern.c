@@ -40,7 +40,7 @@ static void _sfoncef()
 #if _ast_sizeof_pointer < 8
 #define SF_MAXM_DEFAULT		(0)
 #else
-#define SF_MAXM_DEFAULT		(16*1024*1024)
+#define SF_MAXM_DEFAULT		(128*1024*1024)
 #endif
 
 #define SF_TEST_DEFAULT		(0)
