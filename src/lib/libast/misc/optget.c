@@ -984,21 +984,23 @@ init(register char* s, Optpass_t* p)
 	char*		e;
 	int		l;
 
-	if (!state.localized)
-	{
-		state.localized = 1;
-#if !_PACKAGE_astsa
-		if (!ast.locale.serial)
-			setlocale(LC_ALL, "");
+#if _BLD_DEBUG
+	error(-2, "optget debug localized=%lu:%lu xp=%p", state.localized, ast.locale.serial, state.xp);
 #endif
+#if !_PACKAGE_astsa
+	if (!state.localized || state.localized != ast.locale.serial)
+	{
+		state.localized = ast.locale.serial;
+		setlocale(LC_ALL, "");
+	}
+#endif
+	if (!state.xp)
+	{
 		state.xp = sfstropen();
 		if (!map[OPT_FLAGS[0]])
 			for (n = 0, t = OPT_FLAGS; *t; t++)
 				map[*t] = ++n;
 	}
-#if _BLD_DEBUG
-	error(-2, "optget debug");
-#endif
 	p->oopts = s;
 	p->version = 0;
 	p->prefix = 2;

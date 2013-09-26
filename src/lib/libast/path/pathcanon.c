@@ -31,7 +31,7 @@
  *	/.. preserved (for pdu and newcastle hacks)
  *	if (flags&PATH_ABSOLUTE) then pwd prepended to relative paths
  *	if (flags&PATH_PHYSICAL) then symlinks resolved at each component
- *	if (flags&PATH_DOTDOT) then each .. checked for access
+ *	if (flags&(PATH_DOTDOT|PATH_PHYSICAL)) then each .. checked for access
  *	if (flags&PATH_EXISTS) then path must exist at each component
  *	if (flags&PATH_VERIFIED(n)) then first n chars of path exist
  * 
@@ -46,14 +46,18 @@
  * see pathopen() for the api that ties it all together
  */
 
-#if !_BLD_3d
-
-#define _AST_API_H	1
+#define _AST_API_IMPLEMENT	1
 
 #include <ast.h>
 #include <ls.h>
 #include <fs3d.h>
 #include <error.h>
+
+#ifndef	ELOOP
+#define ELOOP	EINVAL
+#endif
+
+#if !_BLD_3d
 
 char*
 pathcanon(char* path, int flags)
@@ -61,9 +65,13 @@ pathcanon(char* path, int flags)
 	return pathcanon_20100601(path, PATH_MAX, flags);
 }
 
-#undef	_AST_API_H
+#endif
+
+#undef	_AST_API_IMPLEMENT
 
 #include <ast_api.h>
+
+#if !_BLD_3d
 
 char*
 pathcanon_20100601(char* path, size_t size, int flags)
@@ -110,6 +118,117 @@ pathcanon_20100601(char* path, size_t size, int flags)
 				n = n * 10 + (*s - '0'); \
 	} while (0)
 
+#define OFLAG(s)		s, (unsigned char)sizeof(s)-1
+
+/* /dev/file/flags@... O_flag table */
+
+typedef struct Oflags_s
+{
+	const char		name[15];
+	const unsigned char	length;
+	const int		oflag;
+} Oflags_t;
+
+static const Oflags_t	oflags[] =
+{
+	{
+		OFLAG("async"),
+#ifdef O_ASYNC
+		O_ASYNC
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("direct"),
+#ifdef O_DIRECT
+		O_DIRECT
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("directory"),
+#ifdef O_DIRECTORY
+		O_DIRECTORY
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("dsync"),
+#ifdef O_DSYNC
+		O_DSYNC
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("exec"),
+#ifdef O_EXEC
+		O_EXEC
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("nofollow"),
+#ifdef O_NOFOLLOW
+		O_NOFOLLOW
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("nolinks"),
+#ifdef O_NOLINKS
+		O_NOLINKS
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("nonblock"),
+#ifdef O_NONBLOCK
+		O_NONBLOCK
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("rsync"),
+#ifdef O_RSYNC
+		O_RSYNC
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("search"),
+#ifdef O_SEARCH
+		O_SEARCH
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("sync"),
+#ifdef O_SYNC
+		O_SYNC
+#else
+		0
+#endif
+	},
+	{
+		OFLAG("xattr"),
+#ifdef O_XATTR
+		O_XATTR
+#else
+		0
+#endif
+	},
+};
+
 /*
  * check for ast pseudo dev/attribute paths and optionally canonicalize
  *
@@ -131,6 +250,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	char*		z;
 	char*		a;
 	char*		b;
+	char*		e;
 	int		c;
 	int		n;
 	int		loop;
@@ -143,23 +263,12 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	oerrno = errno;
 	if (!dev)
 		dev = &nodev;
+	dev->fd = -1;
 	dev->oflags = 0;
 	dev->path.offset = 0;
-
-	/* lazy here -- we will never (modulo PATH_ABSOLUTE) produce a path longer than strlen(path)+1 */
-
-	if (canon)
-	{
-		if (!size)
-			size = strlen(path) + 1;
-		else if (size <= strlen(path))
-		{
-			errno = EINVAL;
-			return 0;
-		}
-	}
-	else if (!size)
-		size = strlen(path);
+	if (!size)
+		size = strlen(path) + 1;
+	e = canon + size;
 	p = (char*)path;
 	inplace = p == canon;
  again:
@@ -200,7 +309,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 #else
 			{
 				errno = ENOENT;
-				return 0;
+				goto nope;
 			}
 #endif
 			if (s[0] == '/')
@@ -250,85 +359,32 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					if (s[0] == 'f' && s[1] == 'l' && s[2] == 'a' && s[3] == 'g' && s[4] == 's' && s[5] == '@')
 					{
 						s += 6;
-						for (;;)
+						do
 						{
-							if (s[0] == 'a' && s[1] == 's' && s[2] == 'y' && s[3] == 'n' && s[4] == 'c' && (s[5] == ',' || s[5] == '@'))
-							{
-#ifdef O_ASYNC
-								s += 5;
-								dev->oflags |= O_ASYNC;
-#else
-								errno = ENXIO;
-								return 0;
-#endif
-							}
-							else if (s[0] == 'd' && s[1] == 'i' && s[2] == 'r' && s[3] == 'e' && s[4] == 'c' && s[5] == 't')
-							{
-								if (s[6] == ',' || s[6] == '@')
-								{
-#ifdef O_DIRECT
-									s += 6;
-									dev->oflags |= O_DIRECT;
-#else
-									errno = ENXIO;
-									return 0;
-#endif
-								}
-								else if (s[6] == 'o' && s[7] == 'r' && s[8] == 'y' && (s[9] == ',' || s[9] == '@'))
-								{
-#ifdef O_DIRECTORY
-									s += 9;
-									dev->oflags |= O_DIRECTORY;
-#else
-									errno = ENXIO;
-									return 0;
-#endif
-								}
-								else
+							for (v = s; *s != ',' && *s != '@'; s++)
+								if (!*s)
 								{
 									errno = EINVAL;
-									return 0;
+									goto nope;
 								}
-							}
-							else if (s[0] == 'n' && s[1] == 'o' && s[2] == 'n' && s[3] == 'b' && s[4] == 'l' && s[5] == 'o' && s[6] == 'c' && s[7] == 'k' && (s[8] == ',' || s[8] == '@'))
-							{
-#ifdef O_NONBLOCK
-								s += 8;
-								dev->oflags |= O_NONBLOCK;
-#else
-								errno = ENXIO;
-								return 0;
-#endif
-							}
-							else if (s[0] == 's' && s[1] == 'y' && s[2] == 'n' && s[3] == 'c' && (s[4] == ',' || s[4] == '@'))
-							{
-#ifdef O_SYNC
-								s += 4;
-								dev->oflags |= O_SYNC;
-#else
-								errno = ENXIO;
-								return 0;
-#endif
-							}
-							else if (s[0] == 'x' && s[1] == 'a' && s[2] == 't' && s[3] == 't' && s[4] == 'r' && (s[5] == ',' || s[5] == '@'))
-							{
-#ifdef O_XATTR
-								s += 5;
-								dev->oflags |= O_XATTR;
-#else
-								errno = ENXIO;
-								return 0;
-#endif
-							}
-							else if (*s != '@')
-							{
-								errno = EINVAL;
-								return 0;
-							}
-							if (*s++ == '@')
-								break;
-						}
-						dev->fd = -1;
+							c = s - v;
+							for (n = 0;; n++)
+								if (n >= elementsof(oflags))
+								{
+									errno = EINVAL;
+									goto nope;
+								}
+								else if (oflags[n].length == c && !memcmp(oflags[n].name, v, c))
+								{
+									if (!oflags[n].oflag)
+									{
+										errno = ENXIO;
+										goto nope;
+									}
+									dev->oflags |= oflags[n].oflag;
+									break;
+								}
+						} while (*s++ == ',');
 						dev->pid = -1;
 						dev->prot.offset = 0;
 						if (!s[0] && (flags & PATH_DEV))
@@ -349,7 +405,6 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					else if (s[0] == 'x' && s[1] == 'a' && s[2] == 't' && s[3] == 't' && s[4] == 'r' && s[5] == '@')
 					{
 						s += 6;
-						dev->fd = -1;
 						dev->pid = -1;
 						dev->prot.offset = 0;
 #if NAMED_XATTR
@@ -363,7 +418,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 							x = r;
 #else
 						errno = ENXIO;
-						return 0;
+						goto nope;
 #endif
 					}
 				}
@@ -401,14 +456,12 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 							s = t + strlen(t);
 							dev->port.size = s - t;
 						}
-						dev->fd = -1;
 						dev->pid = -1;
 						r = s;
 					}
 					else if (flags & PATH_DEV)
 					{
 						dev->port.offset = 0;
-						dev->fd = -1;
 						dev->pid = -1;
 						r = t;
 					}
@@ -444,8 +497,6 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 			}
 		}
 	}
-	else
-		dev->fd = -1;
 	if (r && (!x || canon))
 	{
 		if (!(t = canon))
@@ -480,9 +531,9 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 						for (r = buf + (t - r); r > buf && *(r - 1) == '/'; r--);
 						*r = 0;
 					}
-					if ((dev->fd = openat(dfd, buf, O_INTERCEPT|O_RDONLY|O_CLOEXEC|dev->oflags)) < 0)
+					if ((dev->fd = openat(dfd, buf, O_INTERCEPT|O_RDONLY|O_NONBLOCK|O_CLOEXEC|dev->oflags)) < 0)
 						r = 0;
-					else if ((n = openat(dev->fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR)) < 0)
+					else if ((n = openat(dev->fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR|O_NONBLOCK)) < 0)
 					{
 						r = 0;
 						close(dev->fd);
@@ -528,31 +579,34 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 	{
 		if (inplace)
 		{
-			/* XXX -- TODO -- avoid fmtbuf() by sliding this part to the right and adjusting fgetcwd() size below */
-			z = x ? s : (char*)path;
+			z = x || (flags & PATH_PHYSICAL) && dev->fd >= 0 ? s : (char*)path;
 			n = strlen(z) + 1;
-			a = fmtbuf(n);
-			memcpy(a, z, n);
+			a = (char*)path + size - n;
+			memmove(a, z, n);
 		}
 		else
-			a = (char*)path;
-		z = (x || dev->fd < 0) ? t : p;
-		if (fgetcwd(dev->fd >= 0 ? dev->fd : AT_FDCWD, z, size - strlen(r)))
 		{
-			r = t = z;
-			t += strlen(t);
-			if ((t - z) > 1)
-				*t++ = '/';
-			s = a;
-			v = t;
-			if (dev->fd >= 0)
-			{
-				s += dev->path.offset;
-				dev->path.offset = 0;
-			}
+			a = s;
+			n = strlen(a) + 1;
+		}
+		z = (x || dev->fd < 0) ? t : p;
+		if (fgetcwd(dev->fd >= 0 ? dev->fd : AT_FDCWD, z, size - n - 1))
+		{
+			r = v = z;
+			v += strlen(v);
+			if ((v - z) > 1)
+				*v++ = '/';
+			if (inplace)
+				memmove(v, a, n);
+			else
+				memcpy(v, a, n);
+			s = v = r;
 		}
 		else if (*s != '/')
-			return 0;
+			goto nope;
+		dev->path.offset = 0;
+		t = s;
+		inplace = 1;
 	}
 	if (!(flags & PATH_DROP_HEAD_SLASH2) && s[0] == '/' && s[1] == '/')
 	{
@@ -573,7 +627,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 #if NAMED_XATTR
 	z = 0;
 #endif
-	for (;;)
+	while (t <= e)
 		switch (*t++ = *s++)
 		{
 		case '.':
@@ -594,20 +648,14 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					t -= 2;
 				break;
 			case 2:
-				if ((flags & (PATH_DOTDOT|PATH_EXISTS)) == PATH_DOTDOT && (t - 2) >= v)
+				if ((flags & (PATH_DOTDOT|PATH_PHYSICAL)) && (t - 3) >= v)
 				{
 					struct stat	st;
 
-					*(t - 2) = 0;
+					*(t - 3) = 0;
 					if (fstatat(dfd, canon, &st, 0))
-					{
-						if (inplace)
-							memmove(canon, s, strlen(s) + 1);
-						else
-							strcpy(canon, s);
-						return 0;
-					}
-					*(t - 2) = '.';
+						goto nope;
+					*(t - 3) = '.';
 				}
 #if NAMED_XATTR
 				if ((t - 3) == z)
@@ -640,55 +688,52 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 				r = t;
 				break;
 			default:
-				if ((flags & PATH_PHYSICAL) && loop < 32 && (t - 1) > (x ? x : canon))
+				if ((flags & PATH_PHYSICAL) && (t - 1) > (x ? x : canon) && (loop < 32 || (flags & PATH_EXISTS) || *s && (flags & PATH_EXCEPT_LAST)))
 				{
 					char	buf[PATH_MAX];
 
+					if (loop >= 32)
+					{
+						errno = ELOOP;
+						goto nope;
+					}
 					c = *(t - 1);
 					*(t - 1) = 0;
 					dots = pathgetlink(x ? x : canon, buf, sizeof(buf));
 					*(t - 1) = c;
 					if (dots > 0)
 					{
+						if ((t + dots + 1) >= e)
+							goto nope;
 						loop++;
 						strcpy(buf + dots, s - (*s != 0));
 						if (*buf == '/')
 							p = r = x ? x : canon;
-						v = s = t = p;
+						inplace = 1;
+						s = t = p;
 						strcpy(p, buf);
 					}
 					else if (dots < 0 && errno == ENOENT)
 					{
+						if (!*s && (flags & PATH_EXCEPT_LAST))
+							break;
 						if (flags & PATH_EXISTS)
-						{
-							if (inplace)
-								memmove(canon, s, strlen(s) + 1);
-							else
-								strcpy(canon, s);
-							return 0;
-						}
-						flags &= ~(PATH_PHYSICAL|PATH_DOTDOT);
+							goto nope;
+						flags &= ~(PATH_DOTDOT|PATH_PHYSICAL);
 					}
-					dots = 4;
+				}
+				else if ((flags & PATH_EXISTS) && (t - 1) >= v && (t > canon + 1 || t > canon && *(t - 1) && *(t - 1) != '/'))
+				{
+					struct stat	st;
+
+					*(t - 1) = 0;
+					if (fstatat(dfd, canon, &st, (flags & PATH_EXCEPT_LAST) && !*s ? AT_SYMLINK_NOFOLLOW : 0))
+						goto nope;
+					v = t;
+					if (*s)
+						*(t - 1) = '/';
 				}
 				break;
-			}
-			if (dots >= 4 && (flags & PATH_EXISTS) && (t - 1) >= v && (t > canon + 1 || t > canon && *(t - 1) && *(t - 1) != '/'))
-			{
-				struct stat	st;
-
-				*(t - 1) = 0;
-				if (fstatat(dfd, canon, &st, 0))
-				{
-					if (inplace)
-						memmove(canon, s, strlen(s) + 1);
-					else
-						strcpy(canon, s);
-					return 0;
-				}
-				v = t;
-				if (*s)
-					*(t - 1) = '/';
 			}
 			switch (*s)
 			{
@@ -717,11 +762,11 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 					if (r == canon)
 						r++;
 					*r = 0;
-					dev->fd = openat(dfd, x, O_INTERCEPT|O_RDONLY|O_CLOEXEC|dev->oflags);
+					dev->fd = openat(dfd, x, O_INTERCEPT|O_RDONLY|O_NONBLOCK|O_CLOEXEC|dev->oflags);
 					*r = '/';
 					if (dev->fd < 0)
 						t = 0;
-					else if ((n = openat(dev->fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR)) < 0)
+					else if ((n = openat(dev->fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR|O_NONBLOCK)) < 0)
 					{
 						close(dev->fd);
 						dev->fd = -1;
@@ -766,5 +811,10 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 			dots = 4;
 			break;
 		}
+ nope:
+	if (inplace)
+		memmove(canon, s, strlen(s) + 1);
+	else if (e)
+		strcpy(canon, s);
  	return 0;
 }

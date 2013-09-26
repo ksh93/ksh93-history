@@ -33,7 +33,7 @@
  * if path==0 then the space is malloc'd
  */
 
-#define _AST_API_H	1
+#define _AST_API_IMPLEMENT	1
 
 #include <ast.h>
 
@@ -43,7 +43,7 @@ pathpath(char* path, const char* p, const char* a, int mode)
 	return pathpath_20100601(p, a, mode, path, PATH_MAX);
 }
 
-#undef	_AST_API_H
+#undef	_AST_API_IMPLEMENT
 
 #include <ast_api.h>
 

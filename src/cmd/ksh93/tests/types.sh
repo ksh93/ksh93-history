@@ -876,4 +876,22 @@ yy_t y
 [[ ${y.x.printi} == 2.3 ]] || err_exit 'discipline function with nested type us
 ing _.__ not working as ${var.function}'
 
+typeset -T pp_t=( integer fd ;
+      function pinit { print $(( _.fd=$1 )) ;} 
+)
+compound c
+pp_t -a c.pl
+[[ $(c.pl[3].pinit 7) == 7 ]] 2> /dev/null || err_exit 'arrays of types in arithmetic expressions not working'
+
+$SHELL 2> /dev/null -c '
+typeset -T p_t=( integer fd=-1 ; compound events=(  bool pollin=false ; );)
+p_t --man'
+[[ $? == 2 ]] || err_exit 'unable to generated manpage for types that contain compound variables'
+
+FPATH=$tmp/fundir
+mkdir -p $FPATH
+print 'typeset -T My_t=(integer i j)' > $FPATH/My_t
+$SHELL 2> /dev/null -c 'My_t a=(i=1 j=2); [[ "${a.i} ${a.j}" == "1 2" ]]' || 
+	err_exit "dynamic loading of type with assignment fails"
+
 exit $((Errors<125?Errors:125))

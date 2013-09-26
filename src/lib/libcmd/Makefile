@@ -23,15 +23,18 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c \
 	getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c \
 	mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c \
-	rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c \
+	rmdir.c shasum.c stty.c sum.c sync.c tail.c tee.c tty.c \
+	uname.c uniq.c \
 	vmstate.c wc.c revlib.c wclib.c sumlib.o context.c \
 	fts_fix.c lib.c \
-	grep.c xargs.c iconv.c \
+	grep.c xargs.c iconv.c realpath.c \
 	od.c tr.c \
 	-lfsg -lmd -lutil
 
 grep.o : LICENSE=since=1995,author=gsf+doug
 iconv.o xargs.o : LICENSE=since=1989,author=gsf
+realpath.o : LICENSE=since=2013,author=gsf+roland
+sync.o : LICENSE=since=2006,author=gsf+roland
 
 sumlib.o : +lsum
 	$(AR) x $(*:O=1) $(<)

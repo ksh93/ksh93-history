@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2011 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  * single dir support for pathaccess()
  */
 
-#define _AST_API_H	1
+#define _AST_API_IMPLEMENT	1
 
 #include <ast.h>
 
@@ -50,7 +50,7 @@ pathcat(char* path, const char* dirs, int sep, const char* a, const char* b)
 
 #endif
 
-#undef	_AST_API
+#undef	_AST_API_IMPLEMENT
 
 #include <ast_api.h>
 

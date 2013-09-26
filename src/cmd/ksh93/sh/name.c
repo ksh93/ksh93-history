@@ -1217,6 +1217,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 							if(!sub && (flags&NV_NOADD))
 								return(0);
 							n = mode|((flags&NV_NOADD)?0:NV_ADD);
+							if(!(n&NV_ADD) && ap && tp)
+								n |= NV_ADD;
+
 							if(!ap && (n&NV_ADD))
 							{
 								nv_putsub(np,sub,0,ARRAY_FILL);

@@ -244,6 +244,12 @@ prev comp/getopt.h implicit
 prev ast_map.h implicit
 make include/ast_intercept.h implicit
 done include/ast_intercept.h dontcare
+prev ast_wchar.h implicit
+make include/sfio.h implicit
+prev include/sfio_s.h implicit
+prev ast_common.h implicit
+prev include/ast_std.h implicit
+done include/sfio.h dontcare
 make ast_botch.h implicit
 make FEATURE/botch
 meta FEATURE/botch features/%.c>FEATURE/% features/botch.c botch
@@ -414,11 +420,7 @@ done include/vmalloc.h dontcare
 done include/ast_debug.h dontcare
 make include/ast_errorf.h implicit
 done include/ast_errorf.h dontcare
-make include/sfio.h implicit
-prev include/sfio_s.h implicit
-prev ast_common.h implicit
-prev include/ast_std.h implicit
-done include/sfio.h dontcare
+prev include/sfio.h implicit
 prev include/ast_std.h implicit
 done include/ast.h dontcare
 done misc/state.c
@@ -3250,6 +3252,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done statvfs.o generated
 make eaccess.o
 make comp/eaccess.c
+prev ast_map.h implicit
 prev FEATURE/eaccess implicit
 prev include/ls.h implicit
 prev include/ast.h implicit
@@ -3323,7 +3326,7 @@ prev include/ast_std.h implicit
 done comp/getpgrp.c
 meta getpgrp.o %.c>%.o comp/getpgrp.c getpgrp
 prev comp/getpgrp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -c comp/getpgrp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/getpgrp.c
 done getpgrp.o generated
 make setpgid.o
 make comp/setpgid.c
@@ -3533,7 +3536,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done memfatal.o generated
 make sfkeyprintf.o
 make disc/sfkeyprintf.c
-prev ast_api.h implicit
+prev ast_map.h implicit
 prev include/regex.h implicit
 make include/sfdisc.h implicit
 prev include/ast.h implicit
@@ -3641,7 +3644,6 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${IN
 done codeset.o generated
 make wc.o
 make comp/wc.c
-prev ast_wchar.h implicit
 prev include/ast.h implicit
 done comp/wc.c
 meta wc.o %.c>%.o comp/wc.c wc
@@ -3658,6 +3660,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done utf32toutf8.o generated
 make utf8toutf32.o
 make string/utf8toutf32.c
+prev include/error.h implicit
 prev include/ast.h implicit
 done string/utf8toutf32.c
 meta utf8toutf32.o %.c>%.o string/utf8toutf32.c utf8toutf32
@@ -3695,7 +3698,7 @@ prev include/ast_std.h implicit
 done comp/basename.c
 meta basename.o %.c>%.o comp/basename.c basename
 prev comp/basename.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -c comp/basename.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/basename.c
 done basename.o generated
 make closelog.o
 make comp/closelog.c
@@ -3719,7 +3722,7 @@ prev include/ast_std.h implicit
 done comp/dirname.c
 meta dirname.o %.c>%.o comp/dirname.c dirname
 prev comp/dirname.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -c comp/dirname.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/dirname.c
 done dirname.o generated
 make fmtmsglib.o
 make comp/fmtmsglib.c
@@ -6131,7 +6134,7 @@ prev FEATURE/uwin implicit
 done uwin/crypt.c
 meta crypt.o %.c>%.o uwin/crypt.c crypt
 prev uwin/crypt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -c uwin/crypt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c uwin/crypt.c
 done crypt.o generated
 make erf.o
 make uwin/erf.c
@@ -6267,7 +6270,7 @@ prev FEATURE/uwin implicit
 done uwin/rcmd.c
 meta rcmd.o %.c>%.o uwin/rcmd.c rcmd
 prev uwin/rcmd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iuwin -Iinclude -Istd -c uwin/rcmd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iuwin -Iinclude -Istd -D_PACKAGE_ast -c uwin/rcmd.c
 done rcmd.o generated
 make rint.o
 make uwin/rint.c

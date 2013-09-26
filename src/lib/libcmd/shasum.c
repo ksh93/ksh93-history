@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -16,69 +16,35 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                     Phong Vo <phongvo@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
 /*
- *  strsort - sort an array pointers using fn
- *
- *	fn follows strcmp(3) conventions
- *
- *   David Korn
- *   AT&T Bell Laboratories
- *
- *  derived from Bourne Shell
+ * sha*sum -- implemented by cksum
  */
 
-#include <ast.h>
+#include <cmd.h>
 
-void
-strsort(char** argv, int n, Strcmp_f cmp)
+int
+b_sha1sum(int argc, register char** argv, Shbltin_t* context)
 {
-	register int 	i;
-	register int 	j;
-	register int 	m;
-	register char**	ap;
-	char*		s;
-	int 		k;
-
-	for (j = 1; j <= n; j *= 2);
-	for (m = 2 * j - 1; m /= 2;)
-		for (j = 0, k = n - m; j < k; j++)
-			for (i = j; i >= 0; i -= m)
-			{
-				ap = &argv[i];
-				if ((*cmp)(ap[m], ap[0]) >= 0)
-					break;
-				s = ap[m];
-				ap[m] = ap[0];
-				ap[0] = s;
-			}
+	return b_cksum(argc, argv, context);
 }
 
-void
-strsort_r(char** argv, size_t n, Strcmp_context_f cmp, void* handle)
+int
+b_sha256sum(int argc, register char** argv, Shbltin_t* context)
 {
-	register size_t i;
-	register size_t j;
-	register size_t m;
-	register char**	ap;
-	char*		s;
-	size_t 		k;
+	return b_cksum(argc, argv, context);
+}
 
-	for (j = 1; j <= n; j *= 2);
-	for (m = 2 * j - 1; m /= 2;)
-		for (j = 0, k = n - m; j < k; j++)
-			for (i = j;; i -= m)
-			{
-				ap = &argv[i];
-				if ((*cmp)(ap[m], ap[0], handle) >= 0)
-					break;
-				s = ap[m];
-				ap[m] = ap[0];
-				ap[0] = s;
-				if (i < m)
-					break;
-			}
+int
+b_sha384sum(int argc, register char** argv, Shbltin_t* context)
+{
+	return b_cksum(argc, argv, context);
+}
+
+int
+b_sha512sum(int argc, register char** argv, Shbltin_t* context)
+{
+	return b_cksum(argc, argv, context);
 }

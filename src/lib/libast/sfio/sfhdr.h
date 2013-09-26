@@ -308,11 +308,13 @@
 #define _has_multibyte		1
 
 #define SFMBMAX			mbmax()
-#define SFMBCPY(to,fr)		memcpy((to), (fr), sizeof(mbstate_t))
-#define SFMBCLR(mb)		memset((mb), 0,  sizeof(mbstate_t))
+#define SFMBCPY(to,fr)		(*(Mbstate_t*)(to) = *(fr))
+#define SFMBCLR(mb)		mbtinit(((Mbstate_t*)(mb)))
 #define SFMBSET(lhs,v)		(lhs = (v))
-#define SFMBLEN(s,mb)		mbsize(s)
-#define SFMBDCL(ms)		mbstate_t ms;
+#define SFMBLEN(s,mb)		mbtsize((s),MB_LEN_MAX,(mb))
+#define SFMBDCL(ms)		Mbstate_t ms;
+#define SFMBDCLP(ms)		Mbstate_t* ms;
+#define SFMBSTATE(f)		_sfmbstate(f)
 
 #else
 
@@ -342,6 +344,8 @@
 #define SFMBDCL(mb)
 #define SFMBLEN(s,mb)		mbrtowc(NIL(wchar_t*), (s), SFMBMAX, (mb) )
 #endif /*!_has_multibyte && _hdr_wchar && _lib_mbtowc && _lib_wctomb*/
+
+#define SFMBSTATE(f)		((Mbstate_t*)0)
 
 #ifdef MB_CUR_MAX
 #define SFMBMAX			MB_CUR_MAX
@@ -1194,6 +1198,7 @@ extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, ssize_t));
 extern int		_sfsetpool _ARG_((Sfio_t*));
 extern char*		_sfcvt _ARG_((Void_t*,char*,size_t,int,int*,int*,int*,int));
 extern char**		_sfgetpath _ARG_((char*));
+extern Mbstate_t*	_sfmbstate _ARG_((Sfio_t*));
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern		__EXPORT__

@@ -2008,7 +2008,7 @@ static const Namdisc_t svar_disc =
 
 static char *name_svar(Namval_t *np, Namfun_t *fp)
 {
-	Shell_t	 *shp = sh_ptr(np);;
+	Shell_t	 *shp = sh_ptr(np);
 	Namval_t *mp = *(Namval_t**)(fp+1);
 	sfprintf(shp->strbuf,".sh.%s.%s",mp->nvname,np->nvname);
 	return(sfstruse(shp->strbuf));
@@ -2089,7 +2089,7 @@ static void stat_init(Shell_t *shp)
     static void siginfo_init(Shell_t *shp)
     {
 	struct Svars	*sp;
-	svar_init(shp,SH_SIG,shtab_siginfo,sizeof(siginfo_t)+SIGNAME_MAX);
+	svar_init(shp,SH_SIG,shtab_siginfo,sizeof(siginfo_t)+ sizeof(char*) + SIGNAME_MAX);
 	sp = (struct Svars*)SH_SIG->nvfun->next;
 	sp->dsize = sizeof(siginfo_t)+SIGNAME_MAX;
     }

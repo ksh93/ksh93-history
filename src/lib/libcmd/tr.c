@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tr (AT&T Research) 2013-07-17 $\n]"
+"[-?\n@(#)$Id: tr (AT&T Research) 2013-09-13 $\n]"
 USAGE_LICENSE
 "[+NAME?tr - translate, squeeze, and/or delete characters]"
 "[+DESCRIPTION?\btr\b copies the standard input to the standard output "
@@ -152,6 +152,7 @@ typedef struct Tr_s
 	unsigned char*	base;
 	unsigned char*	next;
 	unsigned char*	hold;
+	Mbstate_t	q;
 	uint32_t	code[1];
 } Tr_t;
 
@@ -171,7 +172,7 @@ nextchar(register Tr_t* tr)
 	int		q;
 	unsigned char*	e;
 	regclass_t	f;
-	wchar_t		wc;
+	wchar_t		w;
 	char		buf[32];
 
 	/*
@@ -201,7 +202,7 @@ nextchar(register Tr_t* tr)
 			}
 			if (tr->iseq)
 			{
-				if ((c = mbconv(buf, tr->prev)) <= 0 || regnexec(tr->iseq, buf, c, 0, NiL, 0))
+				if ((c = mbtconv(buf, tr->prev, &tr->q)) <= 0 || regnexec(tr->iseq, buf, c, 0, NiL, 0))
 					continue;
 			}
 			return (!tr->type || !tr->convert) ? tr->prev : tr->convert == 'l' ? towlower(tr->prev) : towupper(tr->prev);
@@ -216,9 +217,10 @@ nextchar(register Tr_t* tr)
 		tr->prev--;
 		tr->last = -1;
 		tr->hold = tr->next;
-		mbchar(tr->hold);
+		mbtinit(&tr->q);
+		mbtchar(&w, tr->hold, MB_LEN_MAX, &tr->q);
 	}
-	switch (c = mbchar(tr->next))
+	switch (c = mbtchar(&w, tr->next, MB_LEN_MAX, &tr->q))
 	{
 	case -1:
 		c = *(tr->next - 1);
@@ -271,7 +273,7 @@ nextchar(register Tr_t* tr)
 			return nextchar(tr);
 		case '.':
 		case '=':
-			if ((q = regcollate((char*)tr->next, (char**)&e, buf, sizeof(buf), &wc)) >= 0)
+			if ((q = regcollate((char*)tr->next, (char**)&e, buf, sizeof(buf), &w)) >= 0)
 			{
 				if (*tr->next == '=' && q > 0)
 				{
@@ -285,7 +287,7 @@ nextchar(register Tr_t* tr)
 					return nextchar(tr);
 				}
 				tr->next = e;
-				c = q > 1 ? wc : q ? buf[0] : 0;
+				c = q > 1 ? w : q ? buf[0] : 0;
 				break;
 			}
 			/*FALLTHROUGH*/
@@ -597,9 +599,9 @@ trcopy(Tr_t* tr, Sfio_t* ip, Sfio_t* op, ssize_t ncopy)
 		inp = inend = 0;
 		while (!sh_checksig(tr->context))
 		{
-			if ((o = inend - inp) <= 0 || (n = mb2wc(w, inp, o)) < 0)
+			if ((o = inend - inp) <= 0 || (mbchar(&w, inp, o, &tr->q), mberrno(&tr->q)))
 			{
-				if (o >= m)
+				if (o >= m || o && mberrno(&tr->q) == EILSEQ)
 					w = -1;
 				else if (pushbuf)
 				{
@@ -645,7 +647,7 @@ trcopy(Tr_t* tr, Sfio_t* ip, Sfio_t* op, ssize_t ncopy)
 					{
 						if (o)
 							memcpy(side, inp, o);
-						mbinit();
+						mbinit(&tr->q);
 					}
 					else
 						o = 0;
@@ -673,7 +675,7 @@ trcopy(Tr_t* tr, Sfio_t* ip, Sfio_t* op, ssize_t ncopy)
 				}
 				if (w < 0)
 				{
-					w = *inp++;
+					w = *(inp - 1);
 					sfputc(sfstdout, w);
 					if (tr->warn && eline != line)
 					{
@@ -683,8 +685,6 @@ trcopy(Tr_t* tr, Sfio_t* ip, Sfio_t* op, ssize_t ncopy)
 					continue;
 				}
 			}
-			else
-				inp += n ? n : 1;
 			if (w == '\n')
 				line++;
 			w = code[w];

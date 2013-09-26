@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: wc (AT&T Research) 2012-11-21 $\n]"
+"[-?\n@(#)$Id: wc (AT&T Research) 2013-09-13 $\n]"
 USAGE_LICENSE
 "[+NAME?wc - print the number of bytes, words, and lines in files]"
 "[+DESCRIPTION?\bwc\b reads one or more input files and, by default, "

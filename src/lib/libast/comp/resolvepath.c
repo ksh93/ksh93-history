@@ -32,8 +32,9 @@
 #undef	resolvepath
 
 #undef	_def_map_ast
+#undef	_AST_API_IMPLEMENT
+
 #include <ast_map.h>
-#undef	_AST_API_H
 #include <ast_api.h>
 
 #if defined(__EXPORT__)

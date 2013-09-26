@@ -37,14 +37,16 @@ ssize_t
 utf32stowcs(wchar_t* wchar, uint32_t* utf32, size_t n)
 {
 	size_t		i;
+	Mbstate_t	q;
 
 	if (ast.locale.set & AST_LC_utf8)
 	{
 		char	tmp[UTF8_LEN_MAX+1];
 
+		mbinit(&q);
 		for (i = 0; i < n; i++)
 		{
-			if (mbconv(tmp, utf32[i]) < 0)
+			if (mbconv(tmp, utf32[i], &q) < 0)
 				break;
 			wchar[i] = utf32[i];
 		}
@@ -60,6 +62,7 @@ utf32stowcs(wchar_t* wchar, uint32_t* utf32, size_t n)
 			ast.mb_uc2wc = 0;
 		if (ast.mb_uc2wc == 0)
 			return -1;
+		(void)iconv(ast.mb_wc2uc, NiL, NiL, NiL, NiL);
 		if (n == 1)
 		{
 			char	tmp_in[UTF8_LEN_MAX+1];
@@ -84,8 +87,14 @@ utf32stowcs(wchar_t* wchar, uint32_t* utf32, size_t n)
 					return -1;
 #endif
 			}
-			else if (mb2wc(wchar[0], tmp_out, outbuf - tmp_out) <= 0)
-				return -1;
+			else
+			{
+				inbuf = tmp_out;
+				mbinit(&q);
+				(void)mbchar(wchar, inbuf, outbuf - tmp_out, &q);
+				if (mberrno(&q))
+					return -1;
+			}
 			i = 1;
 		}
 		else
@@ -113,8 +122,9 @@ utf32stowcs(wchar_t* wchar, uint32_t* utf32, size_t n)
 			{
 				ssize_t	len;
 
-				for (outbuf = outbuf_start; i < n && outbuf < inbuf; i++, outbuf += len)
-					if ((len = mb2wc(wchar[i], outbuf, inbuf - outbuf)) < 0)
+				mbinit(&q);
+				for (outbuf = outbuf_start; i < n && outbuf < inbuf; i++)
+					if (mbchar(&wchar[i], outbuf, inbuf - outbuf, &q), mberrno(&q))
 						break;
 			}
 			else

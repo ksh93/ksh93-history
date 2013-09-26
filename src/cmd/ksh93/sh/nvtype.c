@@ -755,6 +755,8 @@ static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *od)
 	for(i=0; i < dp->numnodes; i++)
 	{
 		nq = nv_namptr(dp->nodes,i);
+		if(strchr(nq->nvname,'.'))
+			continue;
 		if(tp=nv_type(nq))
 		{
 			Namfun_t *pp = nv_hasdisc(nq,&type_disc);
@@ -1151,8 +1153,6 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 			np->nvenv = 0;
 		}
 		nq->nvname = cp;
-		if(name && strncmp(name,&np->nvname[m],n)==0 && np->nvname[m+n]=='.')
-			offset -= sizeof(char*);
 		dsize = nv_datasize(np,&offset);
 		cp = strcopy(name=cp, &np->nvname[m]);
 		n = cp-name;

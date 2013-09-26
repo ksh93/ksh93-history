@@ -69,7 +69,7 @@ typedef struct regsubop_s
 #define _AST_REGEX_DEBUG	1
 #endif
 
-#define MBSIZE(p)	((ast.tmp_int=mbsize(p))>0?ast.tmp_int:1)
+#define MBSIZE(e,p)	(((e)->i=mbtsize(p,MB_LEN_MAX,&(e)->q))>0?(e)->i:1)
 
 #undef	RE_DUP_MAX			/* posix puts this in limits.h!	*/
 #define RE_DUP_MAX	(INT_MAX/2-1)	/* 2*RE_DUP_MAX won't overflow	*/
@@ -545,6 +545,9 @@ typedef struct reglib_s			/* library private regex_t info	*/
 	int		explicit;	/* explicit match on this char	*/
 	int		leading;	/* leading match on this char	*/
 	int		refs;		/* regcomp()+regdup() references*/
+	Mbstate_t	q;		/* pattern mb state		*/
+	Mbstate_t	s;		/* subject mb state		*/
+	int		i;		/* macro tmp int		*/
 	Rex_t		done;		/* the last continuation	*/
 	regstat_t	stats;		/* for regstat()		*/
 	unsigned char	fold[UCHAR_MAX+1]; /* REG_ICASE map		*/

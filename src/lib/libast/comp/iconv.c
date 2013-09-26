@@ -1178,6 +1178,10 @@ if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast
 		return (iconv_t)(0);
 	fc = _ast_iconv_name(f, fr, sizeof(fr));
 	tc = _ast_iconv_name(t, to, sizeof(to));
+	if (fc > 0 && t == name_native)
+		tc = CC_NATIVE;
+	else if (tc > 0 && f == name_native)
+		fc = CC_NATIVE;
 #if DEBUG_TRACE
 if (error_info.trace <= DEBUG_TRACE) sfprintf(sfstderr, "%s: debug%d: AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", error_info.id, error_info.trace, __LINE__, f, fr, fc, t, to, tc);
 #endif

@@ -37,21 +37,24 @@
 int
 chrexp(register const char* s, char** p, int* m, register int flags)
 {
-	register const char*	q;
+	register const char*	t;
 	register int		c;
 	const char*		e;
 	const char*		b;
 	char*			r;
 	int			n;
 	int			x;
+	wchar_t			d;
+	Mbstate_t		q;
 	bool			u;
 	bool			w;
 
 	u = w = 0;
+	mbtinit(&q);
 	for (;;)
 	{
 		b = s;
-		switch (c = mbchar(s))
+		switch (c = mbtchar(&d, s, MB_LEN_MAX, &q))
 		{
 		case 0:
 			s = b;
@@ -65,8 +68,8 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 				if (!(flags & FMT_EXP_CHAR))
 					goto noexpand;
 				c -= '0';
-				q = s + 2;
-				while (s < q)
+				t = s + 2;
+				while (s < t)
 					switch (*s)
 					{
 					case '0': case '1': case '2': case '3':
@@ -74,7 +77,7 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 						c = (c << 3) + *s++ - '0';
 						break;
 					default:
-						q = s;
+						t = s;
 						break;
 					}
 				break;
@@ -154,25 +157,25 @@ chrexp(register const char* s, char** p, int* m, register int flags)
 			case 'u':
 				u = 1;
 			case 'w':
-				q = s + 4;
+				t = s + 4;
 				goto wex;
 			case 'U':
 				u = 1;
 			case 'W':
-				q = s + 8;
+				t = s + 8;
 			wex:
 				if (!(flags & FMT_EXP_WIDE))
 					goto noexpand;
 				w = 1;
 				goto hex;
 			case 'x':
-				q = s + 2;
+				t = s + 2;
 			hex:
 				e = s;
 				n = 0;
 				c = 0;
 				x = 0;
-				while (!e || !q || s < q)
+				while (!e || !t || s < t)
 				{
 					switch (*s)
 					{

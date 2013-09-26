@@ -1,3 +1,13 @@
+13-09-25 shasum.c: add sha*sum variants
+13-09-25 cksum.c: handle SUM_INDICATOR per-method { '*'(binary) ' '(text) } read mode indicator
+13-09-25 cksum.c: fix --header to include "text" when --text specified
+13-09-25 cksum.c: { -T, --text && -t, --total } => { -t, --text && -T, --total } for gnu compatibility
+13-09-22 realpath.c,readlink.c: add based on ast::pathdev()
+13-09-22 sync.c: add roland's changes + --sfsync
+13-09-19 xarrrrghs.c: halfscore d's be walkin' t'plank t'day: fix run() to work for context==0
+13-09-19 head.c,tail.c: count incomplete lines too
+13-09-19 do not check for command when /bin/echo implied
+13-09-13 cat.c,cmdext.h,cmdlist.h,cut.c,join.c,od.c,paste.c,rev.c,tr.c,uniq.c,wc.c,wc.h,wclib.c: Mbstate_t update
 13-08-11 join.c: drop setlocale() call already done by optget()
 13-08-11 strcopy() => stpcpy()
 13-07-17 tr.c: finally handle ``tr -Cd "[=e=]" <<<"1e2é3"''-- how about a posix equivalence class api

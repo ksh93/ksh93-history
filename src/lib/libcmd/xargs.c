@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: xargs (AT&T Research) 2012-10-26 $\n]"
+"[-?\n@(#)$Id: xargs (AT&T Research) 2013-09-19 $\n]"
 USAGE_LICENSE
 "[--plugin?ksh]"
 "[+NAME?xargs - construct arg list and execute command]"
@@ -114,7 +114,8 @@ typedef struct Xargs_s
 static int
 run(int argc, char** argv, Cmddisc_t* disc)
 {
-	return sh_run(((Xargs_t*)disc)->context, argc, argv);
+	if (((Xargs_t*)disc)->context)
+		return sh_run(((Xargs_t*)disc)->context, argc, argv);
 }
 
 int
@@ -132,7 +133,6 @@ b_xargs(int argc, register char** argv, Shbltin_t* context)
 	size_t			size = 0;
 	int			term = -1;
 
-	char*			av[4];
 	Xargs_t			xargs;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
@@ -230,12 +230,27 @@ b_xargs(int argc, register char** argv, Shbltin_t* context)
 	argv += opt_info.index;
 	if (error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
-	av[0] = "whence";
-	av[1] = "-q";
-	av[2] = argv[0];
-	av[3] = 0;
-	if (sh_run(context, 3, av))
-		error(3, "%s: command not found", argv[0]);
+	if (argv[0])
+	{
+		if (context)
+		{
+			char*	av[4];
+
+			av[0] = "whence";
+			av[1] = "-q";
+			av[2] = argv[0];
+			av[3] = 0;
+			if (run(3, av, &xargs.disc))
+				error(3, "%s: command not found", argv[0]);
+		}
+		else
+		{
+			char	buf[PATH_MAX];
+
+			if (!pathpath(argv[0], NiL, PATH_REGULAR|PATH_EXECUTE, buf, sizeof(buf)))
+				error(3, "%s: command not found", argv[0]);
+		}
+	}
 	if (xargs.cmd = cmdopen(argv, argmax, size, insert, &xargs.disc))
 	{
 		sfopen(sfstdin, NiL, "rt");

@@ -29,6 +29,7 @@
  */
 
 #include <ast.h>
+#include <error.h>
 
 static const uint32_t		utf8mask[] =
 {
@@ -75,7 +76,7 @@ utf8towc(wchar_t* wp, const char* str, size_t n)
 	if ((m = utf8tab[*sp]) > 0)
 	{
 		if (m > n)
-			goto invalid;
+			return -2;
 		if (wp)
 		{
 			if (m == 1)
@@ -87,10 +88,7 @@ utf8towc(wchar_t* wp, const char* str, size_t n)
 				{
 					c = *++sp;
 					if ((c&0xc0) != 0x80)
-					{
-						sp++;
 						goto invalid;
-					}
 					w = (w<<6) | (c&0x3f);
 				}
 				if (!(utf8mask[m] & w) || utf32invalid(w))
@@ -102,12 +100,8 @@ utf8towc(wchar_t* wp, const char* str, size_t n)
 	}
 	if (!*sp)
 		return 0;
-	sp++;
  invalid:
-	ast.mb_sync = (int)((const char*)sp - str);
-#ifdef EILSEQ
-		errno = EILSEQ;
-#endif
+	errno = EILSEQ;
 	return -1;
 }
 
@@ -117,8 +111,8 @@ utf8toutf32(uint32_t* up, const char* str, size_t n)
 	wchar_t		wc;
 	int		r;
 
-	r = utf8towc(&wc, str, n);
-	*up = (uint32_t)wc;
+	if ((r = utf8towc(&wc, str, n)) > 0)
+		*up = (uint32_t)wc;
 	return r;
 }
 

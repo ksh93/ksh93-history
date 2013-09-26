@@ -1449,6 +1449,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 	Stk_t		*stkp = lexp->sh->stk;
 	struct argnod	**argtail;
 	struct argnod	**settail;
+	bool	typed = false;
 	int	cmdarg=0;
 	int	argno = 0;
 	int	type = 0;
@@ -1488,6 +1489,11 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 		/* check for assignment argument */
 		if((argp->argflag&ARG_ASSIGN) && assignment!=2)
 		{
+			if(lexp->typed && assignment==0)
+			{
+				typed = true;
+				assignment = 1;
+			}
 			*settail = argp;
 			settail = &(argp->argnxt.ap);
 			lexp->assignok = (flag&SH_ASSIGN)?SH_ASSIGN:1;
@@ -1648,6 +1654,8 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 	}
 	*argtail = 0;
 	t->comtyp = TCOM;
+	if(typed)
+		t->comtyp |= COMFIXED;
 #if SHOPT_KIA
 	if(lexp->kiafile && !(flag&SH_NOIO))
 	{

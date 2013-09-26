@@ -32,7 +32,7 @@
  *	ATTRIBUTES	list of attribute names
  */
 
-#define _AST_API_H	1
+#define _AST_API_IMPLEMENT	1
 
 #include <ast.h>
 #include <ctype.h>
@@ -46,7 +46,7 @@ pathkey(char* key, char* attr, const char* lang, const char* tool, const char* p
 	return pathkey_20100601(lang, tool, path, key, 16, attr, PATH_MAX);
 }
 
-#undef	_AST_API_H
+#undef	_AST_API_IMPLEMENT
 
 #include <ast_api.h>
 

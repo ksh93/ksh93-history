@@ -1096,6 +1096,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 				comn = com[argn-1];
 			}
 			io = t->tre.treio;
+tryagain:
 			if(shp->envlist = argp = t->com.comset)
 			{
 				if(argn==0 || (np && (nv_isattr(np,BLT_DCL)||(!command && nv_isattr(np,BLT_SPC)))))
@@ -1179,6 +1180,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 #endif
 					if(np && nv_isattr(np,BLT_DCL))
 						flgs |= NV_DECL;
+					if(t->com.comtyp&COMFIXED)
+						((Shnode_t*)t)->com.comtyp &= ~COMFIXED;
 					shp->nodelist = sh_setlist(shp,argp,flgs,tp);
 					if(np==shp->typeinit)
 						shp->typeinit = 0;
@@ -1249,6 +1252,11 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 							Namval_t *mp=nv_search(com0,shp->bltin_tree,0);
 							if(mp)
 								np = mp;
+						}
+						else if((t->com.comtyp&COMFIXED) && nv_type(np))
+						{
+							((Shnode_t*)t)->com.comtyp &= ~COMFIXED;
+							goto tryagain;
 						}
 					}
 					else

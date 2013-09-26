@@ -138,7 +138,7 @@ int		tm;	/* time in millisecs for select/poll	*/
 		while((np = SFPOLL(fds,m,tm)) < 0 )
 		{	if(errno == eintr || errno == EAGAIN)
 				errno = 0;
-			else	break;
+			else	goto report;
 		}
 		if(np > 0) /* poll succeeded */
 			np = c;
@@ -200,7 +200,7 @@ int		tm;	/* time in millisecs for select/poll	*/
 		while((np = select(m+1,&rd,&wr,NIL(fd_set*),tmp)) < 0 )
 		{	if(errno == eintr)
 				errno = 0;
-			else	break;
+			else	goto report;
 		}
 		if(np > 0)
 			np = c;
@@ -227,6 +227,7 @@ int		tm;	/* time in millisecs for select/poll	*/
 	}
 #endif /*_lib_select*/
 
+ report:
 	for(r = c = 0; c < n; ++c)
 	{	if(status[c] == 0)
 			continue;

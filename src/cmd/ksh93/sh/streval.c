@@ -198,7 +198,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 	{
 		if(c&T_NOFLOAT)
 		{
-			if(type==1 || ((c&T_BINARY) && (c&T_OP)!=A_MOD  && tp[-1]==1))
+			if(type || ((c&T_BINARY) && (c&T_OP)!=A_MOD  && tp[-1]==1))
 				arith_error(e_incompatible,ep->expr,ep->emode);
 		}
 		switch(c&T_OP)
@@ -260,6 +260,8 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			if(node.nextop == A_JMP)
 				node.nextop = ((unsigned char*)ep)[*((short*)roundptr(ep,cp+1,short))];
 			num = (*ep->fun)(&ptr,&node,VALUE,num);
+			if(lastval)
+				lastval = node.ovalue;
 			if(node.emode&ARITH_ASSIGNOP)
 			{
 				lastsub = node.nosub;

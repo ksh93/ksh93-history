@@ -49,6 +49,7 @@ typedef struct  _shlex_
 	char		comp_assign;	/* in compound assignment */
 	char		comsub;		/* parsing command substitution */
 	char		noreserv;	/* reserved works not legal */
+	char		typed;		/* possible type definition on PATH */
 	int		inlineno;	/* saved value of sh.inlineno */
 	int		firstline;	/* saved value of sh.st.firstline */
 	int		assignlevel;	/* nesting level for assignment */

@@ -838,4 +838,17 @@ EOF
 float x
 ((x.HOGWARDS_IN_THE_SKY ==0 )) || err_exit 'x.HOGWARDS_IN_THE_SKY is unknown and should have value 0'
 
+unset IFS i
+set -u
+float -a ar
+function f
+{
+	integer i=0 ar_i=0
+	for	(( i=0 ; i < 3 ; i++ ))
+	do	(( ar[ar_i++]=i))
+	done
+	printf "%q\n" "${ar[*]}"
+}
+[[ $(f) == "'0 1 2'" ]] 2> /dev/null || err_exit '0 value for variable in arithmetic expression inside function with set -u fails' 
+
 exit $((Errors<125?Errors:125))

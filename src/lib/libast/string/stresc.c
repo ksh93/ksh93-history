@@ -39,6 +39,7 @@ strexp(register char* s, int flags)
 	char*			b;
 	char*			e;
 	int			w;
+	Mbstate_t		q;
 
 	b = t = s;
 	while (c = *s++)
@@ -51,7 +52,8 @@ strexp(register char* s, int flags)
 				continue;
 			if (w)
 			{
-				t += mbconv(t, c);
+				mbinit(&q);
+				t += mbconv(t, c, &q);
 				continue;
 			}
 		}

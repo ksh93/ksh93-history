@@ -717,7 +717,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2013-08-11 $
+@(#)$Id: iffe (AT&T Research) 2013-09-25 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -3049,6 +3049,10 @@ int x;
 							?*)	for api in $apis
 								do	API=`echo $api | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 									echo "#define ${API}API(rel)	( _BLD_${api} || !_API_${api} || _API_${api} >= rel )"
+									echo
+									echo "#ifndef _${API}_API_IMPLEMENT"
+									echo "#define _${API}_API_IMPLEMENT	1"
+									echo
 									map=
 									sep=
 									eval syms='"${'api_sym_${api}'}"'
@@ -3092,6 +3096,8 @@ int x;
 									echo "#endif"
 									echo
 									echo "#define _API_${api}_MAP	\"$map\""
+									echo
+									echo "#endif"
 								done
 								echo
 								;;

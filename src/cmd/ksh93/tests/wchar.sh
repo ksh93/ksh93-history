@@ -52,17 +52,17 @@ exp1='$'$exp2
 for lc_all in $supported
 do
 
-got=$(LC_OPTIONS=nounicode $SHELL -c 'export LC_ALL='${lc_all}'; printf "%q\n" "$(printf "\u[20ac]")"' | iconv -f ${lc_all#*.} -t UTF-8 | od -tx1 | head -1)
-[[ $got == "$exp0" ]] || err_exit "${lc_all} nounicode FAILED -- locale probably not supported -- expected '$exp0', got '$got'"
+got=$(LC_OPTIONS=nounicodeliterals $SHELL -c 'export LC_ALL='${lc_all}'; printf "%q\n" "$(printf "\u[20ac]")"' | iconv -f ${lc_all#*.} -t UTF-8 | od -tx1 | head -1)
+[[ $got == "$exp0" ]] || err_exit "${lc_all} nounicodeliterals FAILED -- locale probably not supported -- expected '$exp0', got '$got'"
 
-got=$(LC_OPTIONS=unicode $SHELL -c 'export LC_ALL='${lc_all}'; printf "%(nounicode)q\n" "$(printf "\u[20ac]")"' | iconv -f ${lc_all#*.} -t UTF-8 | od -tx1 | head -1)
-[[ $got == "$exp0" ]] || err_exit "${lc_all} (nounicode) FAILED -- locale probably not supported -- expected '$exp0', got '$got'"
+got=$(LC_OPTIONS=unicodeliterals $SHELL -c 'export LC_ALL='${lc_all}'; printf "%(nounicodeliterals)q\n" "$(printf "\u[20ac]")"' | iconv -f ${lc_all#*.} -t UTF-8 | od -tx1 | head -1)
+[[ $got == "$exp0" ]] || err_exit "${lc_all} (nounicodeliterals) FAILED -- locale probably not supported -- expected '$exp0', got '$got'"
 
-got=$(LC_OPTIONS=unicode $SHELL -c 'export LC_ALL='${lc_all}'; printf "%q\n" "$(printf "\u[20ac]")"')
+got=$(LC_OPTIONS=unicodeliterals $SHELL -c 'export LC_ALL='${lc_all}'; printf "%q\n" "$(printf "\u[20ac]")"')
 [[ $got == "$exp1" || $got == "$exp2" ]] || err_exit "${lc_all} unicode FAILED -- expected $exp1, got $got"
 
-got=$(LC_OPTIONS=nounicode $SHELL -c 'export LC_ALL='${lc_all}'; printf "%(unicode)q\n" "$(printf "\u[20ac]")"')
-[[ $got == "$exp1" || $got == "$exp2" ]] || err_exit "${lc_all} (unicode) FAILED -- expected $exp1, got $got"
+got=$(LC_OPTIONS=nounicodeliterals $SHELL -c 'export LC_ALL='${lc_all}'; printf "%(unicodeliterals)q\n" "$(printf "\u[20ac]")"')
+[[ $got == "$exp1" || $got == "$exp2" ]] || err_exit "${lc_all} (unicodeliterals) FAILED -- expected $exp1, got $got"
 
 done
 

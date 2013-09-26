@@ -38,6 +38,10 @@ NoN(eaccess)
 
 #undef	eaccess
 
+#undef	_def_map_ast
+
+#include <ast_map.h>
+
 #if defined(__EXPORT__)
 #define extern	__EXPORT__
 #endif
@@ -55,7 +59,7 @@ eaccess(const char* path, register int flags)
 	register int	mode;
 	struct stat	st;
 
-	static int	init;
+	static int	init = 0;
 	static uid_t	ruid;
 	static uid_t	euid;
 	static gid_t	rgid;

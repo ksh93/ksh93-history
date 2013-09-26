@@ -28,7 +28,7 @@
  */
 
 #ifndef _AST_H
-#define _AST_H
+#define _AST_H		1
 
 #ifndef _AST_STD_H
 #include <ast_std.h>
@@ -118,6 +118,7 @@ struct _sfio_s;
 #define PATH_CANON		0x020
 #define PATH_DROP_HEAD_SLASH2	0x040
 #define PATH_DROP_TAIL_SLASH	0x080
+#define PATH_EXCEPT_LAST	0x100
 #define PATH_VERIFIED(n)	(((n)&0xfffff)<<12)
 #define PATH_GET_VERIFIED(n)	(((n)>>12)&0xfffff)
 
@@ -202,27 +203,22 @@ typedef struct
  * multibyte macros
  */
 
-#define mbmax()		(ast.mb_cur_max)
-#define mberr()		(ast.tmp_int<0)
+#define mbmax()			(ast.mb_cur_max)
 
-#define mbcoll()	(ast.mb_xfrm!=0)
-#define mbwide()	(mbmax()>1)
+#define mbcoll()		(ast.mb_xfrm!=0)
+#define mbwide()		(mbmax()>1)
 
-#define mb2wc(w,p,n)	(*ast.mb_towc)(&(w),(char*)(p),(n))
-#define mbchar(p)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),mbmax()))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=ast.mb_sync+1,ast.tmp_int)):(*(unsigned char*)(p++)))
-#define mbnchar(p,n)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),n))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=ast.mb_sync+1,ast.tmp_int)):(*(unsigned char*)(p++)))
-#define mbinit()	(mbwide()?(*ast.mb_towc)((wchar_t*)0,(char*)0,mbmax()):0)
-#define mbsize(p)	(mbwide()?(*ast.mb_len)((char*)(p),mbmax()):((p),1))
-#define mbnsize(p,n)	(mbwide()?(*ast.mb_len)((char*)(p),n):((p),1))
-#define mbconv(s,w)	(ast.mb_conv?(*ast.mb_conv)(s,w):((*(s)=(w)),1))
-#define mbwidth(w)	(ast.mb_width?(*ast.mb_width)(w):1)
-#define mbxfrm(t,f,n)	(mbcoll()?(*ast.mb_xfrm)((char*)(t),(char*)(f),n):0)
-#define mbalpha(w)	(ast.mb_alpha?(*ast.mb_alpha)(w):isalpha((w)&0xff))
+#define mbwidth(w)		(ast.mb_width?(*ast.mb_width)(w):1)
+#define mbxfrm(t,f,n)		(mbcoll()?(*ast.mb_xfrm)((char*)(t),(char*)(f),n):0)
+#define mbalpha(w)		(ast.mb_alpha?(*ast.mb_alpha)(w):isalpha((w)&0xff))
 
-#define UTF8_LEN_MAX	6	/* UTF-8 only uses 5 */
+#define mbsrtowcs(w,s,n,q)	(*ast._ast_mbsrtowcs)((s),(w),(n),(mbstate_t*)(q))
+#define wcsrtombs(s,w,n,q)	(*ast._ast_wcsrtombs)((s),(w),(n),(mbstate_t*)(q))
 
 /* the converse does not always hold! */
 #define utf32invalid(u)	((u)>0x0010FFFF||(u)>=0x0000D800&&(u)<=0x0000DFFF||(u)>=0xFFFE&&(u)<=0xFFFF)
+
+#define UTF8_LEN_MAX		6	/* UTF-8 only uses 5 */
 
 /*
  * common macros
@@ -411,6 +407,8 @@ extern int		utf8towc(wchar_t*, const char*, size_t);
 extern ssize_t		utf32stowcs(wchar_t*, uint32_t*, size_t);
 extern ssize_t		wcstoutf32s(uint32_t*, wchar_t*, size_t);
 
+extern size_t		ast_mbrchar(wchar_t*, const char*, size_t, Mbstate_t*);
+
 #undef			extern
 
 /*
@@ -426,6 +424,36 @@ extern char**		environ;
 #include <ast_debug.h>
 
 #include <ast_api.h>
+
+/* api specific mb/wc macros */
+
+#if ASTAPI(20130913)
+
+#define mbsinit(q)		(*(q)=ast._ast_mbstate_init.mb_state)
+#define mbinit(q)		(*(q)=ast._ast_mbstate_init)
+#define mberrno(q)		((q)->mb_errno)
+#define mbsize(s,n,q)		(*ast._ast_mbrlen)((char*)(s),(n),(mbstate_t*)(q))
+#define mbchar(w,s,n,q)		(((s)+=(ast_mbrchar)((wchar_t*)(w),(char*)(s),(n),(q))),(*(w)))
+#define mbconv(s,w,q)		(*ast._ast_wcrtomb)((s),(w),(mbstate_t*)(q))
+
+#define mbtinit(q)		(mbwide()?(mbinit(q),0):0)
+#define mbtsize(s,n,q)		(mbwide()?mbsize((s),(n),(q)):(!!*(s)))
+#define mbtchar(w,s,n,q)	(mbwide()?mbchar((w),(s),(n),(q)):(*(unsigned char*)(s++)))
+#define mbtconv(s,w,q)		(mbwide()?mbconv((s),(w),(q)):((*(s)=(w)),1))
+
+#else
+
+#define mb2wc(w,p,n)		(*ast.mb_towc)(&(w),(char*)(p),(n))
+#define mbchar(p)		(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),mbmax()))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=ast.mb_sync+1,ast.tmp_int)):(*(unsigned char*)(p++)))
+#define mbnchar(p,n)		(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),n))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=ast.mb_sync+1,ast.tmp_int)):(*(unsigned char*)(p++)))
+#define mbinit()		(mbwide()?(*ast.mb_towc)((wchar_t*)0,(char*)0,mbmax()):0)
+#define mbsize(p)		(mbwide()?(*ast.mb_len)((char*)(p),mbmax()):((p),1))
+#define mbnsize(p,n)		(mbwide()?(*ast.mb_len)((char*)(p),n):((p),1))
+#define mbconv(s,w)		(ast.mb_conv?(*ast.mb_conv)(s,w):((*(s)=(w)),1))
+
+#endif
+
+/* generic plugin version support */
 
 #undef	AST_PLUGIN_VERSION
 #define AST_PLUGIN_VERSION(v)	((v)>AST_VERSION?(v):AST_VERSION)

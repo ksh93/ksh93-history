@@ -54,7 +54,7 @@ struct comnod
 #define COMBITS		4
 #define COMMSK		((1<<COMBITS)-1)
 #define COMSCAN		(01<<COMBITS)
-#define COMFIXED	(02<<COMBITS)
+#define COMFIXED	(04000<<COMBITS)
 
 struct slnod 	/* struct for link list of stacks */
 {

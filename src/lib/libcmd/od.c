@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: od (AT&T Research) 2012-10-19 $\n]"
+"[-?\n@(#)$Id: od (AT&T Research) 2013-09-13 $\n]"
 USAGE_LICENSE
 "[+NAME?od - dump files in octal or other formats]"
 "[+DESCRIPTION?\bod\b dumps the contents of the input files in various "
@@ -261,6 +261,7 @@ struct State_s
 	int		verbose;
 	int		width;
 	Vmalloc_t*	vm;
+	Mbstate_t	q;
 };
 
 static const Size_t	csize[] =
@@ -369,7 +370,7 @@ cform(State_t* state, Format_t* fp, Sfio_t* op, unsigned char* u)
 		return;
 	}
 	buf[0] = *(v = u);
-	if ((w = mbnchar(u, state->eob - u)) > 0 && (i = u - v) > 1 && !iswprint(w))
+	if ((w = mbtchar(&w, u, state->eob - u, &state->q)) > 0 && (i = u - v) > 1 && !iswprint(w))
 	{
 		state->mb = i - 1;
 		for (j = 3 - mbwidth(w); j > 0; j--)
@@ -453,7 +454,7 @@ Cform(State_t* state, Format_t* fp, Sfio_t* op, unsigned char* u)
 		return;
 	}
 	buf[0] = *(v = u);
-	if ((w = mbnchar(u, state->eob - u)) > 0 && (i = u - v) > 1 && !iswprint(w))
+	if ((w = mbtchar(&w, u, state->eob - u, &state->q)) > 0 && (i = u - v) > 1 && !iswprint(w))
 	{
 		state->mb = i - 1;
 		for (j = 3 - mbwidth(w); j > 0; j--)
@@ -549,7 +550,7 @@ Oform(State_t* state, Format_t* fp, Sfio_t* op, unsigned char* u)
 		return;
 	}
 	buf[0] = *(v = u);
-	if ((w = mbnchar(u, state->eob - u)) > 0 && (i = u - v) > 1 && !iswprint(w))
+	if ((w = mbtchar(&w, u, state->eob - u, &state->q)) > 0 && (i = u - v) > 1 && !iswprint(w))
 	{
 		state->mb = i - 1;
 		for (j = 3 - mbwidth(w); j > 0; j--)
@@ -1066,7 +1067,7 @@ block(State_t* state, Sfio_t* op, char* bp, char* ep, intmax_t base)
 								state->mbp--;
 								sfputc(op, '.');
 							}
-							else if ((v = u) && (w = mbnchar(v, state->eob - u)) > 0 && (c = v - u) > 1 && !iswprint(w))
+							else if ((v = u) && (w = mbtchar(&w, v, state->eob - u, &state->q)) > 0 && (c = v - u) > 1 && !iswprint(w))
 							{
 								sfwrite(op, u, c);
 								state->mbp = c - 1;

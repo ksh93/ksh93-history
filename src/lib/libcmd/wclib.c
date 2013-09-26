@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2013 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -34,7 +34,6 @@
 
 #include <wchar.h>
 #include <wctype.h>
-#include <lc.h>
 
 #else
 
@@ -65,7 +64,7 @@ wc_init(int mode)
 	if (!mbwide())
 		wp->mb = 0;
 #if _hdr_wchar && _hdr_wctype && _lib_iswctype
-	else if (!(mode & WC_NOUTF8) && (lcinfo(LC_CTYPE)->lc->flags & LC_utf8))
+	else if (!(mode & WC_NOUTF8) && (ast.locale.set & AST_LC_utf8))
 		wp->mb = 1;
 #endif
 	else
@@ -193,25 +192,20 @@ wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 		cp = buff = endbuff = 0;
 		for (;;)
 		{
-			if ((o = endbuff - cp) <= 0 || (n = mb2wc(x, cp, endbuff-cp)) < 0)
+			if ((o = endbuff - cp) <= 0 || (mbchar(&x, cp, o, &wp->q), mberrno(&wp->q)))
 			{
 				if (eof)
 				{
 					if (o <= 0)
 						break;
-					cp++;
 					x = -1;
 				}
-				else if (o < (ssize_t)sizeof(side))
+				else if ((!o || mberrno(&wp->q) == E2BIG) && o < (ssize_t)sizeof(side))
 				{
-					if (buff)
-					{
-						if (o)
-							memcpy(side, cp, o);
-						mbinit();
-					}
-					else
+					if (!buff)
 						o = 0;
+					else if (o)
+						memcpy(side, cp, o);
 					cp = side + o;
 					if (!(buff = (unsigned char*)sfreserve(fd, SF_UNBOUND, 0)) || (n = sfvalue(fd)) <= 0)
 					{
@@ -229,7 +223,9 @@ wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 						memcpy(cp, buff, c);
 					endbuff = buff + n;
 					cp = side;
-					x = mbchar(cp);
+					x = mbchar(&x, cp, MB_LEN_MAX, &wp->q);
+					if (mberrno(&wp->q))
+						x = -1;
 					if ((cp-side) < o)
 					{
 						cp = buff;
@@ -239,10 +235,7 @@ wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 						cp = buff + (cp-side) - o;
 				}
 				else
-				{
-					cp++;
 					x = -1;
-				}
 				if (x == -1)
 				{
 					if (wp->mode & WC_INVAL)
@@ -259,8 +252,6 @@ wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 					}
 				}
 			}
-			else
-				cp += n ? n : 1;
 			if (x == '\n')
 			{
 				if ((nchars - longest) > wp->longest)

@@ -25,7 +25,7 @@
  * install error message handler for fatal malloc exceptions
  */
 
-#define _AST_API_H	1
+#define _AST_API_IMPLEMENT	1
 
 #include <ast.h>
 #include <error.h>
@@ -73,7 +73,7 @@ memfatal(void)
 	(void)memfatal_20130509(NiL);
 }
 
-#undef	_AST_API_H
+#undef	_AST_API_IMPLEMENT
 
 #include <ast_api.h>
 

@@ -381,6 +381,7 @@ int sh_lex(Lex_t* lp)
 			lp->lexd.first = 0;
 	}
 	lp->lastline = lp->sh->inlineno;
+	lp->typed = 0;
 	while(1)
 	{
 		/* skip over characters in the current state */
@@ -1172,6 +1173,13 @@ int sh_lex(Lex_t* lp)
 				continue;
 			case S_EQ:
 				assignment = lp->assignok;
+				if(!assignment)
+				{
+					fcgetc(c);
+					fcseek(-LEN);
+					if(c=='(')
+						lp->typed = assignment=1;
+				}
 				/* FALL THRU */
 			case S_COLON:
 				if(assignment)

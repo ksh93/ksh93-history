@@ -334,7 +334,7 @@ char *sh_fmtstr(const char *string, int quote)
 	register int c, state, type=quote;
 	int offset;
 #if SHOPT_MULTIBYTE
-	bool	lc_unicode;
+	bool	lc_unicodeliterals;
 #endif
 	if(!cp)
 		return((char*)0);
@@ -342,14 +342,14 @@ char *sh_fmtstr(const char *string, int quote)
 	mbinit();
 	state = ((c= mbchar(cp))==0);
 #if SHOPT_MULTIBYTE
-	lc_unicode = quote=='u' ? 1 : quote=='U' ? 0 : !!(ast.locale.set & AST_LC_unicode);
+	lc_unicodeliterals = quote=='u' ? 1 : quote=='U' ? 0 : !!(ast.locale.set & AST_LC_unicodeliterals);
 #endif
 	if(quote=='"')
 		goto skip;
 	quote = '\'';
-	if(isaletter(c) && (!lc_unicode || c<=0x7f))
+	if(isaletter(c) && (!lc_unicodeliterals || c<=0x7f))
 	{
-		while((c=mbchar(cp)), isaname(c) && (!lc_unicode || c<=0x7f));
+		while((c=mbchar(cp)), isaname(c) && (!lc_unicodeliterals || c<=0x7f));
 		if(c==0)
 			return((char*)string);
 		if(c=='=')
@@ -471,7 +471,7 @@ skip:
 
 				if(!widebyte)
 				{
-					if(lc_unicode)
+					if(lc_unicodeliterals)
 					{
 						wchar_t		wc = c;
 						uint32_t	uc = 0;
@@ -480,7 +480,7 @@ skip:
 						 * posix doesn't play the iswrune() game for utf8 locales
 						 * also, empty strings on error with no diagnostic just isn't right
 						 * so source wchars that have no utf32 counterpart are emitted
-						 * as \\w[HEX] => and that's a detectable error under lc_unicode
+						 * as \\w[HEX] => and that's a detectable error under lc_unicodeliterals
 						 */
 
 						if(lc_specifier=='u')

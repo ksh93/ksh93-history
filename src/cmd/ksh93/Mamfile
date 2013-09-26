@@ -153,6 +153,8 @@ prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_intercept.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_intercept.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
+prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
@@ -352,7 +354,7 @@ prev include/defs.h implicit
 done bltins/cd_pwd.c
 meta cd_pwd.o %.c>%.o bltins/cd_pwd.c cd_pwd
 prev bltins/cd_pwd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_API_ast=20130625 -DSHOPT_POLL -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c bltins/cd_pwd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_API_ast=20130625 -D_PACKAGE_ast -DSHOPT_POLL -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c bltins/cd_pwd.c
 done cd_pwd.o generated
 make cflow.o
 make bltins/cflow.c
@@ -888,7 +890,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done edit/history.c
 meta history.o %.c>%.o edit/history.c history
 prev edit/history.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_AUDITFILE=\""/etc/ksh_audit"\" -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_POLL -DSHOPT_DYNAMIC -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_FIXEDARRAY -DSHOPT_AUDIT -c edit/history.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_AUDITFILE=\""/etc/ksh_audit"\" -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -D_BLD_shell -DKSHELL -DSHOPT_POLL -DSHOPT_DYNAMIC -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -DSHOPT_FIXEDARRAY -DSHOPT_AUDIT -c edit/history.c
 done history.o generated
 make init.o
 make sh/init.c

@@ -617,6 +617,8 @@ collelt(register Celt_t* ce, char* key, int c, int x)
 static int
 collic(register Celt_t* ce, char* key, register char* nxt, int c, int x)
 {
+	Mbstate_t	q;
+
 	if (!x)
 	{
 		if (collelt(ce, key, c, x))
@@ -627,7 +629,8 @@ collic(register Celt_t* ce, char* key, register char* nxt, int c, int x)
 			c = towlower(c);
 		else
 			return 0;
-		x = mbconv(key, c);
+		mbtinit(&q);
+		x = mbtconv(key, c, &q);
 		key[x] = 0;
 		return collelt(ce, key, c, 0);
 	}
@@ -647,24 +650,25 @@ collic(register Celt_t* ce, char* key, register char* nxt, int c, int x)
 }
 
 static int
-collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
+collmatch(Env_t* env, Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 {
 	unsigned char*		t;
 	wchar_t			c;
-	int			w;
+	int			z;
 	int			r;
 	int			x;
 	int			ic;
+	wchar_t			w;
 	Ckey_t			key;
 	Ckey_t			elt;
 
 	ic = (rex->flags & REG_ICASE);
-	if ((w = MBSIZE(s)) > 1)
+	if ((z = MBSIZE(env, s)) > 1)
 	{
-		memcpy((char*)key, (char*)s, w);
-		key[w] = 0;
+		memcpy((char*)key, (char*)s, z);
+		key[z] = 0;
 		t = s;
-		c = mbchar(t);
+		c = mbchar(&w, t, MB_LEN_MAX, &env->q);
 #if !_lib_wctype
 		c &= 0xff;
 #endif
@@ -682,24 +686,24 @@ collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 			x = e - s;
 			if (x > COLL_KEY_MAX)
 				x = COLL_KEY_MAX;
-			while (w < x)
+			while (z < x)
 			{
-				c = s[w];
+				c = s[z];
 				if (!isalpha(c))
 					break;
 				r = mbxfrm(elt, key, COLL_KEY_MAX);
 				if (ic && isupper(c))
 					c = tolower(c);
-				key[w] = c;
-				key[w + 1] = 0;
+				key[z] = c;
+				key[z + 1] = 0;
 				if (mbxfrm(elt, key, COLL_KEY_MAX) != r)
 					break;
-				w++;
+				z++;
 			}
 		}
-		key[w] = 0;
+		key[z] = 0;
 		c = key[0];
-		x = w - 1;
+		x = z - 1;
 	}
 	r = 1;
 	for (;;)
@@ -711,10 +715,10 @@ collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 			r = 0;
 			break;
 		}
-		w = x--;
-		key[w] = 0;
+		z = x--;
+		key[z] = 0;
 	}
-	*p = s + w;
+	*p = s + z;
 	return rex->re.collate.invert ? !r : r;
 }
 
@@ -802,6 +806,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 	int		r;
 	ssize_t		i;
 	ssize_t		n;
+	wchar_t		w;
 	int*		f;
 	unsigned char*	p;
 	unsigned char*	t;
@@ -879,10 +884,11 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 			}
 			else
 			{
+				mbinit(&env->s);
 				while (s < e)
 				{
-					c = mbchar(s);
-					d = mbchar(t);
+					c = mbchar(&w, s, MB_LEN_MAX, &env->q);
+					d = mbchar(&w, t, MB_LEN_MAX, &env->s);
 					if (towupper(c) != towupper(d))
 						return NONE;
 				}
@@ -966,7 +972,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 					env->error = REG_ESPACE;
 					return BAD;
 				}
-				for (i = 0; s < e && i < n && collmatch(rex, s, e, &t); i++)
+				for (i = 0; s < e && i < n && collmatch(env, rex, s, e, &t); i++)
 				{
 					b[i] = t - s;
 					s = t;
@@ -992,7 +998,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 			else
 			{
 				for (i = 0; i < m && s < e; i++, s = t)
-					if (!collmatch(rex, s, e, &t))
+					if (!collmatch(env, rex, s, e, &t))
 						return r;
 				while (i++ <= n)
 				{
@@ -1006,7 +1012,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 					case GOOD:
 						return BEST;
 					}
-					if (s >= e || !collmatch(rex, s, e, &s))
+					if (s >= e || !collmatch(env, rex, s, e, &s))
 						break;
 				}
 			}
@@ -1114,7 +1120,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 					}
 					e = env->end;
 					for (i = 0; s < e && i < n && *s != c; i++)
-						s += b[i] = MBSIZE(s);
+						s += b[i] = MBSIZE(env, s);
 					for (; i-- >= m; s -= b[i])
 						switch (follow(env, rex, cont, s))
 						{
@@ -1155,9 +1161,9 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 				{
 					e = env->end;
 					for (i = 0; s < e && i < m && *s != c; i++)
-						s += MBSIZE(s);
+						s += MBSIZE(env, s);
 					if (i >= m)
-						for (; s <= e && i <= n; s += MBSIZE(s), i++)
+						for (; s <= e && i <= n; s += MBSIZE(env, s), i++)
 							switch (follow(env, rex, cont, s))
 							{
 							case BAD:
@@ -1529,7 +1535,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 						for (i = 0; s < e && i < n; i++, s = t)
 						{
 							t = s;
-							if (mbchar(t) != c)
+							mbinit(&env->s);
+							if (mbchar(&w, t, MB_LEN_MAX, &env->s) != c)
 								break;
 							b[i] = t - s;
 						}
@@ -1539,7 +1546,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 						for (i = 0; s < e && i < n; i++, s = t)
 						{
 							t = s;
-							if (towupper(mbchar(t)) != c)
+							mbinit(&env->s);
+							if (towupper(mbchar(&w, t, MB_LEN_MAX, &env->s)) != c)
 								break;
 							b[i] = t - s;
 						}
@@ -1621,7 +1629,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 						for (i = 0; i < m && s < e; i++, s = t)
 						{
 							t = s;
-							if (mbchar(t) != c)
+							mbinit(&env->s);
+							if (mbchar(&w, t, MB_LEN_MAX, &env->s) != c)
 								return r;
 						}
 						while (i++ <= n)
@@ -1636,7 +1645,10 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 							case GOOD:
 								return BEST;
 							}
-							if (s >= e || mbchar(s) != c)
+							if (s >= e)
+								break;
+							mbinit(&env->s);
+							if (mbchar(&w, s, MB_LEN_MAX, &env->s) != c)
 								break;
 						}
 					}
@@ -1645,7 +1657,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 						for (i = 0; i < m && s < e; i++, s = t)
 						{
 							t = s;
-							if (towupper(mbchar(t)) != c)
+							mbinit(&env->s);
+							if (towupper(mbchar(&w, t, MB_LEN_MAX, &env->s)) != c)
 								return r;
 						}
 						while (i++ <= n)
@@ -1660,7 +1673,10 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 							case GOOD:
 								return BEST;
 							}
-							if (s >= e || towupper(mbchar(s)) != c)
+							if (s >= e)
+								break;
+							mbinit(&env->s);
+							if (towupper(mbchar(&w, s, MB_LEN_MAX, &env->s)) != c)
 								break;
 						}
 					}
@@ -1722,8 +1738,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s \"%-.*s\" `%-.*s'
 			{
 				while (t < e)
 				{
-					c = mbchar(s);
-					d = mbchar(t);
+					c = mbchar(&w, s, MB_LEN_MAX, &env->q);
+					d = mbchar(&w, t, MB_LEN_MAX, &env->s);
 					if (towupper(c) != d)
 						return NONE;
 				}
@@ -1972,7 +1988,7 @@ regnexec_20120528(const regex_t* p, const char* s, size_t len, size_t nmatch, re
 	{
 		if (j)
 			goto done;
-		i = MBSIZE(s);
+		i = MBSIZE(env, s);
 		s += i;
 		if ((unsigned char*)s > env->end - env->min)
 			goto done;
