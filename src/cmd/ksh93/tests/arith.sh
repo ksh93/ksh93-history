@@ -851,4 +851,8 @@ function f
 }
 [[ $(f) == "'0 1 2'" ]] 2> /dev/null || err_exit '0 value for variable in arithmetic expression inside function with set -u fails' 
 
+integer -u u=123
+(( u.MAX < (1<<31) ))  && err_exit '$((i.MAX)) not workng when i is unsigned int'
+
+
 exit $((Errors<125?Errors:125))

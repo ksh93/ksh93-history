@@ -362,7 +362,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 						do
 						{
 							for (v = s; *s != ',' && *s != '@'; s++)
-								if (!*s)
+								if (!*s || *s == '/')
 								{
 									errno = EINVAL;
 									goto nope;
@@ -581,8 +581,8 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 		{
 			z = x || (flags & PATH_PHYSICAL) && dev->fd >= 0 ? s : (char*)path;
 			n = strlen(z) + 1;
-			a = (char*)path + size - n;
-			memmove(a, z, n);
+			a = fmtbuf(n);
+			memcpy(a, z, n);
 		}
 		else
 		{
@@ -596,10 +596,7 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 			v += strlen(v);
 			if ((v - z) > 1)
 				*v++ = '/';
-			if (inplace)
-				memmove(v, a, n);
-			else
-				memcpy(v, a, n);
+			memcpy(v, a, n);
 			s = v = r;
 		}
 		else if (*s != '/')
@@ -812,9 +809,12 @@ pathdev(int dfd, const char* path, char* canon, size_t size, int flags, Pathdev_
 			break;
 		}
  nope:
-	if (inplace)
-		memmove(canon, s, strlen(s) + 1);
-	else if (e)
-		strcpy(canon, s);
+	if (canon)
+	{
+		if (inplace)
+			memmove(canon, s, strlen(s) + 1);
+		else if (e)
+			strcpy(canon, s);
+	}
  	return 0;
 }

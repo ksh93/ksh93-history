@@ -1,3 +1,5 @@
+13-09-27 path/pathcanon.c: fix buffer clobber bug between pathdev() and fgetcwd()
+13-09-27 path/pathopen.c: handle easy O_XATTR case for /dev/fd open() semantics
 13-09-25 include/ast_std.h,comp/setlocale.c: AST_LC_unicode => AST_LC_unicodeliterals, LC_OPTIONS=...unicodeliterals...
 13-09-25 include/ast_std.h,comp/setlocale.c: AST_LC_native LC_OPTIONS=...native... to bypass ast unicode iswalpha/wcwidth tables
 13-09-25 comp/eaccess.c: resolve <ast_map.h> vs <ast_intercept.h> conflict -- _ast_eaccess wins

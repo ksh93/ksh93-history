@@ -1140,7 +1140,8 @@ static struct process *job_bystring(register char *ajob)
 {
 	register struct process *pw=job.pwlist;
 	register int c;
-	if(*ajob++ != '%' || !pw)
+	const char *msg;
+	if(*ajob++ != '%')
 		return(NIL(struct process*));
 	c = *ajob;
 	if(isdigit(c))
@@ -1156,6 +1157,8 @@ static struct process *job_bystring(register char *ajob)
 		pw = job_byname(ajob);
 	if(pw && pw->p_flag)
 		return(pw);
+	msg = sh_translate(e_no_job);
+	sfprintf(sfstderr,"%s: %s\n",ajob-1, msg);
 	return(NIL(struct process*));
 }
 

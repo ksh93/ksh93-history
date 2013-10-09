@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make ksh
 make pmain.o
@@ -871,7 +871,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/fcin.c
 meta fcin.o %.c>%.o sh/fcin.c fcin
 prev sh/fcin.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/fcin.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/fcin.c
 done fcin.o generated
 make history.o
 make edit/history.c
@@ -1200,7 +1200,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/env.c
 meta env.o %.c>%.o sh/env.c env
 prev sh/env.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/env.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/env.c
 done env.o generated
 make hexpand.o
 make edit/hexpand.c
@@ -1248,7 +1248,7 @@ done LDBL_LLONG_MIN dontcare virtual
 make data/math.tab implicit
 done data/math.tab
 done features/math.sh dontcare
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} : run features/math.sh data/math.tab
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcoshell} ${mam_libcmd} ${mam_libast} ${mam_libm} : run features/math.sh ${PACKAGEROOT}/src/cmd/ksh93/data/math.tab
 make ${PACKAGE_ast_INCLUDE}/ast_standards.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_standards.h dontcare
 done FEATURE/math generated
@@ -1601,7 +1601,7 @@ make tests/shtests
 done tests/shtests
 exec - silent cmp 2>/dev/null -s ${INSTALLROOT}/bin/ksh ksh 2>/dev/null ||
 exec - echo "make install to run the tests on the latest ksh" >&2
-exec - cd ${PACKAGEROOT}/src/cmd/ksh93/tests
+exec - cd
 exec - KSH=${INSTALLROOT}/bin/ksh
 exec - SHELL=$KSH $KSH shtests
 done test.ksh virtual

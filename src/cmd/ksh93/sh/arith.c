@@ -571,7 +571,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		c = mbchar(str);
 		if(isaletter(c))
 		{
-			register Namval_t *np;
+			register Namval_t *np=0;
 			int dot=0;
 			while(1)
 			{
@@ -750,6 +750,19 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					val++;
 			}
 			r = strtonll(val,&str, &lastbase,-1);
+			if(str>val)
+			{
+				if(*str=='f' || *str=='F')
+				{
+					lvalue->isfloat=2;
+					str++;
+				}
+				if(*str=='l' || *str=='L')
+				{
+					lvalue->isfloat=4;
+					str++;
+				}
+			}
 			if(*str=='_')
 			{
 				if((r==1||r==2) && strcmp(str,"_PI")==0)
@@ -785,8 +798,16 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			if(c==GETDECIMAL(0) || c=='e' || c == 'E' || lastbase ==
  16 && (c == 'p' || c == 'P'))
 			{
-				lvalue->isfloat=1;
+				lvalue->isfloat=3;
 				r = strtold(val,&str);
+				if(str)
+				{
+					if(*str=='f' || *str == 'F')
+						lvalue->isfloat=2;
+					if(*str=='l' || *str == 'L')
+						lvalue->isfloat=4;
+				}
+				lvalue->isfloat=1;
 			}
 			else if(lastbase==10 && val[1])
 			{

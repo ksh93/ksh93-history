@@ -2075,7 +2075,9 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		out_offset:
 			stkset(stkp,savptr,savtop);
 			*mp = savemac;
-			if((Sflong_t)num!=num)
+			if(num && (Sfulong_t)num==num)
+				sfprintf(mp->shp->strbuf,"%llu",(Sfulong_t)num);
+			else if((Sflong_t)num!=num)
 				sfprintf(mp->shp->strbuf,"%.*Lg",LDBL_DIG,num);
 			else if(num)
 				sfprintf(mp->shp->strbuf,"%lld",(Sflong_t)num);

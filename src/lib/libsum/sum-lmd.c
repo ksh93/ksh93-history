@@ -266,6 +266,7 @@ sha256_open(const Method_t* method, const char* name)
 #define sha384_description "FIPS 180-2 SHA384 secure hash algorithm.  The block count is not printed."
 #define sha384_options	"[+(version)?sha384 (solaris -lmd) 2005-07-26]"
 #define sha384_match	"sha384|sha-384|SHA384|SHA-384"
+#define sha384_scale	0
 #define sha384_flags	SUM_INDICATOR
 #define sha384_init	lmd_init
 #define sha384_block	lmd_block

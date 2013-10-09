@@ -237,7 +237,7 @@ if	[[ $VMALLOC_OPTIONS ]]
 then	vmalloc_options=$VMALLOC_OPTIONS
 else	VMALLOC_OPTIONS=$vmalloc_options
 fi
-[[ $VMALLOC_OPTIONS ]] || timesensitive=.
+[[ ,$VMALLOC_OPTIONS, == *,@(abort|check),* ]] || timesensitive=.
 export PATH PWD SHCOMP SHELL VMALLOC_OPTIONS
 PWD=$(pwd)
 SHELL=${SHELL-ksh}

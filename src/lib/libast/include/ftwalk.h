@@ -76,6 +76,7 @@
 #define FTW_TOP		FTS_TOP
 #define FTW_TWICE	(FTS_WALK<<2)
 #define FTW_USER	(FTS_WALK<<3)
+#define FTW_XATTR	FTS_XATTR
 
 /*
  * Ftw_t.info type bits

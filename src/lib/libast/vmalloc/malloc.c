@@ -126,7 +126,8 @@ typedef struct ______mstats Mstats_t;
 **			Vmregion==Vmdebug region checking starts after n ops
 **	    test=x	enable tests du jour in the range 0x0001..0x8000
 **	    trace=f	enable tracing to file f
-**	    verbose	enable method and dicsipline initialization messages to stderr
+**	    usage	print region usage stats diagnotics on each system allocation
+**	    verbose	enable method and discipline initialization messages to stderr
 **	    warn=f	sets Vmregion=Vmdebug if not defined, if
 **			Vmregion==Vmdebug then warnings printed to file f
 **	    watch=a	sets Vmregion=Vmdebug if not defined, if

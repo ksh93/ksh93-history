@@ -32,8 +32,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make hurl
 make hurl.sh
@@ -773,22 +773,19 @@ make ${INSTALLROOT}/bin/filter
 prev filter
 exec - test '' = 'filter' || ${STDCMP} 2>/dev/null -s filter ${INSTALLROOT}/bin/filter || { ${STDMV} ${INSTALLROOT}/bin/filter ${INSTALLROOT}/bin/filter.old 2>/dev/null || true; ${STDCP} filter ${INSTALLROOT}/bin/filter ;}
 done ${INSTALLROOT}/bin/filter generated
-make ${PACKAGEROOT}/lib/package
+make ${INSTALLROOT}/lib/package
 exec - if test ! -d ${PACKAGEROOT}/lib/package
 exec - then mkdir -p ${PACKAGEROOT}/lib/package
 exec - fi
-done ${PACKAGEROOT}/lib/package generated
-make ${PACKAGEROOT}/lib/package/package.mk
-prev ${PACKAGEROOT}/lib/package
+done ${PACKAGEROOT}/lib/package
+make ${PACKAGEROOT}/lib/package
+done ${PACKAGEROOT}/lib/package
 make package.mk
 done package.mk
 exec - test '' = 'package.mk' || ${STDCMP} 2>/dev/null -s package.mk ${PACKAGEROOT}/lib/package/package.mk || { ${STDMV} ${PACKAGEROOT}/lib/package/package.mk ${PACKAGEROOT}/lib/package/package.mk.old 2>/dev/null || true; ${STDCP} package.mk ${PACKAGEROOT}/lib/package/package.mk ;}
-done ${PACKAGEROOT}/lib/package/package.mk generated
-make ${PACKAGEROOT}/lib/package/CONVERT.mk
 make CONVERT.mk
 done CONVERT.mk
 exec - test '' = 'CONVERT.mk' || ${STDCMP} 2>/dev/null -s CONVERT.mk ${PACKAGEROOT}/lib/package/CONVERT.mk || { ${STDMV} ${PACKAGEROOT}/lib/package/CONVERT.mk ${PACKAGEROOT}/lib/package/CONVERT.mk.old 2>/dev/null || true; ${STDCP} CONVERT.mk ${PACKAGEROOT}/lib/package/CONVERT.mk ;}
-done ${PACKAGEROOT}/lib/package/CONVERT.mk generated
 make ${INSTALLROOT}/lib/make
 exec - if test ! -d ${INSTALLROOT}/lib/make
 exec - then mkdir -p ${INSTALLROOT}/lib/make

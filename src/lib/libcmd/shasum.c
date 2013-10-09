@@ -32,6 +32,12 @@ b_sha1sum(int argc, register char** argv, Shbltin_t* context)
 }
 
 int
+b_sha2sum(int argc, register char** argv, Shbltin_t* context)
+{
+	return b_cksum(argc, argv, context);
+}
+
+int
 b_sha256sum(int argc, register char** argv, Shbltin_t* context)
 {
 	return b_cksum(argc, argv, context);

@@ -475,60 +475,65 @@ cat{
 	#define true	1
 	#endif
 }end
-tst key___thread -lpthread note{ __thread keyword exists and works with -lpthread }end execute{
-	#if defined(__APPLE__) || defined(__APPLE_CC__) || defined(__MACH__)
-	(	/* __thread does not work in dlls */
-	#endif
-	
-	#include	<pthread.h>
+if	tst key___thread -lpthread note{ __thread keyword exists and works with -lpthread }end execute{
+		#if defined(__APPLE__) || defined(__APPLE_CC__) || defined(__MACH__)
+		(	/* __thread does not work in dlls */
+		#endif
+		
+		#include	<pthread.h>
 
-	#define INITIAL		1
-	#define LOOP		100
-	
-	static __thread int	specific = INITIAL;
-	static int		global = 0;
-	
-	static void* worker(void* arg)
-	{
-		int	k;
-		int	v;
-		v = (int)(arg - 0);
-		for (k = 0; k < LOOP; ++k)
-		{	
-			specific += v;
-			usleep(1);
-		}
-		if (specific != (INITIAL + LOOP * v)) 
-			global = 1;
-		return 0;
-	}
-	int main()
-	{
-		pthread_t	th[2];
-	
-		if (pthread_create(&th[0], 0, worker, (void*)0 + 5) ||
-		    pthread_create(&th[1], 0, worker, (void*)0 + 7))
+		#define INITIAL		1
+		#define LOOP		100
+		
+		static __thread int	specific = INITIAL;
+		static int		global = 0;
+		
+		static void* worker(void* arg)
 		{
-			NOTE("pthread_create failed");
-			return 1;
+			int	k;
+			int	v;
+			v = (int)(arg - 0);
+			for (k = 0; k < LOOP; ++k)
+			{	
+				specific += v;
+				usleep(1);
+			}
+			if (specific != (INITIAL + LOOP * v)) 
+				global = 1;
+			return 0;
 		}
-		pthread_join(th[0], 0);
-		pthread_join(th[1], 0);
-		if (global)
+		int main()
 		{
-			NOTE("__thread variable not thread specific");
-			return 1;
+			pthread_t	th[2];
+		
+			if (pthread_create(&th[0], 0, worker, (void*)0 + 5) ||
+			    pthread_create(&th[1], 0, worker, (void*)0 + 7))
+			{
+				NOTE("pthread_create failed");
+				return 1;
+			}
+			pthread_join(th[0], 0);
+			pthread_join(th[1], 0);
+			if (global)
+			{
+				NOTE("__thread variable not thread specific");
+				return 1;
+			}
+			if (specific != INITIAL)
+			{
+				NOTE("main __thread variable changed by another thread");
+				return 1;
+			}
+			return 0;
 		}
-		if (specific != INITIAL)
-		{
-			NOTE("main __thread variable changed by another thread");
-			return 1;
-		}
-		return 0;
-	}
-}end no{
-	#define __thread		/* __thread keyword does not exist or does not work with -lpthread */
-}end
+	}end
+elif	tst - note{ msvc __declspec(thread) works }end compile{
+		__declspec(thread) tls = 1;
+	}end
+else	cat{
+		#define __thread		/* __thread keyword does not exist or does not work with -lpthread */
+	}end
+endif
 
 tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	#if _STD_ && _hdr_stdarg

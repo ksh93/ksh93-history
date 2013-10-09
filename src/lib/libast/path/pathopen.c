@@ -40,6 +40,10 @@
 #include <netinet/in.h>
 #endif
 
+#ifndef O_XATTR
+#define O_XATTR		0
+#endif
+
 #if !_lib_getaddrinfo
 
 #if !defined(htons) && !_lib_htons
@@ -222,7 +226,7 @@ pathopen(int dfd, const char* path, char* canon, size_t size, int flags, int ofl
 
 			/* preserve open() semantics if possible */
 
-			if (oflags & (O_DIRECTORY|O_SEARCH))
+			if (oflags & (O_DIRECTORY|O_SEARCH|O_XATTR))
 				return openat(dev.fd, ".", oflags|O_INTERCEPT, mode);
 #if O_XATTR
 			if ((f = openat(dev.fd, ".", O_INTERCEPT|O_RDONLY|O_XATTR)) >= 0)

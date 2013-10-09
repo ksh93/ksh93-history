@@ -1,4 +1,10 @@
-13-09-23  --- Release ksh93v- ---
+13-10-08  --- Release ksh93v- ---
+13-10-08  The shell arithmetic now recognized suffices f,F, l, and L for
+	  floating point constants.
+13-10-07  The shell now prints an error message on standard error when a
+	  job specified with %job does not exist.
+13-10-04  A bug in the value of i.MAX inside an arithmetic expression when the
+	  variable i is unsigned long has been fixed.
 13-09-23  A bug in which a compound assignment to a type, [(T_t x=(i=2)] where
 	  type T_t is defined in FPATH would fail with a syntx error has been
 	  fixed

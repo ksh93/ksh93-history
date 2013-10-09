@@ -3048,13 +3048,13 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 		else if(nv_isattr(np, NV_UNSIGN))
 		{
 			if(nv_isattr(np, NV_LONG))
-				r = (Sflong_t)*((Sfulong_t*)up->llp);
+				r = (Sfulong_t)*((Sfulong_t*)up->llp);
 			else if(nv_isattr(np, NV_SHORT))
 			{
 				if(nv_isattr(np,NV_INT16P)==NV_INT16P)
-					r = (Sflong_t)(*(uint16_t*)up->sp);
+					r = (Sfulong_t)(*(uint16_t*)up->sp);
 				else
-					r = (Sflong_t)((uint16_t)up->s);
+					r = (Sfulong_t)((uint16_t)up->s);
 			}
 			else
 				r = *((uint32_t*)up->lp);
