@@ -14,7 +14,7 @@
 #                            AT&T Research                             #
 #                           Florham Park NJ                            #
 #                                                                      #
-#                  David Korn <dgk@research.att.com>                   #
+#                    David Korn <dgkorn@gmail.com>                     #
 #                                                                      #
 ########################################################################
 function err_exit
@@ -668,5 +668,14 @@ function foo
 }
 val=${ foo;}
 [[ $val ]] && err_exit "function foo generates $val but should generate the empty string in command substitution"
+
+x=$(
+	for i in a b c 
+	do	read A
+		print -n "$A"
+		STDERR=$(</dev/null)
+	done <<< $'y\ny\ny\n'
+)
+[[ $x == yyy ]] || err_exit '$(</dev/null) in a subshell causes failure'
 
 exit $((Errors<125?Errors:125))

@@ -6834,7 +6834,7 @@ on groups of 3 in the C locale.)
 .PP
 .RE
 .TP
-\f3pwd\fP \*(OK \f3\-LP\fP \*(CK
+\f3pwd\fP \*(OK \f3\-LP\fP \*(CK \*(OK \f3\-f\fP \f2fd\^\fP \*(CK 
 Outputs the value of the current working
 directory.
 The
@@ -6850,6 +6850,11 @@ or
 .B \-P
 on the command line
 determines which method is used.
+If the
+.B \-f
+option is specified, the directory name corresponding to file descriptor
+.IR fd
+is outputted.
 .TP
 \f3read\fP \*(OK \f3\-ACSprsv\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-n\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-N\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
 The shell input mechanism.

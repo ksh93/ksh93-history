@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -29,6 +29,8 @@
  *
  */
 
+#define PATCH	1
+
 #include	"defs.h"
 #include	<stak.h>
 #include	<error.h>
@@ -36,6 +38,7 @@
 #include	"path.h"
 #include	"name.h"
 #include	"builtins.h"
+#include	<pwd.h>
 #include	<ls.h>
 
 /*
@@ -58,7 +61,7 @@ int sh_diropenat(Shell_t *shp, int dir, const char *path)
 
 	if ((fd = openat(dir, path, O_DIRECTORY|O_NONBLOCK|O_CLOEXEC)) < 0)
 #if O_SEARCH
-	    if (errno != EACCES || (fd = openat(dir, path, O_SEARCH|O_DIRECTORY|O_NONBLOCK|O_CLOEXEC)) < 0)
+	if (errno != EACCES || (fd = openat(dir, path, O_SEARCH|O_DIRECTORY|O_NONBLOCK|O_CLOEXEC)) < 0)
 #endif
 		return fd;
 
@@ -107,9 +110,11 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	}
 	argv += opt_info.index;
 	argc -= opt_info.index;
-	dir =  argv[0];
+	dir = argv[0];
 	if(error_info.errors>0 || argc >2)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
+	if(!shp->pwd)
+		shp->pwd = path_pwd(shp,0);
 	oldpwd = (char*)shp->pwd;
 	opwdnod = (shp->subshell?sh_assignok(OLDPWDNOD,1):OLDPWDNOD); 
 	pwdnod = (shp->subshell?sh_assignok(PWDNOD,1):PWDNOD); 
@@ -118,7 +123,11 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	if(argc==2)
 		dir = sh_substitute(shp,oldpwd,dir,argv[1]);
 	else if(!dir)
-		dir = nv_getval(HOME);
+	{
+		struct passwd *pw;
+		if(!(dir = nv_getval(HOME)) && (pw = getpwuid(geteuid())))
+			dir = pw->pw_dir;
+	}
 	else if(*dir == '-' && dir[1]==0)
 		dir = nv_getval(opwdnod);
 	if(!dir || *dir==0)
@@ -130,9 +139,33 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		j = sfprintf(shp->strbuf2,"%s",dir);
 		dir = sfstruse(shp->strbuf2);
 		pathcanon(dir, j + 1, 0);
+#if PATCH&1
+		if (*dir!='/' && dirfd!=shp->pwdfd)
+		{
+#if defined(_fd_pid_dir_fmt)
+			sfprintf(shp->strbuf, "/dev/file/xattr@" _fd_pid_dir_fmt "//@//", shp->gd->pid, dirfd, "/", dir);
+#else
+			sfprintf(shp->strbuf, "/dev/file/xattr@/dev/fd/%d/%s//@//", dirfd, dir);
+#endif
+			dirfd = shp->pwdfd;
+		}
+		else
+#endif
 		sfprintf(shp->strbuf, "/dev/file/xattr@%s//@//", dir);
 		dir = sfstruse(shp->strbuf);
 	}
+#if PATCH&1
+	else if (*dir!='/' && dirfd!=shp->pwdfd)
+	{
+#if defined(_fd_pid_dir_fmt)
+		sfprintf(shp->strbuf, _fd_pid_dir_fmt, shp->gd->pid, dirfd, "/", dir);
+#else
+		sfprintf(shp->strbuf, "/dev/fd/%d/%s", dirfd, dir);
+#endif
+		dirfd = shp->pwdfd;
+		dir = sfstruse(shp->strbuf);
+	}
+#endif
 #if _WINIX
 	if(*dir != '/' && (dir[1]!=':'))
 #else
@@ -174,13 +207,13 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		dp = cdpath?cdpath->name:"";
 		cdpath = path_nextcomp(shp,cdpath,dir,0);
 #if _WINIX
-                if(*stakptr(PATH_OFFSET+1)==':' && isalpha(*stakptr(PATH_OFFSET)))
+		if(*stakptr(PATH_OFFSET+1)==':' && isalpha(*stakptr(PATH_OFFSET)))
 		{
 			*stakptr(PATH_OFFSET+1) = *stakptr(PATH_OFFSET);
 			*stakptr(PATH_OFFSET)='/';
 		}
 #endif /* _WINIX */
-                if(*stakptr(PATH_OFFSET)!='/' && dirfd==shp->pwdfd)
+		if(*stakptr(PATH_OFFSET)!='/' && dirfd==shp->pwdfd)
 		{
 			char *last=(char*)stakfreeze(1);
 			stakseek(PATH_OFFSET);
@@ -225,7 +258,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		}
 #endif
 		if(saverrno==0)
-                        saverrno=errno;
+			saverrno=errno;
 	}
 	while(cdpath);
 	if(rval<0 && *dir=='/' && *(path_relative(shp,stakptr(PATH_OFFSET)))!='/')
@@ -275,7 +308,15 @@ success:
 	if(*dp && (*dp!='.'||dp[1]) && strchr(dir,'/'))
 		sfputr(sfstdout,dir,'\n');
 	if(*dir != '/')
+#if PATCH&2
+	{
+		if(!fflag)
+			return(0);
+		dir = fgetcwd(newdirfd, 0, 0);
+	}
+#else
 		return(0);
+#endif
 	nv_putval(opwdnod,oldpwd,NV_RDONLY);
 	i = j = (int)strlen(dir);
 	/* delete trailing '/' */
@@ -305,10 +346,13 @@ int	b_pwd(int argc, char *argv[],Shbltin_t *context)
 	register char *cp, *dir;
 	register Shell_t *shp = context->shp;
 	bool pflag = false;
-	int n,fd;
+	int n,fd,ffd=-1;
 	NOT_USED(argc);
 	while((n=optget(argv,sh_optpwd))) switch(n)
 	{
+		case 'f':
+			ffd = opt_info.num;
+			break;
 		case 'L':
 			pflag = false;
 			break;
@@ -324,6 +368,15 @@ int	b_pwd(int argc, char *argv[],Shbltin_t *context)
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
+	if (ffd != -1)
+	{
+		if(!(cp = fgetcwd(ffd, 0, 0)))
+			errormsg(SH_DICT, ERROR_system(1), e_pwd);
+		sfputr(sfstdout, cp, '\n');
+		free(cp);
+		return(0);
+
+	}
 	if(pflag)
 	{
 #if SHOPT_FS_3D

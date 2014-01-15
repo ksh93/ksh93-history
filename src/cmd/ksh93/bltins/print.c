@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -76,9 +76,9 @@ static const struct printmap  Pmap[] =
 	3,	"csv",			"#q",
 	3,	"ere",			"R",
 	4,	"html",			"H",
-	9,	"nounicodeliterals",	"0q",
+	17,	"nounicodeliterals",	"0q",
 	7,	"pattern",		"P",
-	7,	"unicodeliterals",	"+q",
+	15,	"unicodeliterals",	"+q",
 	3,	"url",			"#H",
 	0,	0,			0,
 };

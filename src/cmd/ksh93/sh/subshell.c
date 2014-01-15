@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -213,16 +213,28 @@ void sh_subfork(void)
 	}
 }
 
-bool nv_subsaved(register Namval_t *np)
+bool nv_subsaved(register Namval_t *np, int table)
 {
 	register struct subshell	*sp;
-	register struct Link		*lp;
+	register struct Link		*lp, *lpprev;
 	for(sp = (struct subshell*)subshell_data; sp; sp=sp->prev)
 	{
-		for(lp=sp->svar; lp; lp = lp->next)
+		lpprev = 0;
+		for(lp=sp->svar; lp; lpprev=lp, lp=lp->next)
 		{
 			if(lp->node==np)
+			{
+				if(table&NV_TABLE)
+				{
+					if(lpprev)
+						lpprev->next = lp->next;
+					else
+						sp->svar = lp->next;
+					free((void*)np);
+					free((void*)lp);
+				}
 				return(true);
+			}
 		}
 	}
 	return(false);
@@ -238,14 +250,16 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	register Namval_t	*mp;
 	register struct Link	*lp;
 	register struct subshell *sp = (struct subshell*)subshell_data;
-	Shell_t			*shp = sp->shp;
-	Dt_t			*dp= shp->var_tree;
+	Shell_t			*shp;
+	Dt_t			*dp;
 	Namval_t		*mpnext;
 	Namarr_t		*ap;
 	int			save;
 	/* don't bother with this */
-	if(!sp->shpwd || np==SH_LEVELNOD || np==L_ARGNOD || np==SH_SUBSCRNOD || np==SH_NAMENOD)
+	if(!sp || !sp->shpwd || np==SH_LEVELNOD || np==L_ARGNOD || np==SH_SUBSCRNOD || np==SH_NAMENOD)
 		return(np);
+	shp = sp->shp;
+	dp = shp->var_tree;
 	/* don't bother to save if in newer scope */
 	if(sp->var!=shp->var_tree && sp->var!=shp->var_base && shp->last_root==shp->var_tree)
 		return(np);
@@ -433,8 +447,8 @@ int sh_subsavefd(register int fd)
 	register int old=0;
 	if(sp)
 	{
-		old = !(sp->fdsaved&(1<<(fd-1)));
-		sp->fdsaved |= (1<<(fd-1));
+		old = !(sp->fdsaved&(1<<fd));
+		sp->fdsaved |= (1<<fd);
 	}
 	return(old);
 }

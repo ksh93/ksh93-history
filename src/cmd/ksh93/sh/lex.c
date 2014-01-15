@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -1163,7 +1163,7 @@ int sh_lex(Lex_t* lp)
 				}
 				if(mode==ST_NONE)
 					return(0);
-				if(c!=n)
+				if(c!=n && lp->lex.incase<TEST_RE)
 				{
 					lp->token = c;
 					sh_syntax(lp);
@@ -1349,7 +1349,7 @@ breakloop:
 	{
 		/* check for numbered redirection */
 		n = state[0];
-		if((c=='<' || c=='>') && isadigit(n))
+		if(!lp->lex.intest && (c=='<' || c=='>') && isadigit(n))
 		{
 			c = sh_lex(lp);
 			lp->digits = (n-'0'); 

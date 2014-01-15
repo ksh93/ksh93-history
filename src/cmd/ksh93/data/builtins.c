@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -469,7 +469,8 @@ USAGE_LICENSE
 "[+?When invoked without operands and when the \bHOME\b environment "
 	"variable is set to a nonempty value,  the directory named by "
 	"the \bHOME\b environment variable will be used.  If \bHOME\b "
-	"is empty or unset, \bcd\b will fail.]"
+	"is empty or unset, it will use the home directory for the effective "
+	"user if possible.  Otherwise \bcd\b will fail.]"
 "[+?When \bcd\b is successful, the \bPWD\b environment variable will be set "
 	"to the name of an absolute pathname that does not contain any "
 	"\b..\b components corresponding to the new directory.  The "
@@ -1267,7 +1268,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optpwd[] =
-"[-1c?\n@(#)$Id: pwd (AT&T Research) 1999-06-07 $\n]"
+"[-1c?\n@(#)$Id: pwd (AT&T Research) 2013-11-10 $\n]"
 USAGE_LICENSE
 "[+NAME?pwd - write working directory name]"
 "[+DESCRIPTION?\bpwd\b writes an absolute pathname of the current working "
@@ -1283,11 +1284,13 @@ USAGE_LICENSE
 "[L?The absolute pathname may contains symbolic link components.  This is "
 	"the default.]"
 "[P?The absolute pathname will not contain any symbolic link components.]"
+"[f?Print the directory name for the open directory file descriptor "
+	"\afd\a. Cannot be combined with other options.]#[fd]"
 "[+EXIT STATUS?]{"
 	"[+0?Successful completion.]"
 	"[+>0?An error occurred.]"
 "}"
-"[+SEE ALSO?\bcd\b(1), \bgetconf\b(1)]"
+"[+SEE ALSO?\bcd\b(1), \bgetconf\b(1), \breadlink\b(1), \brealpath\b(1)]"
 ;
 
 const char sh_optread[] =

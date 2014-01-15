@@ -14,7 +14,7 @@
 #                            AT&T Research                             #
 #                           Florham Park NJ                            #
 #                                                                      #
-#                  David Korn <dgk@research.att.com>                   #
+#                    David Korn <dgkorn@gmail.com>                     #
 #                                                                      #
 ########################################################################
 function err_exit
@@ -727,5 +727,15 @@ if	cd -f $fd
 then	[[ -r null ]] || err_exit 'cannot find "null" file in /dev'
 else	err_exit 'cannot cd to ~{fd} when fd is /dev'
 fi
+
+[[ $(pwd -f $fd) == /dev ]] || err_exit "pwd -f $fd should be /dev"
+
+$SHELL <<- \EOF
+	home=$HOME
+	unset HOME
+	cd 2> /dev/null
+	[[ $(pwd) == "$home" ]]
+EOF
+[[ $? == 0 ]] || err_exit 'cd with no arguments fails if HOME is unset'
 
 exit $((Errors<125?Errors:125))

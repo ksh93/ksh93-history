@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -2916,10 +2916,12 @@ tryagain:
 				register char *right;
 				register char *trap;
 				char *argv[6];
+				int savexit = shp->savexit;
 				n = type>>TSHIFT;
 				left = sh_macpat(shp,&(t->lst.lstlef->arg),OPTIMIZE);
 				if(type&TBINARY)
 					right = sh_macpat(shp,&(t->lst.lstrit->arg),((n==TEST_PEQ||n==TEST_PNE)?ARG_EXP:0)|OPTIMIZE);
+				shp->savexit = savexit;
 				if(trap=shp->st.trap[SH_DEBUGTRAP])
 					argv[0] = (type&TNEGATE)?((char*)e_tstbegin):"[[";
 				if(sh_isoption(shp,SH_XTRACE))

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2014 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -14,7 +14,7 @@
 #                            AT&T Research                             #
 #                           Florham Park NJ                            #
 #                                                                      #
-#                  David Korn <dgk@research.att.com>                   #
+#                    David Korn <dgkorn@gmail.com>                     #
 #                                                                      #
 ########################################################################
 function err_exit
@@ -888,10 +888,12 @@ typeset -T p_t=( integer fd=-1 ; compound events=(  bool pollin=false ; );)
 p_t --man'
 [[ $? == 2 ]] || err_exit 'unable to generated manpage for types that contain compound variables'
 
-FPATH=$tmp/fundir
+export FPATH=$tmp/fundir
 mkdir -p $FPATH
 print 'typeset -T My_t=(integer i j)' > $FPATH/My_t
 $SHELL 2> /dev/null -c 'My_t a=(i=1 j=2); [[ "${a.i} ${a.j}" == "1 2" ]]' || 
 	err_exit "dynamic loading of type with assignment fails"
+
+$SHELL 2> /dev/null -c 'typeset -T My_t=(readonly x); My_t foo' && err_exit 'unset type subvariables defined as readonly are required to be specified for each type instance'
 
 exit $((Errors<125?Errors:125))

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -524,8 +524,6 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 						nv_delete(nr,shp->last_root,0);
 				}
 			}
-			else if(nv_isattr(nq,NV_RDONLY) && !nq->nvalue.cp && !nv_isattr(nq,NV_INTEGER))
-				errormsg(SH_DICT,ERROR_exit(1),e_required,nq->nvname,nv_name(mp));
 		}
 	}
 	if(nv_isattr(mp,NV_BINARY))
@@ -775,7 +773,9 @@ static int typeinfo(Opt_t* op, Sfio_t *out, const char *str, Optdisc_t *od)
 			sfputc(sp,0);
 			for(n=strlen(buffer); n>0 && buffer[n-1]==' '; n--);
 			buffer[n] = 0;
-			if(cp)
+			if(nq->nvalue.cp==Empty && nv_isattr(nq,NV_RDONLY))
+				sfprintf(out,"\t[+%s?%s, default value is required at creation\n",nq->nvname,*buffer?buffer:"string");
+			else if(cp)
 				sfprintf(out,"\t[+%s?%s, default value is %s.\n",nq->nvname,*buffer?buffer:"string",cp);
 			else
 				sfprintf(out,"\t[+%s?%s.\n",nq->nvname,*buffer?buffer:"string");
@@ -1812,4 +1812,19 @@ Namval_t *nv_typeparent(Namval_t *np)
 	if(tp = (Namtype_t*)nv_hasdisc(np,&type_disc))
 		return(tp->parent);
 	return(0);
+}
+
+void nv_checkrequired(Namval_t *mp)
+{
+	Namtype_t	*dp;
+	Namval_t	*np;
+	int		i;
+	if(!(dp=(Namtype_t*)nv_hasdisc(mp,&type_disc)))
+		return;
+	for(i=0; i < dp->numnodes; i++) 
+	{
+		np = nv_namptr(dp->nodes,i);
+		if(nv_isattr(np,NV_RDONLY) && np->nvalue.cp==Empty)
+			errormsg(SH_DICT,ERROR_exit(1),e_required,np->nvname,nv_name(nv_type(mp)));
+	}
 }

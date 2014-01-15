@@ -1,4 +1,43 @@
-13-10-08  --- Release ksh93v- ---
+14-01-14  --- Release ksh93v- ---
+14-01-14  Fixed a memory leak which occurred for local variables in a function
+	  that is invoked by a subshell.
+14-01-10  [[...]] now supports hexidecimal constants with aritmetic operators.
+14-01-09  A bug which could cause a core dump with nested subshells and
+	  functions has been fixed.
+14-01-09  A second bug in which appending to an empty array of types does
+	  starts with element 1 rather than 0 has been fixed.
+14-01-06  A bug which could cause a core dump when KSH_VERSION is exported in
+	  the envirnment has been fixed.  KSH_VERSION is a name reference to
+	  .sh.version.
+14-01-06  Fixed a bug that could cause a core dump wiith large prompts.
+14-01-06  A bug in which appending to an empty array of types does starts with
+	  element 1 rather than 0 has been fixed.
+14-01-02  A bug in which set -o nounset can trigger unset errors when reading
+	  function definitions has been fixed.
+13-12-31  The documente feature that state that unset a type subvariable that
+	  is readonly is required to be specified when creating an type instance
+	  now works.  The man page generated with typename --man now lists these
+	  fields as required fields.
+13-12-31  A bug in which extended regular expressions give with the =~ operator
+	  in [[...]] gave syntax errors with (...){...} has been fixed.
+13-12-30  A bug in the left shift operator in arithmetic expressions when the
+	  shift count is greated then the number of bits in a long integer has
+	  been fixed.
+13-12-05  If cd is invoked with no arguments and HOME is unset, it attempts to
+	  find the home directory and use that.  Otherwise an error occurs.
+13-12-04  A bug in the handling of $(<file) when contained in a subshell has
+	  been fixed.
+13-12-03  A bug in /bin/cd on Solaris which could cause a core dump has
+	  been fixed.
+13-11-25  The math functions nextafter and nexttowards now work when called
+	  different floating point types.
+13-11-22  Fixed bugs in support for f, d, and l suffices for floating point
+	  constants.
+13-11-14 +Added -f fd option to pwd to display the directory corresponding to
+	  file descriptor fd.
+13-11-12  A bug in [[...]] in which $? is not preserved while expanding the
+	  right hand side of a binary expression has been fixed.
+13-11-11  A bug in [[...]] in which [[ 1<2 ]] is a syntax error has been fixed.
 13-10-08  The shell arithmetic now recognized suffices f,F, l, and L for
 	  floating point constants.
 13-10-07  The shell now prints an error message on standard error when a

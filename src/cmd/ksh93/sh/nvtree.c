@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -580,6 +580,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 						size = LDBL_DIG;
 					else if(nv_isattr(np,NV_SHORT))
 						size = FLT_DIG;
+					size -= 2;
 				}
 				if(nv_size(np) != size)
 				{

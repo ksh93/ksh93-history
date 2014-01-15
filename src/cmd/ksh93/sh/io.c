@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -1465,7 +1465,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					}
 					sh_iosave(shp,fn,indx,tname?fname:(trunc?Empty:0));
 				}
-				else if(!vex && sh_subsavefd(fn))
+				else if(!vex && flag!=3 && sh_subsavefd(fn))
 					sh_iosave(shp,fn,indx|IOSUBSHELL,tname?fname:0);
 			}
 			if(fd<0)

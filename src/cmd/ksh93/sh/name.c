@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -555,7 +555,9 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 						{
 							if((sub=nv_aimax(np)) < 0  && nv_arrayptr(np))
 								errormsg(SH_DICT,ERROR_exit(1),e_badappend,nv_name(np));
-							if(sub>=0)
+							if(sub==0 && nv_type(np) && (ap=nv_arrayptr(np)) && array_elem(ap)==0)
+								nv_putsub(np,(char*)0,0,ARRAY_ADD|ARRAY_FILL);
+							else if(sub>=0)
 								sub++;
 						}
 						if(!nv_isnull(np) && np->nvalue.cp!=Empty && !nv_isvtree(np))
@@ -1379,7 +1381,7 @@ void nv_delete(Namval_t* np, Dt_t *root, int flags)
 	{
 		if(dtdelete(root,np))
 		{
-			if(!(flags&NV_NOFREE) && ((flags&NV_FUNCTION) || !nv_subsaved(np)))
+			if(!(flags&NV_NOFREE) && ((flags&NV_FUNCTION) || !nv_subsaved(np,flags&NV_TABLE)))
 				free((void*)np);
 		}
 #if 0
@@ -1694,7 +1696,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		if(mp)
 			nv_clone(mp,np,0);
 	}
-	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY))
+	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY) && np->nvalue.cp!=Empty)
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 	/* The following could cause the shell to fork if assignment
 	 * would cause a side effect
@@ -2553,14 +2555,14 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 			{
 				_nv_unset(nq,flags);
 				npnext = (Namval_t*)dtnext(root,nq);
-				nv_delete(nq,root,0);
+				nv_delete(nq,root,NV_TABLE);
 			}
 		}
 		npnext = (Namval_t*)dtnext(root,np);
 		if(nv_arrayptr(np))
 			nv_putsub(np,NIL(char*),0,ARRAY_SCAN);
 		_nv_unset(np,flags);
-		nv_delete(np,root,0);
+		nv_delete(np,root,NV_TABLE);
 	}
 }
 

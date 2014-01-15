@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -823,12 +823,31 @@ Pathcomp_t *path_absolute(Shell_t *shp,register const char *name, Pathcomp_t *pp
 			isfun = 1;
 		if(!isfun && !sh_isoption(shp,SH_RESTRICTED))
 		{
+			char *bp;
 #if SHOPT_DYNAMIC
 			Shbltin_f addr;
 			int n;
 #endif
 			if(*stkptr(shp->stk,PATH_OFFSET)=='/' && (np=nv_search(stkptr(shp->stk,PATH_OFFSET),shp->bltin_tree,0)) && !nv_isattr(np,BLT_DISABLE)) 
 				return(oldpp);
+			if((oldpp->flags&PATH_BIN) && (bp = strrchr(oldpp->name,'/')))
+			{
+				bp = stkptr(shp->stk,PATH_OFFSET+bp-oldpp->name);
+				if(!(np=nv_search(bp,shp->bltin_tree,0)))
+				{
+					char save[4];
+					memcpy(save,bp-=4,4);
+					memcpy(bp,"/usr",4);
+					np=nv_search(bp,shp->bltin_tree,0);
+					memcpy(bp,save,4);
+				}
+				if(np)
+				{
+					addr = (Shbltin_f)np->nvalue.bfp;
+					if(np = sh_addbuiltin(shp,stkptr(shp->stk,PATH_OFFSET),addr,NiL))
+						return(oldpp);
+				}
+			}
 #if SHOPT_DYNAMIC
 			n = stktell(shp->stk);
 			sfputr(shp->stk,"b_",-1);
@@ -1682,6 +1701,8 @@ static bool path_chkpaths(Shell_t *shp,Pathcomp_t *first, Pathcomp_t* old,Pathco
 					free(pp->bbuf);
 				pp->blib = pp->bbuf = strdup(ep);
 			}
+			else if(m==4 && memcmp((void*)sp,(void*)"BIN=1",m)==0)
+				pp->flags |= PATH_BIN;
 			else if(m)
 			{
 				size_t z;

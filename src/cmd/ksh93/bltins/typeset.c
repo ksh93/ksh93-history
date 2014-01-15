@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -14,7 +14,7 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
@@ -260,7 +260,7 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 					if(n=='X')
 						tdata.argnum = 2*((flag&NV_LONG)?sizeof(Sfdouble_t):(isshort?sizeof(float):sizeof(double)));
 					else
-						tdata.argnum = (flag&NV_LONG)?LDBL_DIG:(isshort?FLT_DIG:DBL_DIG);
+						tdata.argnum = ((flag&NV_LONG)?LDBL_DIG:(isshort?FLT_DIG:DBL_DIG))-2;
 				}
 				isfloat = true;
 				if (n=='E')
@@ -745,6 +745,8 @@ static int     setall(char **argv,register int flag,Dt_t *troot,struct tdata *tp
 				nv_settype(np,tp->tp,tp->aflag=='-'?0:NV_APPEND);
 				flag = (np->nvflag&NV_NOCHANGE);
 			}
+			if(tp->tp)
+				nv_checkrequired(np);
 			flag &= ~NV_ASSIGN;
 			if(last=strchr(name,'='))
 				*last = 0;

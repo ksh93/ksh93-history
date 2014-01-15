@@ -41,7 +41,7 @@ lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
 lib	htons,htonl sys/types.h sys/socket.h netinet/in.h
 lib	mbtowc,mbrtowc,memalign,memchr,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
-lib	mount,on_exit,onexit,opendir,pathconf,pipe2,qsort,qsort_r
+lib	mount,on_exit,onexit,opendir,pathconf,fpathconf,pipe2,qsort,qsort_r
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setregid,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec
@@ -247,8 +247,8 @@ tst	lib_vfork unistd.h stdlib.h vfork.h note{ vfork exists and it works }end exe
 	char**	argv;
 	{
 		int	status;
-		char*	cmd[3];
-		if (argv[1])
+		char*	cmd[4];
+		if (argv[2])
 			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
 		signal(SIGHUP, SIG_IGN);
 		switch (vfork())
@@ -257,8 +257,9 @@ tst	lib_vfork unistd.h stdlib.h vfork.h note{ vfork exists and it works }end exe
 			_exit(1);
 		case 0:
 			cmd[0] = argv[0];
-			cmd[1] = "test";
-			cmd[2] = 0;
+			cmd[1] = argv[1];
+			cmd[2] = "test";
+			cmd[3] = 0;
 			execv(cmd[0], cmd);
 			_exit(2);
 		}
