@@ -275,6 +275,16 @@ exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} ' ref ${mam_cc_
 done FEATURE/options dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/option.h implicit
 done include/builtins.h
+make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
+make ${PACKAGE_ast_INCLUDE}/tv.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+done ${PACKAGE_ast_INCLUDE}/tv.h dontcare
+make ${PACKAGE_ast_INCLUDE}/tm.h implicit
+prev ${PACKAGE_ast_INCLUDE}/times.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/tm.h dontcare
+done ${PACKAGE_ast_INCLUDE}/tmx.h
 prev ${PACKAGE_ast_INCLUDE}/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 make include/defs.h implicit
@@ -487,16 +497,7 @@ done ${PACKAGE_ast_INCLUDE}/ast_ccode.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ccode.h
-make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
-make ${PACKAGE_ast_INCLUDE}/tv.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-done ${PACKAGE_ast_INCLUDE}/tv.h dontcare
-make ${PACKAGE_ast_INCLUDE}/tm.h implicit
-prev ${PACKAGE_ast_INCLUDE}/times.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/tm.h dontcare
-done ${PACKAGE_ast_INCLUDE}/tmx.h
+prev ${PACKAGE_ast_INCLUDE}/tmx.h implicit
 make include/streval.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_float.h implicit
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit

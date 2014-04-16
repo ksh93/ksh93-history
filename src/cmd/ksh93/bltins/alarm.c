@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2012 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -29,6 +29,7 @@
 #include	"defs.h"
 #include	<error.h>
 #include	<stak.h>
+#include	<tmx.h>
 #include	"builtins.h"
 #include	"FEATURE/time"
 
@@ -94,6 +95,19 @@ static 	void *time_delete(register struct tevent *item, void *list)
 	return(list);
 }
 
+static Time_t getnow(void)
+{
+	double now;
+#ifdef timeofday
+	struct timeval tmp;
+	timeofday(&tmp);
+	now = tmp.tv_sec + 1.e-6*tmp.tv_usec;
+#else
+	now = (Time_t)time(NIL(time_t*));
+#endif /* timeofday */
+	return(now);
+}
+
 static void	print_alarms(void *list)
 {
 	register struct tevent *tp = (struct tevent*)list;
@@ -108,7 +122,10 @@ static void	print_alarms(void *list)
 				sfprintf(sfstdout,e_alrm1,name,d/1000.);
 			}
 			else
-				sfprintf(sfstdout,e_alrm2,name,nv_getnum(tp->node));
+			{
+				Time_t num=nv_getnum(tp->node),now = getnow();
+				sfprintf(sfstdout,e_alrm2,name,(double)num-now);
+			}
 		}
 		tp = tp->next;
 	}
@@ -122,7 +139,7 @@ static void	trap_timeout(void* handle)
 		tp->timeout = 0;
 	tp->flags |= L_FLAG;
 	tp->sh->sigflag[SIGALRM] |= SH_SIGALRM;
-	if(sh_isstate(tp->sh,SH_TTYWAIT))
+	if(sh_isstate(tp->sh,SH_TTYWAIT) && !tp->sh->bltinfun)
 		sh_timetraps(tp->sh);
 }
 
@@ -130,6 +147,7 @@ void	sh_timetraps(Shell_t *shp)
 {
 	register struct tevent *tp, *tpnext;
 	register struct tevent *tptop;
+	shp->trapnote &= ~SH_SIGALRM;
 	while(1)
 	{
 		shp->sigflag[SIGALRM] &= ~SH_SIGALRM;
@@ -182,28 +200,35 @@ static char *setdisc(Namval_t *np, const char *event, Namval_t* action, Namfun_t
  */
 static void putval(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 {
-	register struct tevent	*tp = (struct tevent*)fp;
-	register double d;
+	struct tevent	*tp = (struct tevent*)fp;
+	double		d,x;
 	Shell_t		*shp = tp->sh;
+	char		*cp, *pp;
 	if(val)
 	{
-		double now;
-#ifdef timeofday
-		struct timeval tmp;
-		timeofday(&tmp);
-		now = tmp.tv_sec + 1.e-6*tmp.tv_usec;
-#else
-		now = (double)time(NIL(time_t*));
-#endif /* timeofday */
-		nv_putv(np,val,flag,fp);
-		d = nv_getnum(np);
+		Time_t now = getnow();
+		char *last;
 		if(*val=='+')
 		{
-			double x = d + now;
-			nv_putv(np,(char*)&x,NV_INTEGER|NV_DOUBLE,fp);
+			d = strtod(val+1, &last);
+			x = d + now;
+			nv_putv(np,val,flag,fp);
 		}
 		else
-			d -= now;
+		{
+			d = strtod(val, &last);
+			if(*last)
+			{
+				if(pp = sfprints("exact %s", val))
+					d = tmxdate(pp, &last, TMX_NOW);
+				if(*last && (pp = sfprints("p%s", val)))
+					d = tmxdate(pp, &last, TMX_NOW);
+				d /= 1000000000;
+				x = d;
+				d -= now;
+			}
+		}
+		nv_putv(np,(char*)&x,NV_INTEGER|NV_DOUBLE,fp);
 		tp->milli = 1000*(d+.0005);
 		if(tp->timeout)
 			shp->st.timetrap = time_delete(tp,shp->st.timetrap);

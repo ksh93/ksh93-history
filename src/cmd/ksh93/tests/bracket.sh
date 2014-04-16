@@ -361,6 +361,8 @@ x=$( [[ -z $(printf $? >&2) && -z $(printf $? >&2) ]] 2>&1)
 
 $SHELL -c 2> /dev/null '[[ AATAAT =~ (AAT){2} ]]' || err_exit '[[ AATAAT =~ (AAT){2} ]] does not match'
 
+$SHELL -c 2> /dev/null '[[ AATAATCCCAATAAT =~ (AAT){2}CCC(AAT){2} ]]' || err_exit '[[ AATAATCCCAATAAT =~ (AAT){2}CCC(AAT){2} ]] does not match'
+
 [[ 0x10 -eq 16 ]] || err_exit 'heximal constants not working in [[...]]'
 
 [[ 010 -eq 10 ]] || err_exit '010 not 10 in [[...]]'

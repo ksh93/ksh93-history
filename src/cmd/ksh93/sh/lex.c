@@ -390,6 +390,12 @@ int sh_lex(Lex_t* lp)
 		switch(n)
 		{
 			case S_BREAK:
+				if(lp->lex.incase>TEST_RE && mode==ST_NORM && c==LPAREN)
+				{
+					pushlevel(lp,RPAREN,mode);
+					mode = ST_NESTED;
+					continue;
+				}
 				fcseek(-LEN);
 				goto breakloop;
 			case S_EOF:

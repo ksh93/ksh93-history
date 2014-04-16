@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2014 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -677,5 +677,8 @@ x=$(
 	done <<< $'y\ny\ny\n'
 )
 [[ $x == yyy ]] || err_exit '$(</dev/null) in a subshell causes failure'
+
+
+$SHELL -c 'while((SECONDS<3)); do test -z `/bin/false | /bin/false | /bin/doesnotexist`;done;:' 2> /dev/null || err_exit 'non-existant last command in pipeline causes `` to fail'
 
 exit $((Errors<125?Errors:125))

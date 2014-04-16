@@ -237,6 +237,7 @@ extern Namval_t		*nv_typeparent(Namval_t*);
 extern bool		nv_istable(Namval_t*);
 extern size_t		nv_datasize(Namval_t*, size_t*);
 extern Namfun_t		*nv_mapchar(Namval_t*, const char*);
+extern void		nv_checkrequired(Namval_t*); 
 #if SHOPT_FIXEDARRAY
    extern int		nv_arrfixed(Namval_t*, Sfio_t*, int, char*);
 #endif /* SHOPT_FIXEDARRAY */

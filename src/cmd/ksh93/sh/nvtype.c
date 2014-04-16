@@ -445,6 +445,11 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 			nrp++;
 			nq = nq->nvalue.nrp->np;
 		}
+		else if(nv_isattr(nq,NV_RDONLY) && nv_isattr(nq,NV_INTEGER))
+		{
+			if(nv_type(np)!=np || nv_getnum(nq)==0)
+				nq->nvalue.cp = Empty;
+		}
 		if(xp = (Namtype_t*)nv_hasdisc(nq,&type_disc))
 			xp->parent = mp;
 		if(flags==(NV_NOFREE|NV_ARRAY))
@@ -469,7 +474,7 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 			stkseek(shp->stk,offset);
 			if(nr)
 			{
-				if(nv_isattr(nq,NV_RDONLY) && (nq->nvalue.cp || nv_isattr(nq,NV_INTEGER)))
+				if(nv_isattr(nq,NV_RDONLY) && nv_type(np)!=np && (nq->nvalue.cp || nv_isattr(nq,NV_INTEGER)))
 					errormsg(SH_DICT,ERROR_exit(1),e_readonly, nq->nvname);
 				if(nv_isref(nq))
 					nq = nv_refnode(nq);
@@ -1425,7 +1430,11 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 			if(mp && nv_isarray(mp))
 				nv_settype(mp,tp,flags);
 			else
+			{
 				nv_arraysettype(np, tp, nv_getsub(np),flags);
+				if(mp)
+					nv_checkrequired(mp);
+			}
 		}
 		while(nv_nextsub(np));
 	}
@@ -1816,15 +1825,21 @@ Namval_t *nv_typeparent(Namval_t *np)
 
 void nv_checkrequired(Namval_t *mp)
 {
-	Namtype_t	*dp;
-	Namval_t	*np;
+	Namtype_t	*dp, *dq=0;
+	Namval_t	*np, *mq, *nq;
 	int		i;
-	if(!(dp=(Namtype_t*)nv_hasdisc(mp,&type_disc)))
+	if(nv_arrayptr(mp) || !(dp=(Namtype_t*)nv_hasdisc(mp,&type_disc)))
 		return;
+	if(mq = nv_type(mp))
+		dq=(Namtype_t*)nv_hasdisc(mq,&type_disc);
 	for(i=0; i < dp->numnodes; i++) 
 	{
+		if(dq)
+			nq = nv_namptr(dq->nodes,i);
 		np = nv_namptr(dp->nodes,i);
 		if(nv_isattr(np,NV_RDONLY) && np->nvalue.cp==Empty)
-			errormsg(SH_DICT,ERROR_exit(1),e_required,np->nvname,nv_name(nv_type(mp)));
+			errormsg(SH_DICT,ERROR_exit(1),e_required,np->nvname,nv_type(mp)->nvname);
+		if(nv_isattr(nq,NV_RDONLY))
+			nv_onattr(np,NV_RDONLY);
 	}
 }

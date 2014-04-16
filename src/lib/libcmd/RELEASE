@@ -1,3 +1,5 @@
+14-02-06 context.c: fix -B0 bug that added superfluous --
+14-01-26 grep.c: add { -An -Bn } for gnu compatibility
 13-12-05 ls.c: move from src/cmd/std
 13-12-01 getconf.c: add -f<fd>, --descriptor=<fd> for fpathconf()
 13-12-01 rm.c: fix --directory logic; could really use unlinkat(d,p,AT_REMOVE)

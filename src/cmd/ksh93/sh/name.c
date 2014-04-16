@@ -334,6 +334,7 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 	}
 	for(;arg; arg=arg->argnxt.ap)
 	{
+		Namval_t *nq=0;
 		shp->used_pos = 0;
 		if(arg->argflag&ARG_MAC)
 		{
@@ -488,7 +489,7 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 				{
 					if(!(arg->argflag&ARG_APPEND))
 					{
-						if(ap)
+						if(ap && ap->nelem>0)
 						{
 							nv_putsub(np, NIL(char*), 0, ARRAY_SCAN);
 							if(!ap->fun && !(ap->flags&ARRAY_TREE) && !np->nvfun->next && !nv_type(np))
@@ -540,6 +541,7 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 						nv_close(np);
 						goto check_type;
 					}
+					nq = np;
 					if(*cp!='.' && *cp!='[' && strchr(cp,'['))
 					{
 						cp = stkcopy(shp->stk,nv_name(np));
@@ -559,6 +561,11 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 								nv_putsub(np,(char*)0,0,ARRAY_ADD|ARRAY_FILL);
 							else if(sub>=0)
 								sub++;
+							if(nv_type(np))
+							{
+								sfprintf(shp->strbuf,"%s[%d]\0",nv_name(np),sub);
+								nq = nv_open(sfstruse(shp->strbuf),shp->var_tree,flags|NV_ARRAY);
+							}
 						}
 						if(!nv_isnull(np) && np->nvalue.cp!=Empty && !nv_isvtree(np))
 							sub=1;
@@ -607,6 +614,8 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 					L_ARGNOD->nvfun = 0;
 				}
 				sh_exec(shp,tp,sh_isstate(shp,SH_ERREXIT));
+				if(nq && nv_type(nq))
+					nv_checkrequired(nq);
 				if(shp->prefix)
 				{
 					L_ARGNOD->nvalue.nrp = node.nvalue.nrp;
@@ -2629,6 +2638,8 @@ void	_nv_unset(register Namval_t *np,int flags)
 				}
 				dtclose(rp->sdict);
 			}
+			if(flags&NV_TABLE)
+				while(stkclose(slp->slptr)==1);
 			sfclose(slp->slptr);
 			free((void*)np->nvalue.ip);
 			np->nvalue.ip = 0;

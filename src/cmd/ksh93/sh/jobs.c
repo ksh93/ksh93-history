@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -367,6 +367,7 @@ static void job_waitsafe(int sig, siginfo_t *info, void *context)
 static void job_waitsafe(int sig)
 #endif
 {
+	int saved_errno = errno;
 	if(job.in_critical || vmbusy())
 	{
 		job.savesig = sig;
@@ -374,6 +375,7 @@ static void job_waitsafe(int sig)
 	}
 	else
 		job_reap(sig);
+	errno = saved_errno;
 }
 
 /*
@@ -2060,6 +2062,7 @@ again:
 	{
 		count = bp->count;
 		jp = bp->list;
+		jpold = 0;
 		goto again;
 	}
 	if(jp && (env<0 || jp->env==env))

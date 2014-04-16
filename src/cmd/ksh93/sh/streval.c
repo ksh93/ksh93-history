@@ -404,7 +404,9 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				num = (Sflong_t)(sp[-1]) << (long)(num);
 			break;
 		    case A_RSHIFT:
-			if(tp[-1]==TYPE_U)
+			if((long)num >= CHAR_BIT*sizeof(Sfulong_t))
+				num = 0;
+			else if(tp[-1]==TYPE_U)
 				num = U2F((Sfulong_t)(sp[-1]) >> (long)(num));
 			else
 				num = (Sflong_t)(sp[-1]) >> (long)(num);

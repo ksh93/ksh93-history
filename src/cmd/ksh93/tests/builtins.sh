@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2013 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2014 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                 Eclipse Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -737,5 +737,37 @@ $SHELL <<- \EOF
 	[[ $(pwd) == "$home" ]]
 EOF
 [[ $? == 0 ]] || err_exit 'cd with no arguments fails if HOME is unset'
+
+cd "$tmp"
+if	mkdir -p f1
+then	redirect {d}<f1
+	pwd=$(pwd)
+	( cd -f $d && [[ $(pwd) == "$pwd/f1" ]]) || err_exit '$(pwd) does not show new directory' 
+	[[ $(pwd) == "$pwd" ]] || err_exit '$(pwd) is not $pwd'
+	[[ $(/bin/pwd) == "$pwd" ]] || err_exit  '/bin/pwd is not "$pwd"'
+	[[ $(/bin/pwd) == "$(pwd)" ]] || err_exit  '/bin/pwd is not pwd'
+	cd "$pwd"
+	rmdir "$pwd/f1"
+fi
+
+$SHELL 2> /dev/null <<- \!!! || err_exit 'alarm during read causes core dump'
+	function input_feed
+	{
+		typeset i
+		for ((i=0; i<3 ; i++))
+		do	print hello,world
+			sleep .3
+		done
+	}
+	alarm -r alarm_handler +.1
+	function alarm_handler.alarm
+	{
+		print "goodbye world" | read arg1 arg2
+	}
+	
+	input_feed | while IFS=',' read arg1 arg2
+	do	:
+	done
+!!!
 
 exit $((Errors<125?Errors:125))

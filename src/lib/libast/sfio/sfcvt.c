@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -513,7 +513,8 @@ int		format;		/* conversion format		*/
 				*decpt += 1;
 				if(!(format&SFFMT_EFORMAT))
 				{	/* add one more 0 for %f precision */
-					ep[-1] = '0';
+					if (ep - sp > 1)
+						ep[-1] = '0';
 					ep += 1;
 				}
 			}

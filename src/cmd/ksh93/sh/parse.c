@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1542,7 +1542,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 				{
 					if(nv_isattr(np,BLT_DCL))
 					{
-						assignment = 1+(*argp->argval=='a');
+						assignment = 1;
 						if(np==SYSTYPESET)
 							lexp->intypeset = 1;
 						else if(np==SYSENUM)

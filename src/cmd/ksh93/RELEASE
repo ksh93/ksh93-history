@@ -1,4 +1,38 @@
-14-01-14  --- Release ksh93v- ---
+14-04-15  --- Release ksh93v- ---
+14-04-05  A bug in which type name starting with the letter a, did not
+	  allow instances to be created has been fixed.
+14-04-03  A bug which caused a syntax error when a here-doc was embedded
+	  in `` command substitution has been fixed.
+14-03-31  A bug in `` command substition of a pipeline which could cause
+	  memory problems has been fixed.
+14-03-25  A bug in which the assignment A=() when A is an index array of types
+	  did not eliminate the zero-th element has been fixed.
+14-03-24  A bug in which the braceexpand option was ignored when noglob was
+	  on has been fixed.
+14-03-17  A bug in which a timer alarm during a built-in could cause a core
+	  dump has been fixed.
+14-03-03  A bug in which creating an empty array of a type variable with
+	  required fields has been fixed
+14-02-12  A bug which occurs in an interactive shell when a file is opened as
+	  file descriptor 3 for reading which causes a subsequent read
+	  command to fail to read a line from the file  has been fixed.
+14-02-06  The description of .sh.match in the sh.1 man page was fixed.
+14-02-05  A typeset -p bug for an associative array of types has been fixed.
+14-01-29  A process substitution bug which caused a process to hang has been
+	  fixed.
+14-01-27  Another bug in which extended regular expressions give with the =~
+	  operator in [[...]] gave syntax errors with multiple (...){...} has
+	  been fixed.
+14-01-23  The value of errno is now saved and restored during shell interrupt
+	  handlers.
+14-01-21  A bug in which a read from a script invoked with set -m could stop
+	  when trying to read, and cause the parent to try to restart which
+	  causes a loop has been fixed.
+14-01-20  A bug in the right shift operator in arithmetic expressions when the
+	  shift count is greated then the number of bits in a long integer has
+	  been fixed.
+14-01-20  Another memory leak which occured for functions defined in subshells
+	  has been fixed.
 14-01-14  Fixed a memory leak which occurred for local variables in a function
 	  that is invoked by a subshell.
 14-01-10  [[...]] now supports hexidecimal constants with aritmetic operators.
@@ -411,7 +445,7 @@
 12-10-16  Fixed a bug with typeset -p that could cause a core dump.
 12-10-15  Fixed a bug in which unsigned long was used when unsigned long long
 	  was needed.
-12-10-15  Fixed a bug in in which could cause long double data to not
+12-10-15  Fixed a bug in which could cause long double data to not
 	  aligned correctly in types.
 12-10-09  A bug in which nested types were not able to invoke a discipline
 	  method defined by an embedded type has been fixed.

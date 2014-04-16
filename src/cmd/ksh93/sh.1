@@ -1688,21 +1688,6 @@ each function.
 An indexed array which stores the most recent match and sub-pattern
 matches after conditional pattern matches that match and after
 variables expansions using the operators
-.TP
-.B .sh.pgrp
-The current process group of this shell.
-.TP
-.B .sh.pwdfd
-The file descriptor number for the present working directory.
-.TP
-.B .sh.sig
-Set when executing a trap to the information contained in the
-siginfo_t structure (See
-.IR siginfo (2)
-for a description of this structure.)
-.TP
-.B .sh.version
-The current version of this shell.
 .BR # ,
 .BR % ,
 or
@@ -1753,6 +1738,18 @@ This variable can be set by including it in the
 .B
 .SM SH_OPTIONS
 variable.
+.TP
+.B .sh.pgrp
+The current process group of this shell.
+.TP
+.B .sh.pwdfd
+The file descriptor number for the present working directory.
+.TP
+.B .sh.sig
+Set when executing a trap to the information contained in the
+siginfo_t structure (See
+.IR siginfo (2)
+for a description of this structure.)
 .TP
 .B .sh.subscript
 Set to the name subscript of the variable at the time that a

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -948,6 +948,7 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 #ifdef SPAWN_cwd
 		int		vexi = shp->vexp->cur;
 #endif
+		pid_t		*procsub = 0;
 		volatile int	was_interactive = 0;
 		volatile int	was_errexit = sh_isstate(shp,SH_ERREXIT);
 		volatile int	was_monitor = sh_isstate(shp,SH_MONITOR);
@@ -990,6 +991,8 @@ int sh_exec(register Shell_t *shp,register const Shnode_t *t, int flags)
 			error_info.line = t->com.comline-shp->st.firstline;
 			spawnvex_add(shp->vex,SPAWN_frame,0,0,0);
 			com = sh_argbuild(shp,&argn,&(t->com),OPTIMIZE);
+			procsub = shp->procsub;
+			shp->procsub = 0;
 			echeck = 1;
 			if(t->tre.tretyp&COMSCAN)
 			{
@@ -2984,14 +2987,18 @@ tryagain:
 			break;
 		    }
 		}
-		if(shp->procsub && *shp->procsub)
+		if(procsub && *procsub)
 		{
-			pid_t pid, *procsub;
+			pid_t pid;
 			int exitval = shp->exitval;
-			for(procsub=shp->procsub;pid=*procsub;procsub++)
+			while(pid = *procsub++)
 				job_wait(pid);
-			*shp->procsub = 0;
 			shp->exitval = exitval;
+		}
+		if(shp->trapnote&SH_SIGALRM)
+		{
+			shp->trapnote &= ~SH_SIGALRM;
+			sh_timetraps(shp);
 		}
 		if(shp->trapnote || (shp->exitval && sh_isstate(shp,SH_ERREXIT)) &&
 			t && echeck) 
@@ -3182,7 +3189,7 @@ pid_t _sh_fork(Shell_t *shp,register pid_t parent,int flags,int *jobid)
 			 * completed.  Make parent the job group id.
 			 */
 			if(postid==0)
-				job.curpgid = parent;
+				job.curpgid = job.jobcontrol?parent:getpid();
 			if(job.jobcontrol || (flags&FAMP))
 			{
 				if(setpgid(parent,job.curpgid)<0 && errno==EPERM)
