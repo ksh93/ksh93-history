@@ -392,7 +392,8 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 			return 1;
 		}
 		m = n * (sizeof(x)-1);
-		if (!(b = mmap((void*)0, m, PROT_READ|PROT_WRITE, MAP_PRIVATE, d, (off_t)0)))
+		b = mmap((void*)0, m, PROT_READ|PROT_WRITE, MAP_PRIVATE, d, (off_t)0);
+		if (b == (caddr_t)0 || b == (caddr_t)(-1))
 		{
 			close(d);
 			return 1;
@@ -419,6 +420,7 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 		char	buf[1024];
 	#ifdef MAP_PRIVATE
 		char*	srcbuf;
+		char*	addbuf;
 		char*	dstbuf;
 		int	fd;
 		size_t	siz;
@@ -446,9 +448,11 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 			return 0;
 		if ((fd = open("/dev/zero", O_RDWR)) < 0)
 			return 0;
-		if (!(srcbuf = (char*)mmap(NULL, siz, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0)))
+		srcbuf = (char*)mmap(NULL, siz, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+		if (srcbuf == (caddr_t)0 || srcbuf == (caddr_t)(-1))
 			return 0;
-		if (!mmap(srcbuf + siz, siz, PROT_NONE, MAP_PRIVATE, fd, 0))
+		addbuf i= mmap(srcbuf + siz, siz, PROT_NONE, MAP_PRIVATE, fd, 0);
+		if (addbuf == (caddr_t)0 || addbuf == (caddr_t)(-1))
 			return 0;
 		for (i = 0; i < siz; i++)
 			srcbuf[i] = 'x';

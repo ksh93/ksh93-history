@@ -4191,7 +4191,7 @@ int sh_eval_20120720(Shell_t *shp,register Sfio_t *iop, int mode)
 			mode = sh_state(SH_INTERACTIVE);
 		}
 		sh_exec(shp,t,sh_isstate(shp,SH_ERREXIT)|sh_isstate(shp,SH_NOFORK)|(mode&~SH_FUNEVAL));
-		if(!(mode&SH_FUNEVAL))
+		if(!io_save)
 			break;
 	}
 	sh_popcontext(shp,buffp);

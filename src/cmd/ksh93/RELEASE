@@ -1,4 +1,14 @@
-14-04-15  --- Release ksh93v- ---
+14-05-09  --- Release ksh93v- ---
+14-05-08  A bug in the option parser which could cause 'X -a v=((...)...) to
+	  core dump has been fixed. 
+14-05-07  A change to improve the performance of appending an element to an
+	  array has been fixed.
+14-05-02 +A complilation option to add programmable completion with the two
+	  new builtins, complete and compgen has been added.  It should behave
+	  the same as it does with bash.  Please try this out and report any
+	  problems you find.  Use compgen --man and complete --man to get the
+	  man pages.  Use the bash documentation for now for information about
+	  programmable completion.  The compilation is on by default for now.
 14-04-05  A bug in which type name starting with the letter a, did not
 	  allow instances to be created has been fixed.
 14-04-03  A bug which caused a syntax error when a here-doc was embedded

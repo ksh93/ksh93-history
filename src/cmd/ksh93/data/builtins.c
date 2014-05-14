@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -109,6 +109,10 @@ const struct shtable3 shtab_builtins[] =
 #   endif	/* SIGTSTP */
 	"jobs",		NV_BLTIN|BLT_ENV,		bltin(jobs),
 #endif	/* JOBS */
+#if SHOPT_COMPLETE
+	"compgen",	NV_BLTIN,			bltin(complete),
+	"complete",	NV_BLTIN,			bltin(complete),
+#endif /* SHOPT_COMPLETE */
 	"false",	NV_BLTIN|BLT_ENV,		bltin(false),
 	"getopts",	NV_BLTIN|BLT_ENV,		bltin(getopts),
 #if 0

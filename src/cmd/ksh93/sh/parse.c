@@ -1542,7 +1542,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 				{
 					if(nv_isattr(np,BLT_DCL))
 					{
-						assignment = 1;
+						assignment = 1 + !strcmp(argp->argval,"alias");
 						if(np==SYSTYPESET)
 							lexp->intypeset = 1;
 						else if(np==SYSENUM)

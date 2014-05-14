@@ -943,4 +943,7 @@ exp='My_t -a A=((typeset -l -i x=1;typeset -l -i y=2))'
 
 $SHELL 2> /dev/null -c 'typeset -T a_t=(x=3 y=4); a_t b=(x=1)' || err_exit 'Cannot create instances for type names starting with the letter a'
 
+$SHELL 2> /dev/null -c 'typeset -T X=(typeset x; function x.get { :; }); X -a xs=((x=yo) (x=jo)); [[ $(typeset -p xs) == "X -a xs=((x=yo) (x=jo))" ]]' || err_exit 'X -a xs=((v1) (v2)) where X is a type, not working'
+
 exit $((Errors<125?Errors:125))
+

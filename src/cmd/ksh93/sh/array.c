@@ -45,6 +45,7 @@ struct index_array
         Namarr_t        header;
 	void		*xp;	/* if set, subscripts will be converted */
         int		cur;    /* index of current element */
+	int		last;	/* index of highest assigned element */
         int		maxi;   /* maximum index for array */
 	unsigned char	*bits;	/* bit array for child subscripts */
         union Value	val[1]; /* array of value holders */
@@ -872,6 +873,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	{
 		ap->header = arp->header;
 		ap->header.hdr.dsize = sizeof(*ap) + size;
+		ap->last = arp->last;
 		for(i=0;i < arp->maxi;i++)
 		{
 			ap->bits[i] = arp->bits[i];
@@ -920,6 +922,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 			Sfdouble_t d= nv_getnum(np);
 			i++;
 		}
+		ap->last = i;
 		ap->header.nelem = i;
 		ap->header.flags = flags;
 		ap->header.hdr.disc = &array_disc;
@@ -1304,6 +1307,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long size,int flags)
 						if(!array_covered(np,ap))
 							ap->header.nelem++;
 					}
+					ap->last = ap->header.nelem;
 				}
 				if(n=ap->maxi-ap->maxi)
 					memset(&ap->val[size],0,n*sizeof(union Value));
@@ -1783,7 +1787,8 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 	    case NV_ADELETE:
 		if(ap->cur)
 		{
-			if(!ap->header.scope || (Dt_t*)ap->header.scope==ap->header.table || !nv_search(ap->cur->nvname,(Dt_t*)ap->header.scope,0))
+			Dt_t* scope = ap->header.scope;
+			if(!scope || scope==ap->header.table || !nv_search(ap->cur->nvname,scope,0))
 				ap->header.nelem--;
 			_nv_unset(ap->cur,NV_RDONLY);
 			nv_delete(ap->cur,ap->header.table,0);
@@ -1933,9 +1938,9 @@ void nv_setvec(register Namval_t *np,int append,register int argc,register char 
 		{
 			if(!(aq = (struct index_array*)ap->header.scope))
 				aq = ap;
-			arg0 = ap->maxi;
-			while(--arg0>0 && ap->val[arg0].cp==0 && aq->val[arg0].cp==0);
-			arg0++;
+			if(ap->header.nelem > ap->last)
+				ap->last = ap->header.nelem;
+			arg0 = ap->last;
 		}
 		else
 		{
@@ -1944,11 +1949,15 @@ void nv_setvec(register Namval_t *np,int append,register int argc,register char 
 				arg0=1;
 		}
 	}
+	if(ap)
+		ap->last = arg0+argc;
 	while(--argc >= 0)
 	{
 		nv_putsub(np,NIL(char*),(long)argc+arg0,ARRAY_FILL|ARRAY_ADD);
 		nv_putval(np,argv[argc],0);
 	}
+	if(!ap && (ap = (struct index_array*)nv_arrayptr(np)))
+		ap->last = ap->header.nelem;
 }
 
 #undef nv_putsub

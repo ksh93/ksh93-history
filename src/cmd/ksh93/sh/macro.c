@@ -2134,7 +2134,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	if(t)
 	{
 		fcsave(&save);
-		sfclose(sp);
 		if(t->tre.tretyp==0 && !t->com.comarg && !t->com.comset)
 		{
 			/* special case $(<file) and $(<#file) */
@@ -2142,6 +2141,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			int r;
 			struct checkpt buff;
 			struct ionod *ip=0;
+			if(sp)
+				sfclose(sp);
 			sh_pushcontext(mp->shp,&buff,SH_JMPIO);
 			if((ip=t->tre.treio) && 
 				((ip->iofile&IOLSEEK) || !(ip->iofile&IOUFD)) &&

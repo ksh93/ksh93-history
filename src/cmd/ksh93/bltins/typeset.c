@@ -202,7 +202,6 @@ int    b_alias(int argc,register char *argv[],Shbltin_t *context)
 	return(setall(argv,flag,troot,&tdata));
 }
 
-
 #if 0
     /* for the dictionary generator */
     int    b_local(int argc,char *argv[],Shbltin_t *context){}
@@ -372,7 +371,7 @@ endargs:
 	/* handle argument of + and - specially */
 	if(*argv && argv[0][1]==0 && (*argv[0]=='+' || *argv[0]=='-'))
 		tdata.aflag = *argv[0];
-	else
+	else if (opt_info.index)
 		argv--;
 	if((flag&NV_ZFILL) && !(flag&NV_LJUST))
 		flag |= NV_RJUST;

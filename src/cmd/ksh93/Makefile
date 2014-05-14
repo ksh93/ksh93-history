@@ -49,6 +49,7 @@ SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
 SHOPT_SYSRC ==			/* attempt . /etc/ksh.kshrc if interactive */
 SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */
 SHOPT_VSH == 1			/* vi edit mode */
+SHOPT_COMPLETE == 1		/* programmable completion */
 
 if CC.HOSTTYPE == "linux.alpha"
 	/* workaround for "BUG IN DYNAMIC LINKER ld.so" */
@@ -121,6 +122,9 @@ $(LIBS_opt)	: .DONTCARE
 LDLIBRARIES = $(LIBS_opt)
 
 FILES_opt =		/* optional file list enabled by vars above */
+if SHOPT_COMPLETE
+	FILES_opt += pcomplete.c
+end
 if SHOPT_ESH
 	FILES_opt += emacs.c
 end

@@ -168,7 +168,29 @@ typedef struct edit
 	char		hpat[40];
 	char		*hstak;
 #endif /* SHOPT_EDPREDICT */
+#if SHOPT_COMPLETE
+	Dt_t		*compdict;
+#endif /*SHOPT_COMPLETE */
 } Edit_t;
+
+#if SHOPT_COMPLETE
+struct Complete
+{
+	Dtlink_t	link;
+	Shell_t		*sh;
+	char		*name;
+	char		*prefix;
+	char		*suffix;
+	char		*globpat;
+	char		*wordlist;
+	char		*command;
+	char		*filter;
+	char		*fname;
+	Namval_t	*fun;
+	long		action;
+	int		options;
+};
+#endif /*SHOPT_COMPLETE */
 
 #undef MAXWINDOW
 #define MAXWINDOW	300	/* maximum width window */
@@ -222,6 +244,7 @@ extern int	ed_read(void*, int, char*, int, int);
 extern int	ed_emacsread(void*, int, char*, int, int);
 extern Edpos_t	ed_curpos(Edit_t*, genchar*, int, int, Edpos_t);
 extern int	ed_setcursor(Edit_t*, genchar*, int, int, int);
+extern char	**ed_pcomplete(struct Complete*, const char*, const char*,int);
 #if KSHELL
 	extern int	ed_macro(Edit_t*,int);
 	extern int	ed_expand(Edit_t*, char[],int*,int*,int,int);

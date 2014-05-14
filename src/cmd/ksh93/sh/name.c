@@ -956,7 +956,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			if(c)
 				*sp = c;
 			top = 0;
-			if(np && !nv_isattr(np,NV_MINIMAL) && shp->oldnp && !np->nvenv && shp->oldnp!=np)
+			if(np && !nv_isattr(np,NV_MINIMAL) && shp->oldnp && !np->nvenv && shp->oldnp!=np && !(flags&NV_ARRAY))
 				np->nvenv = (char*)shp->oldnp;
 			shp->oldnp = np;
 			if(isref)
@@ -1321,7 +1321,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			{
 				cp += 2;
 				dp->last = cp;
+#if NVCACHE
 				nvcache.ok = 0;
+#endif
 				shp->oldnp = np = nv_parentnode(shp->oldnp);
 				if(*cp==0)
 					return(np);
@@ -2638,9 +2640,11 @@ void	_nv_unset(register Namval_t *np,int flags)
 				}
 				dtclose(rp->sdict);
 			}
+			/* Note that stkclose() calls sfclose() which frees the stream */
 			if(flags&NV_TABLE)
 				while(stkclose(slp->slptr)==1);
-			sfclose(slp->slptr);
+			else
+				sfclose(slp->slptr);
 			free((void*)np->nvalue.ip);
 			np->nvalue.ip = 0;
 		}

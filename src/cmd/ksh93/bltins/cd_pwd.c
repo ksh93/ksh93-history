@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -28,8 +28,6 @@
  *   research!dgk
  *
  */
-
-#define PATCH	1
 
 #include	"defs.h"
 #include	<stak.h>
@@ -113,8 +111,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 	dir = argv[0];
 	if(error_info.errors>0 || argc >2)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if(!shp->pwd)
-		shp->pwd = path_pwd(shp,0);
+	shp->pwd = path_pwd(shp,0);
 	oldpwd = (char*)shp->pwd;
 	opwdnod = (shp->subshell?sh_assignok(OLDPWDNOD,1):OLDPWDNOD); 
 	pwdnod = (shp->subshell?sh_assignok(PWDNOD,1):PWDNOD); 
@@ -139,33 +136,9 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		j = sfprintf(shp->strbuf2,"%s",dir);
 		dir = sfstruse(shp->strbuf2);
 		pathcanon(dir, j + 1, 0);
-#if PATCH&1
-		if (*dir!='/' && dirfd!=shp->pwdfd)
-		{
-#if defined(_fd_pid_dir_fmt)
-			sfprintf(shp->strbuf, "/dev/file/xattr@" _fd_pid_dir_fmt "//@//", shp->gd->pid, dirfd, "/", dir);
-#else
-			sfprintf(shp->strbuf, "/dev/file/xattr@/dev/fd/%d/%s//@//", dirfd, dir);
-#endif
-			dirfd = shp->pwdfd;
-		}
-		else
-#endif
 		sfprintf(shp->strbuf, "/dev/file/xattr@%s//@//", dir);
 		dir = sfstruse(shp->strbuf);
 	}
-#if PATCH&1
-	else if (*dir!='/' && dirfd!=shp->pwdfd)
-	{
-#if defined(_fd_pid_dir_fmt)
-		sfprintf(shp->strbuf, _fd_pid_dir_fmt, shp->gd->pid, dirfd, "/", dir);
-#else
-		sfprintf(shp->strbuf, "/dev/fd/%d/%s", dirfd, dir);
-#endif
-		dirfd = shp->pwdfd;
-		dir = sfstruse(shp->strbuf);
-	}
-#endif
 #if _WINIX
 	if(*dir != '/' && (dir[1]!=':'))
 #else
@@ -308,15 +281,11 @@ success:
 	if(*dp && (*dp!='.'||dp[1]) && strchr(dir,'/'))
 		sfputr(sfstdout,dir,'\n');
 	if(*dir != '/')
-#if PATCH&2
 	{
 		if(!fflag)
 			return(0);
 		dir = fgetcwd(newdirfd, 0, 0);
 	}
-#else
-		return(0);
-#endif
 	nv_putval(opwdnod,oldpwd,NV_RDONLY);
 	i = j = (int)strlen(dir);
 	/* delete trailing '/' */
