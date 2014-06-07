@@ -20,7 +20,7 @@ SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_AUDIT == 1		/* enable auditing per SHOPT_AUDITFILE */
 SHOPT_AUDITFILE == "/etc/ksh_audit"  		/* auditing file */
-SHOPT_BASH ==			/* bash compatibility code */
+SHOPT_BASH == 1			/* bash compatibility code */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
 SHOPT_CMDLIB_HDR ==		/* -lcmd builtin list (<cmdlist.h>) */
 SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_HDR directory prefix (default "/opt/ast/bin") */

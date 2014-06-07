@@ -214,6 +214,9 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 	Namdecl_t 	*ntp = (Namdecl_t*)context->ptr;
 	Dt_t		*troot;
 	bool		isfloat=false, isshort=false, sflag=false;
+#if SHOPT_BASH
+	bool		local = *argv[0]=='l' && strcmp(argv[0],"local")==0;
+#endif
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
 	tdata.sh = context->shp;
@@ -224,6 +227,7 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 		optstring = ntp->optstring;
 	}
 	troot = tdata.sh->var_tree;
+	opt_info.index = 0;
 	while((n = optget(argv,optstring)))
 	{
 		if(tdata.aflag==0)
@@ -367,6 +371,10 @@ int    b_typeset(int argc,register char *argv[],Shbltin_t *context)
 	}
 endargs:
 	argv += opt_info.index;
+#if SHOPT_BASH
+	if(local && context->shp->var_base==context->shp->var_tree)
+		errormsg(SH_DICT,ERROR_exit(1),"local can only be used in a function");
+#endif
 	opt_info.disc = 0;
 	/* handle argument of + and - specially */
 	if(*argv && argv[0][1]==0 && (*argv[0]=='+' || *argv[0]=='-'))
@@ -1013,6 +1021,10 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 	    case 's':
 		flag = BLT_SPC;
 		break;
+	    case 'n':
+		flag  = BLT_DISABLE;
+		dlete=2;
+		break;
 	    case 'd':
 		dlete=1;
 		break;
@@ -1031,6 +1043,7 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 	        break;
 	    case 'p':
 		tdata.prefix = argv[0];
+		break;
 	    case ':':
 		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
@@ -1049,6 +1062,13 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 			errormsg(SH_DICT,ERROR_exit(1),e_pfsh,argv[-opt_info.index]);
 		if(tdata.sh->subshell && !tdata.sh->subshare)
 			sh_subfork();
+	}
+	if(tdata.prefix && dlete==2)
+	{
+		if(*tdata.prefix=='e')
+			tdata.prefix = "enable -n";
+		else
+			tdata.prefix = "builtin -n";
 	}
 #if SHOPT_DYNAMIC
 	if(arg)
@@ -1076,7 +1096,7 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 	}
 	else
 #endif /* SHOPT_DYNAMIC */
-	if(*argv==0 && !dlete)
+	if(*argv==0 && dlete!=1)
 	{
 		if(tdata.prefix)
 		{
@@ -1086,10 +1106,16 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 		print_scan(sfstdout, flag, tdata.sh->bltin_tree, 1, &tdata);
 		return(0);
 	}
-	r = 0;
 	flag = stktell(stkp);
+	r = 0;
 	while(arg = *argv)
 	{
+		if(tdata.prefix)
+		{
+			sfprintf(sfstdout,"%s %s\n",tdata.prefix,arg);
+			argv++;
+			continue;
+		}
 		name = path_basename(arg);
 		sfwrite(stkp,"b_",2);
 		sfputr(stkp,name,0);
@@ -1131,6 +1157,8 @@ int	b_builtin(int argc,char *argv[],Shbltin_t *context)
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",*argv,errmsg);
 			r = 1;
 		}
+		if(!dlete && np)
+			nv_offattr(np,BLT_DISABLE);
 		stkseek(stkp,flag);
 		argv++;
 	}

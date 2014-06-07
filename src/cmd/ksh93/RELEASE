@@ -1,9 +1,25 @@
-14-05-09  --- Release ksh93v- ---
+14-06-06  --- Release ksh93v- ---
+14-06-06  Added -a option to read which is equivalent to -A.
+14-06-05  Fixed a bug in builtin -p.
+14-06-05 +Added -n option to builtin to disable builtins.
+14-06-04  Fixed a couple of file completion bugs.
+14-06-02 +When compiled with the SHOPT_BASH and run with the name bash,
+	  the shell now uses dynamic scoping for name() and function name. 
+	  In addition the builtins declare and local are supported.
+	  The SHOPT_BASH option is on by default in the Makefile.
+	  More work remains with the bash compatibility option.
+14-05-25  Fixed a bug in vi command completion in which tab did not work
+	  after a space.
+14-05-25 +Replaced the -p option for read with -p prompt.  For backword
+	  compatibility, if a coprocess is running and prompt begins with -
+	  or is a valid variable name, -p causes the read from a pipe.
+14-05-25 +Modified the -u option for read and print so that it accepts the
+	  option argument p to indicate the coprocess file descriptor.
 14-05-08  A bug in the option parser which could cause 'X -a v=((...)...) to
 	  core dump has been fixed. 
 14-05-07  A change to improve the performance of appending an element to an
 	  array has been fixed.
-14-05-02 +A complilation option to add programmable completion with the two
+14-05-02 +A compilation option to add programmable completion with the two
 	  new builtins, complete and compgen has been added.  It should behave
 	  the same as it does with bash.  Please try this out and report any
 	  problems you find.  Use compgen --man and complete --man to get the

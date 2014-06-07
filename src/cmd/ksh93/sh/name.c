@@ -582,7 +582,7 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 				{
 					if(!(arg->argflag&ARG_APPEND))
 						_nv_unset(np,NV_EXPORT);
-					if(!sh_isoption(shp,SH_BASH) && !(array&NV_IARRAY) && !nv_isarray(np))
+					 if(!(array&NV_IARRAY) && !nv_isarray(np))
 						nv_setarray(np,nv_associative);
 				}
 			skip:
@@ -1527,8 +1527,19 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	}
 	nvcache.ok = 1;
 #endif
-	np = nv_create(name, root, flags, &fun);
-	cp = fun.last;
+#if SHOPT_BASH
+	if(root==shp->fun_tree && sh_isoption(shp,SH_BASH))
+	{
+		c = ((flags&NV_NOSCOPE)?HASH_NOSCOPE:0)|((flags&NV_NOADD)?0:NV_ADD);
+		np = nv_search(name,root,c);
+		cp = Empty;
+	}
+	else
+#endif
+	{
+		np = nv_create(name, root, flags, &fun);
+		cp = fun.last;
+	}
 #if NVCACHE
 	if(np && nvcache.ok && cp[-1]!=']')
 	{
@@ -2447,7 +2458,7 @@ int nv_scan(Dt_t *root, void (*fn)(Namval_t*,void*), void *data,int mask, int fl
  */
 void sh_scope(Shell_t *shp, struct argnod *envlist, int fun)
 {
-	register Dt_t		*newscope, *newroot=shp->var_base;
+	register Dt_t		*newscope, *newroot=(sh_isoption(shp,SH_BASH)?shp->var_tree:shp->var_base);
 	struct Ufunction	*rp;
 #if SHOPT_NAMESPACE
 	if(shp->namespace)

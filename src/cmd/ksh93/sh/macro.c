@@ -1132,7 +1132,7 @@ retry1:
 	    case S_SPC1:
 		if(type==M_BRACE)
 		{
-			if(isaletter(mode=fcpeek(0)) || mode=='.')
+			if(isaletter(mode=fcpeek(0)) || mode=='.' || (c=='!' && isadigit(mode)))
 			{
 				if(c=='#')
 					type = M_SIZE;
@@ -1152,6 +1152,7 @@ retry1:
 				mode = c;
 				goto retry1;
 			}
+			
 		}
 		/* FALL THRU */
 	    case S_SPC2:
@@ -1507,7 +1508,7 @@ retry1:
 	c = fcmbget(&LEN);
 	if(type>M_TREE)
 	{
-		if(c!=RBRACE)
+		if(c!=RBRACE && type!=M_VNAME && !idnum)
 			mac_error(np);
 		if(type==M_NAMESCAN || type==M_NAMECOUNT)
 		{
@@ -1550,7 +1551,15 @@ retry1:
 		else
 		{
 			if(!isastchar(mode))
-				c = charlen(v,vsize);
+			{
+				if(np || mode!='!' || idnum==0)
+					c = charlen(v,vsize);
+				else if(np = nv_open(v,mp->shp->var_tree,NV_NOREF|NV_NOADD|NV_VARNAME|NV_NOFAIL))
+				{
+					v = nv_getval(np);
+					goto skip;
+				}
+			}
 			else if(dolg>0)
 			{
 #if  SHOPT_FILESCAN
@@ -1572,6 +1581,7 @@ retry1:
 		}
 		c = RBRACE;
 	}
+    skip:
 	nulflg = 0;
 	if(type && c==':')
 	{
@@ -1595,11 +1605,11 @@ retry1:
 		}
 		if(c!=RBRACE)
 		{
-			int newops = (c=='#' || c == '%' || c=='/');
+			bool newops = sh_lexstates[ST_BRACE][c]==S_MOD2;
 			offset = stktell(stkp);
 			if(newops && sh_isoption(mp->shp,SH_NOUNSET) && *id && id!=idbuff  && (!np || nv_isnull(np)))
 				errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
-			if(c=='/' ||c==':' || ((!v || (nulflg && *v==0)) ^ (c=='+'||c=='#'||c=='%')))
+			if(c==',' || c=='^' || c=='/' ||c==':' || ((!v || (nulflg && *v==0)) ^ (c=='+'||c=='#'||c=='%')))
 			{
 				int newquote = mp->quote;
 				int split = mp->split;
@@ -1771,7 +1781,7 @@ retry1:
 		argp = 0;
 	}
 	/* check for substring operations */
-	else if(c == '#' || c == '%' || c=='/')
+	else if(sh_lexstates[ST_BRACE][c]==S_MOD2)
 	{
 		if(c=='/')
 		{
@@ -1866,7 +1876,23 @@ retry2:
 					sh_setmatch(mp->shp,0,0,nmatch,0,-1);
 			}
 			if(vsize)
+			{
+				if(c==',' || c=='^')
+					offset = stktell(stkp);
 				mac_copy(mp,v,vsize>0?vsize:strlen(v));
+				if(c==',' || c=='^')
+				{
+					v = stkptr(stkp,offset);
+					if(type)
+					{
+						char *sp;
+						for(sp=v;*sp;sp++)
+							 *sp = (c=='^'?toupper(*sp):tolower(*sp));
+					}
+					else if(*pattern=='?' || (v && *pattern==*v && pattern[1]==0))
+						 *v = (c=='^'?toupper(*v):tolower(*v));
+				}
+			}
 			if(addsub)
 			{
 				mp->shp->instance++;

@@ -17,6 +17,7 @@
 *                    David Korn <dgkorn@gmail.com>                     *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
 
 #include	"defs.h"
 #include	"builtins.h"
@@ -43,6 +44,7 @@ static const char *Option_names[] =  {
 	"Ddirnames",
 	"ffilenames",
 	"nnospace",
+	"pplusdirs",
 	0
 };
 
@@ -81,12 +83,12 @@ static const char *Action_eval[] =  {
 	"xtypeset +a",
 	"",
 	"k",
-	"xbuiltin",
+	"x'builtin'",
 	"x(IFS=:;for i in $PATH;do cd \"$i\";for f in *;do [[ -x $f && ! -d $f ]] && print -r -- \"$f\";done;cd ~-;done)",
 	"xfor _ in *; do [[ ! -d \"$_\" ]] && print -r -- \"$_\";done",
 	"xfor _ in *; do [[ -d \"$_\" ]] && print -r -- \"$_\";done",
-	"",
-	"xbuiltin",
+	"x'builtin' -n",
+	"x'builtin'",
 	"xtypeset +x",
 	"xtypeset +f | sed -e 's/()//'",
 	"xsed -e 's/:.*//' /etc/group", 
@@ -620,11 +622,38 @@ static bool delete_and_add(const char *name, struct Complete *comp)
 	return(true);
 }
 
+static const char *lquote(struct Complete *cp, const char *str)
+{
+	register int c;
+	char	*sp;
+	Sfio_t	*stakp;
+	if(!(sp=strchr(str,'\'')))
+		return(str);
+	stakp = cp->sh->stk;
+	stkseek(stakp,0);
+	sfputc(stakp,'$');
+	if(sp-str)
+		sfwrite(stakp,str,sp-str);
+	while(c = *sp++) 
+	{
+		if(c=='\'')
+			sfputc(stakp,'\\');
+		sfputc(stakp,c);
+	}
+	sfputc(stakp,0);
+	return(stkptr(stakp,0));
+}
+
 static void print_out(struct Complete *cp,Sfio_t *out)
 {
 	int c,i=0,a;
 	char *sp;
 	sfputr(out,"complete",' ');
+	while(Options[c=i++])
+	{
+		if(cp->options&(1<<c))
+			sfprintf(out,"-o %s ",Option_names[c]+1);
+	}
 	while(Actions[c=i++])
 	{
 		if(a=cp->action&(1L<<c))
@@ -642,31 +671,26 @@ static void print_out(struct Complete *cp,Sfio_t *out)
 			break;
 	}
 	if(cp->globpat)
-		sfprintf(out,"-G %s ", cp->globpat);
+		sfprintf(out,"-G '%s' ", lquote(cp,cp->globpat));
 	if(cp->wordlist)
 		sfprintf(out,"-W %s ", cp->wordlist);
 	if(cp->prefix)
-		sfprintf(out,"-P %s ", cp->prefix);
+		sfprintf(out,"-P '%s' ", lquote(cp,cp->prefix));
 	if(cp->suffix)
-		sfprintf(out,"-S %s ", cp->suffix);
+		sfprintf(out,"-S '%s' ", lquote(cp,cp->suffix));
 	if(cp->filter)
-		sfprintf(out,"-X %s ", cp->filter);
-	if(cp->fun)
+		sfprintf(out,"-X '%s' ", lquote(cp,cp->filter));
+	if(cp->fname)
 		sfprintf(out,"-F %s ", cp->fname);
 	if(cp->command)
 		sfprintf(out,"-C %s ", cp->command);
-	while(Options[c=i++])
-	{
-		if(cp->options&(1<<c))
-			sfprintf(out,"-o %s ",Option_names[c]+1);
-	}
 	sfputr(out,cp->name,'\n');
 }
 
 int b_complete(int argc, char *argv[], Shbltin_t *context)
 {
 	int n,r=0;
-	bool complete=true,delete=false,print=false;
+	bool complete=true,delete=false,print=(argc==1);
 	Optdisc_t disc;
 	struct Complete comp;
 	disc.version = OPT_VERSION;
@@ -688,6 +712,7 @@ int b_complete(int argc, char *argv[], Shbltin_t *context)
 				errormsg(SH_DICT,ERROR_exit(1),"invalid -%c option name %s", 'A',opt_info.arg);
 		    case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
 		    case 'g': case 'j': case 'k': case 's': case 'u': case 'v':
+		    case 'D': case 'E': case 'Z':
 			n =  (strchr(Actions,n)-Actions);
 			comp.action |= 1L<<n;
 			if(Actions[n] == 'c')

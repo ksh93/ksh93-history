@@ -192,6 +192,11 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 	}
 	if(inquote && *bp==inquote)
 		*type = *bp++;
+	else
+	{
+		if(*cp==0 && cp[-1]==' ')
+			return(cp);
+	}
 	return(bp);
 }
 
@@ -487,7 +492,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				if(out[-1] =='"' || out[-1]=='\'')
 					  *--out = 0;
 			}
-			if(*begin==0)
+			if(*begin==0 && begin[-1]!=' ')
 				ed_ringbell();
 		}
 		else

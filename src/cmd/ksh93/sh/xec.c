@@ -1327,7 +1327,7 @@ tryagain:
 							else
 								type = (execflg && !shp->subshell && !shp->st.trapcom[0]);
 							shp->redir0 = 1;
-							sh_redirect(shp,io,type|(np==SYSDOT?0:IOHERESTRING|IOUSEVEX));
+							sh_redirect(shp,io,type|(np->nvalue.bfp==(Nambfp_f)b_dot_cmd?0:IOHERESTRING|IOUSEVEX));
 							for(item=buffp->olist;item;item=item->next)
 								item->strm=0;
 						}
@@ -3396,7 +3396,7 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	SH_LEVELNOD->nvalue.s = lp->maxlevel;
 	shp->st.lineno = error_info.line;
 	np->nvalue.rp->running  += 2;
-	if(nv_isattr(np,NV_FPOSIX))
+	if(nv_isattr(np,NV_FPOSIX) && !sh_isoption(shp,SH_BASH))
 	{
 		char *save;
 		int loopcnt = shp->st.loopcnt;

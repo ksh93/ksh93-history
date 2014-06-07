@@ -140,6 +140,7 @@ struct shared
 	int		bltin_nnodes;	/* number of bltins nodes */ 
 	int		sigmax;
 	int		nforks;
+	int		shtype;
 	Shwait_f	waitevent;
 };
 

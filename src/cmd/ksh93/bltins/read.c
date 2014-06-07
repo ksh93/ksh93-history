@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -62,7 +62,7 @@ struct read_save
 int	b_read(int argc,char *argv[], Shbltin_t *context)
 {
 	Sfdouble_t sec;
-	register char *name;
+	register char *name=0;
 	register int r, flags=0, fd=0;
 	register Shell_t *shp = context->shp;
 	ssize_t	len=0;
@@ -108,8 +108,15 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		}
 		break;
 	    case 'p':
-		if((fd = shp->cpipe[0])<=0)
-			errormsg(SH_DICT,ERROR_exit(1),e_query);
+		if(shp->cpipe[0]<=0 || *opt_info.arg!='-' && (!strmatch(opt_info.arg,"+(\\w)") || isdigit(*opt_info.arg)))
+			name = opt_info.arg;
+		else
+		{
+			/* for backward compatibility */
+			fd = shp->cpipe[0];
+			argv--;
+			argc--;
+		}
 		break;
 	    case 'n': case 'N':
 		flags &= ((1<<D_FLAG)-1);
@@ -127,14 +134,28 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		flags |= SS_FLAG;
 		break;
 	    case 'u':
-		fd = (int)opt_info.num;
-		if(sh_inuse(shp,fd))
+		if(opt_info.arg[0]=='p' && opt_info.arg[1]==0)
+		{
+			if((fd = shp->cpipe[0])<=0)
+				errormsg(SH_DICT,ERROR_exit(1),e_query);
+			break;
+		}
+		fd = (int)strtol(opt_info.arg,&opt_info.arg,10);
+		if(*opt_info.arg)
 			fd = -1;
+		else if(!sh_iovalidfd(shp,fd))
+			fd = -1;
+		else if(!(shp->inuse_bits&(1<<fd)) && (sh_inuse(shp,fd) || (shp->gd->hist_ptr && fd==sffileno(shp->gd->hist_ptr->histfp))))
 		break;
 	    case 'v':
 		flags |= V_FLAG;
 		break;
 	    case ':':
+		if(shp->cpipe[0]>0 && strcmp(opt_info.arg,"-p: prompt argument expected")==0)
+		{
+			fd = shp->cpipe[0];
+			break;
+		}
 		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
@@ -149,8 +170,10 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 	if(fd<0 || !(r&IOREAD))
 		errormsg(SH_DICT,ERROR_system(1),e_file+4);
 	/* look for prompt */
-	if((name = *argv) && (name=strchr(name,'?')) && (r&IOTTY))
-		r = strlen(name++);
+	if(!name && *argv && (name=strchr(*argv,'?')))
+		name++;
+	if(name && (r&IOTTY))
+		r = strlen(name)+1;
 	else
 		r = 0;
 	if(argc==fixargs && (rp=newof(NIL(struct read_save*),struct read_save,1,0)))

@@ -1566,7 +1566,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	/* read the environment */
 	if(argc>0)
 	{
-		type = sh_type(*argv);
+		shgd->shtype= type = sh_type(*argv);
 		if(type&SH_TYPE_LOGIN)
 			shp->login_sh = 2;
 	}
@@ -1641,7 +1641,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		/* check for invocation as bash */
 		if(type&SH_TYPE_BASH)
 		{
-		        shp>userinit = userinit = bash_init;
+		        shp->userinit = userinit = bash_init;
 			sh_onoption(shp,SH_BASH);
 			sh_onstate(shp,SH_PREINIT);
 			(*userinit)(shp, 0);

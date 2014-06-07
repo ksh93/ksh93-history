@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1541,7 +1541,7 @@ static void vigetline(register Vi_t* vp,register int mode)
 			return;
 
 		case '\t':		/** command completion **/
-			if(mode!=SEARCH && last_virt>=0 && (vp->ed->e_tabcount|| !isblank(cur_virt)) && vp->ed->sh->nextprompt)
+			if(mode!=SEARCH && last_virt>=0 && vp->ed->sh->nextprompt)
 			{
 				if(virtual[cur_virt]=='\\')
 				{
@@ -2449,7 +2449,7 @@ addin:
 			--cur_virt;
 			--last_virt;
 			vp->ocur_virt = MAXCHAR;
-			if(c=='=' || (mode<cur_virt && (virtual[cur_virt]==' ' || virtual[cur_virt]=='/')))
+			if(c=='=' || (mode<cur_virt && virtual[cur_virt]=='/'))
 				vp->ed->e_tabcount = 0;
 			return(APPEND);
 		}

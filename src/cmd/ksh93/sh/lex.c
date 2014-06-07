@@ -937,6 +937,13 @@ int sh_lex(Lex_t* lp)
 				if(c=='.' && endchar(lp)=='$')
 					goto err;
 			case S_SPC2:
+#ifdef SHOPT_BASH
+				if(c=='=' && (lp->lexd.warn || !sh_isoption(shp,SH_BASH)))
+				{
+					lp->token = c;
+					sh_syntax(lp);
+				}
+#endif
 			case S_DIG:
 				wordflags |= ARG_MAC;
 				switch(endchar(lp))
@@ -952,7 +959,7 @@ int sh_lex(Lex_t* lp)
 						break;
 					case '@':
 					case '!':
-						if(n!=S_ALP)
+						if(n!=S_ALP && n!=S_DIG)
 							goto dolerr;
 					case '#':
 						if(c=='#')

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1232,6 +1232,11 @@ Namval_t *sh_addbuiltin_20120720(Shell_t* shp,const char *path, Shbltin_f bltin,
 			if(np->nvfun && !nv_isattr(np,NV_NOFREE))
 				free((void*)np->nvfun);
 			dtdelete(shp->bltin_tree,np);
+			return(0);
+		}
+		else if(extra == (void*)2)
+		{
+			nv_onattr(np,BLT_DISABLE);
 			return(0);
 		}
 		if(!bltin)
