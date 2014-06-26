@@ -1007,7 +1007,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COSHELL -DSHOPT_OPTIMIZE -DSHOPT_FIXEDARRAY -DSHOPT_FILESCAN -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_PFSH -DSHOPT_BASH -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_KIA -DSHOPT_DYNAMIC -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COSHELL -DSHOPT_OPTIMIZE -DSHOPT_FIXEDARRAY -DSHOPT_BASH -DSHOPT_FILESCAN -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_PFSH -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_KIA -DSHOPT_DYNAMIC -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
@@ -1351,6 +1351,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done lexstates.o generated
 make pcomplete.o
 make edit/pcomplete.c
+prev include/variables.h implicit
 prev include/edit.h implicit
 prev include/name.h implicit
 prev include/builtins.h implicit
@@ -1358,7 +1359,7 @@ prev include/defs.h implicit
 done edit/pcomplete.c
 meta pcomplete.o %.c>%.o edit/pcomplete.c pcomplete
 prev edit/pcomplete.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgkorn@gmail.com>][-copyright?Copyright (c) 1982-2014 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libshell]"\" -DSHOPT_COMPLETE -DSHOPT_EDPREDICT -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_FIXEDARRAY -D_BLD_shell -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_POLL -DSHOPT_BASH -DSHOPT_DYNAMIC -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c edit/pcomplete.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgkorn@gmail.com>][-copyright?Copyright (c) 1982-2014 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html][--catalog?libshell]"\" -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -DSHOPT_COMPLETE -DSHOPT_EDPREDICT -DKSHELL -DSHOPT_FIXEDARRAY -D_BLD_shell -DSHOPT_POLL -DSHOPT_BASH -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_COSHELL -c edit/pcomplete.c
 done pcomplete.o generated
 make emacs.o
 make edit/emacs.c

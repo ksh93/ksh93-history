@@ -206,22 +206,31 @@ static char **prog_complete(Dt_t *dict, char *line, char *word, int cur)
 	struct Complete *pcp;
 	while(isspace(*cp) || *cp=='#')
 		cp++;
-	cmd = cp;
-	while(*cp && !isspace(*cp))
-		cp++;
-	c = *cp;
-	*cp = 0;
-	pcp = dtmatch(dict,cmd);
-	if(!pcp && (cmd=strrchr(cmd,'/')))
-		pcp = dtmatch(dict,++cmd);
-	*cp= c;
+	if(*cp && cp<word)
+	{
+		cmd = cp;
+		while(*cp && !isspace(*cp))
+			cp++;
+		c = *cp;
+		*cp = 0;
+		pcp = dtmatch(dict,cmd);
+		if(!pcp && (cmd=strrchr(cmd,'/')))
+			pcp = dtmatch(dict,++cmd);
+		*cp= c;
+		if(!pcp)
+			pcp = dtmatch(dict," D");
+	}
+	else
+		pcp = dtmatch(dict," E");
 	if(pcp)
 	{
 		Stk_t *stkp = pcp->sh->stk;
 		char *savptr = stkfreeze(stkp,0);
 		int offset = stktell(stkp);
 		com = ed_pcomplete(pcp, line, word, cur);
-		if(savptr==stkptr(stkp,0))
+		if(com && com[1])
+			stkfreeze(stkp,1);
+		else if(savptr==stkptr(stkp,0))
 			stkseek(stkp,offset);
 		else
 			stkset(stkp,savptr,offset);
@@ -294,10 +303,13 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 	{
 		register int c;
 		char *last = out;
+		Namval_t *np = nv_search("COMP_KEY",shp->var_tree,0);
+		if(np)
+			np->nvalue.s = (mode=='\\'?'\t':mode);
 		c =  *(unsigned char*)out;
 		var = mode;
 		begin = out = find_begin(outbuff,last,0,&var);
-		if(ep->compdict && (com = prog_complete(ep->compdict,outbuff,out,*cur)))
+		if(ep->compdict && mode!='?' && (com = prog_complete(ep->compdict,outbuff,out,*cur)))
 		{
 			char **av;
 			for(av=com; *av; av++);
@@ -317,6 +329,8 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			while(out < last)
 			{
 				c = *(unsigned char*)out;
+				if(c==0)
+					break;
 				if(isexp(c))
 					addstar = 0;
 				if (c == '/')

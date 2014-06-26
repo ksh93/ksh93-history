@@ -1541,7 +1541,7 @@ static void vigetline(register Vi_t* vp,register int mode)
 			return;
 
 		case '\t':		/** command completion **/
-			if(mode!=SEARCH && last_virt>=0 && vp->ed->sh->nextprompt)
+			if(mode!=SEARCH && (last_virt>=0||vp->ed->e_tabcount) && vp->ed->sh->nextprompt)
 			{
 				if(virtual[cur_virt]=='\\')
 				{
@@ -1556,11 +1556,17 @@ static void vigetline(register Vi_t* vp,register int mode)
 				}
 				else if(vp->ed->e_tabcount==1)
 				{
+					if(last_virt==0)
+#if 1
+						cur_virt = --last_virt;
+#endif
 					ed_ungetchar(vp->ed,'=');
 					goto escape;
 				}
 				vp->ed->e_tabcount = 0;
 			}
+			else
+				vp->ed->e_tabcount = 1;
 			/* FALL THRU*/
 		default:
 			if( mode == REPLACE )

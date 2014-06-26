@@ -4154,6 +4154,7 @@ int sh_eval_20120720(Shell_t *shp,register Sfio_t *iop, int mode)
 	volatile int lineno=0;
 	int binscript=shp->binscript;
 	char comsub = shp->comsub;
+	Sfio_t *iosaved = io_save;
 	io_save = iop; /* preserve correct value across longjmp */
 	shp->binscript = 0;
 	shp->comsub = 0;
@@ -4203,6 +4204,8 @@ int sh_eval_20120720(Shell_t *shp,register Sfio_t *iop, int mode)
 		shp->inlineno = lineno;
 	if(io_save)
 		sfclose(io_save);
+	if((io_save=iosaved) == iop)
+		io_save = 0;
 	sh_freeup(shp);
 	shp->st.staklist = saveslp;
 	shp->fn_reset = 0;

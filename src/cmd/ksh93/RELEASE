@@ -1,4 +1,15 @@
-14-06-06  --- Release ksh93v- ---
+14-06-25  --- Release ksh93v- ---
+14-06-25  A bug on some systems in which cd to a directory without execute
+	  permission would not fail has been fixed.
+14-06-25 +The BASH_SOURCE variable was added when ksh is run in bash mode.
+14-06-25 +The -D and -E options have been added to the complete builtin.
+14-06-19  References to dgk@research.att.com were deleted.
+14-06-19 +The -l flag to trap and the -p flag to umask were added as in bash.
+14-06-17 +In bash mode ${!parameter} is treated like ${$parameter}.
+14-06-17  Fixed a bug in which eval inside a dot script invoked by a profile file
+	  terminated the dot script prematurely after running the eval command.
+14-06-16 +Added parameter expansion operator ${$parameter} for variables and
+	  positional parameters.
 14-06-06  Added -a option to read which is equivalent to -A.
 14-06-05  Fixed a bug in builtin -p.
 14-06-05 +Added -n option to builtin to disable builtins.

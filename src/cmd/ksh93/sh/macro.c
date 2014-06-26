@@ -102,6 +102,7 @@ typedef struct  _mac_
 #define M_NAMESCAN	6	/* ${!var*}	*/
 #define M_NAMECOUNT	7	/* ${#var*}	*/
 #define M_TYPE		8	/* ${@var}	*/
+#define M_EVAL		9	/* ${$var}	*/
 
 static int	substring(const char*, size_t, const char*, int[], int);
 static void	copyto(Mac_t*, int, int);
@@ -1132,7 +1133,7 @@ retry1:
 	    case S_SPC1:
 		if(type==M_BRACE)
 		{
-			if(isaletter(mode=fcpeek(0)) || mode=='.' || (c=='!' && isadigit(mode)))
+			if(isaletter(mode=fcpeek(0)) || mode=='.')
 			{
 				if(c=='#')
 					type = M_SIZE;
@@ -1152,10 +1153,19 @@ retry1:
 				mode = c;
 				goto retry1;
 			}
-			
+#if SHOPT_BASH
+			else if(sh_isoption(mp->shp,SH_BASH) && c=='!' && isadigit(mode))
+				c = '$';
+#endif
 		}
 		/* FALL THRU */
 	    case S_SPC2:
+		if(type==M_BRACE && c=='$' && isalnum(mode=fcpeek(0)))
+		{
+			type = M_EVAL;
+			mode = c;
+			goto retry1;
+		}
 		var = 0;
 		*id = c;
 		v = special(mp->shp,c);
@@ -1340,6 +1350,43 @@ retry1:
 				sfprintf(mp->shp->strbuf,"%s%c",id,0);
 				id = sfstruse(mp->shp->strbuf);
 			}
+#if SHOPT_BASH
+			if(sh_isoption(mp->shp,SH_BASH) && (c=='}'||c==':') && type==M_VNAME && !nv_isattr(np,NV_REF))
+				type = M_EVAL;
+#endif
+			if(type==M_EVAL && np && (v=nv_getval(np)))
+			{
+				char *last;
+				int n = strtol(v,&last,10);
+				type = M_BRACE;
+				if(*last==0)
+				{
+					np = 0;
+					v = 0;
+					idnum = n;
+					if(n==0)
+						v = special(mp->shp,n);
+					else if(n <= mp->shp->st.dolc)
+					{
+						mp->shp->used_pos = 1;
+						v = mp->shp->st.dolv[n];
+					}
+					else
+						idnum = 0;
+					fcseek(-LEN);
+					stkseek(stkp,offset);
+					break;
+				}
+				else
+				{
+					np = nv_open(v,mp->shp->var_tree,flag|NV_NOFAIL);
+#if  0
+					type = M_BRACE;
+				if(c!='}')
+					mac_error(np);
+#endif
+				}
+			}
 		}
 		if(isastchar(mode))
 			var = 0;
@@ -1508,7 +1555,7 @@ retry1:
 	c = fcmbget(&LEN);
 	if(type>M_TREE)
 	{
-		if(c!=RBRACE && type!=M_VNAME && !idnum)
+		if(c!=RBRACE && type!=M_EVAL)
 			mac_error(np);
 		if(type==M_NAMESCAN || type==M_NAMECOUNT)
 		{
@@ -1548,18 +1595,15 @@ retry1:
 					v = nv_getsub(np);
 			}
 		}
+		else if(type==M_EVAL && (np = nv_open(v,mp->shp->var_tree,NV_NOREF|NV_NOADD|NV_VARNAME|NV_NOFAIL)))
+		{
+			v = nv_getval(np);
+			goto skip;
+		}
 		else
 		{
 			if(!isastchar(mode))
-			{
-				if(np || mode!='!' || idnum==0)
-					c = charlen(v,vsize);
-				else if(np = nv_open(v,mp->shp->var_tree,NV_NOREF|NV_NOADD|NV_VARNAME|NV_NOFAIL))
-				{
-					v = nv_getval(np);
-					goto skip;
-				}
-			}
+				c = charlen(v,vsize);
 			else if(dolg>0)
 			{
 #if  SHOPT_FILESCAN

@@ -1280,6 +1280,11 @@ Expands to the type name (See
 below) or attributes of the variable referred to by
 .IR vname .
 .TP
+\f3${$\fP\f2parameter\^\fP\f3}\fP
+If \f3$\fP\f2parameter\fP expands to the name of a variable, this expands
+to the value of that variable.  Otherwise, it expands to the empty string.
+It is undefined for special parameters.
+.TP
 \f3${!\fP\f2vname\^\fP\f3}\fP
 Expands to the name of the variable referred to by
 .IR vname .
@@ -7389,7 +7394,7 @@ second given by
 A suffix of one of \f3smhd\f3 can be used to indicate seconds, minutes, hours,
 and days respectively.  Seconds can also be specified using a date/time format.
 .TP
-\(dg \f3trap\fP \*(OK \f3\-ap\fP \*(CK \*(OK \f2action\^\fP \*(CK \*(OK \f2sig\^\fP \*(CK .\|.\|.
+\(dg \f3trap\fP \*(OK \f3\-alp\fP \*(CK \*(OK \f2action\^\fP \*(CK \*(OK \f2sig\^\fP \*(CK .\|.\|.
 The
 .B \-p
 option causes the trap
@@ -7514,6 +7519,29 @@ or
 .B return
 without an argument in a trap action will
 preserve the exit status of the command that invoked the trap.
+.IR action .
+Each
+.I sig\^
+can be given as a number or as the name of the signal.
+Trap commands are executed in order of signal number.
+Any attempt to set a trap on a signal that
+was ignored on entry to the current shell
+is ineffective.
+If
+.I action\^
+is omitted and the first
+.I sig\^
+is a number, or if
+.I action\^
+is
+.BR \- ,
+then the trap(s) for each
+.I sig\^
+are reset
+to their original values.
+The
+.B \-l
+option lists the signals and their numbers to standard output.
 .TP
 \f3true\fP
 Does nothing, and exits 0. Used with
@@ -7982,7 +8010,7 @@ If no option is given,
 is assumed.
 .RE
 .TP
-\f3umask\fP \*(OK \f3\-S\fP \*(CK \*(OK \f2mask\^\fP \*(CK
+\f3umask\fP \*(OK \f3\-pS\fP \*(CK \*(OK \f2mask\^\fP \*(CK
 The user file-creation mask is set to
 .I mask\^
 (see
@@ -8005,6 +8033,8 @@ The
 option causes the mode to be printed as a symbolic
 value.  Otherwise, the
 mask is printed in octal.
+The \-p
+option cause the output to be in a form that can be use for reinput.
 .TP
 \(dg \f3unalias\fP \*(OK \f3\-a\fP \*(CK \f2name\^\fP .\|.\|.
 The aliases

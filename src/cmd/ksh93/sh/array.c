@@ -22,8 +22,7 @@
  * Array processing routines
  *
  *   David Korn
- *   AT&T Labs
- *   dgk@research.att.com
+ *   dgkorn@gmail.com
  *
  */
 

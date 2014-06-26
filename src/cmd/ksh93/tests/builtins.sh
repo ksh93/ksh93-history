@@ -769,5 +769,15 @@ $SHELL 2> /dev/null <<- \!!! || err_exit 'alarm during read causes core dump'
 	do	:
 	done
 !!!
+# test for eval bug when called from . script in a startup file.
+print $'eval : foo\nprint ok' > $tmp/evalbug
+print ". $tmp/evalbug" >$tmp/envfile
+[[ $(ENV=$tmp/envfile $SHELL -i -c : 2> /dev/null) == ok ]] || err_exit 'eval inside dot script called from profile file not working'
+
+# test cd to a directory that doesn't have execute permission
+if	mkdir -p $tmp/a/b
+then	chmod -x $tmp/a/b
+	cd $tmp/a/b 2> /dev/null && err_exit 'cd to directory without execute should fail'
+fi
 
 exit $((Errors<125?Errors:125))

@@ -29,11 +29,11 @@
 #include "name.h"
 
 #ifndef BASH_MAJOR
-#   define BASH_MAJOR	"1"
-#   define BASH_MINOR	"0"
+#   define BASH_MAJOR	"4"
+#   define BASH_MINOR	"2"
 #   define BASH_PATCH	"0"
 #   define BASH_BUILD	"0"
-#   define BASH_RELEASE	"experimental"
+#   define BASH_RELEASE	"ksh93"
 #endif 
 #define BASH_VERSION	BASH_MAJOR "." BASH_MINOR "." BASH_PATCH "(" BASH_BUILD ")-" BASH_RELEASE 
 

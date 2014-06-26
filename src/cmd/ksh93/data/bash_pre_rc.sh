@@ -100,9 +100,14 @@ function __pwd
 	print -r -- "$pwd"
 }
 
+function PS1.get 
+{
+	eval .sh.value=$($PROMPT_COMMAND)'$PS1'
+}
+
 function PS1.set 
 {
-	typeset prefix remaining=${.sh.value} var= n= k=
+	typeset prefix remaining=${.sh.value} var=$($PROMPT_COMMAND) n= k=
 	while	[[ $remaining ]]
 	do	prefix=${remaining%%'\'*}
 		remaining=${remaining:${#prefix}}
@@ -265,3 +270,4 @@ typeset BASH=$0
 HOSTNAME=$(hostname)
 nameref BASH_SUBSHELL=.sh.subshell
 nameref BASH_REMATCH=.sh.match
+nameref BASH_SOURCE=.sh.file

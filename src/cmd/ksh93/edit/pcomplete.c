@@ -23,6 +23,7 @@
 #include	"builtins.h"
 #include	"name.h"
 #include	"edit.h"
+#include	"variables.h"
 
 #define FILTER_AMP	0x4000
 
@@ -31,17 +32,11 @@ Dtdisc_t        _Compdisc =
         offsetof(struct Complete,name), -1 , 0, 0, 0, nv_compare
 };
 
-static Namval_t compline;
-static Namval_t comppoint;
-static Namval_t compwords;
-static Namval_t compcword;
-static Namval_t compreply;
-
 static const char Options[] = "bdDfn";
 static const char *Option_names[] =  {
 	"bbashdefault",
 	"ddefault",
-	"Ddirnames",
+	"Idirnames",
 	"ffilenames",
 	"nnospace",
 	"pplusdirs",
@@ -59,8 +54,8 @@ static const char *Action_names[] =  {
 	"ccommand",
 	"ffile",
 	"ddirectory",
-	"Ddisabled",
-	"Eenabled",
+	"Idisabled",
+	"Jenabled",
 	"eexport",
 	"Ffunction",
 	"ggroup",
@@ -93,7 +88,7 @@ static const char *Action_eval[] =  {
 	"xtypeset +f | sed -e 's/()//'",
 	"xsed -e 's/:.*//' /etc/group", 
 	"",
-	"ygrep -v '^#' ${HOSTNAME:-/etc/hosts} | tr '\t ' '\n\n' | tr -s '\n' | cat",
+	"ygrep -v '^#' ${HOSTFILE:-/etc/hosts} | tr '\t ' '\n\n' | tr -s '\n' | cat",
 	"xjobs -l",
 	"xjobs -l | grep Running",
 	"xgrep -v '^#' /etc/services | sed -e 's/[ \t].*//'",
@@ -178,6 +173,10 @@ USAGE_LICENSE
 	"word being completed.]"
 "[C]:?[command?\acommand\a is executed in a subshell environment, and its "
 	"output is used as the possible completions.]"
+"[D?Use this completion as a default for commands that don't have a completion "
+	"specified.]"
+"[E?Use this completion when for a blank line.]"
+	"specified.]"
 "[F]:?[function?The shell function \afunction\a is executed in the current "
 	"environment.  When it finishes the possible list of completions are "
 	"retrieved from the indexed array variable \bCOMPREPLY\b]"
@@ -351,35 +350,13 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 	{
 		char *cpsave;
 		int csave;
+		if(strcmp(comp->name," E")==0)
+			complete = 1;
 		if(complete)
 		{
-			if(!compline.nvname)
-			{
-				compline.nvname = "COMP_LINE";
-				comppoint.nvname = "COMP_POINT";
-				compwords.nvname = "COMP_WORDS";
-				compcword.nvname = "COMP_CWORD";
-				compreply.nvname = "COMPREPLY";
-				compline.nvshell = shp;
-				comppoint.nvshell = shp;
-				compwords.nvshell = shp;
-				compcword.nvshell = shp;
-				compreply.nvshell = shp;
-				nv_setsize(&comppoint,10);
-				nv_setsize(&compcword,10);
-				nv_onattr(&compline,NV_NOFREE|NV_RDONLY);
-				nv_onattr(&comppoint,NV_EXPORT|NV_RDONLY|NV_INTEGER|NV_SHORT|NV_UNSIGN);
-				nv_onattr(&compwords,NV_NOFREE|NV_RDONLY);
-				nv_onattr(&compcword,NV_RDONLY|NV_INTEGER|NV_SHORT|NV_UNSIGN);
-				dtinsert(shp->var_base,&compline);
-				dtinsert(shp->var_base,&comppoint);
-				dtinsert(shp->var_base,&compwords);
-				dtinsert(shp->var_base,&compcword);
-				dtinsert(shp->var_base,&compreply);
-			}
-			_nv_unset(&compreply,0);
-			comppoint.nvalue.s = index+1;
-			compline.nvalue.cp = line;
+			_nv_unset(COMPREPLY,0);
+			COMP_POINT->nvalue.s = index+1;
+			COMP_LINE->nvalue.cp = line;
 			cp = (char*)&line[index]-strlen(prefix);
 			csave = *(cpsave=cp);
 			while(--cp>=line)
@@ -392,11 +369,11 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 		if(comp->fun)
 		{
 			Namarr_t	*ap;
-			Namval_t	*np = &compreply;
+			Namval_t	*np = COMPREPLY;
 			int		n,spaces=0;
 			if(!complete)
 				errormsg(SH_DICT,ERROR_warn(0),"-F option may not work as you expect");
-			_nv_unset(&compwords,NV_RDONLY);
+			_nv_unset(COMP_WORDS,NV_RDONLY);
 			cp = (char*)line;
 			if(strchr(" \t",*cp))
 				cp++;
@@ -413,7 +390,7 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 			}
 			if(spaces==0)
 				n++;
-			compcword.nvalue.s = n-2;
+			COMP_CWORD->nvalue.s = n-2;
 			stkseek(shp->stk,0);
 			len = (n+1)*sizeof(char*) + strlen(line)+1;
 			stkseek(shp->stk,len);
@@ -432,7 +409,7 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 			}
 			*av=0;
 			av = (char**)stkptr(shp->stk,0);
-			nv_setvec(&compwords,0,n,av);
+			nv_setvec(COMP_WORDS,0,n,av);
 			stkseek(shp->stk,0);
 			*cpsave = 0;
 			sfprintf(shp->stk,"%s \"%s\" \"%s\" \"%s\"\n\0",nv_name(comp->fun),comp->name,prefix,lastword); 
@@ -441,7 +418,7 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 			str = stkptr(shp->stk,0);
 			sh_trap(shp,str,0);
 			stkseek(shp->stk,0);
-			if(ap = nv_arrayptr(np))
+			if((ap = nv_arrayptr(np)) && ap->nelem>0)
 			{
 				nv_putsub(np,(char*)0,0,ARRAY_SCAN);
 				do
@@ -549,7 +526,7 @@ again:
 	{
 		/* reserved space on stack and try again */
 		len = 3;
-		tlen = (c+1)*sizeof(char*)+len*c; 
+		tlen = (c+1)*sizeof(char*)+len*c +1024; 
 		stkseek(shp->stk,tlen);
 		complete = 2;
 		av = (char**)stkptr(shp->stk,0);
@@ -684,13 +661,18 @@ static void print_out(struct Complete *cp,Sfio_t *out)
 		sfprintf(out,"-F %s ", cp->fname);
 	if(cp->command)
 		sfprintf(out,"-C %s ", cp->command);
-	sfputr(out,cp->name,'\n');
+	if(*cp->name ==' ')
+		sfprintf(out,"-%c\n", cp->name[1]);
+	else
+		sfputr(out,cp->name,'\n');
 }
 
 int b_complete(int argc, char *argv[], Shbltin_t *context)
 {
 	int n,r=0;
 	bool complete=true,delete=false,print=(argc==1);
+	bool empty=false;
+	char *av[2];
 	Optdisc_t disc;
 	struct Complete comp;
 	disc.version = OPT_VERSION;
@@ -703,6 +685,7 @@ int b_complete(int argc, char *argv[], Shbltin_t *context)
 		optinit(&disc,complete_info);
 	memset(&comp,0,sizeof(comp));
 	comp.sh = context->shp;
+
 	while((n = optget(argv,sh_optcomplete)))
 	{
 		switch(n)
@@ -712,7 +695,7 @@ int b_complete(int argc, char *argv[], Shbltin_t *context)
 				errormsg(SH_DICT,ERROR_exit(1),"invalid -%c option name %s", 'A',opt_info.arg);
 		    case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
 		    case 'g': case 'j': case 'k': case 's': case 'u': case 'v':
-		    case 'D': case 'E': case 'Z':
+		    case 'I': case 'J': case 'Z':
 			n =  (strchr(Actions,n)-Actions);
 			comp.action |= 1L<<n;
 			if(Actions[n] == 'c')
@@ -761,6 +744,11 @@ int b_complete(int argc, char *argv[], Shbltin_t *context)
 		    case 'p':
 			print=true;
 			break;
+		    case 'D': case 'E':
+			av[1] = 0;
+			av[0] = n=='D'?" D":" E";
+			empty = true;
+			break;
 		    case '?':
 			errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
 			return(-1);
@@ -772,7 +760,7 @@ int b_complete(int argc, char *argv[], Shbltin_t *context)
 		char *name;
 		struct Complete *cp;
 		Dt_t *compdict =  ((Edit_t*)(shgd->ed_context))->compdict;
-		if(!argv[0])
+		if(!empty && !argv[0])
 		{
 			if(!print && !delete)
 				errormsg(SH_DICT,ERROR_usage(0), "complete requires command name");
@@ -789,6 +777,8 @@ int b_complete(int argc, char *argv[], Shbltin_t *context)
 				}
 			}
 		}
+		if(empty)
+			argv = av;
 		while(name = *argv++)
 		{
 			if(print)

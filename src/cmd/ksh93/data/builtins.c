@@ -1605,7 +1605,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttrap[] =
-"[-1c?\n@(#)$Id: trap (AT&T Research) 2012-07-05 $\n]"
+"[-1c?\n@(#)$Id: trap (AT&T Research) 2014-06-19 $\n]"
 USAGE_LICENSE
 "[+NAME?trap - trap signals and conditions]"
 "[+DESCRIPTION?\btrap\b is a special built-in that defines actions to be "
@@ -1647,6 +1647,7 @@ USAGE_LICENSE
 "[a?append the current trap setting to the specified \aaction\a.]"
 "[p?Causes the current traps to be output in a format that can be processed "
 	"as input to the shell to recreate the current traps.]"
+"[l?Output the list of signals and their numbers to standard output.]"
 "\n"
 "\n[action condition ...]\n"
 "\n"
@@ -1782,7 +1783,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optulimit[] =
-"[-1c?@(#)$Id: ulimit (AT&T Research) 2003-06-21 $\n]"
+"[-1c?@(#)$Id: ulimit (AT&T Research) 2014-06-19 $\n]"
 USAGE_LICENSE
 "[+NAME?ulimit - set or display resource limits]"
 "[+DESCRIPTION?\bulimit\b sets or displays resource limits.  These "
@@ -1833,6 +1834,7 @@ USAGE_LICENSE
 	"file creation mask for the current process to standard output.]"
 "[S?Causes the file creation mask to be written or treated as a symbolic value "
 	"rather than an octal number.]"
+"[p?Write the file creation mask in a format that can be use for re-input.]"
 "\n"
 "\n[mask]\n"
 "\n"

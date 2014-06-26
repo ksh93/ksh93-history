@@ -24,8 +24,7 @@
  * pwd [-LP]
  *
  *   David Korn
- *   AT&T Labs
- *   research!dgk
+ *   dgkorn@gmail.com
  *
  */
 
@@ -214,7 +213,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		if(newdirfd >=0)
 		{
 			/* chdir for directories on HSM/tapeworms may take minutes */
-			if(fchdir(newdirfd) >= 0)
+			if((rval=fchdir(newdirfd)) >= 0)
 			{
 				if(shp->pwdfd >= 0)
 					sh_close(shp->pwdfd);
@@ -240,7 +239,7 @@ int	b_cd(int argc, char *argv[],Shbltin_t *context)
 		if(newdirfd >=0)
 		{
 			/* chdir for directories on HSM/tapeworms may take minutes */
-			if(fchdir(newdirfd) >= 0)
+			if((rval=fchdir(newdirfd)) >= 0)
 			{
 				if(shp->pwdfd >= 0)
 					sh_close(shp->pwdfd);
