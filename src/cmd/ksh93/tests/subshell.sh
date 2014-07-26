@@ -681,4 +681,7 @@ x=$(
 
 $SHELL -c 'while((SECONDS<3)); do test -z `/bin/false | /bin/false | /bin/doesnotexist`;done;:' 2> /dev/null || err_exit 'non-existant last command in pipeline causes `` to fail'
 
+x=$({ sleep .1;false;} | true)
+[[ $? != 0 ]] && err_exit 'without pipefail, non-zero exit in pipeline causes command substitution to fail'
+
 exit $((Errors<125?Errors:125))

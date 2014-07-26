@@ -1,4 +1,18 @@
-14-06-25  --- Release ksh93v- ---
+14-07-21  --- Release ksh93v- ---
+14-07-21 +A -m method option has been added to read to read compound variables
+	  using a specified method. Currently only methods ksh and json are
+	  implemented.  -m ksh is equivalent to -C. 
+14-07-18 +In bash mode, the last element of a pipe is run in a subshell unless
+	  the option lastpipe is on.
+14-07-15  Fixed a bug in which json format output with 'print -j' had a comma
+	  after the last element.
+14-07-11 +Added -t flag and -P flag to whence and type for bash compaiblity.
+14-07-11 +Added -p flag to alias to output aliases for re-input.
+14-07-10  In bash mode x=() creates an empty index array instead of an empty
+	  compound variable.
+14-07-01  Some ifdefs were added so that ksh93 compiles with SHOPT_COMPLETE
+	  disabled.
+14-06-30 +The variable COMP_WORDBREAKS for programmable completion.
 14-06-25  A bug on some systems in which cd to a directory without execute
 	  permission would not fail has been fixed.
 14-06-25 +The BASH_SOURCE variable was added when ksh is run in bash mode.

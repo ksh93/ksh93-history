@@ -112,6 +112,8 @@ const struct shtable2 shtab_variables[] =
 	"COMP_WORDS",	NV_NOFREE,		(char*)0,
 	"COMP_KEY",	NV_EXPORT|NV_INTEGER|NV_SHORT|NV_UNSIGN,(char*)0,
 	"COMPREPLY",	0,				(char*)0,
+	"COMP_WORDBREAKS",	NV_NOFREE,		(char*)e_wordbreaks,
+	"COMP_TYPE",	NV_EXPORT|NV_INTEGER|NV_SHORT|NV_UNSIGN,(char*)0,
 #if SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,
 #endif /* SHOPT_FS_3D */

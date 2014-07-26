@@ -668,7 +668,6 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 				}
 				if(c==0 || c==ESC || c=='\r')
 					last--;
-				qlen += (n+1);
 				break;
 			}
 			case '\b':

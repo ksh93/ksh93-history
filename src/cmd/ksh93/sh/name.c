@@ -413,6 +413,8 @@ Namval_t **sh_setlist(Shell_t *shp,register struct argnod *arg,register int flag
 				if(ap && ap->fixed)
 					flags |= NV_FARRAY;
 #endif /* SHOPT_FIXEDARRAY */
+				if(sh_isoption(shp,SH_BASH) &&!array && !ap && !(flags&NV_COMVAR) && !np->nvfun && !tp->com.comset && !tp->com.comarg)
+					array = NV_IARRAY;
 				if(array && (!ap || !ap->hdr.type))
 				{
 #if SHOPT_FIXEDARRAY

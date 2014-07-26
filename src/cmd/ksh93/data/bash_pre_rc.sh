@@ -102,7 +102,9 @@ function __pwd
 
 function PS1.get 
 {
+	integer exitval=$?
 	eval .sh.value=$($PROMPT_COMMAND)'$PS1'
+	return $exitval
 }
 
 function PS1.set 
@@ -120,7 +122,9 @@ function PS1.set
 		w)	var+="\$(__pwd)";;
 		W)	var+="\$(basename \"\$(pwd)\")";;
 		u)	var+=$USER;;
-		h)	var+=$(hostname -s);;
+		H)	var+=$(hostname -s);;
+		h)	n=$(hostname -s)
+			var+=${n%%.*};;
 		'#')	var+=!;;
 		!)	var+=!;;
 		@)	var+="\$(printf '%(%I:%M%p)T')";;

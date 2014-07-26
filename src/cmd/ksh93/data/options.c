@@ -74,6 +74,7 @@ const Shtable_t shtab_options[] =
 	bashextra("interactive_comments",	SH_INTERACTIVE_COMM)
 	"keyword",			SH_KEYWORD,
 	"letoctal",			SH_LETOCTAL,
+	bashopt("lastpipe",		SH_LASTPIPE)
 	bashopt("lithist",		SH_LITHIST)
 	"nolog",			SH_NOLOG,
 	"login_shell",			SH_LOGIN_SHELL|SH_COMMANDLINE,

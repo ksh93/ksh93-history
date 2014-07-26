@@ -374,6 +374,7 @@ struct shared
 #   define SH_SHIFT_VERBOSE	75
 #   define SH_SOURCEPATH	76
 #   define SH_XPG_ECHO		77
+#   define SH_LASTPIPE		78
 #endif
 
 #define SH_HISTAPPEND		60
@@ -432,7 +433,7 @@ extern int		sh_outtype(Shell_t*, Sfio_t*);
 extern char 		*sh_mactry(Shell_t*,char*);
 extern int		sh_mathstd(const char*);
 extern void		sh_printopts(Shell_t*,Shopt_t,int,Shopt_t*);
-extern int 		sh_readline(Shell_t*,char**,volatile int,int,ssize_t,long);
+extern int 		sh_readline(Shell_t*,char**,void*,volatile int,int,ssize_t,long);
 extern Sfio_t		*sh_sfeval(char*[]);
 extern char		*sh_fmtj(const char*);
 extern char		*sh_fmtstr(const char*,int);

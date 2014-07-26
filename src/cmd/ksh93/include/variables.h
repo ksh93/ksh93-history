@@ -103,15 +103,17 @@
 #define COMP_WORDS	(shgd->bltin_nodes+73)
 #define COMP_KEY	(shgd->bltin_nodes+74)
 #define COMPREPLY	(shgd->bltin_nodes+75)
+#define COMP_WORDBREAKS	(shgd->bltin_nodes+76)
+#define COMP_TAB	(shgd->bltin_nodes+77)
 #if SHOPT_FS_3D
-#   define VPATHNOD	(shgd->bltin_nodes+76)
+#   define VPATHNOD	(shgd->bltin_nodes+78)
 #   define NFS_3D	1
 #else
 #   define NFS_3D	0
 #endif /* SHOPT_FS_3D */
 #if SHOPT_VPIX
-#   define DOSPATHNOD	(shgd->bltin_nodes+76+NFS_3D)
-#   define VPIXNOD	(shgd->bltin_nodes+77+NFS_3D)
+#   define DOSPATHNOD	(shgd->bltin_nodes+78+NFS_3D)
+#   define VPIXNOD	(shgd->bltin_nodes+79+NFS_3D)
 #   define NVPIX	(NFS_3D+2)
 #else
 #   define NVPIX	NFS_3D

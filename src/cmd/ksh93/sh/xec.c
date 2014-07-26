@@ -2196,6 +2196,13 @@ tryagain:
 			pipejob = 2;
 			waitall = job.waitall;
 			job.waitall = 0;
+			if(type==0 && sh_isoption(shp,SH_BASH) && !sh_isoption(shp,SH_LASTPIPE))
+			{
+				tt = (Shnode_t*)stkalloc(shp->stk,sizeof(Shnode_t));
+				tt->par.partyp = type = TPAR;
+				tt->par.partre = (Shnode_t*)t;
+				t = tt;
+			}
 			if(type == 0)
 			{
 				/*
@@ -2343,7 +2350,7 @@ tryagain:
 					save_prompt = shp->nextprompt;
 					shp->nextprompt = 3;
 					shp->timeout = 0;
-					shp->exitval=sh_readline(shp,&nullptr,0,1,(size_t)0,1000*shp->st.tmout);
+					shp->exitval=sh_readline(shp,&nullptr,(void*)0,0,1,(size_t)0,1000*shp->st.tmout);
 					shp->nextprompt = save_prompt;
 					if(shp->exitval||sfeof(sfstdin)||sferror(sfstdin))
 					{

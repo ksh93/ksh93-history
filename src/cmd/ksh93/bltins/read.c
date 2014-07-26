@@ -19,7 +19,7 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * read [-ACprs] [-d delim] [-u filenum] [-t timeout] [-n n] [-N n] [name...]
+ * read [-ACprs] [-q format] [-d delim] [-u filenum] [-t timeout] [-n n] [-N n] [name...]
  *
  *   David Korn
  *   AT&T Labs
@@ -50,13 +50,126 @@
 
 struct read_save
 {
-        char	**argv;
+	char	**argv;
 	char	*prompt;
-        short	fd;
-        short	plen;
+	short	fd;
+	short	plen;
 	int	flags;
+	int	mindex;
 	ssize_t	len;
         long	timeout;
+};
+
+struct Method
+{
+	char	*name;
+	void	*fun;
+};
+
+static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
+{
+	int	c, state=0, lastc=0, level=0;
+	size_t	here, offset = stktell(shp->stk);
+	char	*start;
+	bool	isname, isnull=false;
+	while((c = sfgetc(in)) > 0)
+	{
+		if(state==0)
+		{
+			switch(c)
+			{
+			    case '\t': case ' ':
+				if(lastc==' ' || lastc=='\t')
+					continue;
+				break;
+			    case ',':
+				continue;
+			    case '[': case '{':
+				c = '(';
+				level++;
+				break;
+			    case ']': case '}':
+				c = ')';
+				level--;
+				break;
+			    case '"':
+				state = 1;
+				isname = true;
+				sfputc(shp->stk,c);
+				continue;
+			}
+			sfputc(out,c);
+			if(level==0)
+				break;
+		}
+		else if(state==1)
+		{
+			if(c=='"' && lastc != '\\') 
+				state=2;
+			else if(state==1 && !isalnum(c) && c!='_')
+				isname = false;
+			sfputc(shp->stk,c);
+		}
+		else if(state==2)
+		{
+			char *last;
+			if(c==' ' || c == '\t')
+				continue;
+			if(c==':')
+			{
+				while((c = sfgetc(in)) &&  isblank(c));
+				sfungetc(in,c);
+				if(!strchr("[{,\"",c))
+				{
+					if(isdigit(c) || c=='.' || c =='-')
+						sfwrite(out,"float ",6);
+					else if(c=='t' || c=='f')
+						sfwrite(out,"bool ",5);
+					else if(c=='n')
+					{
+						char buff[4];
+						isnull = true;
+						sfread(in,buff,4);
+						sfwrite(out,"typeset  ",8);
+					}
+				}
+				start = stkptr(shp->stk,offset);
+				here = stktell(shp->stk);
+				if(isname && !isalpha(*(start+1)) && c!='_')
+					isname = false;
+				if(!isname)
+					sfputc(out,'[');
+				sfwrite(out,start+1, here-offset-2);
+				if(!isname)
+					sfputc(out,']');
+				if(isnull)
+					isnull = false;
+				else
+					sfputc(out,'=');
+				stkseek(shp->stk,offset);
+			}
+			if(c==',' || c=='\n')
+			{
+				start = stkptr(shp->stk,offset);
+				here = stktell(shp->stk);
+				*stkptr(shp->stk,here-1) = 0;
+				stresc(start+1);
+				sfputr(out,sh_fmtq(start+1),-1);
+				stkseek(shp->stk,offset);
+				sfputc(out,' ');
+			}
+			c = ' ';
+			state = 0;
+		}
+		lastc = c;
+	}
+	return(0);
+}
+
+static struct Method methods[] = {
+	"json",	json2sh,
+	"ksh",	0,
+	0,	0
 };
 
 int	b_read(int argc,char *argv[], Shbltin_t *context)
@@ -69,6 +182,9 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 	long timeout = 1000*shp->st.tmout;
 	int save_prompt, fixargs=context->invariant;
 	struct read_save *rp;
+	int mindex=0;
+	char *method = 0;
+	void *readfn = 0;
 	static char default_prompt[3] = {ESC,ESC};
 	rp = (struct read_save*)(context->data);
 	if(argc==0)
@@ -84,6 +200,7 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		fd = rp->fd;
 		argv = rp->argv;
 		name = rp->prompt;
+		mindex = rp->mindex;
 		r = rp->plen;
 		goto bypass;
 	}
@@ -94,6 +211,7 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		break;
 	    case 'C':
 		flags |= C_FLAG;
+		method = "ksh";
 		break;
 	    case 't':
 		sec = sh_strnum(shp,opt_info.arg, (char**)0,1);
@@ -117,6 +235,10 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 			argv--;
 			argc--;
 		}
+		break;
+	    case 'm':
+		method = opt_info.arg;
+		flags |= C_FLAG;
 		break;
 	    case 'n': case 'N':
 		flags &= ((1<<D_FLAG)-1);
@@ -165,6 +287,17 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 	argv += opt_info.index;
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2), "%s", optusage((char*)0));
+	if(method)
+	{
+		for(mindex=0; methods[mindex].name; mindex++)
+		{
+			if(strcmp(method,methods[mindex].name)==0)
+				break;
+		}
+		if(!methods[mindex].name)
+			errormsg(SH_DICT,ERROR_system(1),"%s method not supported",method);
+	}
+		
 	if(!((r=shp->fdstatus[fd])&IOREAD)  || !(r&(IOSEEK|IONOSEEK)))
 		r = sh_iocheckfd(shp,fd,fd);
 	if(fd<0 || !(r&IOREAD))
@@ -186,6 +319,7 @@ int	b_read(int argc,char *argv[], Shbltin_t *context)
 		rp->prompt = name;
 		rp->plen = r;
 		rp->len = len;
+		rp->mindex = mindex;
 	}
 bypass:
 	shp->prompt = default_prompt;
@@ -197,7 +331,8 @@ bypass:
 	shp->timeout = 0;
 	save_prompt = shp->nextprompt;
 	shp->nextprompt = 0;
-	r=sh_readline(shp,argv,fd,flags,len,timeout);
+	readfn = (flags&C_FLAG)?methods[mindex].fun:0;
+	r=sh_readline(shp,argv,readfn,fd,flags,len,timeout);
 	shp->nextprompt = save_prompt;
 	if(r==0 && (r=(sfeof(shp->sftable[fd])||sferror(shp->sftable[fd]))))
 	{
@@ -230,7 +365,7 @@ static void timedout(void *handle)
  *  <flags> is union of -A, -r, -s, and contains delimiter if not '\n'
  *  <timeout> is number of milli-seconds until timeout
  */
-int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,ssize_t size,long timeout)
+int sh_readline(register Shell_t *shp,char **names, void *readfn, volatile int fd, int flags,ssize_t size,long timeout)
 {
 	register ssize_t	c;
 	register unsigned char	*cp;
@@ -294,6 +429,7 @@ int sh_readline(register Shell_t *shp,char **names, volatile int fd, int flags,s
 			if(!nv_isattr(np,NV_MINIMAL))
 				np->nvenv = sp;
 			nv_setvtree(np);
+			*(void**)(np->nvfun+1) = readfn;
 		}
 		else
 			name = *++names;

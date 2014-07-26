@@ -102,7 +102,12 @@ int    b_readonly(int argc,char *argv[],Shbltin_t *context)
 			break;
 		case ':':
 			errormsg(SH_DICT,2, "%s", opt_info.arg);
-			break;
+		case 'n':
+			if(*command=='e')
+			{
+				tdata.aflag = '+';
+				break;
+			}
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
 			return(2);
@@ -147,6 +152,8 @@ int    b_alias(int argc,register char *argv[],Shbltin_t *context)
 	troot = tdata.sh->alias_tree;
 	if(*argv[0]=='h')
 		flag = NV_TAGGED;
+	if(sh_isoption(tdata.sh,SH_BASH))
+		tdata.prefix = argv[0];
 	if(argv[1])
 	{
 		opt_info.offset = 0;

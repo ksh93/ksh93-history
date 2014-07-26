@@ -658,11 +658,8 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 			{
 				int c = shp->exitval;
 				job_wait(shp->spid);
-				if(shp->exitval==ERROR_NOENT)
-				{
-					shp->exitval = c;
-					exitset(shp);
-				}
+				shp->exitval = c;
+				exitset(shp);
 				if(shp->pipepid==shp->spid)
 					shp->spid = 0;
 				shp->pipepid = 0;

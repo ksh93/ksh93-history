@@ -158,6 +158,7 @@ struct Ufunction
 #define NV_OPTGET	(NV_BINARY)		/* function calls getopts */
 #define NV_SHVALUE	(NV_TABLE)		/* function assigns .sh.value */
 #define NV_JSON		(NV_TAGGED)		/* for json formatting */
+#define NV_JSON_LAST	(NV_TABLE)		/* last for json formatting */
 #define nv_isref(n)	(nv_isattr((n),NV_REF|NV_TAGGED|NV_FUNCT)==NV_REF)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN|NV_INTEGER)==NV_BLTIN)
 #define is_afunction(n)	(nv_isattr(n,NV_FUNCTION|NV_REF)==NV_FUNCTION)
@@ -286,4 +287,5 @@ extern const char	e_globalref[];
 extern const char	e_tolower[];
 extern const char	e_toupper[];
 extern const char	e_astbin[];
+extern const char	e_wordbreaks[];
 #endif /* _NV_PRIVATE */
