@@ -84,6 +84,7 @@ struct process
 	struct process *p_nxtjob;	/* next job structure */
 	struct process *p_nxtproc;	/* next process in current job */
 	Shell_t		*p_shp;		/* shell that posted the job */
+	char		*p_curdir;	/* current direcory at job start */
 #if SHOPT_COSHELL
 	Cojob_t		*p_cojob;	/* coshell job */
 #endif /* SHOPT_COSHELL */

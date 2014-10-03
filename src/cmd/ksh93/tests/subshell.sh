@@ -684,4 +684,40 @@ $SHELL -c 'while((SECONDS<3)); do test -z `/bin/false | /bin/false | /bin/doesno
 x=$({ sleep .1;false;} | true)
 [[ $? != 0 ]] && err_exit 'without pipefail, non-zero exit in pipeline causes command substitution to fail'
 
+foo() {
+  print -r foo | read
+  return 1
+}
+o1=$(foo "foo") && err_exit 'function which fails inside commad substitution should return non-zero exit status for assignments'
+
+# test for larg `` command substitutions
+tmpscr=$tmp/xxx.sh
+print 'x=` print -n '"'" > $tmpscr
+integer i
+for ((i=0; i < 4000; i++))
+do	print xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaaaaaaabbbbbbbbbbcccccccccc
+done >>  $tmpscr
+print  "'"'`' >> $tmpscr
+(( size= $(wc -c < $tmpscr) -18 ))
+$SHELL  "$tmpscr" &
+cop=$!
+{ sleep 2; kill $cop; } 2>/dev/null &
+spy=$!
+if      wait $cop 2>/dev/null
+then    kill $spy 2>/dev/null
+else    err_exit -u2 "\`...\` hangs for large with output size $size"
+fi
+
+if	[[ -e /dev/zero ]]
+then	(( size = 117*1024 ))
+	$SHELL -c 'x=`(dd if=/dev/zero bs=1k count=117 2>/dev/null)`' &
+	cop=$!
+	{ sleep 2; kill $cop; } 2>/dev/null &
+	spy=$!
+	if      wait $cop 2>/dev/null
+	then    kill $spy 2>/dev/null
+	else    err_exit -u2 "\`(...)\` hangs for large with output size $size"
+	fi
+fi
+
 exit $((Errors<125?Errors:125))

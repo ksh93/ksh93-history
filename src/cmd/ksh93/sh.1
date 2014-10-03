@@ -5676,6 +5676,26 @@ value will be inserted on the input queue for processing.
 Display version of the shell.
 .RE
 .PD
+.SS Programmable Completion.
+By default, hitting the
+.B tab
+key causes the current word to be matched against files starting with
+the characters you typed and adding as many characters that provide a
+unique match.  If the matching prefix is not unique hitting
+.B tab
+again will output a numbered list with the choices and entering
+.I number\^
+.B tab
+will replace the current word with that selection.
+.P
+Programmable completion allows you to control how words are expanded when
+you enter the
+.B tab
+key for one or more specified commands.
+The
+.B complete
+built-in command allows you to specify how to complete the current word of the
+specified command.
 .SS Built-in Commands.
 The following simple-commands are executed in the shell process.
 Input/Output redirection is permitted.

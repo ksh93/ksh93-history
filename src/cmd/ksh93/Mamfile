@@ -952,6 +952,8 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done io.o generated
 make jobs.o
 make sh/jobs.c
+prev include/path.h implicit
+prev include/variables.h implicit
 prev include/history.h implicit
 prev include/jobs.h implicit
 prev include/io.h implicit
@@ -965,7 +967,7 @@ prev include/defs.h implicit
 done sh/jobs.c
 meta jobs.o %.c>%.o sh/jobs.c jobs
 prev sh/jobs.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COSHELL -D_API_ast=20130625 -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_BASH -D_BLD_shell -DKSHELL -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_FIXEDARRAY -c sh/jobs.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_PFSH -DSHOPT_BASH -D_API_ast=20130625 -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_FIXEDARRAY -DSHOPT_MULTIBYTE -DSHOPT_DYNAMIC -DKSHELL -c sh/jobs.c
 done jobs.o generated
 make lex.o
 make sh/lex.c

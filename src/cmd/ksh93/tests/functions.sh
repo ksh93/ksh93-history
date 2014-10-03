@@ -1227,4 +1227,6 @@ foo()
 	((  (A[i-1].x != A[i].x) ))
 }' || err_exit 'unset parameter in function not called causes error with set -u'
 
+$SHELL -c 'function ftest { ftest2; }; function ftest2 { unset -f ftest; }; ftest' 2> /dev/null || err_exit 'unset of function in the calling stack fails'
+
 exit $((Errors<125?Errors:125))

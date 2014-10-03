@@ -212,7 +212,8 @@ int    b_print(int argc, char *argv[], Shbltin_t *context)
 			/* print to history file */
 			if(!sh_histinit((void*)shp))
 				errormsg(SH_DICT,ERROR_system(1),e_history);
-			fd = sffileno(shp->gd->hist_ptr->histfp);
+			outfile = shp->gd->hist_ptr->histfp;
+			fd = sffileno(outfile);
 			sh_onstate(shp,SH_HISTORY);
 			sflag++;
 			break;
@@ -307,6 +308,8 @@ skip2:
 		errno = EBADF;
 		n = 0;
 	}
+	else if(sflag)
+		n = IOREAD|IOWRITE|IOSEEK;
 	else if(!(n=shp->fdstatus[fd]))
 		n = sh_iocheckfd(shp,fd,fd);
 	if(!(n&IOWRITE))
@@ -316,7 +319,7 @@ skip2:
 			return(1);
 		errormsg(SH_DICT,ERROR_system(1),msg);
 	}
-	if(!(outfile=shp->sftable[fd]))
+	if(!sflag && !(outfile=shp->sftable[fd]))
 	{
 		sh_onstate(shp,SH_NOTRACK);
 		n = SF_WRITE|((n&IOREAD)?SF_READ:0);

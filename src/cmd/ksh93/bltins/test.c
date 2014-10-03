@@ -473,14 +473,20 @@ int test_binop(Shell_t *shp,register int op,const char *left,const char *right)
 	register double lnum,rnum;
 	if(op&TEST_ARITH)
 	{
-		while(*left=='0')
-			left++;
-		if(!isdigit(*left))
-			left--;
-		while(*right=='0')
-			right++;
-		if(!isdigit(*right))
-			right--;
+		if(*left=='0')
+		{
+			while(*left=='0')
+				left++;
+			if(!isdigit(*left))
+				left--;
+		}
+		if(*right=='0')
+		{
+			while(*right=='0')
+				right++;
+			if(!isdigit(*right))
+				right--;
+		}
 		lnum = sh_arith(shp,left);
 		rnum = sh_arith(shp,right);
 	}

@@ -757,8 +757,6 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			}
 			else if(!(fmtq = sh_fmtj(ep)))
 				fmtq = "\"\"";
-			else if(nv_isnull(np))
-				fmtq = "null";
 		}
 		else if(!ep && !mp && nv_isarray(np))
 			fmtq = " ()";
@@ -1137,8 +1135,16 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					if(argv[1][r]=='.' && strncmp(argv[0],argv[1],r)==0)
 						wp->flags &= ~NV_COMVAR;
 				}
+#if 1
+				if(argv[1])
+				{
+					if((wp->flags& NV_JSON) && strlen(argv[1])<m+n || memcmp(argv[1],arg,m+n-1))
+						wp->flags |= NV_JSON_LAST;
+				}
+#else
 				if((wp->flags& NV_JSON) && (!argv[1] || strlen(argv[1])<m+n || memcmp(argv[1],arg,m+n-1)))
 					wp->flags |= NV_JSON_LAST;
+#endif
 				outval(cp,arg,wp);
 				if(wp->array)
 				{

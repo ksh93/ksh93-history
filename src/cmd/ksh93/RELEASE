@@ -1,4 +1,21 @@
-14-07-21  --- Release ksh93v- ---
+14-09-29  --- Release ksh93v- ---
+14-09-29  A bug which allowed builtin -d to delete a special built-in has been
+	  fixed.
+14-09-24 +When listing jobs, the shell now shows the directory that the job
+	  was started from when it was not started from the current working
+	  directory.
+14-09-09  A bug in which `` command substitutions could hang with large output
+	  has been fixed.
+14-09-02  A bug in the test and [...] command for arithmetic operations when one
+	  of the operands was a variable.
+14-08-28  a bug which could cause a core dump when unsetting a function that is 
+	  in the active call chain has been fixed.
+14-08-22  A bug in which a command substitution of a function that fails, does 
+	  not cause an assigment command to fail has been fixed
+14-08-05  A bug in which print -s would fail with bad file unit number has
+	  been fixed.
+14-07-22  A bug in which a non-zero exit status not last element of a pipeline
+	  could cause the pipeline to fail when pipefail is off has been fixed.
 14-07-21 +A -m method option has been added to read to read compound variables
 	  using a specified method. Currently only methods ksh and json are
 	  implemented.  -m ksh is equivalent to -C. 

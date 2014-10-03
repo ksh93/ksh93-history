@@ -34,6 +34,8 @@
 #include	"io.h"
 #include	"jobs.h"
 #include	"history.h"
+#include	"variables.h"
+#include	"path.h"
 
 #if !defined(WCONTINUED) || !defined(WIFCONTINUED)
 #   undef  WCONTINUED
@@ -1055,6 +1057,8 @@ int job_list(struct process *pw,register int flag)
 	register int  n;
 	register const char *msg;
 	register int msize;
+	char *dir=0, *home = nv_getval(HOME);
+	size_t len = home?strlen(home):0;
 	if(!pw || pw->p_job<=0)
 		return(1);
 	if(pw->p_env != shp->jobenv)
@@ -1085,6 +1089,8 @@ int job_list(struct process *pw,register int flag)
 	sfprintf(outfile,"[%d] %c ",n, msize);
 	do
 	{
+		if(px && px->p_curdir)
+			dir = px->p_curdir;
 		n = 0;
 		if(flag&JOB_LFLAG)
 #if SHOPT_COSHELL
@@ -1125,7 +1131,23 @@ int job_list(struct process *pw,register int flag)
 			px = 0;
 		}
 		if(!px)
-			hist_list(shgd->hist_ptr,outfile,pw->p_name,0,";");
+		{
+			char *pwd;
+			if(dir && (pwd=nv_getval(PWDNOD)) && !strcmp(dir,pwd))
+				dir = 0;
+			hist_list(shgd->hist_ptr,outfile,pw->p_name,dir?'\n':0,";");
+			if(dir)
+			{
+				char *tilde = "";
+				if(!strncmp(dir,home,len) && dir[len]=='/' || dir[len]==0)
+				{
+					tilde = "~";
+					dir += len;
+				}
+				sfprintf(outfile,"  (wd: %s%s)\n",tilde,dir);
+				dir = 0;
+			}
+		}
 		else
 			sfputr(outfile, e_nlspace, -1);
 	}
@@ -1448,6 +1470,7 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 	else
 		pw = new_of(struct process,0);
 	pw->p_flag = 0;
+	pw->p_curdir = 0;
 	job.numpost++;
 	pw->p_exitval = job.exitval; 
 #if SHOPT_COSHELL
@@ -1525,6 +1548,8 @@ int job_post(Shell_t *shp,pid_t pid, pid_t join)
 		pw->p_nxtproc = 0;
 		do	pw->p_nxtjob = job.pwlist;
 		while	(asocasptr(&job.pwlist,pw->p_nxtjob,pw)!=pw->p_nxtjob);
+		if(pw->p_curdir = path_pwd(shp,0))
+			pw->p_curdir = strdup(pw->p_curdir);
 	}
 	job_unlock();
 	return(pw->p_job);
@@ -1941,6 +1966,8 @@ static struct process *job_unpost(Shell_t* shp,register struct process *pwtop,in
 		pw->p_flag &= ~P_DONE;
 		job.numpost--;
 		pw->p_nxtjob = freelist;
+		if(pw->p_curdir)
+			free(pw->p_curdir);
 		freelist = pw;
 	}
 	pwtop->p_pid = 0;

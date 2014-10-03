@@ -367,4 +367,8 @@ $SHELL -c 2> /dev/null '[[ AATAATCCCAATAAT =~ (AAT){2}CCC(AAT){2} ]]' || err_exi
 
 [[ 010 -eq 10 ]] || err_exit '010 not 10 in [[...]]'
 
+x=10
+
+([[ x -eq 10 ]]) 2> /dev/null || err_exit 'x -eq 10 fails in [[...]] with x=10'
+
 exit $((Errors<125?Errors:125))

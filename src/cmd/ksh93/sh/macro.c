@@ -2099,7 +2099,7 @@ nosub:
  * This routine handles command substitution
  * <type> is 0 for older `...` version
  */
-static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
+static void comsubst(Mac_t *mp,register Shnode_t* t, volatile int type)
 {
 	Sfdouble_t		num;
 	register int		c;
@@ -2118,6 +2118,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	int			newlines,bufsize,nextnewlines;
 	Sfoff_t			foff;
 	Namval_t		*np;
+	pid_t			spid;
 	mp->shp->argaddr = 0;
 	savemac = *mp;
 	mp->shp->st.staklist=0;
@@ -2267,6 +2268,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	}
 	if(foff > IOBSIZE)
 		sfsetbuf(sp,NULL,SF_UNBOUND);
+	spid = mp->shp->spid;
+	mp->shp->spid = 0;
 	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c=bufsize=sfvalue(sp))>0)
 	{
 #if SHOPT_CRNL
@@ -2313,6 +2316,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		newlines = nextnewlines;
 		mac_copy(mp,str,c);
 	}
+	if(type==1 && spid)
+		job_wait(spid);
 	if(was_interactive)
 		sh_onstate(mp->shp,SH_INTERACTIVE);
 	if(--newlines>0 && mp->shp->ifstable['\n']==S_DELIM)

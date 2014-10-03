@@ -148,7 +148,7 @@ static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
 					sfputc(out,'=');
 				stkseek(shp->stk,offset);
 			}
-			if(c==',' || c=='\n')
+			if(c==',' || c=='\n' || c== '}')
 			{
 				start = stkptr(shp->stk,offset);
 				here = stktell(shp->stk);
@@ -157,6 +157,8 @@ static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
 				sfputr(out,sh_fmtq(start+1),-1);
 				stkseek(shp->stk,offset);
 				sfputc(out,' ');
+				if(c=='}')
+					sfungetc(in,c);
 			}
 			c = ' ';
 			state = 0;

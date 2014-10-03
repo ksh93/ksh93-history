@@ -381,21 +381,31 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 				else if(spaces)
 					spaces = 0;
 			}
-			if(spaces==0)
-				n++;
-			COMP_CWORD->nvalue.s = n-2;
+			COMP_CWORD->nvalue.s = n-1;
 			stkseek(shp->stk,0);
 			len = (n+1)*sizeof(char*) + strlen(line)+1;
 			stkseek(shp->stk,len);
 			av = (char**)stkptr(shp->stk,0);
 			cp = (char*)&av[n+1];
 			strcpy(cp,line);
+			spaces = 0;
 			while(*cp)
 			{
 				while(*cp && strchr(" \t",*cp))
+				{
 					*cp++ = 0;
+					spaces++;
+				}
 				if(*cp==0)
+				{
+					if(spaces)
+					{
+						*--cp = ' ';
+						*av++ = cp;
+					}
 					break;
+				}
+				spaces = 0;
 				*av++ = cp;
 				while(*cp && !strchr(" \t",*cp))
 					cp++;
@@ -466,9 +476,15 @@ char **ed_pcomplete(struct Complete *comp, const char *line, const char *prefix,
 		negate = true;
 	}
 	sfset(tmp,SF_WRITE,0);
-again:
 	if(prefix)
+	{
+		if(*prefix=='\'' && prefix[1]=='\'')
+			prefix+=2;
+		else if(*prefix=='"' && prefix[1]=='"')
+			prefix+=2;
 		len = strlen(prefix);
+	}
+again:
 	c = 0;
 	sfseek(tmp,(Sfoff_t)0,SEEK_SET);
 	while(str = sfgetr(tmp,'\n',0))

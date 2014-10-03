@@ -780,4 +780,11 @@ then	chmod -x $tmp/a/b
 	cd $tmp/a/b 2> /dev/null && err_exit 'cd to directory without execute should fail'
 fi
 
+if	print -s 'print hello world' 2> /dev/null
+then	[[ $(history -1) == *'hello world'* ]] || err_exit 'history file does not can results of print -s'
+else	err_exit 'print -s fails'
+fi
+
+builtin  -d set 2> /dev/null && err_exit 'buitin -d allows special builtins to be deleted'
+
 exit $((Errors<125?Errors:125))
