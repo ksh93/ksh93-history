@@ -37,7 +37,7 @@
 #include	"variables.h"
 #include	"path.h"
 
-#if !defined(WCONTINUED) || !defined(WIFCONTINUED)
+#if !defined(WCONTINUED) || !defined(WIFCONTINUED) || defined(__APPLE__)
 #   undef  WCONTINUED
 #   define WCONTINUED	0
 #   undef  WIFCONTINUED
@@ -1944,7 +1944,8 @@ static struct process *job_unpost(Shell_t* shp,register struct process *pwtop,in
 	if(pwtop->p_job == job.curjobid)
 		return(0);
 	/* all processes complete, unpost job */
-	job_unlink(pwtop);
+	if(pwtop)
+		job_unlink(pwtop);
 	for(pw=pwtop; pw; pw=pw->p_nxtproc)
 	{
 		if(pw && pw->p_exitval)
@@ -1975,7 +1976,8 @@ static struct process *job_unpost(Shell_t* shp,register struct process *pwtop,in
 	sfprintf(sfstderr,"ksh: job line %4d: free pid=%d critical=%d job=%d\n",__LINE__,getpid(),job.in_critical,pwtop->p_job);
 	sfsync(sfstderr);
 #endif /* DEBUG */
-	job_free((int)pwtop->p_job);
+	if(pwtop)
+		job_free((int)pwtop->p_job);
 	return((struct process*)0);
 }
 

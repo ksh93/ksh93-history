@@ -321,6 +321,7 @@ struct shared
 #define	SH_FCOMPLETE	17	/* set for filename completion */
 #define	SH_PREINIT	18	/* set with SH_INIT before parsing options */
 #define SH_COMPLETE	19	/* set for command completion */
+#define SH_IOPROMPT	20	/* set when prompting */
 
 #define SH_BASH			41
 #define SH_BRACEEXPAND		42

@@ -601,7 +601,6 @@ Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, volatile int flags, int comsub)
 		if(comsub==1)
 		{
 			int fds[2];
-			sp->jobcontrol = job.jobcontrol;
 			sh_rpipe(fds);
 			sp->pipe = 0;
 			sp->pipefd = fds[0];

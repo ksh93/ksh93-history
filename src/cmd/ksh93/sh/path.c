@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -268,7 +268,6 @@ static pid_t path_xargs(Shell_t *shp,const char *path, char *argv[],char *const 
 char *path_pwd(Shell_t *shp,int flag)
 {
 	register char *cp;
-	register char *dfault = (char*)e_dot;
 	register int count = 0;
 	if(shp->pwd)
 		return((char*)shp->pwd);
@@ -287,11 +286,6 @@ char *path_pwd(Shell_t *shp,int flag)
 				cp = "/";
 				break;
 			case 3:
-				cp = (char*)e_crondir;
-				if(flag) /* skip next case when non-zero flag */
-					++count;
-				break;
-			case 4:
 			{
 				if(cp=getcwd(NIL(char*),0))
 				{  
@@ -302,8 +296,6 @@ char *path_pwd(Shell_t *shp,int flag)
 				}
 				break;
 			}
-			case 5:
-				return(dfault);
 		}
 		if(cp && *cp=='/' && test_inode(cp,e_dot))
 			break;

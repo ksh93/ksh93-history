@@ -4143,7 +4143,7 @@ int sh_funscope_20120720(Shell_t *shp,int argn, char *argv[],int(*fun)(void*),vo
 	}
 	if(jmpval)
 		r=shp->exitval;
-	if(r>SH_EXITSIG && ((r&SH_EXITMASK)==SIGINT || ((r&SH_EXITMASK)==SIGQUIT)))
+	if(!sh_isstate(shp,SH_IOPROMPT) && r>SH_EXITSIG && ((r&SH_EXITMASK)==SIGINT || ((r&SH_EXITMASK)==SIGQUIT)))
 		kill(getpid(),r&SH_EXITMASK);
 	if(jmpval > SH_JMPFUN)
 	{

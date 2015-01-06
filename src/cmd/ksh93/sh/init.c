@@ -2413,7 +2413,13 @@ static void env_init(Shell_t *shp)
 		}
 			nv_onattr(mp,NV_IMPORT);
 		if(mp->nvfun || nv_isattr(mp,NV_INTEGER))
-			nv_putval(mp,dp,0);
+		{
+			char *cp = Empty;
+			if(nv_isattr(mp,NV_INTEGER) && dp)
+				strtold(dp,&cp);
+			if(*cp==0)
+				nv_putval(mp,dp,0);
+		}
 		else
 		{
 			mp->nvalue.cp = dp;

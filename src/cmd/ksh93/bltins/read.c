@@ -68,12 +68,14 @@ struct Method
 
 static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
 {
-	int	c, state=0, lastc=0, level=0;
+	int	c, state=0, lastc=0, level=0, line=1;
 	size_t	here, offset = stktell(shp->stk);
 	char	*start;
 	bool	isname, isnull=false;
 	while((c = sfgetc(in)) > 0)
 	{
+		if(c=='\n')
+			line++;
 		if(state==0)
 		{
 			switch(c)
@@ -117,6 +119,7 @@ static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
 				continue;
 			if(c==':')
 			{
+				int len;
 				while((c = sfgetc(in)) &&  isblank(c));
 				sfungetc(in,c);
 				if(!strchr("[{,\"",c))
@@ -137,9 +140,25 @@ static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
 				here = stktell(shp->stk);
 				if(isname && !isalpha(*(start+1)) && c!='_')
 					isname = false;
+				len = here-offset-2;
 				if(!isname)
-					sfputc(out,'[');
-				sfwrite(out,start+1, here-offset-2);
+				{
+					char *sp;
+					sfwrite(out,".[",2);
+					for(sp=start+1;len-->0;sp++)
+					{
+						if(*sp=='$')
+						{
+							if(sp>start+1)
+								sfwrite(out,start,sp-start);
+							sfputc(out,'\\');
+							sfputc(out,'$');
+							start = sp;
+						}
+					}
+					len = (sp- start)-1;
+				}
+				sfwrite(out,start+1, len);
 				if(!isname)
 					sfputc(out,']');
 				if(isnull)
@@ -147,17 +166,25 @@ static int json2sh(Shell_t *shp, Sfio_t *in, Sfio_t *out)
 				else
 					sfputc(out,'=');
 				stkseek(shp->stk,offset);
+				if(c=='{')
+					c = ' ';
 			}
-			if(c==',' || c=='\n' || c== '}')
+			if(c==',' || c=='\n' || c== '}' || c==']' || c=='{')
 			{
 				start = stkptr(shp->stk,offset);
 				here = stktell(shp->stk);
-				*stkptr(shp->stk,here-1) = 0;
-				stresc(start+1);
-				sfputr(out,sh_fmtq(start+1),-1);
-				stkseek(shp->stk,offset);
-				sfputc(out,' ');
-				if(c=='}')
+				if(here>1)
+				{
+					*stkptr(shp->stk,here-1) = 0;
+					stresc(start+1);
+					sfputr(out,sh_fmtq(start+1),-1);
+					stkseek(shp->stk,offset);
+				}
+				if(c=='{')
+					sfputc(out,'=');
+				else
+					sfputc(out,' ');
+				if(c=='}' || c==']' || c=='{')
 					sfungetc(in,c);
 			}
 			c = ' ';

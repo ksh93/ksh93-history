@@ -27,6 +27,7 @@
  */
 
 #include	"defs.h"
+#include	<fcin.h>
 #include	<error.h>
 #include	<stak.h>
 #include	<tmx.h>
@@ -147,6 +148,8 @@ void	sh_timetraps(Shell_t *shp)
 {
 	register struct tevent *tp, *tpnext;
 	register struct tevent *tptop;
+	char	ifstable[256];
+	Fcin_t  savefc;
 	shp->trapnote &= ~SH_SIGALRM;
 	while(1)
 	{
@@ -159,7 +162,13 @@ void	sh_timetraps(Shell_t *shp)
 			{
 				tp->flags &= ~L_FLAG;
 				if(tp->action)
+				{
+					fcsave(&savefc);
+					memcpy(ifstable,shp->ifstable,sizeof(ifstable));
 					sh_fun(shp,tp->action,tp->node,(char**)0);
+					fcrestore(&savefc);
+					memcpy(shp->ifstable,ifstable,sizeof(ifstable));
+				}
 				tp->flags &= ~L_FLAG;
 				if(!tp->flags)
 				{

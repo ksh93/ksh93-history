@@ -437,7 +437,7 @@ USAGE_LICENSE
     "specified with separate invocations of \bbuiltin\b. Libraries are "
     "searched in the reverse order in which they are specified.]"
 "[n?Disable each of the specified built-ins. Special built-ins cannot be "
-    "disabled.  If no built-ns are specifed, display all disabled built-ins.]]"
+    "disabled.  If no built-ns are specifed, display all disabled built-ins.]"
 "[l?List the library base name, plugin YYYYMMDD version stamp, and full "
     "path for \b-f\b\alib\a on one line on the standard output.]"
 "[p?Causes the output to be in a form of \bbuiltin\b commands that can be "

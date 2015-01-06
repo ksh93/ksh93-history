@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2013 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2014 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                 Eclipse Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -2262,6 +2262,7 @@ static int	io_prompt(Shell_t *shp,Sfio_t *iop,register int flag)
 	sfflags = sfset(sfstderr,SF_SHARE|SF_PUBLIC|SF_READ,0);
 	if(!(shp->prompt=(char*)sfreserve(sfstderr,0,0)))
 		shp->prompt = "";
+	sh_onstate(shp,SH_IOPROMPT);
 	switch(flag)
 	{
 		case 1:
@@ -2310,6 +2311,7 @@ static int	io_prompt(Shell_t *shp,Sfio_t *iop,register int flag)
 	if(cp)
 		sfputr(sfstderr,cp,-1);
 done:
+	sh_offstate(shp,SH_IOPROMPT);
 	if(*shp->prompt && (endprompt=(char*)sfreserve(sfstderr,0,0)))
 		*endprompt = 0;
 	sfset(sfstderr,sfflags&SF_READ|SF_SHARE|SF_PUBLIC,1);

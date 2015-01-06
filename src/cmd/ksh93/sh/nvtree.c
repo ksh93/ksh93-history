@@ -799,6 +799,27 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	Indent = saveI;
 }
 
+static void outname(Shell_t *shp, Sfio_t *out, char *name, int len, bool json)
+{
+	if(json)
+	{
+		if(len < 0)
+			len = strlen(name);
+		sfputc(out,'"');
+		if(*name=='[')
+		{
+			len-=2;
+			if(*++name == '\'')
+				len--;
+		}
+	}
+	else if(*name=='[' && name[-1]=='.')
+		name--;
+	sh_outname(shp,out,name, len);
+	if(json)
+		sfwrite(out,"\": ",3);
+}
+
 static void outval(char *name, const char *vname, struct Walk *wp)
 {
 	register Namval_t *tp=0, *np, *nq, *last_table=wp->shp->last_table;
@@ -941,11 +962,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			}
 #endif /* SHOPT_FIXEDARRAY */
 		}
-		if(json)
-			sfputc(wp->out,'"');
-		sh_outname(wp->shp,wp->out,name,-1);
-		if(json)
-			sfwrite(wp->out,"\": ",3);
+		outname(wp->shp,wp->out,name,-1, json);
 		if((np->nvalue.cp && np->nvalue.cp!=Empty) || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)) || nv_isvtree(np))  
 			if(!json)
 				sfputc(wp->out,(isarray==2?(wp->indent>=0?'\n':';'):'='));
@@ -1053,12 +1070,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					}
 					if(!array_parent)
 					{
-						if(json)
-							sfputc(outfile,'"');
-						sh_outname(shp,outfile,cp,nextcp-cp);
-						if(json)
-							sfwrite(outfile,"\": ",3);
-						else
+						outname(shp,outfile,cp,nextcp-cp, json);
+						if(!json)
 							sfputc(outfile,'=');
 					}
 					*nextcp = '.';
@@ -1135,16 +1148,8 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					if(argv[1][r]=='.' && strncmp(argv[0],argv[1],r)==0)
 						wp->flags &= ~NV_COMVAR;
 				}
-#if 1
-				if(argv[1])
-				{
-					if((wp->flags& NV_JSON) && strlen(argv[1])<m+n || memcmp(argv[1],arg,m+n-1))
-						wp->flags |= NV_JSON_LAST;
-				}
-#else
 				if((wp->flags& NV_JSON) && (!argv[1] || strlen(argv[1])<m+n || memcmp(argv[1],arg,m+n-1)))
 					wp->flags |= NV_JSON_LAST;
-#endif
 				outval(cp,arg,wp);
 				if(wp->array)
 				{

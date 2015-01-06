@@ -2817,7 +2817,7 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
 		sfprintf(shp->stk, _fd_pid_dir_fmt, (long)getpid(), fd,"","");
 #else
 #   ifdef _fd_self_dir_fmt
-		sfprintf(shp->stk,_fd_pid_dir_fmt,fd,"","");
+		sfprintf(shp->stk,_fd_self_dir_fmt,fd,"","");
 #   else
 		sfprintf(shp->stk,"/dev/fd/%d", fd);
 #   endif

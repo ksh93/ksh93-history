@@ -1,4 +1,26 @@
-14-09-29  --- Release ksh93v- ---
+14-12-24  --- Release ksh93v- ---
+14-12-24  A bug which occurred when the undocumented alarm builtin received an
+	  alarm timeout while in the read builtin has been fixed.
+14-12-24  A bug in the startup of interactive restricted ksh which give a 
+	  restricted error message for redirection to /dev/null has been fixed.
+14-12-24  A bug in which the output from builtin --? was garbled has been fixed.
+14-12-24  The SIGINFO signal has been added to DARWIN.
+14-12-23  A bug in which job control was being disabled by using `...` command
+	  substitution has been fixed.
+14-12-22  Some patches for compilation on Darwin have been added.
+14-12-02  The requirement that unquoted { and } must match inside string with
+	  ${name op string} has been removed (at least for now). 
+14-11-26  A bug in which hitting interrup while a PS1.get function was executing
+	  could cause in infinite loop has been fixed.
+14-11-25 +If tab completion for a command name that is an alias is attempted,
+	  it will use the completion for the command it is aliased to.
+14-11-24  Two bugs with programmable completion have been fixed.
+14-11-24  A parser bug with line continuation after the =~ operator with
+          [[...]] has been fixed.
+14-11-20  A fix in read for some multibyte locales such as shift JIS has been
+	  made.
+14-11-02  Merged in changes from Apple for Mac/OS.
+14-10-29  Several bugs in the read -m json builtin have been made.
 14-09-29  A bug which allowed builtin -d to delete a special built-in has been
 	  fixed.
 14-09-24 +When listing jobs, the shell now shows the directory that the job
