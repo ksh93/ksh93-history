@@ -739,7 +739,7 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 					}
 					if (!xev && !(xev = spawnvex_open()))
 						goto bad;
-					spawnvex_add(xev, fd, -1, 0, 0, 0);
+					spawnvex_add(xev, fd, -1, 0, 0);
 					if (err = posix_spawn_file_actions_adddup2(&fx, fd, op))
 						goto bad;
 				}
@@ -755,7 +755,7 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 		if (xev)
 		{
 			spawnvex_apply(xev, 0, SPAWN_NOCALLBACK);
-			spawnvex_free(xev);
+			spawnvex_close(xev);
 		}
 		VEXINIT(vex);
 	}
@@ -769,7 +769,7 @@ spawnvex(const char* path, char* const argv[], char* const envv[], Spawnvex_t* v
 	if (xev)
 	{
 		spawnvex_apply(xev, 0, SPAWN_NOCALLBACK);
-		spawnvex_free(xev);
+		spawnvex_close(xev);
 	}
 #endif
  nope:
