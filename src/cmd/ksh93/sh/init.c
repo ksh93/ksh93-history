@@ -1440,10 +1440,12 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	register size_t n;
 	int type;
 	static char *login_files[2];
+#if !_std_malloc
 #if AST_VERSION >= 20130509
 	memfatal(NiL);
 #else
 	memfatal();
+#endif
 #endif
 	n = strlen(e_version);
 	if(e_version[n-1]=='$' && e_version[n-2]==' ')
