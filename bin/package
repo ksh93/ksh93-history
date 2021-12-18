@@ -1,4 +1,23 @@
 USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2013 AT&T Intellectual Property][-license?http://www.eclipse.org/org/documents/epl-v10.html]"
+########################################################################
+#                                                                      #
+#               This software is part of the ast package               #
+#          Copyright (c) 1994-2013 AT&T Intellectual Property          #
+#                      and is licensed under the                       #
+#                 Eclipse Public License, Version 1.0                  #
+#                    by AT&T Intellectual Property                     #
+#                                                                      #
+#                A copy of the License is available at                 #
+#          http://www.eclipse.org/org/documents/epl-v10.html           #
+#         (with md5 checksum b35adb5213ca9657e911e9befb180842)         #
+#                                                                      #
+#              Information and Software Systems Research               #
+#                            AT&T Research                             #
+#                           Florham Park NJ                            #
+#                                                                      #
+#                 Glenn Fowler <gsf@research.att.com>                  #
+#                                                                      #
+########################################################################
 ### this script contains archaic constructs that work with all sh variants ###
 # package - source and binary package control
 # Glenn Fowler <gsf@research.att.com>
@@ -81,7 +100,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2013-05-17 $
+@(#)$Id: package (AT&T Research) 2013-06-17 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -550,7 +569,7 @@ ifs=${IFS-'
 	 '}
 lo=
 make=
-makeflags='-k -K'
+makeflags='-K'
 nmakeflags=
 nmakesep=
 nl="
@@ -2493,8 +2512,22 @@ int main() { return 0; }
 			;;
 		esac
 		case $bits in
-		32)	case $type in
-			*.i386)	bits= ;;
+		32)	case $CCFLAGS in
+			*-m64*)	case $type in
+				*.i386)	bits=32 ;;
+				esac
+				;;
+			*)	case $type in
+				*.i386)	bits= ;;
+				esac
+				;;
+			esac
+			;;
+		64)	case $CCFLAGS in
+			*-m32*)	case $type in
+				*.i386)	bits= ;;
+				esac
+				;;
 			esac
 			;;
 		esac
