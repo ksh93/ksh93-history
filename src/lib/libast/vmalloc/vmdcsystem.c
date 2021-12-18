@@ -335,6 +335,7 @@ static Void_t* getmemory(Vmalloc_t* vm, Void_t* caddr, size_t csize, size_t nsiz
 	if((_Vmassert & VM_native) && (addr = mallocmem(vm, caddr, csize, nsize, disc)))
 	{	GETMEMUSE(mallocmem, disc);
 		return (Void_t*)addr;
+	}
 #endif 
 	write(2, "vmalloc: panic: all memory allocation disciplines failed\n", 57);
 	abort();
