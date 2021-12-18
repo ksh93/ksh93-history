@@ -227,6 +227,9 @@ USAGE_LICENSE
 #include <fs3d.h>
 #include <dt.h>
 #include <vmalloc.h>
+#ifdef __linux__
+#include <sys/sysmacros.h>
+#endif
 
 #define LS_ACROSS	(LS_USER<<0)	/* multi-column row order	*/
 #define LS_ALL		(LS_USER<<1)	/* list all			*/
@@ -1257,7 +1260,7 @@ ls(State_t* state, register FTSENT* ent)
 	if (!VISIBLE(state, ent))
 	{
 		fts_set(NiL, ent, FTS_SKIP);
-		return;
+		return 0;
 	}
 	switch (ent->fts_info)
 	{
@@ -1265,17 +1268,17 @@ ls(State_t* state, register FTSENT* ent)
 		if (ent->fts_parent->fts_info == FTS_DNX)
 			break;
 		error(2, "%s: not found", ent->fts_path);
-		return;
+		return 1;
 	case FTS_DC:
 		if (state->lsflags & LS_DIRECTORY)
 			break;
 		error(2, "%s: directory causes cycle", ent->fts_path);
-		return;
+		return 1;
 	case FTS_DNR:
 		if (state->lsflags & LS_DIRECTORY)
 			break;
 		error(2, "%s: cannot read directory", ent->fts_path);
-		return 0;
+		return 1;
 	case FTS_DOT:
 		#if 0
 		fts_set(NiL, ent, FTS_SKIP);
