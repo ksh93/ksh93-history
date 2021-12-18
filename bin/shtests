@@ -1,0 +1,54 @@
+#! /bin/sh
+# Wrapper script to run the ksh93 regression tests without requiring nmake.
+# By Martijn Dekker <martijn@inlv.org> 2020-05-14
+# Public domain. http://creativecommons.org/publicdomain/zero/1.0/
+#
+# The manual: bin/shtests --man
+# Brief help: bin/shtests --help
+#
+# By default, this runs your compiled arch/*/bin/ksh.
+#
+# Note: The test suite actually uses $SHELL to indicate the shell to test. But
+# we cannot use the $SHELL environment value on entry to this wrapper script,
+# as that is already used for the user's default login shell on most systems.
+
+# Process and remove any assignment-argument indicating the shell to test
+for arg do
+	case $arg in
+	( SHELL=* | KSH=* )
+		KSH=${arg#*=} ;;
+	( * )	set -- "$@" "$1" ;;
+	esac
+	shift
+done
+
+# Find root dir of ksh source
+mydir=$(dirname "$0") \
+&& mydir=$(CDPATH='' cd -P -- "$mydir/.." && printf '%sX' "$PWD") \
+&& mydir=${mydir%X} \
+|| exit
+myarch=$("$mydir/bin/package" host type) || exit
+
+# Check if there is a ksh to test.
+case ${KSH+set} in
+( '' )	KSH=$mydir/arch/$myarch/bin/ksh ;;
+esac
+if ! test -x "$KSH" || ! test -f "$KSH"; then
+	printf '%s: shell not found: %s\n' "${0##*/}" "$KSH" >&2
+	printf 'Specify a shell like:  KSH=path/to/ksh bin/shtests\n' >&2
+	exit 1
+fi
+
+# Ensure absolute path to ksh
+KSH=$(CDPATH='' cd -P -- "$(dirname "$KSH")" \
+	&& printf '%s/%sX' "$PWD" "${KSH##*/}") \
+&& KSH=${KSH%X}
+
+# Run the test suite
+CDPATH='' cd -P -- "$mydir/src/cmd/ksh93/tests" || exit
+SHELL=$KSH
+INSTALLROOT=${INSTALLROOT:-$mydir/arch/$myarch}
+export SHELL INSTALLROOT
+unset -v KSH
+printf '#### Regression-testing %s ####\n' "$SHELL"
+exec "$SHELL" shtests "$@"
