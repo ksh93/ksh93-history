@@ -1103,7 +1103,7 @@ make dl.c
 done dl.c
 exec - set -
 exec - r='-'
-exec - set '' '' dl.c dl
+exec - set '' '' dl.c dl${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1130,7 +1130,7 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > dl.req
-exec - rm -f dl.exe dl
+exec - rm -f dl.exe dl${mam_cc_SUFFIX_OBJECT}
 done dl.req generated
 exec - test '' = 'dl.req' || ${STDCMP} 2>/dev/null -s dl.req ${INSTALLROOT}/lib/lib/dl || { ${STDMV} ${INSTALLROOT}/lib/lib/dl ${INSTALLROOT}/lib/lib/dl.old 2>/dev/null || true; ${STDCP} dl.req ${INSTALLROOT}/lib/lib/dl ;}
 done ${INSTALLROOT}/lib/lib/dl generated
@@ -1140,7 +1140,7 @@ make iconv.c
 done iconv.c
 exec - set -
 exec - r='-'
-exec - set '' '' iconv.c iconv
+exec - set '' '' iconv.c iconv${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1167,7 +1167,7 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > iconv.req
-exec - rm -f iconv.exe iconv
+exec - rm -f iconv.exe iconv${mam_cc_SUFFIX_OBJECT}
 done iconv.req generated
 exec - test '' = 'iconv.req' || ${STDCMP} 2>/dev/null -s iconv.req ${INSTALLROOT}/lib/lib/iconv || { ${STDMV} ${INSTALLROOT}/lib/lib/iconv ${INSTALLROOT}/lib/lib/iconv.old 2>/dev/null || true; ${STDCP} iconv.req ${INSTALLROOT}/lib/lib/iconv ;}
 done ${INSTALLROOT}/lib/lib/iconv generated
@@ -1179,7 +1179,7 @@ make w2.c
 done w2.c
 exec - set -
 exec - r='-'
-exec - set '' '' w.c w w2.c w2
+exec - set '' '' w.c w${mam_cc_SUFFIX_OBJECT} w2.c w2${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1206,7 +1206,7 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > w.req
-exec - rm -f w.exe w w2
+exec - rm -f w.exe w${mam_cc_SUFFIX_OBJECT} w2${mam_cc_SUFFIX_OBJECT}
 done w.req generated
 exec - test '' = 'w.req' || ${STDCMP} 2>/dev/null -s w.req ${INSTALLROOT}/lib/lib/w || { ${STDMV} ${INSTALLROOT}/lib/lib/w ${INSTALLROOT}/lib/lib/w.old 2>/dev/null || true; ${STDCP} w.req ${INSTALLROOT}/lib/lib/w ;}
 done ${INSTALLROOT}/lib/lib/w generated
@@ -1216,7 +1216,7 @@ make intl.c
 done intl.c
 exec - set -
 exec - r='-'
-exec - set '' '' intl.c intl
+exec - set '' '' intl.c intl${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1243,7 +1243,7 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > intl.req
-exec - rm -f intl.exe intl
+exec - rm -f intl.exe intl${mam_cc_SUFFIX_OBJECT}
 done intl.req generated
 exec - test '' = 'intl.req' || ${STDCMP} 2>/dev/null -s intl.req ${INSTALLROOT}/lib/lib/intl || { ${STDMV} ${INSTALLROOT}/lib/lib/intl ${INSTALLROOT}/lib/lib/intl.old 2>/dev/null || true; ${STDCP} intl.req ${INSTALLROOT}/lib/lib/intl ;}
 done ${INSTALLROOT}/lib/lib/intl generated
@@ -1263,7 +1263,7 @@ make m6.c
 done m6.c
 exec - set -
 exec - r='-'
-exec - set '' '' m.c m m2.c m2 m3.c m3 m4.c m4 m5.c m5 m6.c m6
+exec - set '' '' m.c m${mam_cc_SUFFIX_OBJECT} m2.c m2${mam_cc_SUFFIX_OBJECT} m3.c m3${mam_cc_SUFFIX_OBJECT} m4.c m4${mam_cc_SUFFIX_OBJECT} m5.c m5${mam_cc_SUFFIX_OBJECT} m6.c m6${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1290,55 +1290,17 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > m.req
-exec - rm -f m.exe m m2 m3 m4 m5 m6
+exec - rm -f m.exe m${mam_cc_SUFFIX_OBJECT} m2${mam_cc_SUFFIX_OBJECT} m3${mam_cc_SUFFIX_OBJECT} m4${mam_cc_SUFFIX_OBJECT} m5${mam_cc_SUFFIX_OBJECT} m6${mam_cc_SUFFIX_OBJECT}
 done m.req generated
 exec - test '' = 'm.req' || ${STDCMP} 2>/dev/null -s m.req ${INSTALLROOT}/lib/lib/m || { ${STDMV} ${INSTALLROOT}/lib/lib/m ${INSTALLROOT}/lib/lib/m.old 2>/dev/null || true; ${STDCP} m.req ${INSTALLROOT}/lib/lib/m ;}
 done ${INSTALLROOT}/lib/lib/m generated
-make ${INSTALLROOT}/lib/lib/nsl
-make nsl.req
-make nsl.c
-done nsl.c
-exec - set -
-exec - r='-'
-exec - set '' '' nsl.c nsl
-exec - while :
-exec - do shift 2
-exec - case $# in
-exec - 0) break ;;
-exec - esac
-exec - src=$1
-exec - obj=$2
-exec - if ${CC} -c $src
-exec - then g=
-exec - for p in nsl -
-exec - do case $p in
-exec - -) if ${CC} -o nsl.exe $obj $g
-exec - then ${CC} -o nsl.exe $obj || {
-exec - r="$g"
-exec - break 2
-exec - }
-exec - fi
-exec - g=
-exec - ;;
-exec - *) g="$g -l$p"
-exec - ;;
-exec - esac
-exec - done
-exec - fi
-exec - done >/dev/null 2>&1
-exec - echo " $r" > nsl.req
-exec - rm -f nsl.exe nsl
-done nsl.req generated
-exec - test '' = 'nsl.req' || ${STDCMP} 2>/dev/null -s nsl.req ${INSTALLROOT}/lib/lib/nsl || { ${STDMV} ${INSTALLROOT}/lib/lib/nsl ${INSTALLROOT}/lib/lib/nsl.old 2>/dev/null || true; ${STDCP} nsl.req ${INSTALLROOT}/lib/lib/nsl ;}
-done ${INSTALLROOT}/lib/lib/nsl generated
 make ${INSTALLROOT}/lib/lib/socket
 make socket.req
 make socket.c
 done socket.c
-prev nsl.c
 exec - set -
 exec - r='-'
-exec - set '' '' socket.c socket nsl.c nsl
+exec - set '' '' socket.c socket${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1348,7 +1310,7 @@ exec - src=$1
 exec - obj=$2
 exec - if ${CC} -c $src
 exec - then g=
-exec - for p in socket -
+exec - for p in socket - socket nsl -
 exec - do case $p in
 exec - -) if ${CC} -o socket.exe $obj $g
 exec - then ${CC} -o socket.exe $obj || {
@@ -1365,7 +1327,7 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > socket.req
-exec - rm -f socket.exe socket nsl
+exec - rm -f socket.exe socket${mam_cc_SUFFIX_OBJECT}
 done socket.req generated
 exec - test '' = 'socket.req' || ${STDCMP} 2>/dev/null -s socket.req ${INSTALLROOT}/lib/lib/socket || { ${STDMV} ${INSTALLROOT}/lib/lib/socket ${INSTALLROOT}/lib/lib/socket.old 2>/dev/null || true; ${STDCP} socket.req ${INSTALLROOT}/lib/lib/socket ;}
 done ${INSTALLROOT}/lib/lib/socket generated
@@ -1385,7 +1347,7 @@ done ndbm.h dontcare virtual
 done gdbm2.c
 exec - set -
 exec - r='-'
-exec - set '' '' db.c db gdbm.c gdbm gdbm1.c gdbm1 gdbm2.c gdbm2
+exec - set '' '' db.c db${mam_cc_SUFFIX_OBJECT} gdbm.c gdbm${mam_cc_SUFFIX_OBJECT} gdbm1.c gdbm1${mam_cc_SUFFIX_OBJECT} gdbm2.c gdbm2${mam_cc_SUFFIX_OBJECT}
 exec - while :
 exec - do shift 2
 exec - case $# in
@@ -1412,7 +1374,7 @@ exec - done
 exec - fi
 exec - done >/dev/null 2>&1
 exec - echo " $r" > dbm.req
-exec - rm -f dbm.exe db gdbm gdbm1 gdbm2
+exec - rm -f dbm.exe db${mam_cc_SUFFIX_OBJECT} gdbm${mam_cc_SUFFIX_OBJECT} gdbm1${mam_cc_SUFFIX_OBJECT} gdbm2${mam_cc_SUFFIX_OBJECT}
 done dbm.req generated
 exec - test '' = 'dbm.req' || ${STDCMP} 2>/dev/null -s dbm.req ${INSTALLROOT}/lib/lib/dbm || { ${STDMV} ${INSTALLROOT}/lib/lib/dbm ${INSTALLROOT}/lib/lib/dbm.old 2>/dev/null || true; ${STDCP} dbm.req ${INSTALLROOT}/lib/lib/dbm ;}
 done ${INSTALLROOT}/lib/lib/dbm generated
