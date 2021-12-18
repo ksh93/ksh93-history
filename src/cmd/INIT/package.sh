@@ -568,7 +568,7 @@ ifs=${IFS-'
 	 '}
 lo=
 make=
-makeflags='-k -K'
+makeflags='-K'
 nmakeflags=
 nmakesep=
 nl="
