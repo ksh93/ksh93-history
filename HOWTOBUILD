@@ -1,0 +1,4 @@
+On Linux run the following command at the root of the repository to build ksh93d:
+   SHELL=/bin/sh CC=gcc CCFLAGS='-O1 -fPIC' ship/shipin -E
+The resulting binaries are output to ./bin, with ksh being ./bin/ksh. Note that
+this version currently cannot compile with tcc.
