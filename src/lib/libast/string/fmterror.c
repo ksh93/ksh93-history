@@ -91,14 +91,14 @@
 #endif
 #include <ast.h>
 
-extern __MANGLE__ int	sys_nerr;
-extern __MANGLE__ char*	sys_errlist[];
+#ifdef __linux__
+#define _BSD_SOURCE
+#endif
+
+int	ast_sys_nerr;
+char*	ast_sys_errlist[];
 
 char*
 fmterror __PARAM__((int err), (err)) __OTORP__(int err;){
-	static char	msg[28];
-
-	if (err > 0 && err <= sys_nerr) return(sys_errlist[err]);
-	sfsprintf(msg, sizeof(msg), "Error %d", err);
-	return(msg);
+	return strerror(err);
 }
