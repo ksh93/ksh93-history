@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -45,7 +45,7 @@
 #include	"sfhdr.h"
 
 #if __STD_C
-static __sfgetc(reg Sfio_t* f)
+static int __sfgetc(reg Sfio_t* f)
 #else
 static __sfgetc(f)
 reg Sfio_t	*f;
@@ -57,7 +57,7 @@ reg Sfio_t	*f;
 #undef sfgetc
 
 #if __STD_C
-sfgetc(reg Sfio_t* f)
+int sfgetc(reg Sfio_t* f)
 #else
 sfgetc(f)
 reg Sfio_t	*f;

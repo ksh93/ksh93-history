@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -101,8 +101,8 @@ extern __MANGLE__ char*		getlogin __PROTO__((void));
 
 int
 b_logname __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
-	register int	n;
-	register char*	logname;
+	int	n;
+	char*	logname;
 
 	NoP(argc);
 	NoP(id[0]);

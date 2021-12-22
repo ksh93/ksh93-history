@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -107,11 +107,11 @@
  */
 
 int
-tabindex __PARAM__((char* tab, int siz, register char* name), (tab, siz, name)) __OTORP__(char* tab; int siz; register char* name;)
+tabindex __PARAM__((char* tab, int siz, char* name), (tab, siz, name)) __OTORP__(char* tab; int siz; char* name;)
 #line 18
 {
-	register char*	p;
-	register char*	s;
+	char*	p;
+	char*	s;
 
 	for (p = tab; s = *((char**)p); p += siz)
 		if (streq(s, name))

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,10 +98,10 @@
  */
 
 __V_*
-swapmem __PARAM__((int op, const __V_* from, __V_* to, register size_t n), (op, from, to, n)) __OTORP__(int op; const __V_* from; __V_* to; register size_t n;){
-	register char*	f = (char*)from;
-	register char*	t = (char*)to;
-	register int	c;
+swapmem __PARAM__((int op, const __V_* from, __V_* to, size_t n), (op, from, to, n)) __OTORP__(int op; const __V_* from; __V_* to; size_t n;){
+	char*	f = (char*)from;
+	char*	t = (char*)to;
+	int	c;
 
 	switch ((op ^ int_swap) & (n - 1))
 	{

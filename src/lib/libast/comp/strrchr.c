@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -113,8 +113,8 @@ strrchr __PARAM__((const char* s, int c), (s, c)) __OTORP__(const char* s; int c
 #else
 
 char*
-strrchr __PARAM__((register const char* s, register int c), (s, c)) __OTORP__(register const char* s; register int c;){
-	register const char*	r;
+strrchr __PARAM__((const char* s, int c), (s, c)) __OTORP__(const char* s; int c;){
+	const char*	r;
 
 	r = 0;
 	do if (*s == c) r = s; while(*s++);

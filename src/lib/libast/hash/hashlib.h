@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -161,11 +161,11 @@ typedef struct				/* root local pointers		*/
 #define HASH(r,n,h)	if (r->local->hash) h = r->namesize ? (*r->local->hash)(n, r->namesize) : (*r->local->hash)(n);\
 			else\
 			{\
-				register const char*	_hash_s1 = n;\
+				const char*	_hash_s1 = n;\
 				h = 0;\
 				if (r->namesize)\
 				{\
-					register const char*	_hash_s2 = _hash_s1 + r->namesize;\
+					const char*	_hash_s2 = _hash_s1 + r->namesize;\
 					while (_hash_s1 < _hash_s2) HASHPART(h, *_hash_s1++);\
 				}\
 				else while (*_hash_s1) HASHPART(h, *_hash_s1++);\

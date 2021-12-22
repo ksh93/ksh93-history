@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -45,7 +45,7 @@
 #include	"sfhdr.h"
 
 #if __STD_C
-static __sfputc(reg Sfio_t* f, reg int c)
+static int __sfputc(reg Sfio_t* f, reg int c)
 #else
 static __sfputc(f,c)
 reg Sfio_t	*f;
@@ -58,7 +58,7 @@ reg int		c;
 #undef sfputc
 
 #if __STD_C
-sfputc(reg Sfio_t* f, reg int c)
+int sfputc(reg Sfio_t* f, reg int c)
 #else
 sfputc(f,c)
 reg Sfio_t	*f;

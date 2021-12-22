@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -195,8 +195,8 @@ _END_EXTERNS_
 #define uchar		unsigned char
 #define ulong		unsigned long
 #define uint		unsigned int
-#define reg		register
-#define REG		register
+#define reg		/*NO register keyword*/
+#define REG		reg
 
 #define SECOND		1000	/* millisecond units */
 
@@ -622,9 +622,7 @@ extern double	frexp _ARG_((double, int*));
 extern double	ldexp _ARG_((double,int));
 
 extern int	getpagesize _ARG_((void));
-#ifndef __USLC__
 extern Void_t*	memccpy _ARG_((Void_t*, const Void_t*, int, size_t));
-#endif
 
 #if !_PACKAGE_ast
 extern void	bcopy _ARG_((const Void_t*, Void_t*, int));

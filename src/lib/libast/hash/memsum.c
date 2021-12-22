@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -101,9 +101,9 @@
  */
 
 unsigned long
-memsum __PARAM__((const __V_* ap, int n, register unsigned long c), (ap, n, c)) __OTORP__(const __V_* ap; int n; register unsigned long c;){
-	register const unsigned char*	p = (const unsigned char*)ap;
-	register const unsigned char*	e = p + n;
+memsum __PARAM__((const __V_* ap, int n, unsigned long c), (ap, n, c)) __OTORP__(const __V_* ap; int n; unsigned long c;){
+	const unsigned char*	p = (const unsigned char*)ap;
+	const unsigned char*	e = p + n;
 
 	while (p < e) HASHPART(c, *p++);
 #if LONG_MAX > 2147483647

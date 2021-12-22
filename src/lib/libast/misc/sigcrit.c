@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -135,7 +135,7 @@ interrupt __PARAM__((int sig), (sig)) __OTORP__(int sig;){
 
 int
 sigcritical __PARAM__((int op), (op)) __OTORP__(int op;){
-	register int		i;
+	int		i;
 	static int		level;
 #if _lib_sigprocmask
 	static sigset_t		mask;

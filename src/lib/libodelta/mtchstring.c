@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -99,7 +99,7 @@
 #define ALPHA	(256)	/* alphabet size */
 
 static void freemem __PARAM__((long* n_index, char*** index), (n_index, index)) __OTORP__(long* n_index; char*** index;){
-	register int i;
+	int i;
 	if(n_index && index)
 	{
 		for(i = 0; i < ALPHA; ++i)
@@ -112,7 +112,7 @@ static void freemem __PARAM__((long* n_index, char*** index), (n_index, index)) 
 
 /* initial assumptions: src[0] == tar[0] && src+n_match <= endsrc */
 static long domatch __PARAM__((char* src, char* endsrc, char* tar, char* endtar, long n_match), (src, endsrc, tar, endtar, n_match)) __OTORP__(char* src; char* endsrc; char* tar; char* endtar; long n_match;){
-	register char	*sp, *tp;
+	char	*sp, *tp;
 
 	/* see if this really improves on the current match */
 	for(sp = src+n_match, tp = tar+n_match; sp > src; --sp, --tp)
@@ -135,9 +135,9 @@ static long domatch __PARAM__((char* src, char* endsrc, char* tar, char* endtar,
 long	mtchstring __PARAM__((char* src, long n_src, char* tar, long n_tar, char** match), (src, n_src, tar, n_tar, match)) __OTORP__(char* src; long n_src; char* tar; long n_tar; char** match;){
 	char		*endsrc, *endtar;
 	long		n_match;
-	register int	i;
-	register long	n_ind;
-	register char	**ind;
+	int	i;
+	long	n_ind;
+	char	**ind;
 	static long	*N_index = 0;
 	static char	*Cursrc = 0, ***Index = 0;
 	static int	Alloced = 0;
@@ -165,7 +165,7 @@ long	mtchstring __PARAM__((char* src, long n_src, char* tar, long n_tar, char** 
 		Alloced = 1;
 		if(N_index = (long*) malloc(ALPHA*sizeof(long)))
 		{
-			register char	*sp;
+			char	*sp;
 
 			memzero(N_index,ALPHA*sizeof(long));
 			if(!(Index = (char ***) malloc(ALPHA*sizeof(char**))))
@@ -212,7 +212,7 @@ long	mtchstring __PARAM__((char* src, long n_src, char* tar, long n_tar, char** 
 	n_match = 0;
 	while(1)
 	{
-		register long m;
+		long m;
 
 		if(ind)
 		{

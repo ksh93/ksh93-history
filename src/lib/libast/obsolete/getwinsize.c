@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,6 +92,6 @@
 #include <ast.h>
 
 void
-getwinsize __PARAM__((int fd, register int* rows, register int* cols), (fd, rows, cols)) __OTORP__(int fd; register int* rows; register int* cols;){
+getwinsize __PARAM__((int fd, int* rows, int* cols), (fd, rows, cols)) __OTORP__(int fd; int* rows; int* cols;){
 	astwinsize(fd, rows, cols);
 }

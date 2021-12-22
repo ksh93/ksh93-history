@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -105,9 +105,9 @@ NoN(strtol)
 #define MBASE	('z' - 'a' + 1 + 10)
 
 long
-strtol __PARAM__((register const char* str, char** ptr, register int base), (str, ptr, base)) __OTORP__(register const char* str; char** ptr; register int base;){
-	register long val;
-	register int c;
+strtol __PARAM__((const char* str, char** ptr, int base), (str, ptr, base)) __OTORP__(const char* str; char** ptr; int base;){
+	long val;
+	int c;
 	int xx, neg = 0;
 
 	if (ptr)

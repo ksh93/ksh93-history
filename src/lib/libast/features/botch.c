@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -97,12 +97,12 @@
 extern __MANGLE__ int		getgroups __PROTO__((int, gid_t*));
 extern __MANGLE__ int		printf __PROTO__((const char*, ...));
 
-main()
+int main()
 {
 #if _lib_getgroups
 	if (sizeof(gid_t) < sizeof(int))
 	{
-		register int	n;
+		int	n;
 		gid_t		groups[32 * sizeof(int) / sizeof(gid_t)];
 
 		for (n = 0; n < sizeof(int) / sizeof(gid_t); n++)

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -116,10 +116,10 @@ static const char id[] = "\n@(#)nocom (AT&T Bell Laboratories) 08/11/94\0\n";
  */
 
 static void
-nocom __PARAM__((register Sfio_t* sp, char* file), (sp, file)) __OTORP__(register Sfio_t* sp; char* file;){
-	register int	c = 0;
-	register int	p;
-	register int	data = 0;
+nocom __PARAM__((Sfio_t* sp, char* file), (sp, file)) __OTORP__(Sfio_t* sp; char* file;){
+	int	c = 0;
+	int	p;
+	int	data = 0;
 	int		sync = 0;
 	unsigned long	line = 0;
 	unsigned long	prev = 0;
@@ -401,10 +401,11 @@ nocom __PARAM__((register Sfio_t* sp, char* file), (sp, file)) __OTORP__(registe
 	/*NOTREACHED*/
 }
 
+int
 main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
-	register int		c;
-	register char*		s;
-	register Sfio_t*	sp;
+	int		c;
+	char*		s;
+	Sfio_t*	sp;
 
 	NoP(argc);
 	error_info.id = "nocom";

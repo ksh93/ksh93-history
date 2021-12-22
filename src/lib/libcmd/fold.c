@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -105,10 +105,10 @@ static const char id[] = "\n@(#)fold (AT&T Bell Laboratories) 04/01/92\0\n";
 
 static char cols[1<<CHAR_BIT];
 
-static void fold __PARAM__((Sfio_t *in, Sfio_t *out, register int width), (in, out, width)) __OTORP__(Sfio_t *in; Sfio_t *out; register int width;){
-	register char *cp, *first;
-	register int n, col=0;
-	register char *last_space=0;
+static void fold __PARAM__((Sfio_t *in, Sfio_t *out, int width), (in, out, width)) __OTORP__(Sfio_t *in; Sfio_t *out; int width;){
+	char *cp, *first;
+	int n, col=0;
+	char *last_space=0;
 	cols[0] = 0;
 	while(cp  = sfgetr(in,'\n',0))
 	{
@@ -176,9 +176,9 @@ static void fold __PARAM__((Sfio_t *in, Sfio_t *out, register int width), (in, o
 
 int
 b_fold __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
-	register int n, width=WIDTH;
-	register Sfio_t *fp;
-	register char *cp;
+	int n, width=WIDTH;
+	Sfio_t *fp;
+	char *cp;
 
 	NoP(id[0]);
 	cmdinit(argv);

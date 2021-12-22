@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -175,7 +175,7 @@ extern __MANGLE__ void	sh_siginit __PROTO__((void));
 extern __MANGLE__ void 	sh_sigtrap __PROTO__((int));
 extern __MANGLE__ void 	sh_sigreset __PROTO__((int));
 extern __MANGLE__ void 	sh_timetraps __PROTO__((void));
-extern __MANGLE__ __V_ 	*timeradd __PROTO__((unsigned long,int ,void (*)(__V_*),__V_*));
+extern __MANGLE__ __V_ 	*kshtimeradd __PROTO__((unsigned long,int ,void (*)(__V_*),__V_*));
 extern __MANGLE__ void	timerdel __PROTO__((__V_*));
 
 extern __MANGLE__ const char e_alarm[];

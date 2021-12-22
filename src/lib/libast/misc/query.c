@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -110,8 +110,8 @@ query __PARAM__((int quit, const char* format, ...), (va_alist)) __OTORP__(va_dc
 #line 26
 
 	va_list		ap;
-	register int	n;
-	register int	c;
+	int	n;
+	int	c;
 
 	static Sfio_t*	rfp;
 	static Sfio_t*	wfp;

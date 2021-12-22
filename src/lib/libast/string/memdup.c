@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,8 +102,8 @@ NoN(memdup)
  */
 
 __V_*
-memdup __PARAM__((register const __V_* s, register size_t n), (s, n)) __OTORP__(register const __V_* s; register size_t n;){
-	register __V_*	t;
+memdup __PARAM__((const __V_* s, size_t n), (s, n)) __OTORP__(const __V_* s; size_t n;){
+	__V_*	t;
 
 	return((t = (__V_*)newof(0, char, n, 0)) ? memcpy(t, s, n) : 0);
 }

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -138,9 +138,9 @@ Tm_info_t		tm_info;
 
 static int
 tzwest __PARAM__((time_t* clock, int* isdst), (clock, isdst)) __OTORP__(time_t* clock; int* isdst;){
-	register Tm_t*	tp;
-	register int	n;
-	register int	m;
+	Tm_t*	tp;
+	int	n;
+	int	m;
 	int		h;
 
 	/*
@@ -197,9 +197,9 @@ tmopt __PARAM__((__V_* a, const __V_* p, int n, const char* v), (a, p, n, v)) __
 
 static void
 tmlocal __PARAM__((void), ()){
-	register Tm_zone_t*	zp;
-	register int		n;
-	register char*		s;
+	Tm_zone_t*	zp;
+	int		n;
+	char*		s;
 	int			i;
 	int			m;
 	int			isdst;
@@ -389,13 +389,13 @@ tmlocal __PARAM__((void), ()){
  */
 
 void
-tminit __PARAM__((register Tm_zone_t* zp), (zp)) __OTORP__(register Tm_zone_t* zp;){
+tminit __PARAM__((Tm_zone_t* zp), (zp)) __OTORP__(Tm_zone_t* zp;){
 	if (!tm_info.local) tmlocal();
 	if (!zp) zp = tm_info.local;
 #if HUH950804 /* it only worked on systems that ignored TZ=...! */
 	if (zp != tm_info.zone)
 	{
-		register char*	s;
+		char*	s;
 		time_t		clock;
 		char		buf[128];
 

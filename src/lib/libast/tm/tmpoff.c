@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -100,7 +100,7 @@
  */
 
 char*
-tmpoff __PARAM__((register char* s, register const char* p, register int n, int d), (s, p, n, d)) __OTORP__(register char* s; register const char* p; register int n; int d;){
+tmpoff __PARAM__((char* s, const char* p, int n, int d), (s, p, n, d)) __OTORP__(char* s; const char* p; int n; int d;){
 	while (*s = *p++) s++;
 	if (n != d)
 	{

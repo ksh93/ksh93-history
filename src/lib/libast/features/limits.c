@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -118,10 +118,10 @@ extern __MANGLE__ int		printf __PROTO__((const char*, ...));
 
 #include "conflib.h"
 
-main()
+int main()
 {
-	register int	i;
-	register int	n;
+	int	i;
+	int	n;
 
 	char		c;
 	unsigned char	uc;

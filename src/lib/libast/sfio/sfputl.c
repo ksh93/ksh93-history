@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 */
 
 #if __STD_C
-_sfputl(reg Sfio_t* f, reg long v)
+int _sfputl(reg Sfio_t* f, reg long v)
 #else
 _sfputl(f,v)
 reg Sfio_t	*f;	/* write a portable long to this stream */

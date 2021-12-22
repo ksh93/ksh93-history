@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -106,11 +106,11 @@ typedef struct
 static int
 splice __PARAM__((Sfio_t* s, int op, Sfdisc_t* ad), (s, op, ad)) __OTORP__(Sfio_t* s; int op; Sfdisc_t* ad;){
 	SPLICE*		d = (SPLICE*)ad;
-	register char*	b;
-	register int	c;
-	register int	n;
-	register int	q;
-	register char*	e;
+	char*	b;
+	int	c;
+	int	n;
+	int	q;
+	char*	e;
 	char*		buf;
 
 	switch (op)

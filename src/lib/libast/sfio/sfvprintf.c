@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -89,7 +89,6 @@
 		goto pop_fa; \
 	  else	elt = (etype)arge; \
 	}
-#ifdef __ppc
 #define GETARGL(elt,arge,argf,args,etype,type,fmt,t_user,n_user) \
 	{ if(!argf) \
 		__va_copy( elt, va_arg(args,type) ); \
@@ -97,10 +96,9 @@
 		goto pop_fa; \
 	  else	__va_copy( elt, arge ); \
 	}
-#endif
 
 #if __STD_C
-sfvprintf(Sfio_t* f, const char* form, va_list args)
+int sfvprintf(Sfio_t* f, const char* form, va_list args)
 #else
 sfvprintf(f,form,args)
 Sfio_t*	f;		/* file to print to	*/
@@ -302,14 +300,15 @@ loop_fa :
 			GETARG(form,form,argf,args,char*,char*,'1',t_user,n_user);
 			if(!form)
 				form = "";
-#ifdef __ppc
-			GETARGL(argsp,argsp,argf,args,va_list*,va_list*,'2',t_user,n_user);
-			__va_copy( fa->args, args );
-			__va_copy( args, argsp );
-#else
+#if (defined(CSRG_BASED) && !defined(__LP64__)) || \
+    (defined(__linux__) && !defined(__LP64__)) || defined(sun)
 			GETARG(argsp,argsp,argf,args,va_list*,va_list*,'2',t_user,n_user);
 			memcpy((Void_t*)(&(fa->args)), (Void_t*)(&args), sizeof(va_list));
 			memcpy((Void_t*)(&args), (Void_t*)argsp, sizeof(va_list));
+#else
+			GETARGL(argsp,argsp,argf,args,va_list*,va_list*,'2',t_user,n_user);
+			__va_copy( fa->args, args );
+			__va_copy( args, argsp );
 #endif
 			fa->argf.p = argf;
 			fa->extf.p = extf;
@@ -320,11 +319,11 @@ loop_fa :
 		default :	/* unknown directive */
 			if(extf)
 			{
-#ifdef __ppc
+#if defined(CSRG_BASED) && defined(__i386__)
+				va_list savarg = args;  /* is this portable? */
+#else
 				va_list	savarg; 	/* is this portable?   Sorry .. NO. */
 				__va_copy( savarg, args );
-#else
-				va_list	savarg = args;	/* is this portable? */
 #endif
 
 				GETARG(sp,astr,argf,args,char*,char*,fmt,t_user,n_user);
@@ -333,10 +332,10 @@ loop_fa :
 				if((sp = astr) )
 					goto s_format;
 
-#ifdef __ppc
-				__va_copy( args, savarg ); /* extf failed, treat as if unmatched */
+#if defined(CSRG_BASED) && !defined(__LP64__)
+				args = savarg;  /* extf failed, treat as if unmatched */
 #else
-				args = savarg;	/* extf failed, treat as if unmatched */
+				__va_copy( args, savarg ); /* extf failed, treat as if unmatched */
 #endif
 			}
 

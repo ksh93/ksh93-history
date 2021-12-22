@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,10 +98,10 @@ static const char id[] = "\n@(#)paste (AT&T Bell Laboratories) 04/01/92\0\n";
  * to <out>
  */
 
-static int paste __PARAM__((int nstream,Sfio_t* streams[],Sfio_t *out, register const char *delim,int dlen), (nstream, streams, out, delim, dlen)) __OTORP__(int nstream;Sfio_t* streams[];Sfio_t *out; register const char *delim;int dlen;){
-	register const char *cp;
-	register int d, n, more=1;
-	register Sfio_t *fp;
+static int paste __PARAM__((int nstream,Sfio_t* streams[],Sfio_t *out, const char *delim,int dlen), (nstream, streams, out, delim, dlen)) __OTORP__(int nstream;Sfio_t* streams[];Sfio_t *out; const char *delim;int dlen;){
+	const char *cp;
+	int d, n, more=1;
+	Sfio_t *fp;
 	do
 	{
 		d = (dlen>0?0:-1);
@@ -134,7 +134,7 @@ static int paste __PARAM__((int nstream,Sfio_t* streams[],Sfio_t *out, register 
 			}
 			if(++n<nstream && more && d>=0)
 			{
-				register int c;
+				int c;
 				if(d >= dlen)
 					d = 0;
 				if(c=delim[d++])
@@ -149,9 +149,9 @@ static int paste __PARAM__((int nstream,Sfio_t* streams[],Sfio_t *out, register 
 /*
  * Handles paste -s, for file <in> to file <out> using delimiters <delim>
  */
-static int spaste __PARAM__((Sfio_t *in,register Sfio_t* out,register const char *delim,int dlen), (in, out, delim, dlen)) __OTORP__(Sfio_t *in;register Sfio_t* out;register const char *delim;int dlen;){
-	register const char *cp;
-	register int d=0;
+static int spaste __PARAM__((Sfio_t *in,Sfio_t* out,const char *delim,int dlen), (in, out, delim, dlen)) __OTORP__(Sfio_t *in;Sfio_t* out;const char *delim;int dlen;){
+	const char *cp;
+	int d=0;
 	if(cp = sfgetr(in,'\n',0))
 	{
 		if(sfwrite(out,cp,sfslen()-1) < 0)
@@ -161,7 +161,7 @@ static int spaste __PARAM__((Sfio_t *in,register Sfio_t* out,register const char
 	{
 		if(dlen)
 		{
-			register int c;
+			int c;
 			if(d >= dlen)
 				d = 0;
 			if(c=delim[d++])
@@ -175,10 +175,10 @@ static int spaste __PARAM__((Sfio_t *in,register Sfio_t* out,register const char
 }
 
 int
-b_paste __PARAM__((int argc,register char *argv[]), (argc, argv)) __OTORP__(int argc;register char *argv[];){
-	register int		n, sflag=0;
-	register Sfio_t	*fp, **streams;
-	register char 		*cp, *delim = "\t"; 	/* default delimiter */
+b_paste __PARAM__((int argc,char *argv[]), (argc, argv)) __OTORP__(int argc;char *argv[];){
+	int		n, sflag=0;
+	Sfio_t	*fp, **streams;
+	char 		*cp, *delim = "\t"; 	/* default delimiter */
 	int			dlen;
 
 	NoP(id[0]);

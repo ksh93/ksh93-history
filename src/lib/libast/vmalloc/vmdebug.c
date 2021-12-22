@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -541,7 +541,7 @@ int		flags;		/* VM_RS*			*/
 
 /* compact any residual free space */
 #if __STD_C
-static dbcompact(Vmalloc_t* vm)
+static int dbcompact(Vmalloc_t* vm)
 #else
 static dbcompact(vm)
 Vmalloc_t*	vm;
@@ -552,7 +552,7 @@ Vmalloc_t*	vm;
 
 /* check for memory overwrites over all live blocks */
 #if __STD_C
-vmdbcheck(Vmalloc_t* vm)
+int vmdbcheck(Vmalloc_t* vm)
 #else
 vmdbcheck(vm)
 Vmalloc_t*	vm;

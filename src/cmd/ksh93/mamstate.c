@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -65,10 +65,10 @@ static char id[] = "\n@(#)mamstate (AT&T Bell Laboratories) 06/26/89\0\n";
 
 main(argc, argv)
 int		argc;
-register char**	argv;
+char**	argv;
 {
-	register char*	s;
-	register int	c;
+	char*	s;
+	int	c;
 	long		ref;
 	struct stat	st;
 	char		buf[1024];

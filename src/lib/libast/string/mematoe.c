@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -138,9 +138,9 @@ static unsigned char atoe[] =
  */
 
 void
-mematoe __PARAM__((__V_* aop, const __V_* aip, register size_t n), (aop, aip, n)) __OTORP__(__V_* aop; const __V_* aip; register size_t n;){
-	register unsigned char*		op = (unsigned char*)aop;
-	register const unsigned char*	ip = (const unsigned char*)aip;
+mematoe __PARAM__((__V_* aop, const __V_* aip, size_t n), (aop, aip, n)) __OTORP__(__V_* aop; const __V_* aip; size_t n;){
+	unsigned char*		op = (unsigned char*)aop;
+	const unsigned char*	ip = (const unsigned char*)aip;
 
 	while (n-- > 0) *op++ = atoe[*ip++];
 }

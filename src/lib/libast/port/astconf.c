@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -157,11 +157,11 @@ static Ast_confdisc_t	notify;
  */
 
 static char*
-synthesize __PARAM__((register Feature_t* fp, const char* path, const char* value), (fp, path, value)) __OTORP__(register Feature_t* fp; const char* path; const char* value;){
-	register char*		s;
-	register char*		d;
-	register char*		v;
-	register int		n;
+synthesize __PARAM__((Feature_t* fp, const char* path, const char* value), (fp, path, value)) __OTORP__(Feature_t* fp; const char* path; const char* value;){
+	char*		s;
+	char*		d;
+	char*		v;
+	int		n;
 
 	static char*		data;
 	static char*		last;
@@ -278,18 +278,16 @@ synthesize __PARAM__((register Feature_t* fp, const char* path, const char* valu
  */
 
 static void
-initialize __PARAM__((register Feature_t* fp, const char* path, const char* command, const char* succeed, const char* fail), (fp, path, command, succeed, fail)) __OTORP__(register Feature_t* fp; const char* path; const char* command; const char* succeed; const char* fail;){
-	register char*	p;
-	register int	ok = 1;
+initialize __PARAM__((Feature_t* fp, const char* path, const char* command, const char* succeed, const char* fail), (fp, path, command, succeed, fail)) __OTORP__(Feature_t* fp; const char* path; const char* command; const char* succeed; const char* fail;){
+	char*	p;
+	int	ok = 1;
 
 	if (fp->op != OP_path_resolve || !fs3d(FS3D_TEST))
 	{
-		if (fp->op == OP_universe)
-			ok = streq(_UNIV_DEFAULT, "att");
 		if (p = getenv("PATH"))
 		{
-			register int	r = 1;
-			register char*	d = p;
+			int	r = 1;
+			char*	d = p;
 			int		offset = stktell(stkstd);
 
 			for (;;)
@@ -364,8 +362,8 @@ initialize __PARAM__((register Feature_t* fp, const char* path, const char* comm
 
 static char*
 feature __PARAM__((const char* name, const char* path, const char* value), (name, path, value)) __OTORP__(const char* name; const char* path; const char* value;){
-	register Feature_t*	fp;
-	register int		n;
+	Feature_t*	fp;
+	int		n;
 
 	if (value)
 	{
@@ -401,12 +399,6 @@ feature __PARAM__((const char* name, const char* path, const char* value), (name
 		break;
 
 	case OP_universe:
-#if _lib_universe
-		if (getuniverse(fp->value) < 0)
-			strcpy(fp->value, "att");
-		if (value)
-			setuniverse(value);
-#else
 #ifdef UNIV_MAX
 		n = 0;
 		if (value)
@@ -416,20 +408,13 @@ feature __PARAM__((const char* name, const char* path, const char* value), (name
 			if (n >= univ_max)
 				return(0);
 		}
-#ifdef ATT_UNIV
-		n = setuniverse(n + 1);
-		if (!value && n > 0)
-			setuniverse(n);
-#else
 		n = universe(value ? n + 1 : U_GET);
-#endif
 		if (n <= 0 || n >= univ_max)
 			n = 1;
 		strcpy(fp->value, univ_name[n - 1]);
 #else
 		if (!synthesize(fp, path, value))
 			initialize(fp, path, "echo", "att", "ucb");
-#endif
 #endif
 		break;
 
@@ -446,12 +431,12 @@ feature __PARAM__((const char* name, const char* path, const char* value), (name
  */
 
 static int
-lookup __PARAM__((register Lookup_t* look, const char* name), (look, name)) __OTORP__(register Lookup_t* look; const char* name;){
-	register Conf_t*	mid = (Conf_t*)conf;
-	register Conf_t*	lo = mid;
-	register Conf_t*	hi = mid + conf_elements;
-	register int		v;
-	register int		c;
+lookup __PARAM__((Lookup_t* look, const char* name), (look, name)) __OTORP__(Lookup_t* look; const char* name;){
+	Conf_t*	mid = (Conf_t*)conf;
+	Conf_t*	lo = mid;
+	Conf_t*	hi = mid + conf_elements;
+	int		v;
+	int		c;
 	const char*		oldname = name;
 	const Prefix_t*		p;
 
@@ -544,9 +529,9 @@ lookup __PARAM__((register Lookup_t* look, const char* name), (look, name)) __OT
  */
 
 static char*
-print __PARAM__((Sfio_t* sp, register Lookup_t* look, const char* name, const char* path), (sp, look, name, path)) __OTORP__(Sfio_t* sp; register Lookup_t* look; const char* name; const char* path;){
-	register Conf_t*	p = look->conf;
-	register int		flags = look->flags|CONF_DEFINED;
+print __PARAM__((Sfio_t* sp, Lookup_t* look, const char* name, const char* path), (sp, look, name, path)) __OTORP__(Sfio_t* sp; Lookup_t* look; const char* name; const char* path;){
+	Conf_t*	p = look->conf;
+	int		flags = look->flags|CONF_DEFINED;
 	char*			call;
 	int			offset;
 	long			v;
@@ -683,7 +668,7 @@ print __PARAM__((Sfio_t* sp, register Lookup_t* look, const char* name, const ch
 
 char*
 astconf __PARAM__((const char* name, const char* path, const char* value), (name, path, value)) __OTORP__(const char* name; const char* path; const char* value;){
-	register char*	s;
+	char*	s;
 	Lookup_t	look;
 
 	if (!path)

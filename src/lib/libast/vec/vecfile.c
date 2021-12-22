@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -99,9 +99,9 @@
 
 char**
 vecfile __PARAM__((const char* file), (file)) __OTORP__(const char* file;){
-	register int	n;
-	register char*	buf;
-	register char**	vec;
+	int	n;
+	char*	buf;
+	char**	vec;
 	int		fd;
 	struct stat	st;
 

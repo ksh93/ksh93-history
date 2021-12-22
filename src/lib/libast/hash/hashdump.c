@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -96,7 +96,7 @@
  */
 
 static void
-dumpflags __PARAM__((register int flags), (flags)) __OTORP__(register int flags;){
+dumpflags __PARAM__((int flags), (flags)) __OTORP__(int flags;){
 	if (flags & HASH_ALLOCATE) sfprintf(sfstderr, "allocate ");
 	if (flags & HASH_BUCKET) sfprintf(sfstderr, "bucket ");
 	if (flags & HASH_FIXED) sfprintf(sfstderr, "fixed ");
@@ -112,9 +112,9 @@ dumpflags __PARAM__((register int flags), (flags)) __OTORP__(register int flags;
  */
 
 static void
-dumpbucket __PARAM__((register Hash_table_t* tab, int flags), (tab, flags)) __OTORP__(register Hash_table_t* tab; int flags;){
-	register Hash_bucket_t**	sp;
-	register Hash_bucket_t*		b;
+dumpbucket __PARAM__((Hash_table_t* tab, int flags), (tab, flags)) __OTORP__(Hash_table_t* tab; int flags;){
+	Hash_bucket_t**	sp;
+	Hash_bucket_t*		b;
 	Hash_bucket_t**			sx;
 	int				n;
 	unsigned char*			s;
@@ -162,7 +162,7 @@ dumpbucket __PARAM__((register Hash_table_t* tab, int flags), (tab, flags)) __OT
  */
 
 static void
-dumptable __PARAM__((register Hash_table_t* tab, register int flags), (tab, flags)) __OTORP__(register Hash_table_t* tab; register int flags;){
+dumptable __PARAM__((Hash_table_t* tab, int flags), (tab, flags)) __OTORP__(Hash_table_t* tab; int flags;){
 	Hash_table_t*	scope;
 	int		level;
 
@@ -191,8 +191,8 @@ dumptable __PARAM__((register Hash_table_t* tab, register int flags), (tab, flag
  */
 
 static void
-dumproot __PARAM__((register Hash_root_t* root, register int flags), (root, flags)) __OTORP__(register Hash_root_t* root; register int flags;){
-	register Hash_table_t*	tab;
+dumproot __PARAM__((Hash_root_t* root, int flags), (root, flags)) __OTORP__(Hash_root_t* root; int flags;){
+	Hash_table_t*	tab;
 
 	sfprintf(sfstderr, "    root\n");
 	sfprintf(sfstderr, "        address:     0x%08lx\n", (unsigned long)root);
@@ -220,8 +220,8 @@ dumproot __PARAM__((register Hash_root_t* root, register int flags), (root, flag
  */
 
 void
-hashdump __PARAM__((register Hash_table_t* tab, int flags), (tab, flags)) __OTORP__(register Hash_table_t* tab; int flags;){
-	register Hash_root_t*	root;
+hashdump __PARAM__((Hash_table_t* tab, int flags), (tab, flags)) __OTORP__(Hash_table_t* tab; int flags;){
+	Hash_root_t*	root;
 
 	sfprintf(sfstderr, "\nhash table information:\n\n");
 	if (tab) dumproot(tab->root, flags);

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -103,9 +103,9 @@ NoN(memchr)
  */
 
 __V_*
-memchr __PARAM__((const __V_* asp, register int c, size_t n), (asp, c, n)) __OTORP__(const __V_* asp; register int c; size_t n;){
-	register const char*	sp = (char*)asp;
-	register const char*	ep = sp + n;
+memchr __PARAM__((const __V_* asp, int c, size_t n), (asp, c, n)) __OTORP__(const __V_* asp; int c; size_t n;){
+	const char*	sp = (char*)asp;
+	const char*	ep = sp + n;
 
 	while (sp < ep)
 		if (*sp++ == c)

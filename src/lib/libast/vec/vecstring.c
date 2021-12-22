@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,8 +98,8 @@
 
 char**
 vecstring __PARAM__((const char* str), (str)) __OTORP__(const char* str;){
-	register char*	buf;
-	register char**	vec;
+	char*	buf;
+	char**	vec;
 
 	if (!str || !*str || !(buf = strdup(str))) vec = 0;
 	else if (!(vec = vecload(buf))) free(buf);

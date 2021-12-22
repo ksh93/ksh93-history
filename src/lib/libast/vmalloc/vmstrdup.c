@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -97,9 +97,9 @@
  */
 
 char*
-vmstrdup __PARAM__((Vmalloc_t* v, register const char* s), (v, s)) __OTORP__(Vmalloc_t* v; register const char* s;){
-	register char*	t;
-	register int	n;
+vmstrdup __PARAM__((Vmalloc_t* v, const char* s), (v, s)) __OTORP__(Vmalloc_t* v; const char* s;){
+	char*	t;
+	int	n;
 
 	return((t = vmalloc(v, n = strlen(s) + 1)) ? (char*)memcpy(t, s, n) : (char*)0);
 }

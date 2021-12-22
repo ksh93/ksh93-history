@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -182,11 +182,6 @@ const struct shtable3 shtab_builtins[] =
 	"wait",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(wait),
 	"type",		NV_BLTIN|BLT_ENV,		bltin(whence),
 	"whence",	NV_BLTIN|BLT_ENV,		bltin(whence),
-#ifdef apollo
-	"inlib",	NV_BLTIN|BLT_ENV,		bltin(inlib),
-	"rootnode",	NV_BLTIN,			bltin(rootnode),
-	"ver",		NV_BLTIN,			bltin(ver),
-#endif	/* apollo */
 	"/bin/basename",NV_BLTIN|NV_NOFREE,		bltin(basename),
 	"/bin/chmod",	NV_BLTIN|NV_NOFREE,		bltin(chmod),
 	"/bin/dirname",	NV_BLTIN|NV_NOFREE,		bltin(dirname),

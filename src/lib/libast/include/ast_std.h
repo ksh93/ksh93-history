@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -136,7 +136,9 @@
 #define _SKIP_SFSTDIO_H
 #else
 #define _SFSTDIO_H
+#if !defined(__linux__)
 #define FILE	int
+#endif
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 #if !_std_def_calloc
 __STDPP__directive pragma pp:hide calloc
@@ -337,8 +339,6 @@ typedef unsigned short wchar_t;
 #else
 #include <ast_types.h>
 #endif
-
-struct stat;
 
 #if defined(__cplusplus) || !defined(_std_stdlib) && !defined(__STDC__)
 
@@ -616,11 +616,7 @@ __STDPP__directive pragma pp:ignore "string.h"
 
 /* <unistd.h> */
 
-#ifdef _WIN32
-#include <unistd.h>
-#else
 #include <ast_unistd.h>
-#endif
 #include <ast_botch.h>
 
 #ifndef STDIN_FILENO
@@ -695,8 +691,6 @@ extern __MANGLE__ char*		ttyname __PROTO__((int));
 extern __MANGLE__ int		unlink __PROTO__((const char*));
 extern __MANGLE__ ssize_t		write __PROTO__((int, const __V_*, size_t));
 
-#ifndef _WIN32
-
 /*
  * yes, we don't trust anyone's interpretation but our own
  */
@@ -714,8 +708,6 @@ extern __MANGLE__ size_t		confstr __PROTO__((int, char*, size_t));
 extern __MANGLE__ long		fpathconf __PROTO__((int, int));
 extern __MANGLE__ long		pathconf __PROTO__((const char*, int));
 extern __MANGLE__ long		sysconf __PROTO__((int));
-
-#endif
 
 #if defined(__STDPP__directive) && defined(__STDPP__ignore)
 

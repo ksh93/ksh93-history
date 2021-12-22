@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -53,7 +53,7 @@
 */
 
 #if __STD_C
-sfread(reg Sfio_t* f, Void_t* buf, reg int n)
+int sfread(reg Sfio_t* f, Void_t* buf, reg int n)
 #else
 sfread(f,buf,n)
 reg Sfio_t*	f;	/* read from this stream. r11 on Vax	*/

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -108,7 +108,7 @@ typedef struct
  */
 
 static List_t*
-newthread __PARAM__((register List_t* p, register Inst_t* ip, register Subexp_t* sep), (p, ip, sep)) __OTORP__(register List_t* p; register Inst_t* ip; register Subexp_t* sep;){
+newthread __PARAM__((List_t* p, Inst_t* ip, Subexp_t* sep), (p, ip, sep)) __OTORP__(List_t* p; Inst_t* ip; Subexp_t* sep;){
 	for (; p->inst; p++)
 		if (p->inst == ip)
 		{
@@ -122,7 +122,7 @@ newthread __PARAM__((register List_t* p, register Inst_t* ip, register Subexp_t*
 }
 
 static void
-newmatch __PARAM__((register Subexp_t* mp, register Subexp_t* np), (mp, np)) __OTORP__(register Subexp_t* mp; register Subexp_t* np;){
+newmatch __PARAM__((Subexp_t* mp, Subexp_t* np), (mp, np)) __OTORP__(Subexp_t* mp; Subexp_t* np;){
 	if (!mp->m[0].sp || np->m[0].sp < mp->m[0].sp || np->m[0].sp == mp->m[0].sp && np->m[0].ep > mp->m[0].ep)
 		*mp = *np;
 }
@@ -130,10 +130,10 @@ newmatch __PARAM__((register Subexp_t* mp, register Subexp_t* np), (mp, np)) __O
 int
 reexec __PARAM__((Re_program_t* aprogp, const char* starts), (aprogp, starts)) __OTORP__(Re_program_t* aprogp; const char* starts;){
 	Re_program_t*		progp = (Re_program_t*)aprogp;
-	register int		flag = 0;
-	register Inst_t*	inst;
-	register List_t*	tlp;
-	register const char*	s;
+	int		flag = 0;
+	Inst_t*	inst;
+	List_t*	tlp;
+	const char*	s;
 	Subexp_t*		mp;
 	int			checkstart;
 	int			startchar;

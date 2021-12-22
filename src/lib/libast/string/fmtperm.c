@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -93,9 +93,9 @@
 #include <ls.h>
 
 char*
-fmtperm __PARAM__((register int perm), (perm)) __OTORP__(register int perm;){
-	register char*	s;
-	register char*	p;
+fmtperm __PARAM__((int perm), (perm)) __OTORP__(int perm;){
+	char*	s;
+	char*	p;
 	char*		o;
 	int		c;
 

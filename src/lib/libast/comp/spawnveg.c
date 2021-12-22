@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -175,9 +175,9 @@ spawnveg __PARAM__((const char* cmd, char* const argv[], char* const envv[], pid
 		execve(cmd, argv, envv);
 		if (errno == ENOEXEC)
 		{
-			register char**	o;
-			register char**	p;
-			register char**	v;
+			char**	o;
+			char**	p;
+			char**	v;
 
 			for (p = o = (char**)argv; *p; p++);
 			if (v = newof(0, char*, p - o + 2, 0))

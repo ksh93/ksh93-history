@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -113,7 +113,7 @@ int sh_tdump __PARAM__((Sfio_t *out, const union anynode *t), (out, t)) __OTORP_
 /*
  * print script corresponding to shell tree <t>
  */
-static int p_tree __PARAM__((register const union anynode *t), (t)) __OTORP__(register const union anynode *t;){
+static int p_tree __PARAM__((const union anynode *t), (t)) __OTORP__(const union anynode *t;){
 	if(!t)
 		return(sfputl(outfile,-1));
 	if(sfputl(outfile,t->tre.tretyp)<0)
@@ -196,8 +196,8 @@ static int p_tree __PARAM__((register const union anynode *t), (t)) __OTORP__(re
 	}
 }
 
-static int p_arg __PARAM__((register const struct argnod *arg), (arg)) __OTORP__(register const struct argnod *arg;){
-	register int n;
+static int p_arg __PARAM__((const struct argnod *arg), (arg)) __OTORP__(const struct argnod *arg;){
+	int n;
 	struct fornod *fp;
 	while(arg)
 	{
@@ -220,7 +220,7 @@ static int p_arg __PARAM__((register const struct argnod *arg), (arg)) __OTORP__
 	return(sfputu(outfile,0));
 }
 
-static int p_redirect __PARAM__((register const struct ionod *iop), (iop)) __OTORP__(register const struct ionod *iop;){
+static int p_redirect __PARAM__((const struct ionod *iop), (iop)) __OTORP__(const struct ionod *iop;){
 	while(iop)
 	{
 		sfputl(outfile,iop->iofile);
@@ -239,7 +239,7 @@ static int p_redirect __PARAM__((register const struct ionod *iop), (iop)) __OTO
 	return(sfputl(outfile,-1));
 }
 
-static int p_comarg __PARAM__((const register struct comnod *com), (com)) __OTORP__(const register struct comnod *com;){
+static int p_comarg __PARAM__((const struct comnod *com), (com)) __OTORP__(const struct comnod *com;){
 	p_redirect(com->comio);
 	p_arg(com->comset);
 	if(!com->comarg)
@@ -252,8 +252,8 @@ static int p_comarg __PARAM__((const register struct comnod *com), (com)) __OTOR
 }
 
 static int p_comlist __PARAM__((const struct dolnod *dol), (dol)) __OTORP__(const struct dolnod *dol;){
-	register char *cp, *const*argv;
-	register int n;
+	char *cp, *const*argv;
+	int n;
 	argv = dol->dolval+ARG_SPARE;
 	while(cp = *argv)
 		argv++;
@@ -265,7 +265,7 @@ static int p_comlist __PARAM__((const struct dolnod *dol), (dol)) __OTORP__(cons
 	return(sfputu(outfile,0));
 }
 
-static int p_switch __PARAM__((register const struct regnod *reg), (reg)) __OTORP__(register const struct regnod *reg;){
+static int p_switch __PARAM__((const struct regnod *reg), (reg)) __OTORP__(const struct regnod *reg;){
 	while(reg)
 	{
 		sfputl(outfile,reg->regflag);
@@ -276,8 +276,8 @@ static int p_switch __PARAM__((register const struct regnod *reg), (reg)) __OTOR
 	return(sfputl(outfile,-1));
 }
 
-static int p_string __PARAM__((register const char *string), (string)) __OTORP__(register const char *string;){
-	register size_t n=strlen(string);
+static int p_string __PARAM__((const char *string), (string)) __OTORP__(const char *string;){
+	size_t n=strlen(string);
 	if(sfputu(outfile,n+1)<0)
 		return(-1);
 	return(sfwrite(outfile,string,n));

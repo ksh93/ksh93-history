@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,8 +102,8 @@
  */
 
 Tm_t*
-tmfix __PARAM__((register Tm_t* tp), (tp)) __OTORP__(register Tm_t* tp;){
-	register int	n;
+tmfix __PARAM__((Tm_t* tp), (tp)) __OTORP__(Tm_t* tp;){
+	int	n;
 
 	if ((n = tp->tm_sec) < 0)
 	{

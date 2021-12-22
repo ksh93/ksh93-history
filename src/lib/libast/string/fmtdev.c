@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -89,9 +89,18 @@
 #define __VA_START__(p,a)	va_start(p)
 #endif
 #endif
+
+#if defined(__linux__)
+#include <sys/sysmacros.h>
+#endif
+
 #include <ast.h>
 #include <ctype.h>
 #include <ls.h>
+
+#if defined(__linux__)
+#include <sys/sysmacros.h>
+#endif
 
 char*
 fmtdev __PARAM__((struct stat* st), (st)) __OTORP__(struct stat* st;){

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -97,6 +97,12 @@ __STDPP__directive pragma pp:hide getgrgid
 
 #include <ast.h>
 #include <hash.h>
+/* on linux grp.h can include FILE without stdio.h which clashes with sfio_t */
+#if defined(__linux__)
+ #ifndef __FILE_defined
+  #define __FILE_defined 1
+ #endif
+#endif
 #include <grp.h>
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -113,8 +119,8 @@ extern __MANGLE__ struct group*	getgrgid __PROTO__((gid_t));
 
 char*
 fmtgid __PARAM__((int gid), (gid)) __OTORP__(int gid;){
-	register char*		name;
-	register struct group*	gr;
+	char*		name;
+	struct group*	gr;
 
 	static Hash_table_t*	gidtab;
 	static char		buf[sizeof(int) * 3 + 1];

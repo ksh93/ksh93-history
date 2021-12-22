@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -93,8 +93,8 @@
 #include <option.h>
 
 char*
-pathpath __PARAM__((register char* path, const char* p, const char* a, int mode), (path, p, a, mode)) __OTORP__(register char* path; const char* p; const char* a; int mode;){
-	register char*	s;
+pathpath __PARAM__((char* path, const char* p, const char* a, int mode), (path, p, a, mode)) __OTORP__(char* path; const char* p; const char* a; int mode;){
+	char*	s;
 	char*		x;
 
 	static char*	cmd;

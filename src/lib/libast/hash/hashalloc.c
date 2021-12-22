@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -88,6 +88,8 @@
 #else
 #define __VA_START__(p,a)	va_start(p)
 #endif
+#define va_listval(p)		(*(p))
+#define va_listarg		va_list*
 #endif
 static const char id_hash[] = "\n@(#)hash (AT&T Bell Laboratories) 05/09/95\0\n";
 
@@ -107,9 +109,9 @@ Hash_info_t		hash_info = { 0 };
 Hash_table_t*
 hashalloc __PARAM__((Hash_table_t* ref, ...), (va_alist)) __OTORP__(va_dcl)
 { __OTORP__(Hash_table_t* ref; )
-	register Hash_table_t*	tab;
-	register Hash_table_t*	ret = 0;
-	register int		internal;
+	Hash_table_t*	tab;
+	Hash_table_t*	ret = 0;
+	int		internal;
 	int			n;
 	va_list			ap;
 	va_list			va[4];
@@ -213,26 +215,26 @@ hashalloc __PARAM__((Hash_table_t* ref, ...), (va_alist)) __OTORP__(va_dcl)
 			tab->flags |= HASH_STATIC;
 			break;
 		case HASH_va_list:
-#ifdef __ppc
+#if defined(CSRG_BASED) && defined(__i386__)
+			if (vp < &va[elementsof(va)]) *vp++ = ap;
+			ap = va_arg(ap, va_list);
+#else
 			if (vp < &va[elementsof(va)])
 			{
 				__va_copy( *vp, ap );
 				vp++;
 			}
-			__va_copy(ap, *((va_list *) va_arg(ap, va_list)) );
-#else
-			if (vp < &va[elementsof(va)]) *vp++ = ap;
-			ap = va_arg(ap, va_list);
+			__va_copy(ap, va_listval(va_arg(ap, va_listarg)));
 #endif
 			break;
 		case 0:
 			if (vp > va)
 			{
-#ifdef __ppc
+#if defined(CSRG_BASED) && defined(__i386__)
+				ap = *--vp;
+#else
 				vp--;
 				__va_copy( ap, *vp );
-#else
-				ap = *--vp;
 #endif
 				break;
 			}

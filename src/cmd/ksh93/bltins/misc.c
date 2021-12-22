@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -108,7 +108,7 @@ static void     noexport __PROTO__((Namval_t*));
 static char	*arg0;
 
 int    b_exec __PARAM__((int argc,char *argv[], __V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[]; __V_ *extra;){
-	register int n;
+	int n;
         sh.st.ioset = 0;
 	clear = 0;
 	NOT_USED(extra);
@@ -136,7 +136,7 @@ int    b_exec __PARAM__((int argc,char *argv[], __V_ *extra), (argc, argv, extra
 	return(0);
 }
 
-static void     noexport __PARAM__((register Namval_t* np), (np)) __OTORP__(register Namval_t* np;){
+static void     noexport __PARAM__((Namval_t* np), (np)) __OTORP__(Namval_t* np;){
 	nv_offattr(np,NV_EXPORT);
 }
 
@@ -148,9 +148,9 @@ int    b_login __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra
 		error(ERROR_exit(1),e_restricted,argv[0]);
 	else
         {
-		register struct argnod *arg=sh.envlist;
-		register Namval_t* np;
-		register char *cp;
+		struct argnod *arg=sh.envlist;
+		Namval_t* np;
+		char *cp;
 		if(sh.subshell)
 			sh_subfork();
 		if(clear)
@@ -182,8 +182,8 @@ int    b_login __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra
 }
 
 int    b_let __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
-	register int r;
-	register char *arg;
+	int r;
+	char *arg;
 	NOT_USED(argc);
 	NOT_USED(extra);
 	while (r = optget(argv,sh_optlet)) switch (r)
@@ -204,7 +204,7 @@ int    b_let __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra))
 }
 
 int    b_eval __PARAM__((int argc,char *argv[], __V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[]; __V_ *extra;){
-	register int r;
+	int r;
 	NOT_USED(argc);
 	NOT_USED(extra);
 	while (r = optget(argv,sh_opteval)) switch (r)
@@ -227,10 +227,10 @@ int    b_eval __PARAM__((int argc,char *argv[], __V_ *extra), (argc, argv, extra
 	return(sh.exitval);
 }
 
-int    b_dot_cmd __PARAM__((register int n,char *argv[],__V_* extra), (n, argv, extra)) __OTORP__(register int n;char *argv[];__V_* extra;){
-	register char *script;
-	register Namval_t *np;
-	register int jmpval;
+int    b_dot_cmd __PARAM__((int n,char *argv[],__V_* extra), (n, argv, extra)) __OTORP__(int n;char *argv[];__V_* extra;){
+	char *script;
+	Namval_t *np;
+	int jmpval;
 	int	fd;
 	struct dolnod   *argsave=0, *saveargfor;
 	char **saveargv;
@@ -313,7 +313,7 @@ int    b_dot_cmd __PARAM__((register int n,char *argv[],__V_* extra), (n, argv, 
 /*
  * null, true  command
  */
-int    b_true __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[];__V_ *extra;){
+int    b_true __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
 	NOT_USED(argc);
 	NOT_USED(argv[0]);
 	NOT_USED(extra);
@@ -323,15 +323,15 @@ int    b_true __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, arg
 /*
  * false  command
  */
-int    b_false __PARAM__((int argc,register char *argv[], __V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[]; __V_ *extra;){
+int    b_false __PARAM__((int argc,char *argv[], __V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[]; __V_ *extra;){
 	NOT_USED(argc);
 	NOT_USED(argv[0]);
 	NOT_USED(extra);
 	return(1);
 }
 
-int    b_shift __PARAM__((register int n, register char *argv[], __V_ *extra), (n, argv, extra)) __OTORP__(register int n; register char *argv[]; __V_ *extra;){
-	register char *arg;
+int    b_shift __PARAM__((int n, char *argv[], __V_ *extra), (n, argv, extra)) __OTORP__(int n; char *argv[]; __V_ *extra;){
+	char *arg;
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optcflow))) switch(n)
 	{
@@ -356,7 +356,7 @@ int    b_shift __PARAM__((register int n, register char *argv[], __V_ *extra), (
 	return(0);
 }
 
-int    b_wait __PARAM__((register int n,register char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(register int n;register char *argv[];__V_ *extra;){
+int    b_wait __PARAM__((int n,char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(int n;char *argv[];__V_ *extra;){
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optjoblist))) switch(n)
 	{
@@ -375,8 +375,8 @@ int    b_wait __PARAM__((register int n,register char *argv[],__V_ *extra), (n, 
 }
 
 #ifdef JOBS
-int    b_bg_fg __PARAM__((register int n,register char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(register int n;register char *argv[];__V_ *extra;){
-	register int flag = **argv;
+int    b_bg_fg __PARAM__((int n,char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(int n;char *argv[];__V_ *extra;){
+	int flag = **argv;
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optjoblist))) switch(n)
 	{
@@ -403,8 +403,8 @@ int    b_bg_fg __PARAM__((register int n,register char *argv[],__V_ *extra), (n,
 	return(sh.exitval);
 }
 
-int    b_jobs __PARAM__((register int n,char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(register int n;char *argv[];__V_ *extra;){
-	register int flag = 0;
+int    b_jobs __PARAM__((int n,char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(int n;char *argv[];__V_ *extra;){
+	int flag = 0;
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optjobs))) switch(n)
 	{
@@ -442,8 +442,8 @@ int    b_jobs __PARAM__((register int n,char *argv[],__V_ *extra), (n, argv, ext
  * setuniv() calls.
  */
 int	b_universe __PARAM__((int argc, char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc; char *argv[];__V_ *extra;){
-	register char *arg;
-	register int n;
+	char *arg;
+	int n;
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optuniverse))) switch(n)
 	{
@@ -475,10 +475,10 @@ int	b_universe __PARAM__((int argc, char *argv[],__V_ *extra), (argc, argv, extr
 #endif /* cmd_universe */
 
 #ifdef SHOPT_FS_3D
-    int	b_vpath_map __PARAM__((register int argc,char *argv[], __V_ *extra), (argc, argv, extra)) __OTORP__(register int argc;char *argv[]; __V_ *extra;){
-	register int flag, n;
-	register const char *optstr; 
-	register char *vend; 
+    int	b_vpath_map __PARAM__((int argc,char *argv[], __V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[]; __V_ *extra;){
+	int flag, n;
+	const char *optstr;
+	char *vend;
 	NOT_USED(extra);
 	if(argv[0][1]=='p')
 	{

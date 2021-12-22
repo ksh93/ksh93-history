@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -95,9 +95,6 @@
 #include	<sfio.h>
 #include	<error.h>
 #include	<shell.h>
-#ifdef __osf__
-#include	<sys/resource.h>
-#endif
 #include	"builtins.h"
 #include	"ulimit.h"
 
@@ -115,8 +112,8 @@
 #define SOFT	2
 
 int	b_ulimit __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
-	register char *limit;
-	register int flag = 0, mode=0, n;
+	char *limit;
+	int flag = 0, mode=0, n;
 #ifdef _lib_getrlimit
 	struct rlimit rlp;
 #endif /* _lib_getrlimit */

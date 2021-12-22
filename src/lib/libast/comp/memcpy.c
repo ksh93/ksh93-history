@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -112,9 +112,9 @@ memcpy __PARAM__((__V_* s1, __V_* s2, size_t n), (s1, s2, n)) __OTORP__(__V_* s1
 #else
 
 __V_*
-memcpy __PARAM__((__V_* as1, const __V_* as2, register size_t n), (as1, as2, n)) __OTORP__(__V_* as1; const __V_* as2; register size_t n;){
-	register char*		s1 = (char*)as1;
-	register const char*	s2 = (const char*)as2;
+memcpy __PARAM__((__V_* as1, const __V_* as2, size_t n), (as1, as2, n)) __OTORP__(__V_* as1; const __V_* as2; size_t n;){
+	char*		s1 = (char*)as1;
+	const char*	s2 = (const char*)as2;
 
 	while (n-- > 0)
 		*s1++ = *s2++;

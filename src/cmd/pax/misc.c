@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -89,6 +89,11 @@
 #define __VA_START__(p,a)	va_start(p)
 #endif
 #endif
+
+#if defined(__linux__)
+#include <sys/sysmacros.h>
+#endif
+
 #include "pax.h"
 #include "options.h"
 
@@ -99,8 +104,8 @@
  */
 
 int
-getformat __PARAM__((register char* name), (name)) __OTORP__(register char* name;){
-	register int	i;
+getformat __PARAM__((char* name), (name)) __OTORP__(char* name;){
+	int	i;
 
 	strlower(name);
 	for (i = 0; format[i].name; i++)
@@ -114,9 +119,9 @@ getformat __PARAM__((register char* name), (name)) __OTORP__(register char* name
  */
 
 static int
-pathcmp __PARAM__((register const char* s, register const char* t), (s, t)) __OTORP__(register const char* s; register const char* t;){
-	register int	sc;
-	register int	tc;
+pathcmp __PARAM__((const char* s, const char* t), (s, t)) __OTORP__(const char* s; const char* t;){
+	int	sc;
+	int	tc;
 
 	for (;;)
 	{
@@ -149,9 +154,9 @@ ordered __PARAM__((Archive_t* ap, const char* prv, const char* cur), (ap, prv, c
  */
 
 int
-selectfile __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
-	register Archive_t*	bp;
-	register Member_t*	d;
+selectfile __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	Archive_t*	bp;
+	Member_t*	d;
 	int			linked = 0;
 
 	if (f->skip || f->namesize <= 1)
@@ -199,8 +204,8 @@ selectfile __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OT
 		addlink(ap, f);
 	if (state.ordered && ap->delta && ap->delta->format != COMPRESS && (bp = ap->delta->base))
 	{
-		register int	n;
-		register int	m;
+		int	n;
+		int	m;
 
 		for (;;)
 		{
@@ -265,9 +270,9 @@ selectfile __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OT
  */
 
 int
-verify __PARAM__((Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(Archive_t* ap; register File_t* f;){
-	register char*	prompt;
-	register char*	name;
+verify __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	char*	prompt;
+	char*	name;
 
 	NoP(ap);
 	if (state.yesno) switch (state.operation)
@@ -312,8 +317,8 @@ verify __PARAM__((Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(Archive
  */
 
 char*
-map __PARAM__((register char* name), (name)) __OTORP__(register char* name;){
-	register Map_t*	mp;
+map __PARAM__((char* name), (name)) __OTORP__(char* name;){
+	Map_t*	mp;
 	char*		to;
 	char*		from;
 
@@ -346,12 +351,12 @@ typedef struct
  */
 
 static int
-listlookup __PARAM__((__V_* handle, register const char* name, const char* arg, int cc, char** ps, long* pn), (handle, name, arg, cc, ps, pn)) __OTORP__(__V_* handle; register const char* name; const char* arg; int cc; char** ps; long* pn;){
+listlookup __PARAM__((__V_* handle, const char* name, const char* arg, int cc, char** ps, long* pn), (handle, name, arg, cc, ps, pn)) __OTORP__(__V_* handle; const char* name; const char* arg; int cc; char** ps; long* pn;){
 	List_handle_t*		gp = (List_handle_t*)handle;
-	register File_t*	f = gp->file;
-	register struct stat*	st = f->st;
-	register char*		s = 0;
-	register long		n = 0;
+	File_t*	f = gp->file;
+	struct stat*	st = f->st;
+	char*		s = 0;
+	long		n = 0;
 	Option_t*		op;
 
 	static Sfio_t*		mp;
@@ -572,7 +577,7 @@ listprintf __PARAM__((Sfio_t* sp, Archive_t* ap, File_t* f, const char* format),
  */
 
 void
-listentry __PARAM__((register File_t* f), (f)) __OTORP__(register File_t* f;){
+listentry __PARAM__((File_t* f), (f)) __OTORP__(File_t* f;){
 	if (!f->extended && !f->skip && (state.drop || state.list || state.verbose))
 	{
 		if (state.drop)
@@ -598,7 +603,7 @@ listentry __PARAM__((register File_t* f), (f)) __OTORP__(register File_t* f;){
 
 char**
 initmatch __PARAM__((char** p), (p)) __OTORP__(char** p;){
-	register char**	a;
+	char**	a;
 
 	a = p;
 	while (*a)
@@ -611,9 +616,9 @@ initmatch __PARAM__((char** p), (p)) __OTORP__(char** p;){
  */
 
 int
-match __PARAM__((register char* s), (s)) __OTORP__(register char* s;){
-	register char**	p;
-	register char*	t;
+match __PARAM__((char* s), (s)) __OTORP__(char* s;){
+	char**	p;
+	char*	t;
 	int		n;
 
 	if (!(p = state.patterns)) return(state.matchsense);
@@ -645,7 +650,7 @@ match __PARAM__((register char* s), (s)) __OTORP__(register char* s;){
  */
 
 int
-dirprefix __PARAM__((register char* p, register char* s), (p, s)) __OTORP__(register char* p; register char* s;){
+dirprefix __PARAM__((char* p, char* s), (p, s)) __OTORP__(char* p; char* s;){
 	if (*p == '.' && !*(p + 1) && *s != '/' && (*s != '.' || *(s + 1) != '.' || *(s + 2) && *(s + 2) != '/'))
 		return(1);
 	if (*p == '/' && !*(p + 1))
@@ -662,8 +667,8 @@ dirprefix __PARAM__((register char* p, register char* s), (p, s)) __OTORP__(regi
 
 int
 portable __PARAM__((const char* s), (s)) __OTORP__(const char* s;){
-	register unsigned char*	u = (unsigned char*)s;
-	register int		c;
+	unsigned char*	u = (unsigned char*)s;
+	int		c;
 
 	while (c = *s++)
 		if (c > 0177)

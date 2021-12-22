@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -112,7 +112,7 @@ typedef struct				/* expression handle		*/
  */
 
 static long
-seterror __PARAM__((register Expr_t* ex, char* msg), (ex, msg)) __OTORP__(register Expr_t* ex; char* msg;){
+seterror __PARAM__((Expr_t* ex, char* msg), (ex, msg)) __OTORP__(Expr_t* ex; char* msg;){
 	if (!ex->errmsg) ex->errmsg = msg;
 	ex->errchr = ex->nextchr;
 	ex->nextchr = "";
@@ -124,10 +124,10 @@ seterror __PARAM__((register Expr_t* ex, char* msg), (ex, msg)) __OTORP__(regist
  */
 
 static long
-expr __PARAM__((register Expr_t* ex, register int precedence), (ex, precedence)) __OTORP__(register Expr_t* ex; register int precedence;){
-	register int	c;
-	register long	n;
-	register long	x;
+expr __PARAM__((Expr_t* ex, int precedence), (ex, precedence)) __OTORP__(Expr_t* ex; int precedence;){
+	int	c;
+	long	n;
+	long	x;
 	char*		pos;
 	int		operand = 1;
 

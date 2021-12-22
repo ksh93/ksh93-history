@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -124,7 +124,7 @@ extern __MANGLE__ void		_exit __PROTO__((int));
 
 int
 atexit __PARAM__((void (*func)(void)), (func)) __OTORP__(void (*func)();){
-	register struct list*	p;
+	struct list*	p;
 
 	if (!(p = newof(0, struct list, 1, 0))) return(-1);
 	p->func = func;
@@ -135,7 +135,7 @@ atexit __PARAM__((void (*func)(void)), (func)) __OTORP__(void (*func)();){
 
 void
 _ast_atexit __PARAM__((void), ()){
-	register struct list*	p;
+	struct list*	p;
 
 	while (p = funclist)
 	{

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,7 +98,7 @@
 int
 pathcheck __PARAM__((const char* package, const char* tool, Pathcheck_t* pc), (package, tool, pc)) __OTORP__(const char* package; const char* tool; Pathcheck_t* pc;){
 #ifdef PARANOID
-	register char*	s;
+	char*	s;
 	struct stat	st;
 
 	if (strmatch(tool, PARANOID) && environ && (s = *environ) && *s++ == '_' && *s++ == '=' && !stat(s, &st))

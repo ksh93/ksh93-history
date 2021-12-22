@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -94,14 +94,14 @@ static const char id[] = "\n@(#)head (AT&T Bell Laboratories) 04/01/92\0\n";
 #include <cmdlib.h>
 
 int
-b_head __PARAM__((int argc, register  char *argv[]), (argc, argv)) __OTORP__(int argc; register  char *argv[];){
+b_head __PARAM__((int argc,  char *argv[]), (argc, argv)) __OTORP__(int argc;  char *argv[];){
 	static char header_fmt[] = "\n==> %s <==\n";
-	register Sfio_t	*fp;
-	register char		*cp;
-	register long		number = 10;
-	register off_t		skip = 0;
-	register int		n;
-	register int		delim = '\n';
+	Sfio_t	*fp;
+	char		*cp;
+	long		number = 10;
+	off_t		skip = 0;
+	int		n;
+	int		delim = '\n';
 	char			*format = header_fmt+1;
 
 	NoP(id[0]);

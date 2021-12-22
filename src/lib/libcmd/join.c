@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -128,7 +128,7 @@ typedef struct
 #define S_SPACE	2
 #define S_NL	3
 
-static void join_free __PARAM__((register Join_t *jp), (jp)) __OTORP__(register Join_t *jp;){
+static void join_free __PARAM__((Join_t *jp), (jp)) __OTORP__(Join_t *jp;){
 	if(jp->outlist)
 		free(jp->outlist);
 	free(jp->file[0].fieldlist);
@@ -136,9 +136,9 @@ static void join_free __PARAM__((register Join_t *jp), (jp)) __OTORP__(register 
 }
 
 static int getolist __PARAM__((Join_t* jp, const char *first, char** arglist), (jp, first, arglist)) __OTORP__(Join_t* jp; const char *first; char** arglist;){
-	register const char *cp = first;
+	const char *cp = first;
 	char **argv = arglist;
-	register int c;
+	int c;
 	int *outptr, *outmax;
 	int nfield = NFIELD;
 	char *str;
@@ -213,11 +213,11 @@ static int getolist __PARAM__((Join_t* jp, const char *first, char** arglist), (
  * reads in a record from file <index> and splits into fields
 */
 static char *getrec __PARAM__((Join_t* jp, int index), (jp, index)) __OTORP__(Join_t* jp; int index;){
-	register unsigned char *state = jp->state;
-	register struct jfile *fp = &jp->file[index];
-	register char *cp, **ptr = fp->fieldlist;
-	register int n=0;
-	register char **ptrmax = ptr + fp->maxfields;
+	unsigned char *state = jp->state;
+	struct jfile *fp = &jp->file[index];
+	char *cp, **ptr = fp->fieldlist;
+	int n=0;
+	char **ptrmax = ptr + fp->maxfields;
 	fp->spaces = 0;
 	if(!(cp = sfgetr(fp->iop, '\n', 0)))
 		return(0);
@@ -268,11 +268,11 @@ static char *getrec __PARAM__((Join_t* jp, int index), (jp, index)) __OTORP__(Jo
 /*
  * print field <n> from file <index>
  */
-static int outfield __PARAM__((Join_t* jp, int index, register int n, int last), (jp, index, n, last)) __OTORP__(Join_t* jp; int index; register int n; int last;){
-	register struct jfile *fp = &jp->file[index];
-	register char *cp, *cpmax;
-	register int size;
-	register Sfio_t *iop = jp->outfile;
+static int outfield __PARAM__((Join_t* jp, int index, int n, int last), (jp, index, n, last)) __OTORP__(Join_t* jp; int index; int n; int last;){
+	struct jfile *fp = &jp->file[index];
+	char *cp, *cpmax;
+	int size;
+	Sfio_t *iop = jp->outfile;
 	{
 		if(n < fp->nfields)
 		{
@@ -314,9 +314,9 @@ static int outfield __PARAM__((Join_t* jp, int index, register int n, int last),
 	return(0);
 }
 
-static int joinout __PARAM__((register Join_t *jp, int mode), (jp, mode)) __OTORP__(register Join_t *jp; int mode;){
-	register struct jfile *fp;
-	register int i,j,n;
+static int joinout __PARAM__((Join_t *jp, int mode), (jp, mode)) __OTORP__(Join_t *jp; int mode;){
+	struct jfile *fp;
+	int i,j,n;
 	int	last,*out;
 	if(out= jp->outlist)
 	{
@@ -376,7 +376,7 @@ static int joinout __PARAM__((register Join_t *jp, int mode), (jp, mode)) __OTOR
 }
 
 static Join_t *join_init __PARAM__((void), ()){
-	register Join_t *jp;
+	Join_t *jp;
 	static Join_t Join;
 	jp = &Join;
 	memzero(jp->state, sizeof(jp->state));
@@ -392,8 +392,8 @@ static Join_t *join_init __PARAM__((void), ()){
 }
 
 static int join __PARAM__((Join_t *jp), (jp)) __OTORP__(Join_t *jp;){
-	register char *cp1, *cp2;
-	register int n1, n2, n, comp;
+	char *cp1, *cp2;
+	int n1, n2, n, comp;
 	off_t offset = -1;
 	int ndup=0;
 	cp1 = getrec(jp,0);
@@ -484,9 +484,9 @@ static int join __PARAM__((Join_t *jp), (jp)) __OTORP__(Join_t *jp;){
 
 int
 b_join __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
-	register int n;
-	register char *cp;
-	register Join_t *jp = join_init();
+	int n;
+	char *cp;
+	Join_t *jp = join_init();
 
 	NoP(id[0]);
 	cmdinit(argv);

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -96,7 +96,7 @@
  */
 
 char*
-strcopy __PARAM__((register char* s, register const char* t), (s, t)) __OTORP__(register char* s; register const char* t;){
+strcopy __PARAM__((char* s, const char* t), (s, t)) __OTORP__(char* s; const char* t;){
 	if (!t) return(s);
 	while (*s++ = *t++);
 	return(--s);

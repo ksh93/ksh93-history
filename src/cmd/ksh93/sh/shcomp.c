@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -101,7 +101,7 @@
 static const char id[] = "\n@(#)shcomp (AT&T Bell Laboratories) 12/28/93\0\n";
 static const char header[6] = { CNTL('k'),CNTL('s'),CNTL('h'),0,VERSION,0 };
 
-main __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
+int main __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
 	Sfio_t *in, *out;
 	union anynode *t;
 	char *cp;

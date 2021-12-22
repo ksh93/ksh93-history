@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -96,9 +96,9 @@
  */
 
 int
-hashwalk __PARAM__((Hash_table_t* tab, int flags, register(*walker)(const char*, char*, __V_*), __V_* handle), (tab, flags, walker, handle)) __OTORP__(Hash_table_t* tab; int flags; register(*walker)(); __V_* handle;){
-	register Hash_bucket_t*	b;
-	register int		v;
+hashwalk __PARAM__((Hash_table_t* tab, int flags, int register(*walker)(const char*, char*, __V_*), __V_* handle), (tab, flags, walker, handle)) __OTORP__(Hash_table_t* tab; int flags; int register(*walker)(); __V_* handle;){
+	Hash_bucket_t*	b;
+	int		v;
 	Hash_position_t*	pos;
 
 	if (!(pos = hashscan(tab, flags))) return(-1);

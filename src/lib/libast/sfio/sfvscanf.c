@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -135,7 +135,7 @@ int*	rs;
 }
 
 #if __STD_C
-sfvscanf(Sfio_t* f, reg const char* form, va_list args)
+int sfvscanf(Sfio_t* f, reg const char* form, va_list args)
 #else
 sfvscanf(f,form,args)
 Sfio_t		*f;		/* file to be scanned */

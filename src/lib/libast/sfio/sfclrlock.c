@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -51,7 +51,7 @@
 **	Written by Kiem-Phong Vo (07/20/90).
 */
 #if __STD_C
-sfclrlock(reg Sfio_t* f)
+int sfclrlock(reg Sfio_t* f)
 #else
 sfclrlock(f)
 reg Sfio_t	*f;
@@ -65,7 +65,7 @@ reg Sfio_t	*f;
 	f->flags &= ~(SF_ERROR|SF_EOF);
 
 	if(!(f->mode&(SF_LOCK|SF_PEEK)) )
-		return (f->flags&SF_FLAGS);
+		return (f->flags&SFIO_FLAGS);
 
 	/* clear peek locks */
 	f->mode &= ~SF_PEEK;
@@ -77,5 +77,5 @@ reg Sfio_t	*f;
 
 	f->mode &= (SF_RDWR|SF_INIT|SF_POOL|SF_PUSH|SF_SYNCED|SF_STDIO);
 
-	return _sfmode(f,0,0) < 0 ? 0 : (f->flags&SF_FLAGS);
+	return _sfmode(f,0,0) < 0 ? 0 : (f->flags&SFIO_FLAGS);
 }

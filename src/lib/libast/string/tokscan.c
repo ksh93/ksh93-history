@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -88,6 +88,8 @@
 #else
 #define __VA_START__(p,a)	va_start(p)
 #endif
+#define va_listval(p)		(*(p))
+#define va_listarg		va_list*
 #endif
 #include <ast.h>
 
@@ -98,9 +100,9 @@ static char	empty[1];
  */
 
 static char*
-lextok __PARAM__((register char* s, register int c, char** p, int* n), (s, c, p, n)) __OTORP__(register char* s; register int c; char** p; int* n;){
-	register char*	t;
-	register int	q;
+lextok __PARAM__((char* s, int c, char** p, int* n), (s, c, p, n)) __OTORP__(char* s; int c; char** p; int* n;){
+	char*	t;
+	int	q;
 	char*		b;
 	char*		u;
 
@@ -195,10 +197,10 @@ lextok __PARAM__((register char* s, register int c, char** p, int* n), (s, c, p,
  */
 
 int
-tokscan __PARAM__((register char* s, char** nxt, const char* fmt, ...), (va_alist)) __OTORP__(va_dcl)
-{ __OTORP__(register char* s; char** nxt; const char* fmt; )
-	register int	c;
-	register char*	f;
+tokscan __PARAM__((char* s, char** nxt, const char* fmt, ...), (va_alist)) __OTORP__(va_dcl)
+{ __OTORP__(char* s; char** nxt; const char* fmt; )
+	int	c;
+	char*	f;
 	int		num = 0;
 	char*		skip = 0;
 	int		q;
@@ -212,7 +214,6 @@ tokscan __PARAM__((register char* s, char** nxt, const char* fmt, ...), (va_alis
 	char**		p_string;
 	char*		prv_f = 0;
 	va_list		prv_ap;
-	va_list*	pap;
 
 	__VA_START__(ap, fmt); __OTORP__(s = va_arg(ap, char* );nxt = va_arg(ap, char** );fmt = va_arg(ap, const char* );)
 	if (!*s || *s == '\n')
@@ -227,11 +228,7 @@ tokscan __PARAM__((register char* s, char** nxt, const char* fmt, ...), (va_alis
 		if (f = prv_f)
 		{
 			prv_f = 0;
-#ifdef __ppc
 			__va_copy( ap, prv_ap );
-#else
-			ap = prv_ap;
-#endif
 			continue;
 		}
 		goto done;
@@ -260,15 +257,8 @@ tokscan __PARAM__((register char* s, char** nxt, const char* fmt, ...), (va_alis
 		case ':':
 			prv_f = f;
 			f = va_arg(ap, char*);
-#ifdef __ppc
 			__va_copy( prv_ap, ap );
-			pap = va_arg(ap, va_list*)) );
-			__va_copy( ap, pap );
-#else
-			prv_ap = ap;
-			pap = va_arg(ap, va_list*);
-			memcpy(&ap, pap, sizeof(ap));
-#endif
+			__va_copy(ap, va_listval(va_arg(ap, va_listarg)));
 			continue;
 		case 'c':
 			p_char = va_arg(ap, char*);

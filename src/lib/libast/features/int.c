@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -121,11 +121,11 @@ static struct
 
 static int	size[] = { 1, 2, 4, 8 };
 
-main()
+int main()
 {
-	register int	t;
-	register int	s;
-	register int	m = 1;
+	int	t;
+	int	s;
+	int	m = 1;
 
 	for (s = 0; s < elementsof(size); s++)
 	{

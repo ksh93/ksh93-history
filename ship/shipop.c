@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -128,7 +128,7 @@ error __PARAM__((int level, const char* file, const char* msg), (level, file, ms
  */
 
 static int
-shipnewer __PARAM__((register char** argv), (argv)) __OTORP__(register char** argv;){
+shipnewer __PARAM__((char** argv), (argv)) __OTORP__(char** argv;){
 	unsigned long	ref;
 	struct stat	st;
 
@@ -145,9 +145,9 @@ static char		buf[4096];
 
 static unsigned long
 sealfile __PARAM__((char* file, int fd, unsigned long s), (file, fd, s)) __OTORP__(char* file; int fd; unsigned long s;){
-	register unsigned char*	b;
-	register unsigned char*	e;
-	register int		n;
+	unsigned char*	b;
+	unsigned char*	e;
+	int		n;
 
 	HASHPART(s, 0);
 	while ((n = read(fd, buf, sizeof(buf))) > 0)
@@ -165,9 +165,9 @@ sealfile __PARAM__((char* file, int fd, unsigned long s), (file, fd, s)) __OTORP
  */
 
 static int
-shipseal __PARAM__((register char** argv), (argv)) __OTORP__(register char** argv;){
-	register char*	f;
-	register int	fd;
+shipseal __PARAM__((char** argv), (argv)) __OTORP__(char** argv;){
+	char*	f;
+	int	fd;
 	unsigned long	s;
 
 	s = 0;
@@ -191,9 +191,9 @@ shipseal __PARAM__((register char** argv), (argv)) __OTORP__(register char** arg
  */
 
 static int
-shipstate __PARAM__((register char** argv), (argv)) __OTORP__(register char** argv;){
-	register char*	s;
-	register int	c;
+shipstate __PARAM__((char** argv), (argv)) __OTORP__(char** argv;){
+	char*	s;
+	int	c;
 	long		ref;
 	struct stat	st;
 
@@ -224,7 +224,7 @@ shipstate __PARAM__((register char** argv), (argv)) __OTORP__(register char** ar
  */
 
 static int
-shiptime __PARAM__((register char** argv), (argv)) __OTORP__(register char** argv;){
+shiptime __PARAM__((char** argv), (argv)) __OTORP__(char** argv;){
 	struct stat	st;
 	time_t		date;
 
@@ -259,10 +259,9 @@ static struct optab ops[] =
 	"xap",		shipxap,
 };
 
-int
-main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
-	register char*	s;
-	register int	i;
+int main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
+	char*	s;
+	int	i;
 
 	if (!(s = *++argv))
 		exit(0);

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -114,10 +114,10 @@ putenv __PARAM__((const char* akey), (akey)) __OTORP__(const char* akey;)
 	static char**	last;		/* last free slot (0)		*/
 
 	char*		key = (char*)akey;
-	register char**	v = environ;
-	register char**	p = envv;
-	register char*	s;
-	register char*	t;
+	char**	v = environ;
+	char**	p = envv;
+	char*	s;
+	char*	t;
 	int		n;
 
 	if (p && !v)

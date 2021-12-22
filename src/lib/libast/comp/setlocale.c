@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -103,10 +103,10 @@ typedef struct
 } Locale_t;
 
 char*
-_ast_setlocale __PARAM__((register int category, const char* locale), (category, locale)) __OTORP__(register int category; const char* locale;){
+_ast_setlocale __PARAM__((int category, const char* locale), (category, locale)) __OTORP__(int category; const char* locale;){
 #if _hdr_locale && _lib_setlocale
-	register Locale_t*	lc;
-	register char*		p;
+	Locale_t*	lc;
+	char*		p;
 
 	static Locale_t		def[] =
 	{

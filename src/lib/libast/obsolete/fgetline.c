@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -116,12 +116,12 @@
  */
 
 char*
-fgetline __PARAM__((register FILE* fp, int op), (fp, op)) __OTORP__(register FILE* fp; int op;)
+fgetline __PARAM__((FILE* fp, int op), (fp, op)) __OTORP__(FILE* fp; int op;)
 #line 29
 {
-	register int	c;
-	register char*	s;
-	register char*	end;
+	int	c;
+	char*	s;
+	char*	end;
 
 	static char*	buf;
 	static int	siz;

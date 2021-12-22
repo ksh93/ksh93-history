@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 */
 
 #if __STD_C
-sfset(reg Sfio_t* f, reg int flags, reg int set)
+int sfset(reg Sfio_t* f, reg int flags, reg int set)
 #else
 sfset(f,flags,set)
 reg Sfio_t	*f;
@@ -61,7 +61,7 @@ reg int		set;
 	reg int	oflags;
 
 	if(flags == 0)
-		return (f->flags&SF_FLAGS);
+		return (f->flags&SFIO_FLAGS);
 
 	if((oflags = (f->mode&SF_RDWR)) != f->mode && _sfmode(f,oflags,0) < 0)
 		return 0;
@@ -97,5 +97,5 @@ reg int		set;
 		f->flags &= ~SF_PUBLIC;
 
 	SFOPEN(f,0);
-	return (oflags&SF_FLAGS);
+	return (oflags&SFIO_FLAGS);
 }

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,8 +98,8 @@
 
 int_max
 swapget __PARAM__((int op, const __V_* b, int n), (op, b, n)) __OTORP__(int op; const __V_* b; int n;){
-	register unsigned char*	p;
-	register unsigned char*	d;
+	unsigned char*	p;
+	unsigned char*	d;
 	int_max			v;
 	unsigned char		tmp[sizeof(int_max)];
 

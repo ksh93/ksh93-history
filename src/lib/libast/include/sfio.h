@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -44,6 +44,12 @@
 ***************************************************************/
 #ifndef _SFIO_H
 #define _SFIO_H	1
+
+#if defined(__linux__)
+/* HACK On linux prevent inclusion of __FILE.h that contains a conflicting
+   definition of __FILE that we define later */
+# define ____FILE_defined 1
+#endif /* linux */
 
 /*	Public header file for the safe fast io package.
 **
@@ -148,12 +154,22 @@
 #define _STDIO_INCLUDED	1
 #endif
 
+#if !defined(CSRG_BASED) && !defined(__linux__)
 #ifndef FILE
 #define FILE	Sfio_t
 #endif
+#endif
 #endif /* __cplusplus */
 
+#if defined(sun)
+#define _FILEDEFED	/**/
+#endif
+
 typedef struct _sfio_	Sfile_t, Sfio_t, SFIO;
+#if defined(__linux__)
+typedef struct _sfio_	FILE;
+typedef struct _sfio_	__FILE;
+#endif
 typedef struct _sfdc_	Sfdisc_t;
 typedef int		(*Sfread_f)_ARG_((Sfio_t*, Void_t*, int, Sfdisc_t*));
 typedef int		(*Sfwrite_f)_ARG_((Sfio_t*, const Void_t*, int, Sfdisc_t*));
@@ -194,12 +210,10 @@ struct _sfio_
 #ifndef EOF
 #define EOF	(-1)
 #endif
-#ifndef __osf__
 #ifndef SEEK_SET
 #define SEEK_SET	0
 #define SEEK_CUR	1
 #define SEEK_END	2
-#endif
 #endif
 
 /* bits for various types of files */
@@ -217,7 +231,7 @@ struct _sfio_
 #define SF_IOCHECK	0002000	/* call exceptf before doing IO		*/
 #define SF_PUBLIC	0004000	/* SF_SHARE and follow physical seek	*/
 
-#define SF_FLAGS	0005177	/* PUBLIC FLAGS PASSABLE TO SFNEW()	*/
+#define SFIO_FLAGS	0005177	/* PUBLIC FLAGS PASSABLE TO SFNEW()	*/
 #define SF_SETS		0007163	/* flags passable to sfset()		*/
 
 /* exception events: SF_NEW(0), SF_READ(1), SF_WRITE(2) and the below 	*/

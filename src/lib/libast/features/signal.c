@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -110,9 +110,6 @@ static struct _m_ map[] =
 #endif
 #ifdef SIGALRM
 "Alarm call",			"ALRM",		SIGALRM,
-#endif
-#ifdef SIGAPOLLO
-"Apollo",			"APOLLO",	SIGAPOLLO,
 #endif
 #ifdef SIGBUS
 "Bus error",			"BUS",		SIGBUS,
@@ -280,11 +277,11 @@ static int		index[64];
 
 extern __MANGLE__ int		printf __PROTO__((const char*, ...));
 
-main()
+int main()
 {
-	register int	i;
-	register int	j;
-	register int	k;
+	int	i;
+	int	j;
+	int	k;
 	int		n;
 
 	k = 0;

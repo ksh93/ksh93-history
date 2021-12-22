@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -114,7 +114,7 @@ int	flags;	/* type of file stream */
 
 	/* stream type */
 	f->mode = (flags&SF_READ) ? SF_READ : SF_WRITE;
-	f->flags = (flags&SF_FLAGS) | ((flags&SF_RDWR) == SF_RDWR ? SF_BOTH : 0);
+	f->flags = (flags&SFIO_FLAGS) | ((flags&SF_RDWR) == SF_RDWR ? SF_BOTH : 0);
 	f->flags |= (sflags&(SF_MALLOC|SF_STATIC));
 	f->file = file;
 	f->here = f->extent = 0L;

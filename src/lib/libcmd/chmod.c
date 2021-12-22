@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -113,12 +113,12 @@ extern __MANGLE__ int	lchmod __PROTO__((const char*, mode_t));
 
 int
 b_chmod __PARAM__((int argc, char* argv[]), (argc, argv)) __OTORP__(int argc; char* argv[];){
-	register int	mode;
-	register int	force = 0;
-	register int	recurse = 0;
-	register int	resolve;
-	register char*	amode;
-	register char*	file;
+	int	mode;
+	int	force = 0;
+	int	recurse = 0;
+	int	resolve;
+	char*	amode;
+	char*	file;
 	char*		last;
 	struct stat	st;
 	int		(*chmodf) __PROTO__((const char*, mode_t));

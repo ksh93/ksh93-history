@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -119,6 +119,12 @@ __STDPP__directive pragma pp:hide endmntent getmntent
 #define getmntent	______getmntent
 #endif
 
+/* on linux mntent.h can include FILE without stdio.h which clashes with sfio_t */
+#if defined(__linux__)
+ #ifndef __FILE_defined
+  #define __FILE_defined 1
+ #endif
+#endif
 #include <mntent.h>
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -155,10 +161,10 @@ struct	mntent
 
 static struct mntent*
 getmntent __PARAM__((FILE* mp), (mp)) __OTORP__(FILE* mp;){
-	register int		c;
-	register char*		s;
-	register char*		m;
-	register int		q;
+	int		c;
+	char*		s;
+	char*		m;
+	int		q;
 	static struct mntent	e;
 
 	q = 0;
@@ -218,9 +224,9 @@ endmntent __PARAM__((FILE* mp), (mp)) __OTORP__(FILE* mp;){
 
 char*
 fmtfs __PARAM__((struct stat* st), (st)) __OTORP__(struct stat* st;){
-	register FILE*		mp;
-	register struct mntent*	mnt;
-	register char*		s;
+	FILE*		mp;
+	struct mntent*	mnt;
+	char*		s;
 	struct stat		rt;
 
 	static Hash_table_t*	tab;

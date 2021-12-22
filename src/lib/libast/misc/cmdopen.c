@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -149,7 +149,7 @@ static const Namval_t		options[] =
  */
 
 static int
-setopt __PARAM__((register __V_* a, register const __V_* p, register int n, const char* v), (a, p, n, v)) __OTORP__(register __V_* a; register const __V_* p; register int n; const char* v;)
+setopt __PARAM__((__V_* a, const __V_* p, int n, const char* v), (a, p, n, v)) __OTORP__(__V_* a; const __V_* p; int n; const char* v;)
 #line 66
 {
 	NoP(v);
@@ -207,9 +207,9 @@ int
 cmdopen __PARAM__((const char* cmd, char** argv, char** envv, int* redv, const char* mode), (cmd, argv, envv, redv, mode)) __OTORP__(const char* cmd; char** argv; char** envv; int* redv; const char* mode;)
 #line 119
 {
-	register struct cmdinfo*	proc;
-	register int			cmdfd = -1;
-	register char**			p;
+	struct cmdinfo*	proc;
+	int			cmdfd = -1;
+	char**			p;
 	char**				v;
 	int*				r;
 	int				flags = 0;

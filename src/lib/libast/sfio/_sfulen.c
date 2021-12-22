@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -45,7 +45,7 @@
 #include	"sfhdr.h"
 
 #if __STD_C
-static __sfulen(reg ulong v)
+static int __sfulen(reg ulong v)
 #else
 static __sfulen(v)
 reg ulong	v;
@@ -57,7 +57,7 @@ reg ulong	v;
 #undef sfulen
 
 #if __STD_C
-sfulen(reg ulong v)
+int sfulen(reg ulong v)
 #else
 sfulen(v)
 reg ulong	v;

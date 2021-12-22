@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,12 +98,12 @@
 #undef	modex
 
 int
-modex __PARAM__((register int i), (i)) __OTORP__(register int i;){
+modex __PARAM__((int i), (i)) __OTORP__(int i;){
 #if _S_IDPERM && _S_IDTYPE
 	return(i);
 #else
-	register int	x;
-	register int	c;
+	int	x;
+	int	c;
 
 	x = 0;
 #if _S_IDPERM

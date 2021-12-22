@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -97,11 +97,11 @@
  */
 
 void
-hashsize __PARAM__((register Hash_table_t* tab, int size), (tab, size)) __OTORP__(register Hash_table_t* tab; int size;){
-	register Hash_bucket_t**	old_s;
-	register Hash_bucket_t**	new_s;
-	register Hash_bucket_t*		old_b;
-	register Hash_bucket_t*		new_b;
+hashsize __PARAM__((Hash_table_t* tab, int size), (tab, size)) __OTORP__(Hash_table_t* tab; int size;){
+	Hash_bucket_t**	old_s;
+	Hash_bucket_t**	new_s;
+	Hash_bucket_t*		old_b;
+	Hash_bucket_t*		new_b;
 	Hash_bucket_t**			old_sx;
 	unsigned int			index;
 	HASHregion			region;

@@ -24,7 +24,7 @@ After each shipment:
 	ship/shipin
 
 `ship/shipin -n' shows actions but does not unbundle or build.
-`ship/shipin -s <dir>' unbundles from <dir> rather than /usr/spool/uucppublic.
+`ship/shipin -s <dir>' unbundles from <dir> rather than /var/spool/uucppublic.
 `ship/shipin -u' unbundles the shipment but does not build.
 `ship/shipin -i' copies from spool area but does not unbundle or build.
 `ship/shipin -E' rebuild components that failed last time (use after fixes).
@@ -71,7 +71,7 @@ Each shipment is identified by a two part version number [R]YYMMDD
 	R	release -- if specified then it must match for compatibility
 	YYMMDD	shipment year, month and day number
 
-/usr/spool/uucppublic/<installer-login>/<shipper-system> directory hierarchy:
+/var/spool/uucppublic/<installer-login>/<shipper-system> directory hierarchy:
 
 	<shipper-login>.<YYMMDD>	shipment control directory
 	<shipper-login>.<YYMMDD>/manifest list of all files in shipment

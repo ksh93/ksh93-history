@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -212,11 +212,6 @@ const char e_alphanum[]		= "[_[:alpha:]]*([_[:alnum:]])";
     const char e_vpixdir[]	= "/usr/bin";
 #endif /* SHOPT_VPIX */
 const char e_devfdNN[]		= "/dev/fd/+([0-9])";
-#ifdef apollo
-    const char e_rootnode[]	= "Bad root node specification";
-    const char e_nover[]	= "Version not defined";
-    const char e_badver[]	= "Unrecognized version";
-#endif /* apollo */
 #ifdef SHOPT_FS_3D
     const char e_cantget[]	= "cannot get %s";
     const char e_cantset[]	= "cannot set %s";

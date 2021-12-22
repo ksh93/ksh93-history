@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -115,7 +115,7 @@
 
 extern __MANGLE__ int		printf __PROTO__((const char*, ...));
 
-main()
+int main()
 {
 	int		f_local = 0;
 	int		f_lck = 0;
@@ -275,7 +275,7 @@ main()
 #ifndef	F_SETLKW
 	printf("#define F_SETLKW	%d\n", ++f_local);
 #endif
-#if	NEED_LCK && !defined(__osf__)
+#if	NEED_LCK
 	printf("\n");
 #ifndef	F_RDLCK
 	printf("#define F_RDLCK		%d\n", f_lck++);
@@ -290,7 +290,7 @@ main()
 	printf("\n");
 	if (f_lck == 3)
 	{
-#if !defined(_AIX) && !defined(__osf__)
+#if !defined(_AIX)
 		printf("struct flock\n");
 		printf("{\n");
 		printf("	short	l_type;\n");

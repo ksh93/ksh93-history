@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,8 +92,8 @@
 #include <ast.h>
 
 char*
-fmtelapsed __PARAM__((register unsigned long t, register int n), (t, n)) __OTORP__(register unsigned long t; register int n;){
-	register unsigned long	s;
+fmtelapsed __PARAM__((unsigned long t, int n), (t, n)) __OTORP__(unsigned long t; int n;){
+	unsigned long	s;
 
 	static int		amt[] = { 1, 60, 60, 24, 7, 4, 12, 20 };
 	static char		chr[] = "smhdwMYS";

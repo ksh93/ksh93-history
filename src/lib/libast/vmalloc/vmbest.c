@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -324,7 +324,7 @@ Block_t*	wanted;
 
 /* Reclaim all delayed free blocks into the free tree */
 #if __STD_C
-static bestreclaim(reg Vmdata_t* vd, Block_t* wanted, int c)
+static int bestreclaim(reg Vmdata_t* vd, Block_t* wanted, int c)
 #else
 static bestreclaim(vd, wanted, c)
 reg Vmdata_t*	vd;
@@ -686,7 +686,7 @@ done:
 }
 
 #if __STD_C
-static bestfree(Vmalloc_t* vm, Void_t* data )
+static int bestfree(Vmalloc_t* vm, Void_t* data )
 #else
 static bestfree(vm, data )
 Vmalloc_t*	vm;
@@ -923,7 +923,7 @@ done:
 }
 
 #if __STD_C
-static bestcompact(Vmalloc_t* vm)
+static int bestcompact(Vmalloc_t* vm)
 #else
 static bestcompact(vm)
 Vmalloc_t*	vm;

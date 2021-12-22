@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -122,11 +122,11 @@ static char	states[UCHAR_MAX+1];
 
 static int
 vcat __PARAM__((Sfio_t *fdin, Sfio_t *fdout, int flags), (fdin, fdout, flags)) __OTORP__(Sfio_t *fdin; Sfio_t *fdout; int flags;){
-	register unsigned char*	cp;
-	register unsigned char*	cpold;
-	register int		n;
-	register int		line = 1;
-	register unsigned char*	endbuff;
+	unsigned char*	cp;
+	unsigned char*	cpold;
+	int		n;
+	int		line = 1;
+	unsigned char*	endbuff;
 	unsigned char*		inbuff;
 	int			printdefer = (flags&(B_FLAG|N_FLAG));
 	int			lastchar;
@@ -239,10 +239,10 @@ vcat __PARAM__((Sfio_t *fdin, Sfio_t *fdout, int flags), (fdin, fdout, flags)) _
 
 int
 b_cat __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
-	register int		n;
-	register int		flags = 0;
-	register char*		cp;
-	register Sfio_t*	fp;
+	int		n;
+	int		flags = 0;
+	char*		cp;
+	Sfio_t*	fp;
 	int			att;
 
 	NoP(id[0]);

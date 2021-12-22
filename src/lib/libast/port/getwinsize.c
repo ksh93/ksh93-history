@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -136,7 +136,7 @@ __STDPP__directive pragma pp:nohide ioctl sleep
 static int		ttctl __PROTO__((int, int, __V_*));
 
 void
-getwinsize __PARAM__((int fd, register int* rows, register int* cols), (fd, rows, cols)) __OTORP__(int fd; register int* rows; register int* cols;)
+getwinsize __PARAM__((int fd, int* rows, int* cols), (fd, rows, cols)) __OTORP__(int fd; int* rows; int* cols;)
 #line 48
 {
 #ifdef	TIOCGSIZE
@@ -189,10 +189,10 @@ getwinsize __PARAM__((int fd, register int* rows, register int* cols), (fd, rows
  */
 
 static int
-ttctl __PARAM__((register int fd, int op, __V_* tt), (fd, op, tt)) __OTORP__(register int fd; int op; __V_* tt;)
+ttctl __PARAM__((int fd, int op, __V_* tt), (fd, op, tt)) __OTORP__(int fd; int op; __V_* tt;)
 #line 100
 {
-	register int	v;
+	int	v;
 
 	if (fd < 0)
 	{

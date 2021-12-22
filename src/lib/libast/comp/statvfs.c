@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -125,7 +125,7 @@ NoN(statvfs)
 #endif
 
 static void
-us2v __PARAM__((register struct statfs* ufs, register struct stat* st, register struct statvfs* vfs), (ufs, st, vfs)) __OTORP__(register struct statfs* ufs; register struct stat* st; register struct statvfs* vfs;){
+us2v __PARAM__((struct statfs* ufs, struct stat* st, struct statvfs* vfs), (ufs, st, vfs)) __OTORP__(struct statfs* ufs; struct stat* st; struct statvfs* vfs;){
 	memset(vfs, 0, sizeof(*vfs));
 	vfs->f_bsize = vfs->f_frsize = ufs->f_bsize;
 	vfs->f_blocks = ufs->f_blocks;
@@ -170,7 +170,7 @@ statvfs __PARAM__((const char* path, struct statvfs* vfs), (path, vfs)) __OTORP_
 #else
 
 static void
-s2v __PARAM__((register struct stat* st, register struct statvfs* vfs), (st, vfs)) __OTORP__(register struct stat* st; register struct statvfs* vfs;){
+s2v __PARAM__((struct stat* st, struct statvfs* vfs), (st, vfs)) __OTORP__(struct stat* st; struct statvfs* vfs;){
 	memset(vfs, 0, sizeof(*vfs));
 	vfs->f_bsize = vfs->f_frsize =
 #if _mem_st_blksize_stat

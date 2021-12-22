@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -116,10 +116,10 @@ pathgetlink __PARAM__((const char* name, char* buf, int siz), (name, buf, siz)) 
 #ifdef UNIV_MAX
 	if (isspace(*buf))
 	{
-		register char*	s;
-		register char*	t;
-		register char*	u;
-		register char*	v;
+		char*	s;
+		char*	t;
+		char*	u;
+		char*	v;
 		int		match = 0;
 		char		tmp[PATH_MAX];
 

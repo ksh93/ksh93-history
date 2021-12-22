@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 **	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
 */
 #if __STD_C
-vmset(reg Vmalloc_t* vm, int flags, int on)
+int vmset(reg Vmalloc_t* vm, int flags, int on)
 #else
 vmset(vm, flags, on)
 reg Vmalloc_t*	vm;	/* region being worked on		*/

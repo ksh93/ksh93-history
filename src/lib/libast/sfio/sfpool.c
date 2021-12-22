@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -105,7 +105,7 @@ reg int	mode;
 
 /* move a stream to head */
 #if __STD_C
-static _sfphead(Sfpool_t* p, Sfio_t* f, int n)
+static int _sfphead(Sfpool_t* p, Sfio_t* f, int n)
 #else
 static _sfphead(p, f, n)
 Sfpool_t*	p;	/* the pool			*/

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -103,10 +103,10 @@
 extern __MANGLE__ char**	environ;
 
 char*
-pathpath __PARAM__((register char* path, const char* p, const char* a, int mode), (path, p, a, mode)) __OTORP__(register char* path; const char* p; const char* a; int mode;)
+pathpath __PARAM__((char* path, const char* p, const char* a, int mode), (path, p, a, mode)) __OTORP__(char* path; const char* p; const char* a; int mode;)
 #line 20
 {
-	register char*	s;
+	char*	s;
 	char*		x;
 
 	static char*	cmd;

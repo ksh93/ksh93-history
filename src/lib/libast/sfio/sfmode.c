@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -94,7 +94,7 @@ static void _sfcleanup()
 
 /* put into discrete pool */
 #if __STD_C
-_sfsetpool(Sfio_t* f)
+int _sfsetpool(Sfio_t* f)
 #else
 _sfsetpool(f)
 Sfio_t*	f;
@@ -213,7 +213,7 @@ typedef struct _sfp_
 static Sfpopen_t*	_Sfprocess;
 
 #if __STD_C
-_sfpopen(reg Sfio_t* f, int fd, int pid)
+int _sfpopen(reg Sfio_t* f, int fd, int pid)
 #else
 _sfpopen(f, fd, pid)
 reg Sfio_t*	f;
@@ -244,7 +244,7 @@ int		pid;
 }
 
 #if __STD_C
-_sfpclose(reg Sfio_t* f)
+int _sfpclose(reg Sfio_t* f)
 #else
 _sfpclose(f)
 reg Sfio_t*	f;	/* stream to close */
@@ -306,7 +306,7 @@ reg Sfio_t*	f;	/* stream to close */
 }
 
 #if __STD_C
-static _sfpmode(Sfio_t* f, int type)
+static int _sfpmode(Sfio_t* f, int type)
 #else
 static _sfpmode(f,type)
 Sfio_t*	f;
@@ -412,7 +412,7 @@ int	stack;
 }
 
 #if __STD_C
-_sfmode(reg Sfio_t* f, reg int wanted, reg int local)
+int _sfmode(reg Sfio_t* f, reg int wanted, reg int local)
 #else
 _sfmode(f, wanted, local)
 reg Sfio_t*	f;	/* change r/w mode and sync file pointer for this stream */

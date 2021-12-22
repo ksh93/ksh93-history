@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -99,9 +99,9 @@ static const char id_stack[] = "\n@(#)stack (AT&T Bell Laboratories) 05/01/84\0\
  */
 
 STACK
-stackalloc __PARAM__((register int size, __V_* error), (size, error)) __OTORP__(register int size; __V_* error;){
-	register STACK			stack;
-	register struct stackblock	*b;
+stackalloc __PARAM__((int size, __V_* error), (size, error)) __OTORP__(int size; __V_* error;){
+	STACK			stack;
+	struct stackblock	*b;
 
 	if (size <= 0) size = 100;
 	if (!(stack = newof(0, struct stacktable, 1, 0))) return(0);
@@ -131,9 +131,9 @@ stackalloc __PARAM__((register int size, __V_* error), (size, error)) __OTORP__(
  */
 
 void
-stackfree __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK stack;){
-	register struct stackblock*	b;
-	register struct stackblock*	p;
+stackfree __PARAM__((STACK stack), (stack)) __OTORP__(STACK stack;){
+	struct stackblock*	b;
+	struct stackblock*	p;
 
 	b = stack->blocks;
 	while (p = b)
@@ -150,7 +150,7 @@ stackfree __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK st
  */
 
 void
-stackclear __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK stack;){
+stackclear __PARAM__((STACK stack), (stack)) __OTORP__(STACK stack;){
 	stack->position.block = stack->blocks;
 	stack->position.index = -1;
 }
@@ -160,7 +160,7 @@ stackclear __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK s
  */
 
 __V_*
-stackget __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK stack;){
+stackget __PARAM__((STACK stack), (stack)) __OTORP__(STACK stack;){
 	if (stack->position.index < 0) return(stack->error);
 	else return(stack->position.block->stack[stack->position.index]);
 }
@@ -170,8 +170,8 @@ stackget __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK sta
  */
 
 int
-stackpush __PARAM__((register STACK stack, __V_* value), (stack, value)) __OTORP__(register STACK stack; __V_* value;){
-	register struct stackblock	*b;
+stackpush __PARAM__((STACK stack, __V_* value), (stack, value)) __OTORP__(STACK stack; __V_* value;){
+	struct stackblock	*b;
 
 	if (++stack->position.index >= stack->size)
 	{
@@ -199,7 +199,7 @@ stackpush __PARAM__((register STACK stack, __V_* value), (stack, value)) __OTORP
  */
 
 int
-stackpop __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK stack;){
+stackpop __PARAM__((STACK stack), (stack)) __OTORP__(STACK stack;){
 	/*
 	 * return:
 	 *
@@ -224,7 +224,7 @@ stackpop __PARAM__((register STACK stack), (stack)) __OTORP__(register STACK sta
  */
 
 void
-stacktell __PARAM__((register STACK stack, int set, STACKPOS* position), (stack, set, position)) __OTORP__(register STACK stack; int set; STACKPOS* position;){
+stacktell __PARAM__((STACK stack, int set, STACKPOS* position), (stack, set, position)) __OTORP__(STACK stack; int set; STACKPOS* position;){
 	if (set) stack->position = *position;
 	else *position = stack->position;
 }

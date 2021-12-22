@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -326,7 +326,7 @@ Void_t*		addr;
 }
 
 #if __STD_C
-static lastcompact(Vmalloc_t* vm)
+static int lastcompact(Vmalloc_t* vm)
 #else
 static lastcompact(vm)
 Vmalloc_t*	vm;

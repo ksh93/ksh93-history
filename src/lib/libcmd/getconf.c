@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -95,11 +95,11 @@ static const char id[] = "\n@(#)getconf (AT&T Bell Laboratories) 05/09/95\0\n";
 
 int
 b_getconf __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
-	register char*	name;
-	register char*	path;
-	register char*	value;
-	register char*	s;
-	register int	n;
+	char*	name;
+	char*	path;
+	char*	value;
+	char*	s;
+	int	n;
 	int		flags;
 
 	static char	empty[] = "-";

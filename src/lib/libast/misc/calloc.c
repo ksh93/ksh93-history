@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,10 +102,10 @@
 #undef	calloc
 
 __V_*
-calloc __PARAM__((register size_t count, register size_t size), (count, size)) __OTORP__(register size_t count; register size_t size;)
+calloc __PARAM__((size_t count, size_t size), (count, size)) __OTORP__(size_t count; size_t size;)
 #line 15
 {
-	register __V_*	ptr;
+	__V_*	ptr;
 
 	if (ptr = malloc(size *= count))
 		memzero(ptr, size);

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -116,7 +116,7 @@ setuniv __PARAM__((const char* buf), (buf)) __OTORP__(const char* buf;)
 	return(-1);
 #else
 #if defined(ATT_UNIV) || defined(U_GET)
-	register int	n;
+	int	n;
 
 	for (n = 0; n < UNIV_MAX; n++)
 		if (streq(buf, univ_name[n]))

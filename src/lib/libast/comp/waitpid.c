@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -156,9 +156,9 @@ struct zombie
 
 pid_t
 waitpid __PARAM__((pid_t pid, int* status, int flags), (pid, status, flags)) __OTORP__(pid_t pid; int* status; int flags;){
-	register struct zombie*	zp;
-	register struct zombie*	pp;
-	register int		p;
+	struct zombie*	zp;
+	struct zombie*	pp;
+	int		p;
 	int			s;
 #if !_lib_wait2 && !_lib_wait3
 #if !defined(SIGCLD)

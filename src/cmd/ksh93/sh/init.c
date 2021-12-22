@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -107,15 +107,18 @@
 #include	"national.h"
 
 #if _hdr_wchar && _lib_wctype && _lib_iswctype
+/* on linux wchar.h can include FILE without stdio.h which clashes with sfio_t */
+#if defined(__linux__)
+ #ifndef __FILE_defined
+  #define __FILE_defined 1
+ #endif
+#endif
 #   include <wchar.h>
 #   undef  isalpha
 #   define isalpha(x)      iswalpha(x)
 #   undef  isblank
 #   define isblank(x)      iswblank(x)
 #   if !_lib_iswblank
-#if defined(USL)
-#include <wctype.h>
-#endif
 
 	static int
 	iswblank __PARAM__((wint_t wc), (wc)) __OTORP__(wint_t wc;){
@@ -166,7 +169,7 @@ static Namval_t		*ifsnp;
 /*
  * Invalidate all path name bindings
  */
-static void rehash __PARAM__((register Namval_t *np), (np)) __OTORP__(register Namval_t *np;){
+static void rehash __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
 	nv_onattr(np,NV_NOALIAS);
 }
 
@@ -183,8 +186,8 @@ static char *nospace __PARAM__((int unused), (unused)) __OTORP__(int unused;){
 #   include	"edit.h"
     /* Trap for CSWIDTH variable */
     static void put_cswidth __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
-	register char *cp;
-	register char *name = nv_name(np);
+	char *cp;
+	char *name = nv_name(np);
 	if(ed_setwidth(val?val:"") && !(flags&NV_IMPORT))
 		error(ERROR_exit(1),e_format,nv_name(np));
 	nv_putv(np, val, flags, fp);
@@ -192,8 +195,8 @@ static char *nospace __PARAM__((int unused), (unused)) __OTORP__(int unused;){
 #endif /* SHOPT_MULTIBYTE */
 
 /* Trap for VISUAL and EDITOR variables */
-static void put_ed __PARAM__((register Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t* np;const char *val;int flags;Namfun_t *fp;){
-	register const char *cp, *name=nv_name(np);
+static void put_ed __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
+	const char *cp, *name=nv_name(np);
 	if(*name=='E' && nv_getval(nv_scoped(VISINOD)))
 		goto done;
 	sh_offoption(SH_VI|SH_EMACS|SH_GMACS);
@@ -221,7 +224,7 @@ static void put_optindex __PARAM__((Namval_t* np,const char *val,int flags,Namfu
 }
 
 /* Trap for restricted variables PATH, SHELL, ENV */
-static void put_restricted __PARAM__((register Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t* np;const char *val;int flags;Namfun_t *fp;){
+static void put_restricted __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
 		error(ERROR_exit(1),e_restricted,nv_name(np));
 	if(nv_name(np)==nv_name(PATHNOD))			
@@ -231,15 +234,6 @@ static void put_restricted __PARAM__((register Namval_t* np,const char *val,int 
 	}
 	nv_putv(np, val, flags, fp);
 }
-
-#ifdef apollo
-    /* Trap for SYSTYPE variable */
-    static void put_systype __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
-	sh.lastpath = 0;
-	nv_scan(sh.track_tree,rehash,NV_TAGGED,NV_TAGGED);
-	nv_putv(np, val, flags, fp);
-    }
-#endif
 
 #ifdef _hdr_locale
     /*
@@ -256,7 +250,7 @@ static void put_restricted __PARAM__((register Namval_t* np,const char *val,int 
 	void charsize_init __PARAM__((void), ()){
 		static char fc[3] = { 0301,  ESS2, ESS3};
 		char buff[8];
-		register int i,n;
+		int i,n;
 		wchar_t wc;
 		memset(buff,0301,MB_CUR_MAX);
 		for(i=0; i<=2; i++)
@@ -305,7 +299,7 @@ static void put_restricted __PARAM__((register Namval_t* np,const char *val,int 
 			free((__V_*)sh_lexstates[ST_BEGIN]);
 		if(ast.locale.set&LC_SET_CTYPE)
 		{
-			register int c;
+			int c;
 			char *state[4];
 			sh_lexstates[ST_BEGIN] = state[0] = (char*)malloc(4*(1<<CHAR_BIT));
 			memcpy(state[0],sh_lexrstates[ST_BEGIN],(1<<CHAR_BIT));
@@ -354,7 +348,7 @@ static void put_restricted __PARAM__((register Namval_t* np,const char *val,int 
 #endif /* _hdr_locale */
 
 /* Trap for IFS assignment and invalidates state table */
-static void put_ifs __PARAM__((register Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t* np;const char *val;int flags;Namfun_t *fp;){
+static void put_ifs __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
 	ifsnp = 0;
 	nv_putv(np, val, flags, fp);
 }
@@ -363,9 +357,9 @@ static void put_ifs __PARAM__((register Namval_t* np,const char *val,int flags,N
  * This is the lookup function for IFS
  * It keeps the sh.ifstable up to date
  */
-static char* get_ifs __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t* np; Namfun_t *fp;){
-	register char *cp, *value;
-	register int c,n;
+static char* get_ifs __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t* np; Namfun_t *fp;){
+	char *cp, *value;
+	int c,n;
 	value = nv_getv(np,fp);
 	if(np!=ifsnp)
 	{
@@ -415,7 +409,7 @@ static char* get_ifs __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) 
 #   define gettimeofday(a,b)
 #endif
 
-static void put_seconds __PARAM__((register Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t* np;const char *val;int flags;Namfun_t *fp;){
+static void put_seconds __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
 	static double sec_offset;
 	double d;
 	struct tms tp;
@@ -439,7 +433,7 @@ static void put_seconds __PARAM__((register Namval_t* np,const char *val,int fla
 	}
 }
 
-static char* get_seconds __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t* np; Namfun_t *fp;){
+static char* get_seconds __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t* np; Namfun_t *fp;){
 	struct tms tp;
 	double d;
 	NOT_USED(fp);
@@ -448,7 +442,7 @@ static char* get_seconds __PARAM__((register Namval_t* np, Namfun_t *fp), (np, f
 	return(sh_ftos(d,nv_size(np)));
 }
 
-static double nget_seconds __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t* np; Namfun_t *fp;){
+static double nget_seconds __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t* np; Namfun_t *fp;){
 	struct tms tp;
 	NOT_USED(fp);
 	gettimeofday(&tp,NIL(void *));
@@ -458,9 +452,9 @@ static double nget_seconds __PARAM__((register Namval_t* np, Namfun_t *fp), (np,
 /*
  * These three functions are used to get and set the RANDOM variable
  */
-static void put_rand __PARAM__((register Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t* np;const char *val;int flags;Namfun_t *fp;){
+static void put_rand __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
 	static long rand_last;
-	register long n;
+	long n;
 	NOT_USED(fp);
 	if(!val)
 	{
@@ -482,8 +476,8 @@ static void put_rand __PARAM__((register Namval_t* np,const char *val,int flags,
  * get random number in range of 0 - 2**15
  * never pick same number twice in a row
  */
-static double nget_rand __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t* np; Namfun_t *fp;){
-	register long cur, last= *np->nvalue.lp;
+static double nget_rand __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t* np; Namfun_t *fp;){
+	long cur, last= *np->nvalue.lp;
 	NOT_USED(fp);
 	do
 		cur = (rand()>>rand_shift)&RANDMASK;
@@ -492,8 +486,8 @@ static double nget_rand __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp
 	return((double)cur);
 }
 
-static char* get_rand __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t* np; Namfun_t *fp;){
-	register long n = nget_rand(np,fp);
+static char* get_rand __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t* np; Namfun_t *fp;){
+	long n = nget_rand(np,fp);
 	return(fmtbase(n, 10, 0));
 }
 
@@ -512,7 +506,7 @@ static double nget_lineno __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OT
 }
 
 static void put_lineno __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
-	register long n;
+	long n;
 	NOT_USED(fp);
 	if(!val)
 	{
@@ -527,8 +521,8 @@ static void put_lineno __PARAM__((Namval_t* np,const char *val,int flags,Namfun_
 	sh.st.firstline += nget_lineno(np,fp)+1-n;
 }
 
-static char* get_lineno __PARAM__((register Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t* np; Namfun_t *fp;){
-	register long n = nget_lineno(np,fp);
+static char* get_lineno __PARAM__((Namval_t* np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t* np; Namfun_t *fp;){
+	long n = nget_lineno(np,fp);
 	return(fmtbase(n, 10, 0));
 }
 
@@ -557,7 +551,7 @@ static void put_lastarg __PARAM__((Namval_t* np,const char *val,int flags,Namfun
      * set or unset the mappings given a colon separated list of directories
      */
     static void vpath_set __PARAM__((char *str, int mode), (str, mode)) __OTORP__(char *str; int mode;){
-	register char *lastp, *oldp=str, *newp=strchr(oldp,':');
+	char *lastp, *oldp=str, *newp=strchr(oldp,':');
 	if(!sh.lim.fs3d)
 		return;
 	while(newp)
@@ -573,8 +567,8 @@ static void put_lastarg __PARAM__((Namval_t* np,const char *val,int flags,Namfun
     }
 
     /* catch vpath assignments */
-    static void put_vpath __PARAM__((register Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t* np;const char *val;int flags;Namfun_t *fp;){
-	register char *cp;
+    static void put_vpath __PARAM__((Namval_t* np,const char *val,int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t* np;const char *val;int flags;Namfun_t *fp;){
+	char *cp;
 	if(cp = nv_getval(np))
 		vpath_set(cp,0);
 	if(val)
@@ -613,10 +607,6 @@ static Namfun_t L_ARG_init	= {  &L_ARG_disc};
     static Namfun_t LC_ALL_init		= {  &LC_disc};
     static Namfun_t LANG_init		= {  &LC_disc};
 #endif /* _hdr_locale */
-#ifdef apollo
-    static const Namdisc_t SYSTYPE_disc	= {  0, put_systype };
-    static Namfun_t SYSTYPE_init	= {  &SYSTYPEdisc};
-#endif /* apollo */
 #ifdef SHOPT_MULTIBYTE
     static const Namdisc_t CSWIDTH_disc	= {  0, put_cswidth };
     static Namfun_t CSWIDTH_init	= {  &CSWIDTH_disc};
@@ -626,7 +616,7 @@ static Namfun_t L_ARG_init	= {  &L_ARG_disc};
  * This function will get called whenever a configuration parameter changes
  */
 static int newconf __PARAM__((const char *name, const char *path, const char *value), (name, path, value)) __OTORP__(const char *name; const char *path; const char *value;){
-	register char *arg;
+	char *arg;
 	if(strcmp(name,"UNIVERSE")==0 && strcmp(astconf(name,0,0),value))
 	{
 		sh.universe = 0;
@@ -645,9 +635,9 @@ static int newconf __PARAM__((const char *name, const char *path, const char *va
 /*
  * initialize the shell
  */
-int sh_init __PARAM__((register int argc,register char *argv[]), (argc, argv)) __OTORP__(register int argc;register char *argv[];){
-	register char *name;
-	register int n,prof;
+int sh_init __PARAM__((int argc,char *argv[]), (argc, argv)) __OTORP__(int argc;char *argv[];){
+	char *name;
+	int n,prof;
 #ifdef MTRACE
 	Mt_certify = 1;
 #endif /* MTRACE */
@@ -788,8 +778,8 @@ void sh_reinit __PARAM__((char *argv[]), (argv)) __OTORP__(char *argv[];){
 /*
  * set when creating a local variable of this name
  */
-Namfun_t *nv_cover __PARAM__((register Namval_t *np), (np)) __OTORP__(register Namval_t *np;){
-	register Namfun_t *nfp=0;
+Namfun_t *nv_cover __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
+	Namfun_t *nfp=0;
 	if(np==IFSNOD)
 		nfp = &IFS_init;
 	else if(np==PATHNOD)
@@ -827,9 +817,6 @@ static void nv_init __PARAM__((void), ()){
 	nv_stack(LCNUMNOD, &LC_NUM_init);
 	nv_stack(LANGNOD, &LANG_init);
 #endif /* _hdr_locale */
-#ifdef apollo
-	nv_stack(SYSTYPENOD, &SYSTYPE_init);
-#endif /* apollo */
 #ifdef SHOPT_MULTIBYTE
 	nv_stack(CSWIDTHNOD, &CSWIDTH_init);
 #endif /* SHOPT_MULTIBYTE */
@@ -849,10 +836,10 @@ static void nv_init __PARAM__((void), ()){
  */
 
 static Hashtab_t *inittree __PARAM__((const struct shtable2 *name_vals), (name_vals)) __OTORP__(const struct shtable2 *name_vals;){
-	register Namval_t *np;
-	register const struct shtable2 *tp;
-	register unsigned n = 0;
-	register Hashtab_t *treep;
+	Namval_t *np;
+	const struct shtable2 *tp;
+	unsigned n = 0;
+	Hashtab_t *treep;
 	for(tp=name_vals;*tp->sh_name;tp++)
 		n++;
 	np = (Namval_t*)calloc(n,sizeof(Namval_t));
@@ -898,10 +885,10 @@ static Hashtab_t *inittree __PARAM__((const struct shtable2 *name_vals), (name_v
  */
 
 static void env_init __PARAM__((void), ()){
-	register char *cp;
-	register Namval_t	*np;
-	register char **ep=environ;
-	register char *next=0;
+	char *cp;
+	Namval_t	*np;
+	char **ep=environ;
+	char *next=0;
 	if(ep)
 	{
 		while(cp= *ep++)

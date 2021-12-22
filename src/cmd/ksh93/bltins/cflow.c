@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -101,9 +101,9 @@
 /*
  * return and exit
  */
-int	b_ret_exit __PARAM__((register int n, register char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(register int n; register char *argv[];__V_ *extra;){
+int	b_ret_exit __PARAM__((int n, char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(int n; char *argv[];__V_ *extra;){
 	struct checkpt *pp = (struct checkpt*)sh.jmplist;
-	register char *arg;
+	char *arg;
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optcflow))) switch(n)
 	{
@@ -132,9 +132,9 @@ done:
 /*
  * break and continue
  */
-int	b_brk_cont __PARAM__((register int n, register char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(register int n; register char *argv[];__V_ *extra;){
+int	b_brk_cont __PARAM__((int n, char *argv[],__V_ *extra), (n, argv, extra)) __OTORP__(int n; char *argv[];__V_ *extra;){
 	char *arg;
-	register int cont= **argv=='c';
+	int cont= **argv=='c';
 	NOT_USED(extra);
 	while((n = optget(argv,sh_optcflow))) switch(n)
 	{

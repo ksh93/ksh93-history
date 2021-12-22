@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -95,8 +95,8 @@ static const char id[] = "\n@(#)tty (AT&T Bell Laboratories) 04/01/92\0\n";
 
 int
 b_tty __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
-	register int n,sflag=0;
-	register char *tty;
+	int n,sflag=0;
+	char *tty;
 
 	NoP(argc);
 	NoP(id[0]);

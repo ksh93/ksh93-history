@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -89,6 +89,11 @@
 #define __VA_START__(p,a)	va_start(p)
 #endif
 #endif
+
+#if defined(__linux__)
+#include <sys/sysmacros.h>
+#endif
+
 #include "pax.h"
 #include "options.h"
 
@@ -122,7 +127,7 @@ delta_hi __PARAM__((long x), (x)) __OTORP__(long x;){
  */
 
 static int
-isalar __PARAM__((Archive_t* ap, register char* hdr), (ap, hdr)) __OTORP__(Archive_t* ap; register char* hdr;){
+isalar __PARAM__((Archive_t* ap, char* hdr), (ap, hdr)) __OTORP__(Archive_t* ap; char* hdr;){
 	char		buf[4];
 
 	if (!strneq(hdr, "VOL1", 4))
@@ -146,7 +151,7 @@ isalar __PARAM__((Archive_t* ap, register char* hdr), (ap, hdr)) __OTORP__(Archi
  */
 
 int
-getprologue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive_t* ap;){
+getprologue __PARAM__((Archive_t* ap), (ap)) __OTORP__(Archive_t* ap;){
 	int	n;
 	long	size;
 
@@ -296,7 +301,7 @@ getprologue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive
  */
 
 static void
-setinfo __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
+setinfo __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
 	long	n;
 
 	if (ap->delta)
@@ -317,8 +322,8 @@ setinfo __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP
  */
 
 static void
-putinfo __PARAM__((register Archive_t* ap, char* file, unsigned long mtime, unsigned long checksum), (ap, file, mtime, checksum)) __OTORP__(register Archive_t* ap; char* file; unsigned long mtime; unsigned long checksum;){
-	register File_t*	f = &ap->file;
+putinfo __PARAM__((Archive_t* ap, char* file, unsigned long mtime, unsigned long checksum), (ap, file, mtime, checksum)) __OTORP__(Archive_t* ap; char* file; unsigned long mtime; unsigned long checksum;){
+	File_t*	f = &ap->file;
 	Sfio_t*			np = 0;
 
 	if (!file)
@@ -349,7 +354,7 @@ putinfo __PARAM__((register Archive_t* ap, char* file, unsigned long mtime, unsi
  */
 
 void
-putprologue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive_t* ap;){
+putprologue __PARAM__((Archive_t* ap), (ap)) __OTORP__(Archive_t* ap;){
 	if (ap->delta && ap->delta->version == DELTA_88)
 		ap->checksum = ap->old.checksum;
 	switch (ap->format)
@@ -412,10 +417,10 @@ putprologue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive
  */
 
 void
-getepilogue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive_t* ap;){
-	register char*	s;
-	register long	n;
-	register long	i;
+getepilogue __PARAM__((Archive_t* ap), (ap)) __OTORP__(Archive_t* ap;){
+	char*	s;
+	long	n;
+	long	i;
 
 	if (ap->delta && ap->delta->epilogue < 0)
 		error(3, "%s: corrupt archive: missing epilogue", ap->name);
@@ -490,9 +495,9 @@ getepilogue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive
  */
 
 void
-putepilogue __PARAM__((register Archive_t* ap), (ap)) __OTORP__(register Archive_t* ap;){
-	register long		n;
-	register unsigned long	boundary;
+putepilogue __PARAM__((Archive_t* ap), (ap)) __OTORP__(Archive_t* ap;){
+	long		n;
+	unsigned long	boundary;
 
 	static int		selected;
 
@@ -570,10 +575,10 @@ static char*	ops = opsbuf;		/* opsbuf output pointer	*/
  */
 
 static void
-getxops __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
-	register char*	p;
-	register char*	s;
-	register int	c;
+getxops __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	char*	p;
+	char*	s;
+	int	c;
 	long		n;
 
 	if (f->namesize > (n = strlen(f->name) + 1)) for (p = f->name + n; c = *p++;)
@@ -612,8 +617,8 @@ getxops __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP
  */
 
 static void
-setxops __PARAM__((Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(Archive_t* ap; register File_t* f;){
-	register int	n;
+setxops __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	int	n;
 
 	NoP(ap);
 	if (n = ops - opsbuf)
@@ -629,8 +634,8 @@ setxops __PARAM__((Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(Archiv
  */
 
 static void
-putxops __PARAM__((Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(Archive_t* ap; register File_t* f;){
-	register int	n;
+putxops __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	int	n;
 
 	n = ops - opsbuf;
 	bwrite(ap, f->name, f->namesize -= n);
@@ -643,9 +648,9 @@ putxops __PARAM__((Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(Archiv
  */
 
 static void
-addxopstr __PARAM__((Archive_t* ap, int op, register char* s), (ap, op, s)) __OTORP__(Archive_t* ap; int op; register char* s;){
-	register char*	p = ops;
-	register char*	e = opsbuf + sizeof(opsbuf) - 3;
+addxopstr __PARAM__((Archive_t* ap, int op, char* s), (ap, op, s)) __OTORP__(Archive_t* ap; int op; char* s;){
+	char*	p = ops;
+	char*	e = opsbuf + sizeof(opsbuf) - 3;
 
 	NoP(ap);
 	if (p < e)
@@ -680,7 +685,7 @@ addxopnum __PARAM__((Archive_t* ap, int op, long n), (ap, op, n)) __OTORP__(Arch
 
 static void
 getkeyname __PARAM__((Archive_t* ap, File_t* f, int index, char** nm), (ap, f, index, nm)) __OTORP__(Archive_t* ap; File_t* f; int index; char** nm;){
-	register Option_t*	op;
+	Option_t*	op;
 
 	static int		uinit;
 	static int		ginit;
@@ -724,7 +729,7 @@ getkeyname __PARAM__((Archive_t* ap, File_t* f, int index, char** nm), (ap, f, i
 
 static void
 getkeytime __PARAM__((Archive_t* ap, File_t* f, int index, time_t* tm), (ap, f, index, tm)) __OTORP__(Archive_t* ap; File_t* f; int index; time_t* tm;){
-	register Option_t*	op;
+	Option_t*	op;
 
 	NoP(f);
 	op = &options[index];
@@ -744,10 +749,10 @@ getkeytime __PARAM__((Archive_t* ap, File_t* f, int index, time_t* tm), (ap, f, 
  */
 
 int
-getheader __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
-	register char*	s;
-	register int	i;
-	register long	n;
+getheader __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	char*	s;
+	int	i;
+	long	n;
 	char*		t;
 	long		num;
 	int		warned;
@@ -1586,9 +1591,9 @@ getheader __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTO
 
 static void
 putkey __PARAM__((Sfio_t* sp, Sfio_t* tp, const char* name, int op, const char* value), (sp, tp, name, op, value)) __OTORP__(Sfio_t* sp; Sfio_t* tp; const char* name; int op; const char* value;){
-	register const char*	s;
-	register int		c;
-	register int		n;
+	const char*	s;
+	int		c;
+	int		n;
 
 	sfprintf(tp, " %s", name);
 	if (op) sfputc(tp, op);
@@ -1650,9 +1655,9 @@ putkey __PARAM__((Sfio_t* sp, Sfio_t* tp, const char* name, int op, const char* 
  */
 
 void
-putheader __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
-	register char*	s;
-	register int	n;
+putheader __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	char*	s;
+	int	n;
 	int		c;
 
 	setdeltaheader(ap, f);
@@ -2058,8 +2063,8 @@ putheader __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTO
  */
 
 void
-gettrailer __PARAM__((register Archive_t* ap, File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; File_t* f;){
-	register long	n;
+gettrailer __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	long	n;
 
 	NoP(f);
 	if (ap->sum-- > 0)
@@ -2079,8 +2084,8 @@ gettrailer __PARAM__((register Archive_t* ap, File_t* f), (ap, f)) __OTORP__(reg
  */
 
 void
-puttrailer __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
-	register int	n;
+puttrailer __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	int	n;
 
 	putdeltatrailer(ap, f);
 	switch (ap->format)
@@ -2111,9 +2116,9 @@ puttrailer __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OT
  */
 
 int
-getlabel __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTORP__(register Archive_t* ap; register File_t* f;){
-	register int	c;
-	register int	n;
+getlabel __PARAM__((Archive_t* ap, File_t* f), (ap, f)) __OTORP__(Archive_t* ap; File_t* f;){
+	int	c;
+	int	n;
 
 	static char	last[5];
 	static int	done;
@@ -2150,7 +2155,7 @@ getlabel __PARAM__((register Archive_t* ap, register File_t* f), (ap, f)) __OTOR
  */
 
 void
-putlabels __PARAM__((register Archive_t* ap, register File_t* f, char* type), (ap, f, type)) __OTORP__(register Archive_t* ap; register File_t* f; char* type;){
+putlabels __PARAM__((Archive_t* ap, File_t* f, char* type), (ap, f, type)) __OTORP__(Archive_t* ap; File_t* f; char* type;){
 	struct tm*	tm;
 
 	static int	section = 1;
@@ -2191,9 +2196,9 @@ putlabels __PARAM__((register Archive_t* ap, register File_t* f, char* type), (a
  */
 
 int
-getsaveset __PARAM__((register Archive_t* ap, register File_t* f, int header), (ap, f, header)) __OTORP__(register Archive_t* ap; register File_t* f; int header;){
-	register char*	p;
-	register char*	s;
+getsaveset __PARAM__((Archive_t* ap, File_t* f, int header), (ap, f, header)) __OTORP__(Archive_t* ap; File_t* f; int header;){
+	char*	p;
+	char*	s;
 	char*		t;
 	int		i;
 	long		n;

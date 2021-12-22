@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -114,11 +114,11 @@ typedef struct
 
 __V_*
 findopen __PARAM__((const char* pattern), (pattern)) __OTORP__(const char* pattern;){
-	register Find_t*	fp;
-	register char*		p;
-	register char*		s;
-	register char*		b;
-	register int		i; 
+	Find_t*	fp;
+	char*		p;
+	char*		s;
+	char*		b;
+	int		i;
 	int			brace = 0;
 	int			paren = 0;
 
@@ -215,7 +215,7 @@ findopen __PARAM__((const char* pattern), (pattern)) __OTORP__(const char* patte
 
 void
 findclose __PARAM__((__V_* handle), (handle)) __OTORP__(__V_* handle;){
-	register Find_t*	fp = (Find_t*)handle;
+	Find_t*	fp = (Find_t*)handle;
 
 	sfclose(fp->fp);
 	free(fp);
@@ -228,12 +228,12 @@ findclose __PARAM__((__V_* handle), (handle)) __OTORP__(__V_* handle;){
 
 char*
 findnext __PARAM__((__V_* handle), (handle)) __OTORP__(__V_* handle;){
-	register Find_t*	fp = (Find_t*)handle;
-	register char*		p;
-	register char*		q;
-	register char*		s;
-	register char*		b;
-	register int		c;
+	Find_t*	fp = (Find_t*)handle;
+	char*		p;
+	char*		q;
+	char*		s;
+	char*		b;
+	int		c;
 	int			n;
 
 	for (c = fp->peek; c != EOF;)

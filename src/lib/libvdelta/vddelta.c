@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -79,7 +79,7 @@ struct _table_s
 
 /* encode and output delta instructions */
 #if __STD_C
-static vdputinst(Table_t* tab, uchar* begs, uchar* here, Match_t* match, int n_copy)
+static int vdputinst(Table_t* tab, uchar* begs, uchar* here, Match_t* match, int n_copy)
 #else
 static vdputinst(tab, begs, here, match, n_copy)
 Table_t*	tab;
@@ -180,7 +180,7 @@ int		n_copy;	/* length of match	*/
 
 /* Fold a string */
 #if __STD_C
-static vdfold(Table_t* tab, int output)
+static int vdfold(Table_t* tab, int output)
 #else
 static vdfold(tab, output)
 Table_t*	tab;

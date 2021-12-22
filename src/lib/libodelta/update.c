@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -111,7 +111,7 @@ static int		Dfd, Tfd;
 static int delgetc __PARAM__((void), ()){
 	if(Dnext >= Dend)
 	{
-		register int n;
+		int n;
 		if((n = read(Dfd,(char*)Ddata,BUFSIZE)) <= 0)
 			return -1;
 		Dnext = Ddata, Dend = Ddata+n;
@@ -120,13 +120,13 @@ static int delgetc __PARAM__((void), ()){
 }
 
 /* read a long value from delta file */
-static long delgetl __PARAM__((register int n), (n)) __OTORP__(register int n;){
-	register long	lv;
+static long delgetl __PARAM__((int n), (n)) __OTORP__(int n;){
+	long	lv;
 
 	lv = 0;
 	for(; n > 0; --n)
 	{
-		register int v;
+		int v;
 		if((v = delgetc()) < 0)
 			return -1;
 		lv = lv*256 + v;
@@ -138,7 +138,7 @@ static long delgetl __PARAM__((register int n), (n)) __OTORP__(register int n;){
 static int filetransfer __PARAM__((int fd, long n), (fd, n)) __OTORP__(int fd; long n;){
 	while(n > 0)
 	{
-		register int r;
+		int r;
 
 		if(Tnext >= Tend)
 			if(tarflush() < 0)
@@ -153,10 +153,10 @@ static int filetransfer __PARAM__((int fd, long n), (fd, n)) __OTORP__(int fd; l
 }
 
 /* transfer a number of bytes from a memory area to the target file */
-static int memtransfer __PARAM__((unsigned char* addr, register long n), (addr, n)) __OTORP__(unsigned char* addr; register long n;){
+static int memtransfer __PARAM__((unsigned char* addr, long n), (addr, n)) __OTORP__(unsigned char* addr; long n;){
 	while(n > 0)
 	{
-		register int r;
+		int r;
 
 		if(Tnext >= Tend)
 			if(tarflush() < 0)
@@ -172,12 +172,12 @@ static int memtransfer __PARAM__((unsigned char* addr, register long n), (addr, 
 
 /* transfer a number of bytes from delta to target */
 static int deltransfer __PARAM__((long n), (n)) __OTORP__(long n;){
-	register int d;
+	int d;
 
 	/* transfer what's already in core */
 	if((d = Dend-Dnext) > 0)
 	{
-		register int w = n <= d ? n : d;
+		int w = n <= d ? n : d;
 
 		if(w > (Tend-Tnext))
 			if(tarflush() < 0)
@@ -195,8 +195,8 @@ static int deltransfer __PARAM__((long n), (n)) __OTORP__(long n;){
 
 int
 update __PARAM__((int srcfd, long offset, int delfd, int tarfd), (srcfd, offset, delfd, tarfd)) __OTORP__(int srcfd; long offset; int delfd; int tarfd;){
-	register int	i;
-	register long	n_src, n_tar;
+	int	i;
+	long	n_src, n_tar;
 	unsigned char	delbuf[BUFSIZE], tarbuf[BUFSIZE];
 	unsigned char	*src, *tar;
 
@@ -224,7 +224,7 @@ update __PARAM__((int srcfd, long offset, int delfd, int tarfd), (srcfd, offset,
 
 	while((i = delgetc()) >= 0)
 	{
-		register long	size, addr;
+		long	size, addr;
 
 		if((size = delgetl((i>>3)&07)) < 0)
 			return -1;

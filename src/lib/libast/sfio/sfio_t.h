@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -81,7 +81,7 @@
 	  (unsigned char*)(data),			/* endr		*/ \
 	  (unsigned char*)(data),			/* endb		*/ \
 	  (struct _sfio_*)0,				/* push		*/ \
-	  (unsigned short)((type)&SF_FLAGS),		/* flags	*/ \
+	  (unsigned short)((type)&SFIO_FLAGS),		/* flags	*/ \
 	  (short)(file),				/* file		*/ \
 	  (unsigned char*)(data),			/* data		*/ \
 	  (int)(size),					/* size		*/ \

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 **	Written by Kiem-Phong Vo (01/06/91)
 */
 #if __STD_C
-sfnotify(void (*notify)(Sfio_t*, int, int))
+int sfnotify(void (*notify)(Sfio_t*, int, int))
 #else
 sfnotify(notify)
 void	(*notify)();

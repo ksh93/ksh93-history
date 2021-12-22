@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -104,9 +104,9 @@
 #   undef _lib_poll
 #endif /* _lib_poll_notimer */
 
-int	b_sleep __PARAM__((register int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(register int argc;char *argv[];__V_ *extra;){
-	register char *cp;
-	register double d;
+int	b_sleep __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
+	char *cp;
+	double d;
 	time_t tloc = 0;
 	NOT_USED(extra);
 	while((argc = optget(argv,sh_optsleep))) switch(argc)
@@ -156,7 +156,7 @@ unsigned sleep __PARAM__((unsigned sec), (sec)) __OTORP__(unsigned sec;){
 	__V_ *tp;
 	expired = 0;
 	sh.lastsig = 0;
-	tp = (__V_*)timeradd(1000*sec, 0, completed, (__V_*)0);
+	tp = (__V_*)kshtimeradd(1000*sec, 0, completed, (__V_*)0);
 	do
 	{
 		pause();
@@ -180,7 +180,7 @@ unsigned sleep __PARAM__((unsigned sec), (sec)) __OTORP__(unsigned sec;){
  */
 
 void	sh_delay __PARAM__((double t), (t)) __OTORP__(double t;){
-	register int n = (int)t;
+	int n = (int)t;
 #ifdef _lib_poll
 	struct pollfd fd;
 	if(t<=0)

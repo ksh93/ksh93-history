@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -60,7 +60,7 @@
 #define SOCKET_PEEK	002
 
 #if __STD_C
-sfpkrd(int fd, Void_t* argbuf, int n, int rc, long tm, int action)
+int sfpkrd(int fd, Void_t* argbuf, int n, int rc, long tm, int action)
 #else
 sfpkrd(fd, argbuf, n, rc, tm, action)
 int	fd;	/* file descriptor */

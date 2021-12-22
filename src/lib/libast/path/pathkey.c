@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -97,9 +97,9 @@
 
 char*
 pathkey __PARAM__((char* key, char* attr, const char* lang, const char* apath), (key, attr, lang, apath)) __OTORP__(char* key; char* attr; const char* lang; const char* apath;){
-	register char*		path = (char*)apath;
-	register char*		s;
-	register char*		k;
+	char*		path = (char*)apath;
+	char*		s;
+	char*		k;
 	char*			t;
 	char*			flags;
 	char**			p;

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -101,9 +101,9 @@
  */
 
 time_t
-tmtime __PARAM__((register Tm_t* tp, int west), (tp, west)) __OTORP__(register Tm_t* tp; int west;){
-	register time_t		clock;
-	register Tm_leap_t*	lp;
+tmtime __PARAM__((Tm_t* tp, int west), (tp, west)) __OTORP__(Tm_t* tp; int west;){
+	time_t		clock;
+	Tm_leap_t*	lp;
 	int			n;
 	int			sec;
 	time_t			now;

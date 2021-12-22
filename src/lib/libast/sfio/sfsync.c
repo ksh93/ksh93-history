@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
-static _sfall()
+static int _sfall()
 {
 	reg Sfpool_t	*p, *next;
 	reg Sfio_t*	f;
@@ -101,7 +101,7 @@ static _sfall()
 }
 
 #if __STD_C
-sfsync(reg Sfio_t* f)
+int sfsync(reg Sfio_t* f)
 #else
 sfsync(f)
 reg Sfio_t*	f;	/* stream to be synchronized */

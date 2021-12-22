@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -95,9 +95,9 @@
 
 char*
 fmtesc __PARAM__((const char* as), (as)) __OTORP__(const char* as;){
-	register unsigned char*	s = (unsigned char*)as;
-	register char*		b;
-	register int		c;
+	unsigned char*	s = (unsigned char*)as;
+	char*		b;
+	int		c;
 
 	static char*		buf;
 	static int		bufsiz;

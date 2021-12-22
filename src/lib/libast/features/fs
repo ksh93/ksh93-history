@@ -1,9 +1,4 @@
-mac	_STAT_VER,fstat,lstat,stat,_MKNOD_VER,mknod sys/types.h sys/stat.h
 cat{
-	#if defined(__uxp__)
-	#include <sys/types.h>
-	#include <sys/mkdev.h>
-	#endif
 	#ifndef _def_param_lcl
 	#ifndef S_ISUID
 	#if !defined(_AST_H) && !defined(_TM_H)
@@ -72,9 +67,6 @@ cat{
 macro{
 	#include <sys/types.h>
 	#include <sys/stat.h>
-	#if defined(__uxp__)
-	#include <sys/mkdev.h>
-	#endif
 	#ifndef major
 	#include <sys/param.h>
 	#ifndef major

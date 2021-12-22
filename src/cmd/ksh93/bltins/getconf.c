@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,10 +102,10 @@
 #define next_config(p)	((Shtable_t*)((char*)(p) + sizeof(*shtab_config)))
 #define MIN_LEN	20
 
-int	b_getconf __PARAM__((register int argc, char *argv[]), (argc, argv)) __OTORP__(register int argc; char *argv[];){
-	register int m,n;
-	register long val;
-	register const char *name, *path="";
+int	b_getconf __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
+	int m,n;
+	long val;
+	const char *name, *path="";
 	int offset = staktell();
 	const Shtable_t *tp = shtab_config;
 	error_info.id = argv[0];

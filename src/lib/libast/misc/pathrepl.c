@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -100,11 +100,11 @@
 #include <ast.h>
 
 char*
-pathrepl __PARAM__((register char* path, const char* match, register const char* replace), (path, match, replace)) __OTORP__(register char* path; const char* match; register const char* replace;)
+pathrepl __PARAM__((char* path, const char* match, const char* replace), (path, match, replace)) __OTORP__(char* path; const char* match; const char* replace;)
 #line 14
 {
-	register const char*	m = match;
-	register const char*	r;
+	const char*	m = match;
+	const char*	r;
 	char*			t;
 
 	if (!match) match = "";
@@ -121,7 +121,7 @@ pathrepl __PARAM__((register char* path, const char* match, register const char*
 			while (*m && *m++ == *path) path++;
 			if (!*m && *path == '/')
 			{
-				register char*	p;
+				char*	p;
 
 				p = t;
 				r = replace;
@@ -129,7 +129,7 @@ pathrepl __PARAM__((register char* path, const char* match, register const char*
 				if (p < path) while (*p++ = *path++);
 				else if (*r && p >= path)
 				{
-					register char*	u;
+					char*	u;
 
 					t = path + strlen(path);
 					u = t + strlen(r);

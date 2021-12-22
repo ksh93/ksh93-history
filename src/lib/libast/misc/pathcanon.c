@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -110,11 +110,11 @@ char*
 pathcanon __PARAM__((char* path, int flags), (path, flags)) __OTORP__(char* path; int flags;)
 #line 33
 {
-	register char*	p;
-	register char*	r;
-	register char*	s;
-	register char*	t;
-	register int	dots;
+	char*	p;
+	char*	r;
+	char*	s;
+	char*	t;
+	int	dots;
 	int		loop;
 	int		oerrno;
 #if defined(FS_3D)

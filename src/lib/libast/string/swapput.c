@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,7 +98,7 @@
 
 __V_*
 swapput __PARAM__((int op, __V_* b, int n, int_max v), (op, b, n, v)) __OTORP__(int op; __V_* b; int n; int_max v;){
-	register char*	p = (char*)b + n;
+	char*	p = (char*)b + n;
 
 	while (p > (char*)b)
 	{

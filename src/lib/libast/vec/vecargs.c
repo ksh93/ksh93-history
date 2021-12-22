@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -104,9 +104,9 @@
  */
 
 int
-vecargs __PARAM__((register char** vec, int* argcp, char*** argvp), (vec, argcp, argvp)) __OTORP__(register char** vec; int* argcp; char*** argvp;){
-	register char**	argv;
-	register char**	oargv;
+vecargs __PARAM__((char** vec, int* argcp, char*** argvp), (vec, argcp, argvp)) __OTORP__(char** vec; int* argcp; char*** argvp;){
+	char**	argv;
+	char**	oargv;
 	char**		ovec;
 	char*		s;
 	int		num;

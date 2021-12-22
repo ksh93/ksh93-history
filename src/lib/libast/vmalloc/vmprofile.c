@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -368,7 +368,7 @@ ulong	size;
 
 /* print profile data */
 #if __STD_C
-vmprofile(Vmalloc_t* vm, int fd)
+int vmprofile(Vmalloc_t* vm, int fd)
 #else
 vmprofile(vm, fd)
 Vmalloc_t*	vm;

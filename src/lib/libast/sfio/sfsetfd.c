@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 */
 
 #if __STD_C
-static _sfdup(reg int fd, reg int newfd)
+static int _sfdup(reg int fd, reg int newfd)
 #else
 static _sfdup(fd,newfd)
 reg int	fd;
@@ -79,7 +79,7 @@ reg int	newfd;
 }
 
 #if __STD_C
-sfsetfd(reg Sfio_t* f, reg int newfd)
+int sfsetfd(reg Sfio_t* f, reg int newfd)
 #else
 sfsetfd(f,newfd)
 reg Sfio_t	*f;

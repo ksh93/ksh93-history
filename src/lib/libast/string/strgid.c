@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -99,6 +99,12 @@ __STDPP__directive pragma pp:hide getgrgid getgrnam getpwnam
 
 #include <ast.h>
 #include <hash.h>
+/* on linux pwd.h and grp.h can include FILE without stdio.h which clashes with sfio_t */
+#if defined(__linux__)
+ #ifndef __FILE_defined
+  #define __FILE_defined 1
+ #endif
+#endif
 #include <pwd.h>
 #include <grp.h>
 
@@ -129,9 +135,9 @@ typedef struct
 
 int
 strgid __PARAM__((const char* name), (name)) __OTORP__(const char* name;){
-	register struct group*	gr;
-	register struct passwd*	pw;
-	register bucket*	b;
+	struct group*	gr;
+	struct passwd*	pw;
+	bucket*	b;
 	char*			e;
 
 	static Hash_table_t*	gidtab;

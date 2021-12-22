@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,7 +102,7 @@ NoN(rmdir)
 
 int
 rmdir __PARAM__((const char* path), (path)) __OTORP__(const char* path;){
-	register int	n;
+	int	n;
 	struct stat	st;
 	char*		av[3];
 

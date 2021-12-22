@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,8 +98,8 @@ int
 optjoin __PARAM__((char** argv, ...), (va_alist)) __OTORP__(va_dcl)
 { __OTORP__(char** argv; )
 	va_list			ap;
-	register OPTFUN		fun;
-	register OPTFUN		rep;
+	OPTFUN		fun;
+	OPTFUN		rep;
 	OPTFUN			err;
 	int			more;
 	int			user;

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,9 +98,9 @@ static const char id[] = "\n@(#)mkdir (AT&T Bell Laboratories) 02/14/95\0\n";
 
 int
 b_mkdir __PARAM__((int argc, char *argv[]), (argc, argv)) __OTORP__(int argc; char *argv[];){
-	register char *arg;
-	register mode_t mode=DIRMODE, mask;
-	register int n, mflag=0, pflag=0;
+	char *arg;
+	mode_t mode=DIRMODE, mask;
+	int n, mflag=0, pflag=0;
 	mode_t dmode;
 
 	NoP(argc);

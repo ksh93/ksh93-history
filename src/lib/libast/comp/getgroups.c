@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -115,7 +115,7 @@ ast_getgroups __PARAM__((int len, gid_t* set), (len, set)) __OTORP__(int len; gi
 #undef	NGROUPS_MAX
 #define NGROUPS_MAX	1
 #endif
-	register int	i;
+	int	i;
 	int		big[NGROUPS_MAX];
 #else
 #undef	NGROUPS_MAX

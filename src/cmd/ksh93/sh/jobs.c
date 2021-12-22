@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -209,10 +209,10 @@ static Sfio_t		*outfile;
  * This is the SIGCLD interrupt routine
  * When called with sig==0, it does a blocking wait
  */
-static void job_waitsafe __PARAM__((register int sig), (sig)) __OTORP__(register int sig;){
-	register pid_t pid;
-	register struct process *pw;
-	register int flags;
+static void job_waitsafe __PARAM__((int sig), (sig)) __OTORP__(int sig;){
+	pid_t pid;
+	struct process *pw;
+	int flags;
 	struct process dummy;
 	struct jobsave *jp;
 	int wstat;
@@ -346,7 +346,7 @@ static void job_waitsafe __PARAM__((register int sig), (sig)) __OTORP__(register
  * if lflag is set the switching driver message will not print
  */
 void job_init __PARAM__((int lflag), (lflag)) __OTORP__(int lflag;){
-	register int ntry=0;
+	int ntry=0;
 
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
@@ -381,8 +381,8 @@ void job_init __PARAM__((int lflag), (lflag)) __OTORP__(int lflag;){
         {
 		/* Get a controlling terminal and set process group */
 		/* This should have already been done by rlogin */
-                register int fd;
-                register char *ttynam;
+                int fd;
+                char *ttynam;
 #ifndef SIGTSTP
                 setpgid(0,sh.pid);
 #endif /*SIGTSTP */
@@ -481,8 +481,8 @@ void job_init __PARAM__((int lflag), (lflag)) __OTORP__(int lflag;){
  * restore tty driver and pgrp
  */
 int job_close __PARAM__((void), ()){
-	register struct process *pw = job.pwlist;
-	register int count = 0, running = 0;
+	struct process *pw = job.pwlist;
+	int count = 0, running = 0;
 	if(possible && !job.jobcontrol)
 		return(0);
 	else if(!possible && (!sh_isstate(SH_MONITOR) || sh_isstate(SH_FORKED)))
@@ -552,7 +552,7 @@ int job_close __PARAM__((void), ()){
 	return(0);
 }
 
-static void job_set __PARAM__((register struct process *pw), (pw)) __OTORP__(register struct process *pw;){
+static void job_set __PARAM__((struct process *pw), (pw)) __OTORP__(struct process *pw;){
 	/* save current terminal state */
 	tty_get(job.fd,&my_stty);
 	if(pw->p_flag&P_STTY)
@@ -567,7 +567,7 @@ static void job_set __PARAM__((register struct process *pw), (pw)) __OTORP__(reg
 #endif	/* SIGTSTP */
 }
 
-static void job_reset __PARAM__((register struct process *pw), (pw)) __OTORP__(register struct process *pw;){
+static void job_reset __PARAM__((struct process *pw), (pw)) __OTORP__(struct process *pw;){
 	/* save the terminal state for current job */
 #ifdef SIGTSTP
 	job_fgrp(pw,tcgetpgrp(job.fd));
@@ -592,9 +592,9 @@ static void job_reset __PARAM__((register struct process *pw), (pw)) __OTORP__(r
  */
 
 void job_bwait __PARAM__((char **jobs), (jobs)) __OTORP__(char **jobs;){
-	register char *job;
-	register struct process *pw;
-	register pid_t pid;
+	char *job;
+	struct process *pw;
+	pid_t pid;
 	if(*jobs==0)
 		job_wait((pid_t)-1);
 	else while(job = *jobs++)
@@ -620,10 +620,10 @@ void job_bwait __PARAM__((char **jobs), (jobs)) __OTORP__(char **jobs;){
  */
 
 int job_walk __PARAM__((Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[]), (file, fun, arg, joblist)) __OTORP__(Sfio_t *file;int (*fun)();int arg;char *joblist[];){
-	register struct process *pw = job.pwlist;
-	register int r = 0;
-	register char *jobid, **jobs=joblist;
-	register struct process *px;
+	struct process *pw = job.pwlist;
+	int r = 0;
+	char *jobid, **jobs=joblist;
+	struct process *px;
 	job_string = 0;
 	outfile = file;
 	by_number = 0;
@@ -679,7 +679,7 @@ int job_walk __PARAM__((Sfio_t *file,int (*fun)(struct process*,int),int arg,cha
 /*
  * send signal <sig> to background process group if not disowned
  */
-int job_terminate __PARAM__((register struct process *pw,register int sig), (pw, sig)) __OTORP__(register struct process *pw;register int sig;){
+int job_terminate __PARAM__((struct process *pw,int sig), (pw, sig)) __OTORP__(struct process *pw;int sig;){
 	if(pw->p_pgrp && !(pw->p_flag&P_DISOWN))
 		job_kill(pw,sig);
 	return(0);
@@ -692,11 +692,11 @@ int job_terminate __PARAM__((register struct process *pw,register int sig), (pw,
  * flag JOB_PFLAG for process id(s) only
  */
 
-int job_list __PARAM__((struct process *pw,register int flag), (pw, flag)) __OTORP__(struct process *pw;register int flag;){
-	register struct process *px = pw;
-	register int  n;
-	register const char *msg;
-	register int msize;
+int job_list __PARAM__((struct process *pw,int flag), (pw, flag)) __OTORP__(struct process *pw;int flag;){
+	struct process *px = pw;
+	int  n;
+	const char *msg;
+	int msize;
 	if(!pw || pw->p_job<=0)
 		return(1);
 	if(pw->p_env != sh.jobenv)
@@ -767,9 +767,9 @@ int job_list __PARAM__((struct process *pw,register int flag), (pw, flag)) __OTO
  * get the process group given the job number
  * This routine returns the process group number or -1
  */
-static struct process *job_bystring __PARAM__((register char *ajob), (ajob)) __OTORP__(register char *ajob;){
-	register struct process *pw=job.pwlist;
-	register int c;
+static struct process *job_bystring __PARAM__((char *ajob), (ajob)) __OTORP__(char *ajob;){
+	struct process *pw=job.pwlist;
+	int c;
 	if(*ajob++ != '%' || !pw)
 		return(NIL(struct process*));
 	c = *ajob;
@@ -793,9 +793,9 @@ static struct process *job_bystring __PARAM__((register char *ajob), (ajob)) __O
  * Kill a job or process
  */
 
-int job_kill __PARAM__((register struct process *pw,register int sig), (pw, sig)) __OTORP__(register struct process *pw;register int sig;){
-	register pid_t pid;
-	register int r;
+int job_kill __PARAM__((struct process *pw,int sig), (pw, sig)) __OTORP__(struct process *pw;int sig;){
+	pid_t pid;
+	int r;
 	const char *msg;
 #ifdef SIGTSTP
 	int stopsig = (sig==SIGSTOP||sig==SIGTSTP||sig==SIGTTIN||sig==SIGTTOU);
@@ -883,10 +883,10 @@ int job_kill __PARAM__((register struct process *pw,register int sig), (pw, sig)
  */
 
 static struct process *job_byname __PARAM__((char *name), (name)) __OTORP__(char *name;){
-	register struct process *pw = job.pwlist;
-	register struct process *pz = 0;
-	register int *flag = 0;
-	register char *cp = name;
+	struct process *pw = job.pwlist;
+	struct process *pz = 0;
+	int *flag = 0;
+	char *cp = name;
 	int offset;
 	if(!sh.hist_ptr)
 		return(NIL(struct process*));
@@ -916,10 +916,10 @@ static struct process *job_byname __PARAM__((char *name), (name)) __OTORP__(char
  */
 
 void	job_clear __PARAM__((void), ()){
-	register struct process *pw, *px;
-	register struct process *pwnext;
-	register int j = BYTE(sh.lim.child_max);
-	register struct jobsave *jp;
+	struct process *pw, *px;
+	struct process *pwnext;
+	int j = BYTE(sh.lim.child_max);
+	struct jobsave *jp;
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -953,8 +953,8 @@ void	job_clear __PARAM__((void), ()){
  */
 
 int job_post __PARAM__((pid_t pid, pid_t join), (pid, join)) __OTORP__(pid_t pid; pid_t join;){
-	register struct process *pw;
-	register History_t *hp = sh.hist_ptr;
+	struct process *pw;
+	History_t *hp = sh.hist_ptr;
 	sh.jobenv = sh.curenv;
 	if(job.toclear)
 	{
@@ -1022,7 +1022,7 @@ int job_post __PARAM__((pid_t pid, pid_t join), (pid, join)) __OTORP__(pid_t pid
  */
 
 static struct process *job_bypid __PARAM__((pid_t pid), (pid)) __OTORP__(pid_t pid;){
-	register struct process  *pw, *px;
+	struct process  *pw, *px;
 	for(pw=job.pwlist; pw; pw=pw->p_nxtjob)
 		for(px=pw; px; px=px->p_nxtproc)
 		{
@@ -1037,7 +1037,7 @@ static struct process *job_bypid __PARAM__((pid_t pid), (pid)) __OTORP__(pid_t p
  */
 
 static struct process *job_byjid __PARAM__((int jobid), (jobid)) __OTORP__(int jobid;){
-	register struct process *pw;
+	struct process *pw;
 	for(pw=job.pwlist;pw; pw = pw->p_nxtjob)
 	{
 		if(pw->p_job==jobid)
@@ -1049,10 +1049,10 @@ static struct process *job_byjid __PARAM__((int jobid), (jobid)) __OTORP__(int j
 /*
  * print a signal message
  */
-static void job_prmsg __PARAM__((register struct process *pw), (pw)) __OTORP__(register struct process *pw;){
+static void job_prmsg __PARAM__((struct process *pw), (pw)) __OTORP__(struct process *pw;){
 	if(pw->p_exit!=SIGINT && pw->p_exit!=SIGPIPE)
 	{
-		register const char *msg, *dump;
+		const char *msg, *dump;
 		msg = job_sigmsg((int)(pw->p_exit));
 		msg = ERROR_translate(msg,1);
 		if(pw->p_flag&P_COREDUMP)
@@ -1074,9 +1074,9 @@ static void job_prmsg __PARAM__((register struct process *pw), (pw)) __OTORP__(r
  * pid=-1 to wait for all runing processes
  */
 
-void	job_wait __PARAM__((register pid_t pid), (pid)) __OTORP__(register pid_t pid;){
-	register struct process *pw=0,*px;
-	register int	jobid = 0;
+void	job_wait __PARAM__((pid_t pid), (pid)) __OTORP__(pid_t pid;){
+	struct process *pw=0,*px;
+	int	jobid = 0;
 	char		intr = 0;
 	if(pid <= 0)
 	{
@@ -1229,8 +1229,8 @@ done:
  * disown job if bgflag == 'd'
  */
 
-job_switch __PARAM__((register struct process *pw,int bgflag), (pw, bgflag)) __OTORP__(register struct process *pw;int bgflag;){
-	register const char *msg;
+int job_switch __PARAM__((struct process *pw,int bgflag), (pw, bgflag)) __OTORP__(struct process *pw;int bgflag;){
+	const char *msg;
 	if(!pw || !(pw=job_byjid((int)pw->p_job)))
 		return(1);
 	if(bgflag=='d')
@@ -1275,7 +1275,7 @@ job_switch __PARAM__((register struct process *pw,int bgflag), (pw, bgflag)) __O
  * Set the foreground group associated with a job
  */
 
-static void job_fgrp __PARAM__((register struct process *pw, int newgrp), (pw, newgrp)) __OTORP__(register struct process *pw; int newgrp;){
+static void job_fgrp __PARAM__((struct process *pw, int newgrp), (pw, newgrp)) __OTORP__(struct process *pw; int newgrp;){
 	for(; pw; pw=pw->p_nxtproc)
 		pw->p_fgrp = newgrp;
 }
@@ -1284,9 +1284,9 @@ static void job_fgrp __PARAM__((register struct process *pw, int newgrp), (pw, n
  * turn off STOP state of a process group and send CONT signals
  */
 
-static void job_unstop __PARAM__((register struct process *px), (px)) __OTORP__(register struct process *px;){
-	register struct process *pw;
-	register int num = 0;
+static void job_unstop __PARAM__((struct process *px), (px)) __OTORP__(struct process *px;){
+	struct process *pw;
+	int num = 0;
 	for(pw=px ;pw ;pw=pw->p_nxtproc)
 	{
 		if(pw->p_flag&P_STOPPED)
@@ -1312,8 +1312,8 @@ static void job_unstop __PARAM__((register struct process *px), (px)) __OTORP__(
  * if <notify> is non-zero, then jobs with pending notifications are unposted
  */
 
-static struct process *job_unpost __PARAM__((register struct process *pwtop,int notify), (pwtop, notify)) __OTORP__(register struct process *pwtop;int notify;){
-	register struct process *pw;
+static struct process *job_unpost __PARAM__((struct process *pwtop,int notify), (pwtop, notify)) __OTORP__(struct process *pwtop;int notify;){
+	struct process *pw;
 	/* make sure all processes are done */
 #ifdef DEBUG
 	sfprintf(sfstderr,"%ld: unpost pid=%ld\n",(long)getpid(),(long)pwtop->p_pid);
@@ -1360,8 +1360,8 @@ static struct process *job_unpost __PARAM__((register struct process *pwtop,int 
 /*
  * unlink a job form the job list
  */
-static void job_unlink __PARAM__((register struct process *pw), (pw)) __OTORP__(register struct process *pw;){
-	register struct process *px;
+static void job_unlink __PARAM__((struct process *pw), (pw)) __OTORP__(struct process *pw;){
+	struct process *px;
 	if(pw==job.pwlist)
 	{
 		job.pwlist = pw->p_nxtjob;
@@ -1382,15 +1382,15 @@ static void job_unlink __PARAM__((register struct process *pw), (pw)) __OTORP__(
  */
 
 static int job_alloc __PARAM__((void), ()){
-	register int j=0;
-	register unsigned mask = 1;
-	register unsigned char *freeword;
-	register int jmax = BYTE(sh.lim.child_max);
+	int j=0;
+	unsigned mask = 1;
+	unsigned char *freeword;
+	int jmax = BYTE(sh.lim.child_max);
 	/* skip to first word with a free slot */
 	for(j=0;job.freejobs[j] == UCHAR_MAX; j++);
 	if(j >= jmax)
 	{
-		register struct process *pw;
+		struct process *pw;
 		for(j=1; j < sh.lim.child_max; j++)
 		{
 			if((pw=job_byjid(j))&& !job_unpost(pw,0))
@@ -1411,9 +1411,9 @@ static int job_alloc __PARAM__((void), ()){
  * return a job number
  */
 
-static void job_free __PARAM__((register int n), (n)) __OTORP__(register int n;){
-	register int j = (--n)/CHAR_BIT;
-	register unsigned mask;
+static void job_free __PARAM__((int n), (n)) __OTORP__(int n;){
+	int j = (--n)/CHAR_BIT;
+	unsigned mask;
 	n -= j*CHAR_BIT;
 	mask = 1 << n;
 	job.freejobs[j]  &= ~mask;
@@ -1421,16 +1421,7 @@ static void job_free __PARAM__((register int n), (n)) __OTORP__(register int n;)
 
 static char *job_sigmsg __PARAM__((int sig), (sig)) __OTORP__(int sig;){
 	static char signo[] = "Signal xxxx";
-#ifdef apollo
-	/*
-	 * This code handles the formatting for the apollo specific signal
-	 * SIGAPOLLO. 
-	 */
-	extern __MANGLE__ char *apollo_error __PROTO__((void));
-	
-	if ( sig == SIGAPOLLO )
-		return( apollo_error() );
-#endif /* apollo */
+
 	if(sig<sh.sigmax && sh.sigmsg[sig])
 		return(sh.sigmsg[sig]);
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
@@ -1450,9 +1441,9 @@ static char *job_sigmsg __PARAM__((int sig), (sig)) __OTORP__(int sig;){
  * if pid==0, then oldest saved process is deleted
  * If pid is not found a -1 is returned.
  */
-int job_chksave __PARAM__((register pid_t pid), (pid)) __OTORP__(register pid_t pid;){
-	register struct jobsave *jp = bck_list, *jpold=0;
-	register int r= -1;
+int job_chksave __PARAM__((pid_t pid), (pid)) __OTORP__(pid_t pid;){
+	struct jobsave *jp = bck_list, *jpold=0;
+	int r= -1;
 	while(jp)
 	{
 		if(jp->pid==pid)

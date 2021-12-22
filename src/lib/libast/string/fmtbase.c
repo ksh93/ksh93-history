@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,7 +92,7 @@
 #include <ast.h>
 
 char*
-fmtbase __PARAM__((register long n, register int b, int p), (n, b, p)) __OTORP__(register long n; register int b; int p;){
+fmtbase __PARAM__((long n, int b, int p), (n, b, p)) __OTORP__(long n; int b; int p;){
 	static char	buf[36];
 
 	if (n == 0 || b == 0) sfsprintf(buf, sizeof(buf), "%ld", n);

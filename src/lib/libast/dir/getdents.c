@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -143,8 +143,8 @@ getdents __PARAM__((int fd, __V_* buf, size_t siz), (fd, buf, siz)) __OTORP__(in
 #else
 #if _lib_dirread
 	{
-		register char*		sp;	/* system */
-		register struct dirent*	up;	/* user */
+		char*		sp;	/* system */
+		struct dirent*	up;	/* user */
 		char*			u;
 		int			n;
 		int			m;
@@ -186,10 +186,10 @@ getdents __PARAM__((int fd, __V_* buf, size_t siz), (fd, buf, siz)) __OTORP__(in
 
 #define MAXREC	roundof(sizeof(*up)-sizeof(up->d_name)+sizeof(sp->d_name)+1,8)
 
-		register struct direct*	sp;	/* system */
-		register struct dirent*	up;	/* user */
-		register char*		s;
-		register char*		u;
+		struct direct*	sp;	/* system */
+		struct dirent*	up;	/* user */
+		char*		s;
+		char*		u;
 		int			n;
 		int			m;
 		char			tmp[sizeof(sp->d_name) + 1];

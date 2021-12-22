@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -91,10 +91,10 @@
 #endif
 void
 strsort __PARAM__((char** argv, int n, int(*fn)(const char*, const char*)), (argv, n, fn)) __OTORP__(char** argv; int n; int(*fn)();){
-	register int 	i;
-	register int 	j;
-	register int 	m;
-	register char**	ap;
+	int 	i;
+	int 	j;
+	int 	m;
+	char**	ap;
 	char*		s;
 	int 		k;
 

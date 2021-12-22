@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -133,12 +133,12 @@ typedef union
 #define initfield(f,s)	((f)->first = (f)->delimiter = *((f)->next = (s)))
 
 static char*
-getfield __PARAM__((register Field_t* f, int restore), (f, restore)) __OTORP__(register Field_t* f; int restore;){
-	register char*	s;
-	register int	n;
-	register int	c;
-	register int	lp;
-	register int	rp;
+getfield __PARAM__((Field_t* f, int restore), (f, restore)) __OTORP__(Field_t* f; int restore;){
+	char*	s;
+	int	n;
+	int	c;
+	int	lp;
+	int	rp;
 	char*		b;
 
 	if (!f->delimiter)
@@ -413,7 +413,7 @@ int aha = *f.next;
 
 int
 sfkeyprintf __PARAM__((Sfio_t* sp, __V_* handle, const char* format, Sf_key_lookup_t lookup, Sf_key_convert_t convert), (sp, handle, format, lookup, convert)) __OTORP__(Sfio_t* sp; __V_* handle; const char* format; Sf_key_lookup_t lookup; Sf_key_convert_t convert;){
-	register int	i;
+	int	i;
 
 	for (i = 0; i < elementsof(state.tmp); i++)
 		if (!state.tmp[i] && !(state.tmp[i] = sfstropen()))

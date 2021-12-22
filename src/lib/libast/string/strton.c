@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -93,11 +93,11 @@
 #include <ctype.h>
 
 long
-strton __PARAM__((register const char* s, char** e, char* b, int m), (s, e, b, m)) __OTORP__(register const char* s; char** e; char* b; int m;){
-	register long		n;
-	register int		c;
-	register int		r;
-	register const char*	p;
+strton __PARAM__((const char* s, char** e, char* b, int m), (s, e, b, m)) __OTORP__(const char* s; char** e; char* b; int m;){
+	long		n;
+	int		c;
+	int		r;
+	const char*	p;
 	int			z;
 
 	if (!b || (r = *b) < 0 || r > 64) r = 0;

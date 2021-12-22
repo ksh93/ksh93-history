@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 */
 
 #if __STD_C
-static _vdinit(reg Vdio_t* io)
+static int _vdinit(reg Vdio_t* io)
 #else
 static _vdinit(io)
 reg Vdio_t*	io;
@@ -68,7 +68,7 @@ reg Vdio_t*	io;
 
 
 #if __STD_C
-static _vdfilbuf(reg Vdio_t* io)
+static int _vdfilbuf(reg Vdio_t* io)
 #else
 static _vdfilbuf(io)
 reg Vdio_t*	io;
@@ -89,7 +89,7 @@ reg Vdio_t*	io;
 }
 
 #if __STD_C
-static _vdflsbuf(reg Vdio_t* io)
+static int _vdflsbuf(reg Vdio_t* io)
 #else
 static _vdflsbuf(io)
 reg Vdio_t*	io;
@@ -130,7 +130,7 @@ reg ulong	v;
 }
 
 #if __STD_C
-static _vdputu(reg Vdio_t* io, ulong v)
+static int _vdputu(reg Vdio_t* io, ulong v)
 #else
 static _vdputu(io, v)
 reg Vdio_t*	io;
@@ -164,7 +164,7 @@ reg ulong	v;
 }
 
 #if __STD_C
-static _vdread(Vdio_t* io, reg uchar* s, reg int n)
+static int _vdread(Vdio_t* io, reg uchar* s, reg int n)
 #else
 static _vdread(io, s, n)
 Vdio_t*		io;
@@ -191,7 +191,7 @@ reg int		n;
 }
 
 #if __STD_C
-static _vdwrite(Vdio_t* io, reg uchar* s, reg int n)
+static int _vdwrite(Vdio_t* io, reg uchar* s, reg int n)
 #else
 static _vdwrite(io, s, n)
 Vdio_t*		io;

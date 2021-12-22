@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -49,10 +49,12 @@
 #define stdout		sfstdout
 #define stderr		sfstderr
 #define BUFSIZ		SF_BUFSIZE
+#if !defined(__linux__)
 #ifdef FILE
 #undef FILE
 #endif
 #define FILE		Sfio_t
+#endif
 
 #include	<sfio.h>
 

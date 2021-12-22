@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -144,7 +144,7 @@ static const Namdisc_t treedisc =
  */
 
 int    b_read_export __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
-	register int flag;
+	int flag;
 	char *command = argv[0];
 	NOT_USED(argc);
 	NOT_USED(extra);
@@ -177,10 +177,10 @@ int    b_read_export __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv,
 }
 
 
-int    b_alias __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[];__V_ *extra;){
-	register unsigned flag = NV_ARRAY|NV_NOSCOPE|NV_ASSIGN;
-	register Hashtab_t *troot = sh.alias_tree;
-	register int n;
+int    b_alias __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
+	unsigned flag = NV_ARRAY|NV_NOSCOPE|NV_ASSIGN;
+	Hashtab_t *troot = sh.alias_tree;
+	int n;
 	NOT_USED(argc);
 	NOT_USED(extra);
 	prefix=0;
@@ -229,9 +229,9 @@ int    b_alias __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, ar
 }
 
 
-int    b_typeset __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[];__V_ *extra;){
-	register int flag = NV_VARNAME|NV_ASSIGN;
-	register int n;
+int    b_typeset __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
+	int flag = NV_VARNAME|NV_ASSIGN;
+	int n;
 	Hashtab_t *troot = sh.var_tree;
 	int isfloat = 0;
 	NOT_USED(argc);
@@ -346,8 +346,8 @@ int    b_typeset __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, 
 	return(b_common(argv,flag,troot));
 }
 
-static int     b_common __PARAM__((char **argv,register int flag,Hashtab_t *troot), (argv, flag, troot)) __OTORP__(char **argv;register int flag;Hashtab_t *troot;){
-	register char *name;
+static int     b_common __PARAM__((char **argv,int flag,Hashtab_t *troot), (argv, flag, troot)) __OTORP__(char **argv;int flag;Hashtab_t *troot;){
+	char *name;
 	int nvflags=(flag&(NV_ARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_ASSIGN));
 	int r=0, ref=0;
 #ifdef SHOPT_OO
@@ -375,8 +375,8 @@ static int     b_common __PARAM__((char **argv,register int flag,Hashtab_t *troo
 		}
 		while(name = *++argv)
 		{
-			register unsigned newflag;
-			register Namval_t *np;
+			unsigned newflag;
+			Namval_t *np;
 			unsigned curflag;
 			if(troot == sh.fun_tree)
 			{
@@ -536,9 +536,9 @@ __V_ **sh_getliblist __PARAM__((void), ()){
  * adding builtins requires dlopen() interface
  */
 int	b_builtin __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
-	register char *arg=0, *name;
-	register int n, r=0, flag=0;
-	register Namval_t *np;
+	char *arg=0, *name;
+	int n, r=0, flag=0;
+	Namval_t *np;
 	int dlete=0;
 	static int maxlib, nlib;
 	Fptr_t addr;
@@ -658,7 +658,7 @@ int	b_builtin __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)
 	return(r);
 }
 
-int    b_set __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[];__V_ *extra;){
+int    b_set __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
 	NOT_USED(extra);
 	prefix=0;
 	if(argv[1])
@@ -681,21 +681,21 @@ int    b_set __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv
  * Non-existent items being deleted give non-zero exit status
  */
 
-int    b_unalias __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[];__V_ *extra;){
+int    b_unalias __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
 	NOT_USED(extra);
 	return(b_unall(argc,argv,sh.alias_tree));
 }
 
-int    b_unset __PARAM__((int argc,register char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;register char *argv[];__V_ *extra;){
+int    b_unset __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
 	NOT_USED(extra);
 	return(b_unall(argc,argv,sh.var_tree));
 }
 
-static int b_unall __PARAM__((int argc, char **argv, register Hashtab_t *troot), (argc, argv, troot)) __OTORP__(int argc; char **argv; register Hashtab_t *troot;){
-	register Namval_t *np;
-	register struct slnod *slp;
-	register const char *name;
-	register int r;
+static int b_unall __PARAM__((int argc, char **argv, Hashtab_t *troot), (argc, argv, troot)) __OTORP__(int argc; char **argv; Hashtab_t *troot;){
+	Namval_t *np;
+	struct slnod *slp;
+	const char *name;
+	int r;
 	int nflag = 0;
 	int all=0;
 	NOT_USED(argc);
@@ -750,7 +750,7 @@ static int b_unall __PARAM__((int argc, char **argv, register Hashtab_t *troot),
 				else if(slp=(struct slnod*)(np->nvenv))
 				{
 					/* free function definition */
-					register char *cp= strrchr(name,'.');
+					char *cp= strrchr(name,'.');
 					if(cp)
 					{
 						Namval_t *npv;
@@ -766,15 +766,7 @@ static int b_unall __PARAM__((int argc, char **argv, register Hashtab_t *troot),
 					continue;
 				}
 			}
-#ifdef apollo
-			else
-			{
-				short namlen;
-				name = nv_name(np);
-				namlen =strlen(name);
-				ev_$delete_var(name,&namlen);
-			}
-#endif /* apollo */
+
 			if(sh.subshell)
 				np=sh_assignok(np,0);
 			nv_unset(np);
@@ -792,8 +784,8 @@ static int b_unall __PARAM__((int argc, char **argv, register Hashtab_t *troot),
  * print out the name and value of a name-value pair <np>
  */
 
-static int print_namval __PARAM__((Sfio_t *file,register Namval_t *np,register int flag), (file, np, flag)) __OTORP__(Sfio_t *file;register Namval_t *np;register int flag;){
-	register char *cp;
+static int print_namval __PARAM__((Sfio_t *file,Namval_t *np,int flag), (file, np, flag)) __OTORP__(Sfio_t *file;Namval_t *np;int flag;){
+	char *cp;
 	sh_sigcheck();
 	if(flag)
 		flag = '\n';
@@ -823,7 +815,7 @@ static int print_namval __PARAM__((Sfio_t *file,register Namval_t *np,register i
 	}
 	if(cp=nv_getval(np))
 	{
-		register Namarr_t *ap;
+		Namarr_t *ap;
 		sfputr(file,sh_fmtq(nv_name(np)),-1);
 		if(!flag)
 		{
@@ -857,9 +849,9 @@ static void	print_all __PARAM__((Sfio_t *file,Hashtab_t *root), (file, root)) __
  * format initialization list given a list of assignments <argp>
  */
 static void genvalue __PARAM__((struct argnod *argp, const char *prefix, int n, int indent), (argp, prefix, n, indent)) __OTORP__(struct argnod *argp; const char *prefix; int n; int indent;){
-	register struct argnod *ap;
-	register char *cp,*nextcp;
-	register int m,isarray;
+	struct argnod *ap;
+	char *cp,*nextcp;
+	int m,isarray;
 	Namval_t *np;
 	if(n==0)
 		m = strlen(prefix);
@@ -954,13 +946,13 @@ static void genvalue __PARAM__((struct argnod *argp, const char *prefix, int n, 
 /*
  * walk the virtual tree and print or delete name-value pairs
  */
-static char *walk_tree __PARAM__((register Namval_t *np, int dlete), (np, dlete)) __OTORP__(register Namval_t *np; int dlete;){
+static char *walk_tree __PARAM__((Namval_t *np, int dlete), (np, dlete)) __OTORP__(Namval_t *np; int dlete;){
 	static Sfio_t *out;
 	int n;
 	Fcin_t save;
 	int savtop = staktell();
 	char *savptr = stakfreeze(0);
-	register struct argnod *ap; 
+	struct argnod *ap;
 	struct argnod *arglist=0;
 	char *name = nv_name(np);
 	stakseek(ARGVAL);
@@ -992,7 +984,7 @@ static char *walk_tree __PARAM__((register Namval_t *np, int dlete), (np, dlete)
 /*
  * get discipline for compound initializations
  */
-static char *get_tree __PARAM__((register Namval_t *np, Namfun_t *fp), (np, fp)) __OTORP__(register Namval_t *np; Namfun_t *fp;){
+static char *get_tree __PARAM__((Namval_t *np, Namfun_t *fp), (np, fp)) __OTORP__(Namval_t *np; Namfun_t *fp;){
 	NOT_USED(fp);
 	return(walk_tree(np,0));
 }
@@ -1000,7 +992,7 @@ static char *get_tree __PARAM__((register Namval_t *np, Namfun_t *fp), (np, fp))
 /*
  * put discipline for compound initializations
  */
-static void put_tree __PARAM__((register Namval_t *np, const char *val, int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(register Namval_t *np; const char *val; int flags;Namfun_t *fp;){
+static void put_tree __PARAM__((Namval_t *np, const char *val, int flags,Namfun_t *fp), (np, val, flags, fp)) __OTORP__(Namval_t *np; const char *val; int flags;Namfun_t *fp;){
 	walk_tree(np,1);
 	if(fp = nv_stack(np,NIL(Namfun_t*)))
 	{
@@ -1015,8 +1007,8 @@ static void put_tree __PARAM__((register Namval_t *np, const char *val, int flag
 /*
  * Insert discipline to cause $x to print current tree
  */
-void nv_setvtree __PARAM__((register Namval_t *np), (np)) __OTORP__(register Namval_t *np;){
-	register Namfun_t *nfp = newof(NIL(__V_*),Namfun_t,1,0);
+void nv_setvtree __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
+	Namfun_t *nfp = newof(NIL(__V_*),Namfun_t,1,0);
 	nfp->disc = &treedisc;
 	nv_stack(np, nfp);
 }
@@ -1024,11 +1016,11 @@ void nv_setvtree __PARAM__((register Namval_t *np), (np)) __OTORP__(register Nam
 /*
  * print the attributes of name value pair give by <np>
  */
-static void	print_attribute __PARAM__((register Namval_t *np), (np)) __OTORP__(register Namval_t *np;){
-	register const Shtable_t *tp;
-	register char *cp;
-	register unsigned val;
-	register unsigned mask;
+static void	print_attribute __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
+	const Shtable_t *tp;
+	char *cp;
+	unsigned val;
+	unsigned mask;
 #ifdef SHOPT_OO
 	Namval_t *nq;
 	char *cclass=0;
@@ -1106,9 +1098,9 @@ static void	print_attribute __PARAM__((register Namval_t *np), (np)) __OTORP__(r
  */
 
 static void print_scan __PARAM__((Sfio_t *file, int flag, Hashtab_t *root, int option), (file, flag, root, option)) __OTORP__(Sfio_t *file; int flag; Hashtab_t *root; int option;){
-	register char **argv;
-	register Namval_t *np;
-	register int namec;
+	char **argv;
+	Namval_t *np;
+	int namec;
 	Namval_t *onp = 0;
 	flag &= ~NV_ASSIGN;
 	scanmask = flag;
@@ -1155,7 +1147,7 @@ static void pushname __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
 /*
  * The inverse of creating a reference node
  */
-static void unref __PARAM__((register Namval_t *np), (np)) __OTORP__(register Namval_t *np;){
+static void unref __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
 	if(!nv_isattr(np,NV_REF))
 		return;
 	nv_offattr(np,NV_NOFREE|NV_REF);

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,7 +102,7 @@ NoN(strtod)
 extern __MANGLE__ double	atof __PROTO__((const char*));
 
 double
-strtod __PARAM__((register const char* s, char** e), (s, e)) __OTORP__(register const char* s; char** e;){
+strtod __PARAM__((const char* s, char** e), (s, e)) __OTORP__(const char* s; char** e;){
 	double	n;
 
 	n = atof(s);

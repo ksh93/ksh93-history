@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -111,8 +111,8 @@ static char	buf[L_tmpnam];
 static char	seed[] = { 'a', 'a', 'a', 0 };
 
 char*
-tmpnam __PARAM__((register char* p), (p)) __OTORP__(register char* p;){
-	register char*	q;
+tmpnam __PARAM__((char* p), (p)) __OTORP__(char* p;){
+	char*	q;
 
 	if (!p) p = buf;
 	strcopy(strcopy(strcopy(p, P_tmpdir), seed), "XXXXXX");

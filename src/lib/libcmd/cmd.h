@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -110,8 +110,8 @@
  */
 
 static void
-cmdinit __PARAM__((register char** argv), (argv)) __OTORP__(register char** argv;){
-	register char*	cp;
+cmdinit __PARAM__((char** argv), (argv)) __OTORP__(char** argv;){
+	char*	cp;
 
 	if (cp = strrchr(argv[0], '/')) cp++;
 	else cp = argv[0];

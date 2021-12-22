@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -100,8 +100,8 @@
 #include	"builtins.h"
 
 int	b_umask __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
-	register char *mask;
-	register int flag = 0, sflag = 0;
+	char *mask;
+	int flag = 0, sflag = 0;
 	NOT_USED(extra);
 	while((argc = optget(argv,sh_optumask))) switch(argc)
 	{
@@ -120,7 +120,7 @@ int	b_umask __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) 
 	argv += opt_index;
 	if(mask = *argv)
 	{
-		register int c;	
+		int c;
 		if(isdigit(*mask))
 		{
 			while(c = *mask++)

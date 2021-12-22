@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -49,7 +49,7 @@
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 #if __STD_C
-sfllen(reg long v)
+int sfllen(reg long v)
 #else
 sfllen(v)
 reg long	v;

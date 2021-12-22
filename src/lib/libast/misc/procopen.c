@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -150,7 +150,7 @@ static const Namval_t		options[] =
  */
 
 static int
-setopt __PARAM__((register __V_* a, register const __V_* p, register int n, const char* v), (a, p, n, v)) __OTORP__(register __V_* a; register const __V_* p; register int n; const char* v;){
+setopt __PARAM__((__V_* a, const __V_* p, int n, const char* v), (a, p, n, v)) __OTORP__(__V_* a; const __V_* p; int n; const char* v;){
 	NoP(v);
 	if (p)
 	{
@@ -252,7 +252,7 @@ modify __PARAM__((Proc_t* proc, int forked, int op, long arg1, long arg2), (proc
 #endif
 #if USE_SPAWN
 	{
-		register Modify_t*	m;
+		Modify_t*	m;
 
 		if (!(m = newof(NiL, Modify_t, 1, 0))) return(-1);
 		m->next = mods;
@@ -326,8 +326,8 @@ modify __PARAM__((Proc_t* proc, int forked, int op, long arg1, long arg2), (proc
 
 static void
 restore __PARAM__((Proc_t* proc), (proc)) __OTORP__(Proc_t* proc;){
-	register Modify_t*	m;
-	register Modify_t*	p;
+	Modify_t*	m;
+	Modify_t*	p;
 	int			oerrno;
 
 	NoP(proc);
@@ -398,9 +398,9 @@ restore __PARAM__((Proc_t* proc), (proc)) __OTORP__(Proc_t* proc;){
 
 Proc_t*
 procopen __PARAM__((const char* cmd, char** argv, char** envv, long* modv, long flags), (cmd, argv, envv, modv, flags)) __OTORP__(const char* cmd; char** argv; char** envv; long* modv; long flags;){
-	register Proc_t*	proc = 0;
-	register int		procfd;
-	register char**		p;
+	Proc_t*	proc = 0;
+	int		procfd;
+	char**		p;
 	char**			v;
 	int			i;
 	int			forked = 0;
@@ -502,7 +502,7 @@ procopen __PARAM__((const char* cmd, char** argv, char** envv, long* modv, long 
 			if (!fork())
 			{
 				sfsprintf(path, sizeof(path), "%d", getppid());
-				execlp("trace", "trace", "-p", path, NiL);
+				execlp("trace", "trace", "-p", path, NULL);
 				_exit(EXIT_NOTFOUND);
 			}
 			sleep(2);

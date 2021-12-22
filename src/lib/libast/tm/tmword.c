@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -103,8 +103,8 @@
  */
 
 int
-tmword __PARAM__((register const char* s, char** e, register const char* t, char** suf, int n), (s, e, t, suf, n)) __OTORP__(register const char* s; char** e; register const char* t; char** suf; int n;){
-	register int	c;
+tmword __PARAM__((const char* s, char** e, const char* t, char** suf, int n), (s, e, t, suf, n)) __OTORP__(const char* s; char** e; const char* t; char** suf; int n;){
+	int	c;
 	const char*	b;
 
 	if (*s && *t)

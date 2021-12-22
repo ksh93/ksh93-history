@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,8 +98,8 @@
  */
 
 time_t
-tmleap __PARAM__((register time_t* clock), (clock)) __OTORP__(register time_t* clock;){
-	register Tm_leap_t*	lp;
+tmleap __PARAM__((time_t* clock), (clock)) __OTORP__(time_t* clock;){
+	Tm_leap_t*	lp;
 	time_t			now;
 
 	tmset(tm_info.zone);

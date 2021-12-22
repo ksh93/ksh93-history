@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -94,11 +94,11 @@
 #include <modex.h>
 
 int
-strperm __PARAM__((const char* aexpr, char** e, register int perm), (aexpr, e, perm)) __OTORP__(const char* aexpr; char** e; register int perm;){
-	register char*	expr = (char*)aexpr;
-	register int	c;
-	register int	typ;
-	register int	who;
+strperm __PARAM__((const char* aexpr, char** e, int perm), (aexpr, e, perm)) __OTORP__(const char* aexpr; char** e; int perm;){
+	char*	expr = (char*)aexpr;
+	int	c;
+	int	typ;
+	int	who;
 	int		num;
 	int		op;
 

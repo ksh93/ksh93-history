@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -50,7 +50,7 @@
 */
 
 #if __STD_C
-sfprintf(Sfio_t *f, const char *form, ...)
+int sfprintf(Sfio_t *f, const char *form, ...)
 #else
 sfprintf(va_alist)
 va_dcl
@@ -75,7 +75,7 @@ va_dcl
 }
 
 #if __STD_C
-sfsprintf(char *s, int n, const char *form, ...)
+int sfsprintf(char *s, int n, const char *form, ...)
 #else
 sfsprintf(va_alist)
 va_dcl

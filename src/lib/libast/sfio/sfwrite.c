@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -53,7 +53,7 @@
 */
 
 #if __STD_C
-sfwrite(reg Sfio_t* f, const Void_t* buf, reg int n)
+int sfwrite(reg Sfio_t* f, const Void_t* buf, reg int n)
 #else
 sfwrite(f,buf,n)
 reg Sfio_t*	f;	/* write to this stream. r11 on Vax	*/

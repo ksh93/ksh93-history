@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -100,7 +100,7 @@
  */
 
 void
-vecfree __PARAM__((register char** vec, int retain), (vec, retain)) __OTORP__(register char** vec; int retain;){
+vecfree __PARAM__((char** vec, int retain), (vec, retain)) __OTORP__(char** vec; int retain;){
 	if (vec)
 	{
 		if (*(vec -= 2) && !retain) free(*vec);

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -79,7 +79,7 @@ typedef struct _block_		Block_t;
 typedef struct _seg_		Seg_t;
 typedef struct _pfobj_		Pfobj_t;
 
-#define reg			register
+#define reg			/*no register keywords*/
 #define NOTUSED(x)		(&x,1)
 
 /* convert an address to an integral value */

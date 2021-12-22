@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -100,12 +100,12 @@
 #undef	modei
 
 int
-modei __PARAM__((register int x), (x)) __OTORP__(register int x;){
+modei __PARAM__((int x), (x)) __OTORP__(int x;){
 #if _S_IDPERM
 	return(x & X_IPERM);
 #else
-	register int	i;
-	register int	c;
+	int	i;
+	int	c;
 
 	i = 0;
 	for (c = 0; c < PERMLEN; c += 2)

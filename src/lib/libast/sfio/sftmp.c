@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -129,7 +129,7 @@ char	*name;
 #endif /*_PACKAGE_ast*/
 
 #if __STD_C
-static _tmpexcept(Sfio_t* f, int type, Sfdisc_t* disc)
+static int _tmpexcept(Sfio_t* f, int type, Sfdisc_t* disc)
 #else
 static _tmpexcept(f,type,disc)
 Sfio_t*		f;

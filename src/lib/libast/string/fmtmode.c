@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,9 +92,9 @@
 #include "modelib.h"
 
 char*
-fmtmode __PARAM__((register int mode, int external), (mode, external)) __OTORP__(register int mode; int external;){
-	register char*		s;
-	register struct modeop*	p;
+fmtmode __PARAM__((int mode, int external), (mode, external)) __OTORP__(int mode; int external;){
+	char*		s;
+	struct modeop*	p;
 
 	static char		buf[MODELEN + 1];
 

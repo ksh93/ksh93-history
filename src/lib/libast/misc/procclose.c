@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -94,7 +94,7 @@
 #include <wait.h>
 
 int
-procclose __PARAM__((register Proc_t* p), (p)) __OTORP__(register Proc_t* p;){
+procclose __PARAM__((Proc_t* p), (p)) __OTORP__(Proc_t* p;){
 	int	status = -1;
 
 	if (p)

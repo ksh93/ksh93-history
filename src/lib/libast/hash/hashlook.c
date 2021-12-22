@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -96,19 +96,19 @@
  */
 
 char*
-hashlook __PARAM__((register Hash_table_t* tab, const char* name, long flags, const char* value), (tab, name, flags, value)) __OTORP__(register Hash_table_t* tab; const char* name; long flags; const char* value;){
-	register Hash_bucket_t*	b;
-	register unsigned int	n;
-	register Hash_last_t*	last;
+hashlook __PARAM__((Hash_table_t* tab, const char* name, long flags, const char* value), (tab, name, flags, value)) __OTORP__(Hash_table_t* tab; const char* name; long flags; const char* value;){
+	Hash_bucket_t*	b;
+	unsigned int	n;
+	Hash_last_t*	last;
 	Hash_table_t*		top;
 	Hash_bucket_t*		prev;
 	unsigned int		i;
 
 	if ((flags & (HASH_LOOKUP|HASH_INTERNAL)) == (HASH_LOOKUP|HASH_INTERNAL))
 	{
-		register char*		s1;
-		register const char*	s2;
-		register int		c;
+		char*		s1;
+		const char*	s2;
+		int		c;
 
 		if (flags & HASH_HASHED) n = *((unsigned int*)value);
 		else
@@ -165,12 +165,12 @@ hashlook __PARAM__((register Hash_table_t* tab, const char* name, long flags, co
 				{
 					if (!tab->root->local->compare)
 					{
-						register char*		s1 = hashname(b);
-						register const char*	s2 = name;
+						char*		s1 = hashname(b);
+						const char*	s2 = name;
 
 						if (tab->root->namesize)
 						{
-							register char*	s3 = s1 + tab->root->namesize;
+							char*	s3 = s1 + tab->root->namesize;
 
 							while (*s1++ == *s2++)
 								if (s1 >= s3) goto found;

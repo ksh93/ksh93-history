@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -101,8 +101,8 @@ Fcin_t _Fcin;
 /*
  * open stream <f> for fast character input
  */
-int	fcfopen __PARAM__((register Sfio_t* f), (f)) __OTORP__(register Sfio_t* f;){
-	register int	n;
+int	fcfopen __PARAM__((Sfio_t* f), (f)) __OTORP__(Sfio_t* f;){
+	int	n;
 	char		*buff;
 	Fcin_t		save;
 	errno = 0;
@@ -135,9 +135,9 @@ int	fcfopen __PARAM__((register Sfio_t* f), (f)) __OTORP__(register Sfio_t* f;){
  * the previous character is a 0 byte.
  */
 int	fcfill __PARAM__((void), ()){
-	register int		n;
-	register Sfio_t	*f;
-	register unsigned char	*last=_Fcin.fclast, *ptr=_Fcin.fcptr;
+	int		n;
+	Sfio_t	*f;
+	unsigned char	*last=_Fcin.fclast, *ptr=_Fcin.fcptr;
 	if(!(f=fcfile()))
 	{
 		/* see whether pointer has passed null byte */
@@ -169,7 +169,7 @@ int	fcfill __PARAM__((void), ()){
  * Synchronize and close the current stream
  */
 int fcclose __PARAM__((void), ()){
-	register unsigned char *ptr;
+	unsigned char *ptr;
 	if(_Fcin.fclast==0)
 		return(0);
 	if((ptr=_Fcin.fcptr)>_Fcin.fcbuff && *(ptr-1)==0)

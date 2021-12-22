@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -102,9 +102,9 @@ static const char id_dir[] = "\n@(#)directory (AT&T Bell Laboratories) 04/01/93\
 static DIR*	freedirp;		/* always keep one dirp */
 
 DIR*
-opendir __PARAM__((register const char* path), (path)) __OTORP__(register const char* path;){
-	register DIR*	dirp = 0;
-	register int	fd;
+opendir __PARAM__((const char* path), (path)) __OTORP__(const char* path;){
+	DIR*	dirp = 0;
+	int	fd;
 	struct stat	st;
 
 	if ((fd = open(path, 0)) < 0) return(0);
@@ -137,7 +137,7 @@ opendir __PARAM__((register const char* path), (path)) __OTORP__(register const 
 }
 
 void
-closedir __PARAM__((register DIR* dirp), (dirp)) __OTORP__(register DIR* dirp;){
+closedir __PARAM__((DIR* dirp), (dirp)) __OTORP__(DIR* dirp;){
 	if (dirp)
 	{
 		close(dirp->dd_fd);

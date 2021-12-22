@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,7 +92,7 @@
 #include <ast.h>
 
 char*
-strtape __PARAM__((register const char* s, register char** e), (s, e)) __OTORP__(register const char* s; register char** e;){
+strtape __PARAM__((const char* s, char** e), (s, e)) __OTORP__(const char* s; char** e;){
 	int		mtunit = '0';
 	int		mtdensity = 0;
 	char		mtrewind[2];

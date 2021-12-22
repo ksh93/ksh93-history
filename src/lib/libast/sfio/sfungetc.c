@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -49,7 +49,7 @@
 **	Written by Kiem-Phong Vo (03/02/91)
 */
 #if __STD_C
-static _uexcept(reg Sfio_t* f, reg int type, reg Sfdisc_t* disc)
+static int _uexcept(reg Sfio_t* f, reg int type, reg Sfdisc_t* disc)
 #else
 static _uexcept(f,type,disc)
 reg Sfio_t	*f;
@@ -69,7 +69,7 @@ reg Sfdisc_t	*disc;
 }
 
 #if __STD_C
-sfungetc(reg Sfio_t* f, reg int c)
+int sfungetc(reg Sfio_t* f, reg int c)
 #else
 sfungetc(f,c)
 reg Sfio_t	*f;	/* push back one byte to this stream */

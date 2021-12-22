@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -95,8 +95,8 @@
 
 int
 cmdrecurse __PARAM__((int argc, char** argv, int pfxc, char** pfxv), (argc, argv, pfxc, pfxv)) __OTORP__(int argc; char** argv; int pfxc; char** pfxv;){
-	register char**	v;
-	register char**	a;
+	char**	v;
+	char**	a;
 	int		resolve = 'L';
 	char		arg[16];
 

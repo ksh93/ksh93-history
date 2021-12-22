@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -150,9 +150,9 @@ static struct argnod	*label_last;
  * type=='V' for variable assignment lists
  * Otherwise type is determined by the command */
 static void writedefs __PARAM__((struct argnod *arglist, int line, int type, struct argnod *cmd), (arglist, line, type, cmd)) __OTORP__(struct argnod *arglist; int line; int type; struct argnod *cmd;){
-	register struct argnod *argp = arglist;
-	register char *cp;
-	register int n;
+	struct argnod *argp = arglist;
+	char *cp;
+	int n;
 	int width=0;
 	static char atbuff[20];
 	static char justify[2];
@@ -212,7 +212,7 @@ static void writedefs __PARAM__((struct argnod *arglist, int line, int type, str
  * Make a parent node for fork() or io-redirection
  */
 static union anynode	*makeparent __PARAM__((int flag, union anynode *child), (flag, child)) __OTORP__(int flag; union anynode *child;){
-	register union anynode	*par = getnode(forknod);
+	union anynode	*par = getnode(forknod);
 	par->fork.forktyp = flag;
 	par->fork.forktre = child;
 	par->fork.forkio = 0;
@@ -224,7 +224,7 @@ static union anynode	*makeparent __PARAM__((int flag, union anynode *child), (fl
  *  Make a node corresponding to a command list
  */
 static union anynode	*makelist __PARAM__((int type, union anynode *l, union anynode *r), (type, l, r)) __OTORP__(int type; union anynode *l; union anynode *r;){
-	register union anynode	*t;
+	union anynode	*t;
 	if(!l || !r)
 		sh_syntax();
 	else
@@ -246,7 +246,7 @@ static union anynode	*makelist __PARAM__((int type, union anynode *l, union anyn
  */
 
 union anynode	*sh_parse __PARAM__((Sfio_t *iop, int flag), (iop, flag)) __OTORP__(Sfio_t *iop; int flag;){
-	register union anynode	*t;
+	union anynode	*t;
 	Fcin_t	sav_input;
 	int	sav_prompt = sh.nextprompt;
 	if(sh.binscript && sffileno(iop)==sh.infd)
@@ -304,7 +304,7 @@ union anynode	*sh_parse __PARAM__((Sfio_t *iop, int flag), (iop, flag)) __OTORP_
  * the parse tree
  */
 union anynode *sh_dolparen __PARAM__((void), ()){
-	register union anynode *t=0;
+	union anynode *t=0;
 	Sfio_t *sp = fcfile();
 	int line = sh.inlineno;
 	sh.inlineno = error_info.line+sh.st.firstline;
@@ -328,7 +328,7 @@ union anynode *sh_dolparen __PARAM__((void), ()){
 		 * This code handles the case where string has been converted
 		 * to a file by an alias setup
 		 */
-		register int c;
+		int c;
 		char *cp;
 		if(fcgetc(c) > 0)
 			fcseek(-1);
@@ -357,8 +357,8 @@ void	sh_freeup __PARAM__((void), ()){
  * stack is freed when reference count is zero
  */
 
-void sh_funstaks __PARAM__((register struct slnod *slp,int flag), (slp, flag)) __OTORP__(register struct slnod *slp;int flag;){
-	register struct slnod *slpold;
+void sh_funstaks __PARAM__((struct slnod *slp,int flag), (slp, flag)) __OTORP__(struct slnod *slp;int flag;){
+	struct slnod *slpold;
 	while(slpold=slp)
 	{
 		if(slp->slchild)
@@ -378,9 +378,9 @@ void sh_funstaks __PARAM__((register struct slnod *slp,int flag), (slp, flag)) _
  *	list [ ; cmd ]
  */
 
-static union anynode	*sh_cmd __PARAM__((register int sym, int flag), (sym, flag)) __OTORP__(register int sym; int flag;){
-	register union anynode	*left, *right;
-	register int type = FINT|FAMP;
+static union anynode	*sh_cmd __PARAM__((int sym, int flag), (sym, flag)) __OTORP__(int sym; int flag;){
+	union anynode	*left, *right;
+	int type = FINT|FAMP;
 	if(sym==NL)
 		shlex.lasttok = 0;
 	left = list(flag);
@@ -431,9 +431,9 @@ static union anynode	*sh_cmd __PARAM__((register int sym, int flag), (sym, flag)
  *	list || term
  *      unfortunately, these are equal precedence
  */
-static union anynode	*list __PARAM__((register int flag), (flag)) __OTORP__(register int flag;){
-	register union anynode	*t = term(flag);
-	register int 	token;
+static union anynode	*list __PARAM__((int flag), (flag)) __OTORP__(int flag;){
+	union anynode	*t = term(flag);
+	int 	token;
 	while(t && ((token=shlex.token)==ANDFSYM || token==ORFSYM))
 		t = makelist((token==ANDFSYM?TAND:TORF), t, term(SH_NL));
 	return(t);
@@ -444,9 +444,9 @@ static union anynode	*list __PARAM__((register int flag), (flag)) __OTORP__(regi
  *	item
  *	item | term
  */
-static union anynode	*term __PARAM__((register int flag), (flag)) __OTORP__(register int flag;){
-	register union anynode	*t;
-	register int token;
+static union anynode	*term __PARAM__((int flag), (flag)) __OTORP__(int flag;){
+	union anynode	*t;
+	int token;
 	if(flag&SH_NL)
 		token = skipnl();
 	else
@@ -462,7 +462,7 @@ static union anynode	*term __PARAM__((register int flag), (flag)) __OTORP__(regi
 	}
 	else if((t=item(SH_NL|SH_EMPTY)) && shlex.token=='|')
 	{
-		register union anynode	*tt;
+		union anynode	*tt;
 		t = makeparent(TFORK|FPOU,t);
 		if(tt=term(SH_NL))
 		{
@@ -488,9 +488,9 @@ static union anynode	*term __PARAM__((register int flag), (flag)) __OTORP__(regi
 /*
  * case statement
  */
-static struct regnod*	syncase __PARAM__((register int esym), (esym)) __OTORP__(register int esym;){
-	register int tok = skipnl();
-	register struct regnod	*r;
+static struct regnod*	syncase __PARAM__((int esym), (esym)) __OTORP__(int esym;){
+	int tok = skipnl();
+	struct regnod	*r;
 	if(tok==esym)
 		return(NIL(struct regnod*));
 	r = (struct regnod*)stakalloc(sizeof(struct regnod));
@@ -537,11 +537,11 @@ static struct regnod*	syncase __PARAM__((register int esym), (esym)) __OTORP__(r
  * Otherise a list containing an arithmetic command and a while
  * is returned.
  */
-static union anynode	*arithfor __PARAM__((register union anynode *tf), (tf)) __OTORP__(register union anynode *tf;){
-	register union anynode	*t, *tw = tf;
-	register int	offset;
-	register struct argnod *argp;
-	register int n;
+static union anynode	*arithfor __PARAM__((union anynode *tf), (tf)) __OTORP__(union anynode *tf;){
+	union anynode	*t, *tw = tf;
+	int	offset;
+	struct argnod *argp;
+	int n;
 	int argflag = shlex.arg->argflag;
 	/* save current input */
 	Fcin_t	sav_input;
@@ -550,7 +550,7 @@ static union anynode	*arithfor __PARAM__((register union anynode *tf), (tf)) __O
 	/* split ((...)) into three expressions */
 	for(n=0; ; n++)
 	{
-		register int c;
+		int c;
 		argp = (struct argnod*)stakseek(ARGVAL);
 		argp->argnxt.ap = 0;
 		argp->argflag = argflag;
@@ -616,8 +616,8 @@ static union anynode	*arithfor __PARAM__((register union anynode *tf), (tf)) __O
 }
 
 static union anynode *funct __PARAM__((void), ()){
-	register union anynode *t;
-	register int flag;
+	union anynode *t;
+	int flag;
 	struct slnod *volatile slp=0;
 	Stak_t *savstak;
 #ifdef SHOPT_KIA
@@ -734,10 +734,10 @@ static union anynode *funct __PARAM__((void), ()){
 /*
  * Compound assignment
  */
-static struct argnod *assign __PARAM__((register struct argnod *ap), (ap)) __OTORP__(register struct argnod *ap;){
-	register int n;
-	register union anynode *t ,**tp;
-	register struct comnod *ac;
+static struct argnod *assign __PARAM__((struct argnod *ap), (ap)) __OTORP__(struct argnod *ap;){
+	int n;
+	union anynode *t ,**tp;
+	struct comnod *ac;
 	int array=0;
 	Namval_t *np;
 	n = strlen(ap->argval)-1;
@@ -807,9 +807,9 @@ static struct argnod *assign __PARAM__((register struct argnod *ap), (ap)) __OTO
  */
 
 static union anynode	*item __PARAM__((int flag), (flag)) __OTORP__(int flag;){
-	register union anynode	*t;
-	register struct ionod	*io;
-	register int tok = (shlex.token&0xff);
+	union anynode	*t;
+	struct ionod	*io;
+	int tok = (shlex.token&0xff);
 	int savwdval = shlex.lasttok;
 	int savline = shlex.lastline;
 	if(!(flag&SH_NOIO) && (tok=='<' || tok=='>'))
@@ -861,7 +861,7 @@ static union anynode	*item __PARAM__((int flag), (flag)) __OTORP__(int flag;){
 	    /* if statement */
 	    case IFSYM:
 	    {
-		register union anynode	*tt;
+		union anynode	*tt;
 		t = getnode(ifnod);
 		t->if_.iftyp=TIF;
 		t->if_.iftre=sh_cmd(THENSYM,SH_NL);
@@ -942,7 +942,7 @@ static union anynode	*item __PARAM__((int flag), (flag)) __OTORP__(int flag;){
 
 	    case LABLSYM:
 	    {
-		register struct argnod *argp = label_list;
+		struct argnod *argp = label_list;
 		while(argp)
 		{
 			if(strcmp(argp->argval,shlex.arg->argval)==0)
@@ -1000,9 +1000,9 @@ done:
  * This is for a simple command, for list, or compound assignment
  */
 static union anynode *simple __PARAM__((int flag, struct ionod *io), (flag, io)) __OTORP__(int flag; struct ionod *io;){
-	register struct comnod *t;
-	register struct argnod	*argp;
-	register int tok;
+	struct comnod *t;
+	struct argnod	*argp;
+	int tok;
 	struct argnod	**argtail;
 	struct argnod	**settail;
 	int 	keywd=1;
@@ -1136,7 +1136,7 @@ static union anynode *simple __PARAM__((int flag, struct ionod *io), (flag, io))
 #ifdef SHOPT_KIA
 	if(shlex.kiafile)
 	{
-		register Namval_t *np=(Namval_t*)t->comnamp;
+		Namval_t *np=(Namval_t*)t->comnamp;
 		int line = t->comline;
 		argp = t->comarg;
 		if(argp)
@@ -1170,7 +1170,7 @@ static union anynode *simple __PARAM__((int flag, struct ionod *io), (flag, io))
 		Namval_t *np=(Namval_t*)t->comnamp;
 		if((np==SYSBREAK || np==SYSCONT) && (argp->argflag&ARG_RAW) && !isdigit(*argp->argval))
 		{
-			register char *cp = argp->argval;
+			char *cp = argp->argval;
 			/* convert break/continue labels to numbers */
 			tok = 0;
 			for(argp=label_list;argp!=label_last;argp=argp->argnxt.ap)
@@ -1213,7 +1213,7 @@ static union anynode *simple __PARAM__((int flag, struct ionod *io), (flag, io))
  * skip past newlines but issue prompt if interactive
  */
 static int	skipnl __PARAM__((void), ()){
-	register int token;
+	int token;
 	while((token=sh_lex())==NL);
 	if(token==';')
 		sh_syntax();
@@ -1225,8 +1225,8 @@ static int	skipnl __PARAM__((void), ()){
  * if flag is set then an alias can be in the next word
  */
 static struct ionod	*inout __PARAM__((struct ionod *lastio,int flag), (lastio, flag)) __OTORP__(struct ionod *lastio;int flag;){
-	register int 		iof = shlex.digits, token=shlex.token;
-	register struct ionod	*iop;
+	int 		iof = shlex.digits, token=shlex.token;
+	struct ionod	*iop;
 	switch(token&0xff)
 	{
 	    case '<':
@@ -1298,10 +1298,10 @@ static struct ionod	*inout __PARAM__((struct ionod *lastio,int flag), (lastio, f
  */
 
 static struct argnod *qscan __PARAM__((struct comnod *ac,int argn), (ac, argn)) __OTORP__(struct comnod *ac;int argn;){
-	register char **cp;
-	register struct argnod *ap;
-	register struct dolnod* dp;
-	register int special=0;
+	char **cp;
+	struct argnod *ap;
+	struct dolnod* dp;
+	int special=0;
 	/* special hack for test -t compatibility */
 	if((Namval_t*)ac->comnamp==SYSTEST)
 		special = 2;
@@ -1355,30 +1355,30 @@ static struct argnod *qscan __PARAM__((struct comnod *ac,int argn), (ac, argn)) 
 }
 
 static union anynode *test_expr __PARAM__((int sym), (sym)) __OTORP__(int sym;){
-	register union anynode *t = test_or();
+	union anynode *t = test_or();
 	if(shlex.token!=sym)
 		sh_syntax();
 	return(t);
 }
 
 static union anynode *test_or __PARAM__((void), ()){
-	register union anynode *t = test_and();
+	union anynode *t = test_and();
 	while(shlex.token==ORFSYM)
 		t = makelist(TORF|TTEST,t,test_and());
 	return(t);
 }
 
 static union anynode *test_and __PARAM__((void), ()){
-	register union anynode *t = test_primary();
+	union anynode *t = test_primary();
 	while(shlex.token==ANDFSYM)
 		t = makelist(TAND|TTEST,t,test_primary());
 	return(t);
 }
 
 static union anynode *test_primary __PARAM__((void), ()){
-	register struct argnod *arg;
-	register union anynode *t;
-	register int num,token;
+	struct argnod *arg;
+	union anynode *t;
+	int num,token;
 	token = skipnl();
 	num = shlex.digits;
 	switch(token)
@@ -1461,8 +1461,8 @@ static union anynode *test_primary __PARAM__((void), ()){
 
 #ifdef SHOPT_KIA
 int kiaclose __PARAM__((void), ()){
-	register off_t off1,off2;
-	register int n;
+	off_t off1,off2;
+	int n;
 	if(shlex.kiafile)
 	{
 		sfseek(shlex.kiafile,shlex.kiabegin,SEEK_SET);

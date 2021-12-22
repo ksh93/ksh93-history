@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -158,7 +158,7 @@
 	     */
 	    static struct ld_info *getinfo __PARAM__((__V_ *module), (module)) __OTORP__(__V_ *module;){
 	    	struct ld_info *info=ld_info;
-		register int n=1;
+		int n=1;
 		if (!ld_info || module != last_module)
 		{
 			last_module = module;

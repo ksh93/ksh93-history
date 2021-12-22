@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,6 +92,6 @@
 #include <ast.h>
 
 __V_*
-tablook __PARAM__((const __V_* tab, int siz, register const char* name), (tab, siz, name)) __OTORP__(const __V_* tab; int siz; register const char* name;){
+tablook __PARAM__((const __V_* tab, int siz, const char* name), (tab, siz, name)) __OTORP__(const __V_* tab; int siz; const char* name;){
 	return(strlook(tab, siz, name));
 }

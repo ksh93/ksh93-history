@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -97,9 +97,9 @@
 
 unsigned int
 strhash __PARAM__((const char* as), (as)) __OTORP__(const char* as;){
-	register const unsigned char*	s = (const unsigned char*)as;
-	register unsigned int		i = 0;
-	register unsigned int		c;
+	const unsigned char*	s = (const unsigned char*)as;
+	unsigned int		i = 0;
+	unsigned int		c;
 
 	while (c = *s++) HASHPART(i, c);
 	return(i);

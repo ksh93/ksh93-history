@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -44,13 +44,13 @@
 ***************************************************************/
 #include	"sfhdr.h"
 
-/*	Read formated data from a stream
+/*	Read formatted data from a stream
 **
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
 #if __STD_C
-sfscanf(Sfio_t *f, const char *form, ...)
+int sfscanf(Sfio_t *f, const char *form, ...)
 #else
 sfscanf(va_alist)
 va_dcl
@@ -75,7 +75,7 @@ va_dcl
 }
 
 #if __STD_C
-sfsscanf(const char *s, const char *form,...)
+int sfsscanf(const char *s, const char *form,...)
 #else
 sfsscanf(va_alist)
 va_dcl

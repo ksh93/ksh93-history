@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,8 +98,8 @@ NoN(memset)
 #else
 
 __V_*
-memset __PARAM__((__V_* asp, register int c, register size_t n), (asp, c, n)) __OTORP__(__V_* asp; register int c; register size_t n;){
-	register char*	sp = (char*)asp;
+memset __PARAM__((__V_* asp, int c, size_t n), (asp, c, n)) __OTORP__(__V_* asp; int c; size_t n;){
+	char*	sp = (char*)asp;
 
 	while (n-- > 0)
 		*sp++ = c;

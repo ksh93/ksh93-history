@@ -434,7 +434,7 @@ $1"
 	?*)	z=$lib
 		e=
 		lib=
-		echo "main(){return(0);}" > $tmp.c
+		echo "int main(){return(0);}" > $tmp.c
 		for x in $z
 		do	case $x in
 			-)	case $lib in
@@ -853,7 +853,7 @@ extern int $v;
 #endif"
 					;;
 				esac
-				echo "main(){char* i = (char*)&$v; return i!=0;}"
+				echo "int main(){char* i = (char*)&$v; return i!=0;}"
 				} > $tmp.c
 				$cc -c $tmp.c <&$nullin >&$nullout &&
 				rm -f $tmp.exe
@@ -1108,7 +1108,7 @@ static struct xxx v;
 struct xxx* f() { return &v; }"
 					;;
 				esac
-				echo "main() { f(); return 0; }"
+				echo "int main() { f(); return 0; }"
 				} > $tmp.c
 				rm -f $tmp.exe
 				if	$cc -o $tmp.exe $tmp.c <&$nullin >&$nullout &&

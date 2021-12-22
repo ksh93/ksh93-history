@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -177,7 +177,7 @@ struct utsname
 };
 
 int
-uname __PARAM__((register struct utsname* ut), (ut)) __OTORP__(register struct utsname* ut;){
+uname __PARAM__((struct utsname* ut), (ut)) __OTORP__(struct utsname* ut;){
 #ifdef HOSTTYPE
 	char*		sys = 0;
 	char*		arch = 0;
@@ -251,9 +251,9 @@ static int	all = ((M_FLAG<<1)-1);
 
 int
 b_uname __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
-	register int	n;
-	register int	flags = 0;
-	register char*	s;
+	int	n;
+	int	flags = 0;
+	char*	s;
 	char*		sethost = 0;
 	struct utsname	ut;
 	char*		last = (char*)&ut.machine + sizeof(ut.machine);

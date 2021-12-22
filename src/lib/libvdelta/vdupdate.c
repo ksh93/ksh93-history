@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -74,7 +74,7 @@ typedef struct _table_s
 } Table_t;
 
 #if __STD_C
-static vdunfold(Table_t* tab)
+static int vdunfold(Table_t* tab)
 #else
 static vdunfold(tab)
 Table_t*	tab;

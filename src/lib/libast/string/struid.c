@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,6 +98,12 @@ __STDPP__directive pragma pp:hide getpwnam getpwuid
 
 #include <ast.h>
 #include <hash.h>
+/* on linux pwd.h can include FILE without stdio.h which clashes with sfio_t */
+#if defined(__linux__)
+ #ifndef __FILE_defined
+  #define __FILE_defined 1
+ #endif
+#endif
 #include <pwd.h>
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -124,8 +130,8 @@ typedef struct
 
 int
 struid __PARAM__((const char* name), (name)) __OTORP__(const char* name;){
-	register struct passwd*	pw;
-	register bucket*	b;
+	struct passwd*	pw;
+	bucket*	b;
 	char*			e;
 
 	static Hash_table_t*	uidtab;

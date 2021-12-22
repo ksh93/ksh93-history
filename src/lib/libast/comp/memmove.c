@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,9 +98,9 @@ NoN(memmove)
 #else
 
 __V_*
-memmove __PARAM__((__V_* to, const __V_* from, register size_t n), (to, from, n)) __OTORP__(__V_* to; const __V_* from; register size_t n;){
-	register char*	out = (char*)to;
-	register char*	in = (char*)from;
+memmove __PARAM__((__V_* to, const __V_* from, size_t n), (to, from, n)) __OTORP__(__V_* to; const __V_* from; size_t n;){
+	char*	out = (char*)to;
+	char*	in = (char*)from;
 
 	if (n <= 0)	/* works if size_t is signed or not */
 		;

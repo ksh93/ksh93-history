@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -98,10 +98,10 @@
 
 int
 pathsetlink __PARAM__((const char* buf, const char* name), (buf, name)) __OTORP__(const char* buf; const char* name;){
-	register char*	t = (char*)buf;
+	char*	t = (char*)buf;
 #ifdef UNIV_MAX
-	register char*	s = (char*)buf;
-	register char*	v;
+	char*	s = (char*)buf;
+	char*	v;
 	int		n;
 	char		tmp[PATH_MAX];
 

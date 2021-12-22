@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,9 +92,9 @@
 #include <ast.h>
 
 int
-chresc __PARAM__((register const char* s, char** p), (s, p)) __OTORP__(register const char* s; char** p;){
-	register const char*	q;
-	register int		c;
+chresc __PARAM__((const char* s, char** p), (s, p)) __OTORP__(const char* s; char** p;){
+	const char*	q;
+	int		c;
 
 	switch (c = *s++)
 	{

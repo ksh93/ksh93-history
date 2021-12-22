@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -55,7 +55,7 @@
 */
 
 #if __STD_C
-_sffilbuf(reg Sfio_t* f, reg int n)
+int _sffilbuf(reg Sfio_t* f, reg int n)
 #else
 _sffilbuf(f,n)
 reg Sfio_t	*f;	/* fill the read buffer of this stream */

@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -103,7 +103,7 @@ NoN(mkdir)
 
 int
 mkdir __PARAM__((const char* path, mode_t mode), (path, mode)) __OTORP__(const char* path; mode_t mode;){
-	register int	n;
+	int	n;
 	char*		av[3];
 
 	static char*	cmd[] = { "/bin/mkdir", "/usr/5bin/mkdir", 0 };

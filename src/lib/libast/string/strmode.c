@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -92,10 +92,10 @@
 #include "modelib.h"
 
 int
-strmode __PARAM__((register const char* s), (s)) __OTORP__(register const char* s;){
-	register int		c;
-	register char*		t;
-	register struct modeop*	p;
+strmode __PARAM__((const char* s), (s)) __OTORP__(const char* s;){
+	int		c;
+	char*		t;
+	struct modeop*	p;
 	int			mode;
 
 	mode = 0;

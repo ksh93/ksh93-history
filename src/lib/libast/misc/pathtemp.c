@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -114,10 +114,10 @@ char*
 pathtemp __PARAM__((char* buf, const char* adir, const char* apfx), (buf, adir, apfx)) __OTORP__(char* buf; const char* adir; const char* apfx;)
 #line 39
 {
-	register char*	dir = (char*)adir;
+	char*	dir = (char*)adir;
 	char*		pfx = (char*)apfx;
-	register char*	p;
-	register char*	s;
+	char*	p;
+	char*	s;
 	int		pid;
 
 	static char*	tmpdir;

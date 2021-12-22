@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -91,9 +91,6 @@
 #define __VA_START__(p,a)	va_start(p)
 #endif
 #endif
-#ifdef __osf__
-#include	<machine/machlimits.h>
-#endif
 #include	"defs.h"
 #include	"variables.h"
 #include	<error.h>
@@ -101,9 +98,9 @@
 #include	"builtins.h"
 
 int	b_getopts __PARAM__((int argc,char *argv[],__V_ *extra), (argc, argv, extra)) __OTORP__(int argc;char *argv[];__V_ *extra;){
-	register char *options=error_info.context->id;
-	register Namval_t *np;
-	register int flag, mode, r=0;
+	char *options=error_info.context->id;
+	Namval_t *np;
+	int flag, mode, r=0;
 	static char value[2], key[2];
 	NOT_USED(extra);
 	while((flag = optget(argv,sh_optgetopts))) switch(flag)

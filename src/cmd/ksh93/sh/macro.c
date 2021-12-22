@@ -16,7 +16,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
+ * License along with these libraries and programs; if not, write
  * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301 USA
  */
@@ -93,6 +93,12 @@
 #endif
 #include	"defs.h"
 #include	<fcin.h>
+/* on linux pwd.h can include FILE without stdio.h which clashes with sfio_t */
+#if defined(__linux__)
+ #ifndef __FILE_defined
+  #define __FILE_defined 1
+ #endif
+#endif
 #include	<pwd.h>
 #include	"name.h"
 #include	"variables.h"
@@ -154,7 +160,7 @@ static char	*mac_getstring __PROTO__((char*));
 /*
  * perform only parameter substitution and catch failures
  */
-char *sh_mactry __PARAM__((register char *string), (string)) __OTORP__(register char *string;){
+char *sh_mactry __PARAM__((char *string), (string)) __OTORP__(char *string;){
 	if(string)
 	{
 		int		jmp_val;
@@ -176,7 +182,7 @@ char *sh_mactry __PARAM__((register char *string), (string)) __OTORP__(register 
  * yields a single pathname.
  * If <mode> negative, than expansion rules for assignment are applied.
  */
-char *sh_mactrim __PARAM__((char *str, register int mode), (str, mode)) __OTORP__(char *str; register int mode;){
+char *sh_mactrim __PARAM__((char *str, int mode), (str, mode)) __OTORP__(char *str; int mode;){
 	struct _mac_		savemac;
 	savemac = mac;
 	stakseek(0);
@@ -210,9 +216,9 @@ char *sh_mactrim __PARAM__((char *str, register int mode), (str, mode)) __OTORP_
 /*
  * Perform all the expansions on the argument <argp>
  */
-int sh_macexpand __PARAM__((register struct argnod *argp, struct argnod **arghead), (argp, arghead)) __OTORP__(register struct argnod *argp; struct argnod **arghead;){
-	register int flags = argp->argflag;
-	register char *str = argp->argval;
+int sh_macexpand __PARAM__((struct argnod *argp, struct argnod **arghead), (argp, arghead)) __OTORP__(struct argnod *argp; struct argnod **arghead;){
+	int flags = argp->argflag;
+	char *str = argp->argval;
 	struct _mac_		savemac;
 	savemac = mac;
 	stakseek(ARGVAL);
@@ -241,9 +247,9 @@ int sh_macexpand __PARAM__((register struct argnod *argp, struct argnod **arghea
  * The result is written to <outfile>
  */
 void sh_machere __PARAM__((Sfio_t *infile, Sfio_t *outfile, char *string), (infile, outfile, string)) __OTORP__(Sfio_t *infile; Sfio_t *outfile; char *string;){
-	register int	c,n;
-	register const char	*state = sh_lexstates[ST_QUOTE];
-	register char	*cp;
+	int	c,n;
+	const char	*state = sh_lexstates[ST_QUOTE];
+	char	*cp;
 	Fcin_t		save;
 	struct _mac_		savemac;
 	savemac = mac;
@@ -346,9 +352,9 @@ void sh_machere __PARAM__((Sfio_t *infile, Sfio_t *outfile, char *string), (infi
  * Process the characters up to <endch> or end of input string 
  */
 static void copyto __PARAM__((int endch, int newquote), (endch, newquote)) __OTORP__(int endch; int newquote;){
-	register int	c,n;
-	register const char	*state = sh_lexstates[ST_MACRO];
-	register char	*cp,*first;
+	int	c,n;
+	const char	*state = sh_lexstates[ST_MACRO];
+	char	*cp,*first;
 	int		tilde = -1;
 	int		oldquote = mac.quote;
 	int		ansi_c = 0;
@@ -559,7 +565,7 @@ done:
  * This will be in libast some day
  */
 static int strgrpmatch __PARAM__((char *string, char *pattern, int match[], int nmatch,int flags), (string, pattern, match, nmatch, flags)) __OTORP__(char *string; char *pattern; int match[]; int nmatch;int flags;){
-	register char *cp=string, *dp;
+	char *cp=string, *dp;
 	int c=0,anchor = (flags&STR_LEFT);
 	flags &= ~STR_LEFT;
 	/* optimize a little */
@@ -600,9 +606,9 @@ static int strgrpmatch __PARAM__((char *string, char *pattern, int match[], int 
 /*
  * copy <str> to stack performing sub-expression substitutions
  */
-static void mac_substitute __PARAM__((register char *cp,char *str,register int subexp[],int subsize), (cp, str, subexp, subsize)) __OTORP__(register char *cp;char *str;register int subexp[];int subsize;){
-	register int c,n;
-	register char *first=cp;
+static void mac_substitute __PARAM__((char *cp,char *str,int subexp[],int subsize), (cp, str, subexp, subsize)) __OTORP__(char *cp;char *str;int subexp[];int subsize;){
+	int c,n;
+	char *first=cp;
 	while(1)
 	{
 		while((c= *cp++) && c!=ESCAPE);
@@ -637,11 +643,11 @@ static void mac_substitute __PARAM__((register char *cp,char *str,register int s
  */
 static int varsub __PARAM__((void), ()){
 	static char	idbuff[2];
-	register int	c;
-	register int	type=0; /* M_xxx */
-	register char	*v,*argp=0;
-	register Namval_t	*np = NIL(Namval_t*);
-	register int 	dolg=0, mode=0;
+	int	c;
+	int	type=0; /* M_xxx */
+	char	*v,*argp=0;
+	Namval_t	*np = NIL(Namval_t*);
+	int 	dolg=0, mode=0;
 	Namarr_t	*ap=0;
 	int		dolmax=0, vsize= -1, offset, nulflg, replen=0, bysub=0;
 	char		*id = idbuff, *pattern=0, *repstr;
@@ -704,7 +710,7 @@ retry1:
 		c -= '0';
 		if(type)
 		{
-			register int d;
+			int d;
 			while((d=fcget()),isadigit(d))
 				c = 10*c + (d-'0');
 			fcseek(-1);
@@ -1016,7 +1022,7 @@ retry1:
 retry2:
 	if(v && (!nulflg || *v ) && c!='+')
 	{
-		register int d = (mode=='@'?' ':mac.ifs);
+		int d = (mode=='@'?' ':mac.ifs);
 		int match[20], nmatch;
 		while(1)
 		{
@@ -1149,8 +1155,8 @@ nosub:
  * <type> is 0 for older `...` version
  */
 static void comsubst __PARAM__((int type), (type)) __OTORP__(int type;){
-	register int		c;
-	register char		*str;
+	int		c;
+	char		*str;
 	Sfio_t			*sp;
 	Fcin_t			save;
 	struct slnod            *saveslp = sh.st.staklist;
@@ -1160,7 +1166,7 @@ static void comsubst __PARAM__((int type), (type)) __OTORP__(int type;){
 	char			*savptr = stakfreeze(0);
 	int			saveflags = sh_isstate(SH_HISTORY|SH_VERBOSE);
 	int			newlines;
-	register union anynode	*t;
+	union anynode	*t;
 	savemac = mac;
 	sh.st.staklist=0;
 	if(type)
@@ -1221,7 +1227,7 @@ static void comsubst __PARAM__((int type), (type)) __OTORP__(int type;){
 		if(t->tre.tretyp==0 && !t->com.comarg)
 		{
 			/* special case $( < file) */
-			register int fd;
+			int fd;
 			struct checkpt buff;
 			sh_pushcontext(&buff,SH_JMPIO);
 			if(t->tre.treio && !(((t->tre.treio)->iofile)&IOUFD) &&
@@ -1272,10 +1278,10 @@ static void comsubst __PARAM__((int type), (type)) __OTORP__(int type;){
 /*
  * copy <str> onto the stack
  */
-static void mac_copy __PARAM__((register const char *str, register int size), (str, size)) __OTORP__(register const char *str; register int size;){
-	register char		*state;
-	register const char	*cp=str;
-	register int		c,n,nopat;
+static void mac_copy __PARAM__((const char *str, int size), (str, size)) __OTORP__(const char *str; int size;){
+	char		*state;
+	const char	*cp=str;
+	int		c,n,nopat;
 	nopat = (mac.quote||mac.assign==1||mac.arith);
 	if(mac.sp)
 		sfwrite(mac.sp,str,size);
@@ -1396,7 +1402,7 @@ static void mac_copy __PARAM__((register const char *str, register int size), (s
  * Do filename expansion of required
  */
 static void endfield __PARAM__((int split), (split)) __OTORP__(int split;){
-	register struct argnod *argp;
+	struct argnod *argp;
 	if(staktell() > ARGVAL || split)
 	{
 		argp = (struct argnod*)stakfreeze(1);
@@ -1425,9 +1431,9 @@ static void endfield __PARAM__((int split), (split)) __OTORP__(int split;){
  * Finds the right substring of STRING using the expression PAT
  * the longest substring is found when FLAG is set.
  */
-static int substring __PARAM__((register const char *string,const char *pat,int match[], int flag), (string, pat, match, flag)) __OTORP__(register const char *string;const char *pat;int match[]; int flag;){
-	register const char *sp=string;
-	register int size,len,nmatch,n;
+static int substring __PARAM__((const char *string,const char *pat,int match[], int flag), (string, pat, match, flag)) __OTORP__(const char *string;const char *pat;int match[]; int flag;){
+	const char *sp=string;
+	int size,len,nmatch,n;
 	int smatch[20];
 	sp += (len=strlen(sp));
 	size = sp-string;
@@ -1460,8 +1466,8 @@ static int substring __PARAM__((register const char *string,const char *pat,int 
 
 #ifdef SHOPT_MULTIBYTE
 	static char	*lastchar __PARAM__((const char *string, const char *endstring), (string, endstring)) __OTORP__(const char *string; const char *endstring;){
-		register char *str = (char*)string;
-		register int c;
+		char *str = (char*)string;
+		int c;
 		mblen(NIL(char*),MB_CUR_MAX);
 		while(*str)
 		{
@@ -1474,9 +1480,9 @@ static int substring __PARAM__((register const char *string,const char *pat,int 
 		return(str);
 	}
 	static int	charlen __PARAM__((const char *string), (string)) __OTORP__(const char *string;){
-		register const char *str = string;
-		register int n=0;
-		register int c;
+		const char *str = string;
+		int n=0;
+		int c;
 		wchar_t w;
 		mblen(NIL(char*),MB_CUR_MAX);
 		while(*str)
@@ -1497,8 +1503,8 @@ static int substring __PARAM__((register const char *string,const char *pat,int 
  * <offset> is byte offset for beginning of tilde string
  */
 
-static void tilde_expand2 __PARAM__((register int offset), (offset)) __OTORP__(register int offset;){
-	register char *cp;
+static void tilde_expand2 __PARAM__((int offset), (offset)) __OTORP__(int offset;){
+	char *cp;
 	int curoff = staktell();
 	stakputc(0);
 	if(cp = sh_tilde(stakptr(offset)))
@@ -1519,11 +1525,11 @@ static void tilde_expand2 __PARAM__((register int offset), (offset)) __OTORP__(r
  * If string doesn't start with ~ or ~... not found then 0 returned.
  */
                                                             
-static char *sh_tilde __PARAM__((register const char *string), (string)) __OTORP__(register const char *string;){
-	register char		*cp;
-	register int		c;
-	register struct passwd	*pw;
-	register Namval_t *np;
+static char *sh_tilde __PARAM__((const char *string), (string)) __OTORP__(const char *string;){
+	char		*cp;
+	int		c;
+	struct passwd	*pw;
+	Namval_t *np;
 	static Hashtab_t *logins_tree;
 	if(*string++!='~')
 		return(NIL(char*));
@@ -1555,8 +1561,8 @@ static char *sh_tilde __PARAM__((register const char *string), (string)) __OTORP
 /*
  * return values for special macros
  */
-static char *special __PARAM__((register int c), (c)) __OTORP__(register int c;){
-	register Namval_t *np;
+static char *special __PARAM__((int c), (c)) __OTORP__(int c;){
+	Namval_t *np;
 	switch(c)
 	{
 	    case '@':
@@ -1598,8 +1604,8 @@ static void mac_error __PARAM__((Namval_t *np), (np)) __OTORP__(Namval_t *np;){
  * \ characters are stripped from string.
  */ 
 static char *mac_getstring __PARAM__((char *pattern), (pattern)) __OTORP__(char *pattern;){
-	register char *cp = pattern;
-	register int c;
+	char *cp = pattern;
+	int c;
 	while(c = *cp++)
 	{
 		if(c==ESCAPE)
@@ -1618,8 +1624,8 @@ static char *mac_getstring __PARAM__((char *pattern), (pattern)) __OTORP__(char 
  */
 static char *nextname __PARAM__((const char *prefix, int len), (prefix, len)) __OTORP__(const char *prefix; int len;){
 	static Hashpos_t *hp;
-	register Namval_t *np;
-	register char *cp;
+	Namval_t *np;
+	char *cp;
 	if(!prefix)
 		hp = hashscan(sh.var_tree,0);
 	else if(hp)
