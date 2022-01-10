@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2006 AT&T                     #
+#                     Copyright (c) 1994-2007 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -39,11 +39,14 @@ checksum_empty="d41d8cd98f00b204e9800998ecf8427e"
 
 package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
 
+PACKAGE_admin_tail_timeout=${PACKAGE_admin_tail_timeout:-"1m"}
+
 admin_db=admin.db
 admin_env=admin.env
 admin_ditto="ditto --checksum --delete --update --verbose"
 admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
 admin_ping="ping -c 1 -w 5"
+
 default_url=default.url
 MAKESKIP=${MAKESKIP:-"*[-.]*"}
 TAR=tar
@@ -55,7 +58,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2006-02-14 $
+@(#)$Id: package (AT&T Research) 2007-01-08 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -139,7 +142,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
                     \"\bpackage\b\".]
                 [+[user@]]host?The host name and optionally user name
                     for \brcp\b(1) and \brsh\b(1) access.]
-                [+[remote::]]PACKAGEROOT?The absolute remote package
+                [+[remote::[[master]]::]]]]PACKAGEROOT?The absolute remote package
                     root directory and optionally the remote protocol (rsh
                     or ssh) if the directory is on a different server than
                     the master package root directory. If
@@ -148,9 +151,11 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
                     \aaction\a is done. If this field begins with \b-\b
                     then the host is ignored. If this field contains \b:\b
                     then \bditto\b(1) is used to sync the remote \bsrc\b
-                    directory hierarchy to the local one. These directories
-                    must exist on the remote side: \blib/package\b,
-                    \bsrc/cmd\b, \bsrc/lib\b.]
+                    directory hierarchy to the local one. If [\amaster\a]]:
+		    is specified then the sync is deferred to the \amaster\a
+		    host. If \amaster\a is omitted (two :) then the sync is
+		    disabled. These directories must exist on the remote side:
+		    \blib/package\b, \bsrc/cmd\b, \bsrc/lib\b.]
                 [+date?\aYYMMDD\a of the last action.]
                 [+time?Elapsed wall time for the last action.]
                 [+M T W?The \badmin\b action \bmake\b, \btest\b and
@@ -710,6 +715,9 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then manually re
       binary package:${bX}
 		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD.HOSTTYPE${eI}.tgz |
 			${TAR} ${TARFLAGS}f -${eX}
+      Note that some browsers automatically unzip downloaded without warning.
+      If the gunzip fails try:
+		${TAR} ${TARFLAGS}f -${eX} lib/package/tgz/INIT.${bI}YYYY-MM-DD.HOSTTYPE${eI}.tgz
       If your system does not have ${Mtar} or ${Mgunzip} then download the ${Mratz}
       binary package:${bX}
 		mkdir bin
@@ -877,6 +885,9 @@ ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all 
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then manually read the ${bB}INIT${eB}
       source package:${bX}
 		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz | ${TAR} ${TARFLAGS}f -${eX}
+      Note that some browsers automatically unzip downloaded without warning.
+      If the gunzip fails try:
+		${TAR} ${TARFLAGS}f -${eX} lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz
       If your system does not have ${Mtar} or ${Mgunzip} then download the ${Mratz}
       source package, compile it, and manually read the ${bB}INIT${eB}
       source package:${bX}
@@ -931,7 +942,7 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		   [user@]host
 			   The host name and optionally user name for rcp(1)
 			   and rsh(1) access.
-		   [remote:]PACKAGEROOT
+		   [remote:[[master]:]]PACKAGEROOT
 			   The absolute remote package root directory and
 			   optionally the remote prorocol (rsh or ssh) if
 			   the directory is on a different server than the
@@ -941,9 +952,11 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 			   before ACTION is done. If this field begins with -
 			   then the host is ignored. If this field contains
 			   : then ditto(1) is used to sync the remote src
-			   directory hierarchy to the local one. These
-			   directories must exist on the remote side:
-			   lib/package, src/cmd, src/lib.
+			   directory hierarchy to the local one. If [master]:
+			   is specified then the sync is deferred to the
+			   master host. If master is omitted (two :) then
+			   the sync is disabled. These directories must exist
+			   on the remote side: lib/package, src/cmd, src/lib.
 		   date    YYMMDD of the last action.
 		   date    Elapsed wall time of the last action.
 		   M T W   The admin action make, test and write action error
@@ -1194,7 +1207,11 @@ args=
 assign=
 for i
 do	case $i in
-	*=*)	eval `echo ' ' "$i" | sed 's,^[ 	]*\([^=]*\)=\(.*\),n=\1 v='\''\2'\'','` ;;
+	*:*=*)	args="$args $i"
+		continue
+		;;
+	*=*)	eval `echo ' ' "$i" | sed 's,^[ 	]*\([^=]*\)=\(.*\),n=\1 v='\''\2'\'','`
+		;;
 	esac
 	case $i in
 	AR=*|LD=*|NM=*)
@@ -2335,6 +2352,7 @@ export|setup|use)
 	esac
 	;;
 esac
+run=-
 case $x in
 1)	: accept the current package use environment
 
@@ -2886,6 +2904,16 @@ cat $INITROOT/$i.sh
 esac
 PACKAGESRC=$PACKAGEROOT/lib/package
 PACKAGEBIN=$INSTALLROOT/lib/package
+case $action:$run in
+use:-)	set '' $args
+	shift
+	case $# in
+	0)	;;
+	*)	shift ;;
+	esac
+	run="$@"
+	;;
+esac
 
 # more cygwin hassles
 
@@ -4133,7 +4161,10 @@ admin)	while	test ! -f $admin_db
 			$admin_on)
 				keep=1
 				;;
-			*)	keep=0
+			*)	case " $admin_on " in
+				*" $name "*)	keep=1 ;;
+				*)		keep=0 ;;
+				esac
 				;;
 			esac
 			case " $admin_out " in
@@ -4144,18 +4175,26 @@ admin)	while	test ! -f $admin_db
 				log=$name
 				;;
 			esac
-			case $sync in
-			$host)	remote_hosts="$remote_hosts $host"
+			case $admin_binary in
+			1)	remote_hosts="$remote_hosts $host"
 				;;
-			?*)	eval ${sync}_share=\"\$${sync}_share $host\"
-				;;
-			'')	local_hosts="$local_hosts $host"
+			*)	case $sync in
+				$host)	remote_hosts="$remote_hosts $host"
+					;;
+				?*)	eval ${sync}_share=\"\$${sync}_share $host\"
+					;;
+				'')	local_hosts="$local_hosts $host"
+					;;
+				esac
 				;;
 			esac
 			eval ${host}_name='$'name ${host}_type='$'type ${host}_user='$'user ${host}_sync='$'sync ${host}_snarf='$'sync ${host}_rsh='$'rsh ${host}_root='$'root ${host}_keep='$'keep ${host}_log='$'log
 			;;
 		esac
 	done
+	: "admin_binary :" $admin_binary
+	: "admin_args   :" $admin_args
+	: "admin_on     :" $admin_on
 	: "local_hosts  :" $local_hosts
 	: "local_types  :" $local_types
 	: "remote_hosts :" $remote_hosts
@@ -4316,7 +4355,7 @@ admin)	while	test ! -f $admin_db
 	'')	# track the progress
 		case $quiet in
 		0)	cd $admin_log
-			tail -t 4m -f $logs
+			tail -t $PACKAGE_admin_tail_timeout -f $logs
 			cd ..
 			;;
 		esac
@@ -4641,8 +4680,6 @@ install)cd $PACKAGEROOT
 	flat)	flat=1 # backwards compatibility -- documentation dropped
 		shift
 		;;
-	*)	flat=0
-		;;
 	esac
 	case $# in
 	0)	echo "$command: $action: target directory argument expected" >&2
@@ -4935,19 +4972,38 @@ make|view)
 		;;
 	esac
 
-	# check $CC
+	# check $CC and { cc ld ldd } intercepts
 
+	h=$HOSTTYPE
+	case $HOSTTYPE in
+	*.*)	t=`echo $HOSTTYPE | sed 's/[.][^.]*//'`
+		h="$h $t"
+		;;
+	*)	t=$HOSTTYPE
+		;;
+	esac
+	case $t in
+	*[0123456789])
+		t=`echo $t | sed 's/[0123456789]*$//'`
+		h="$h $t"
+		;;
+	esac
 	if	onpath $CC
 	then	cc=$_onpath_
 	else	cc=$CC
 	fi
 	case $CC in
-	cc)	s=$INITROOT/cc.$HOSTTYPE
-		b=$INSTALLROOT/bin/cc
-		t=$INSTALLROOT/lib/package/gen/cc.tim
-		if	cmp -s "$s" "$b" >/dev/null 2>&1
-		then	intercept=1
-		else	intercept=0
+	cc)	c=cc
+		b=$INSTALLROOT/bin/$c
+		t=$INSTALLROOT/lib/package/gen/$c.tim
+		intercept=0
+		for t in $h
+		do	s=$INITROOT/$c.$t
+			test -x "$s" || continue
+			if	cmp -s "$s" "$b" >/dev/null 2>&1
+			then	intercept=1
+				break
+			fi
 			case `ls -t "$t" "$b" "$s" 2>/dev/null` in
 			$t*)	;;
 			$b*)	cc=$b
@@ -4961,7 +5017,8 @@ make|view)
 					*.mips*)$s -version >/dev/null 2>&1 || s= ;;
 					esac
 					case $s in
-					?*)	$exec cp "$s" "$b" || exit
+					?*)	$exec sed "s/^HOSTTYPE=.*/HOSTTYPE=$HOSTTYPE/" < "$s" > "$b" || exit
+						$exec chmod +x "$b" || exit
 						cc=$b
 						intercept=1
 						note update $b
@@ -4973,7 +5030,7 @@ make|view)
 				cd $PACKAGEROOT
 				;;
 			esac
-		fi
+		done
 		case $cc in
 		cc)	if	onpath gcc
 			then	CC=gcc
@@ -4981,29 +5038,36 @@ make|view)
 			fi
 			;;
 		esac
-		s=$INITROOT/ld.$HOSTTYPE
-		b=$INSTALLROOT/bin/ld
-		if	test 0 != "$intercept" -a -x "$s"
-		then	case `ls -t "$b" "$s" 2>/dev/null` in
-			$b*)	;;
-			$s*)	$exec cp "$s" "$b"
-				note update $b
-				;;
-			esac
-		fi
+		case $intercept in
+		1)	c=ld
+			b=$INSTALLROOT/bin/$c
+			for t in $h
+			do	s=$INITROOT/$c.$t
+				test -x "$s" || continue
+				case `ls -t "$b" "$s" 2>/dev/null` in
+				$b*)	;;
+				$s*)	$exec cp "$s" "$b"
+					note update $b
+					;;
+				esac
+			done
+			;;
+		esac
 		;;
 	esac
-	s=$INITROOT/ldd.$HOSTTYPE
-	b=$INSTALLROOT/bin/ldd
-	if	test -x "$s"
-	then	onpath ldd ||
+	c=ldd
+	b=$INSTALLROOT/bin/$c
+	for t in $h
+	do	s=$INITROOT/$c.$t
+		test -x "$s" || continue
+		onpath $c ||
 		case `ls -t "$b" "$s" 2>/dev/null` in
 		$b*)	;;
 		$s*)	$exec cp "$s" "$b"
 			note update $b
 			;;
 		esac
-	fi
+	done
 	case $cc in
 	/*)	;;
 	*)	echo "$command: $CC: not found -- set CC=C-compiler" >&2
@@ -5236,12 +5300,10 @@ cat $j $k
 
 	# generate ksh next if possible
 
-	if	test "$KEEP_SHELL" != 1 -a -d $PACKAGEROOT/src/cmd/ksh93 && executable ! $KSH
-	then	if	nonmake $MAKE
-		then	m=mamake
-		else	m="nmake $nmakeflags"
-		fi
-		eval capture $m \$makeflags \$noexec install ksh93 $assign
+	if	nonmake $MAKE
+	then	: no need to generate ksh next -- it could be the only package
+	elif	test "$KEEP_SHELL" != 1 -a -d $PACKAGEROOT/src/cmd/ksh93 && executable ! $KSH
+	then	eval capture nmake $nmakeflags \$makeflags \$noexec install ksh93 $assign
 		case $make$noexec in
 		'')	if	executable ! $KSH
 			then	echo "$command: $action: errors making $KSH" >&2
@@ -5414,6 +5476,9 @@ read)	case ${PWD:-`pwd`} in
 		*.gz)	: standalone packages unbundled manually
 			continue
 			;;
+		*.md5)	: tarball checksum
+			continue
+			;;
 		*?[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]*)
 			;;
 		*)	echo "$command: $f: not a package archive" >&2
@@ -5501,13 +5566,19 @@ read)	case ${PWD:-`pwd`} in
 						TARPROBE=
 						;;
 					esac
-					case $exec in
-					'')	$exec gunzip < "$f" | $TAR ${TARFLAGS}f - ;;
-					*)	$exec "gunzip < $f | $TAR ${TARFLAGS}f -" ;;
-					esac || {
-						code=1
-						continue
-					}
+					if	gunzip -l < "$f" > /dev/null 2>&1
+					then	case $exec in
+						'')	$exec gunzip < "$f" | $TAR ${TARFLAGS}f - ;;
+						*)	$exec "gunzip < $f | $TAR ${TARFLAGS}f -" ;;
+						esac || {
+							code=1
+							continue
+						}
+					else	$exec $TAR ${TARFLAGS}f "$f" || {
+							code=1
+							continue
+						}
+					fi
 				else	checkaout ratz
 					case $exec in
 					'')	echo $f:
