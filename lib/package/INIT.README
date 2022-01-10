@@ -74,6 +74,9 @@ Source Package Installation Instructions -- Plan B:
   (4) If the bin/package script does not exist then manually read the INIT
       source package:
 		gunzip < lib/package/tgz/INIT.YYYY-MM-DD.tgz | tar xvf -
+      Note that some browsers automatically unzip downloaded without warning.
+      If the gunzip fails try:
+		tar xvf - lib/package/tgz/INIT.YYYY-MM-DD.tgz
       If your system does not have tar(1) or gunzip(1) then download the ratz
       source package, compile it, and manually read the INIT
       source package:
@@ -89,6 +92,46 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+07-01-05 package.sh: fix "admin write binary" logic
+07-01-01 iffe.sh: add "cmd" --verbose trace
+07-01-01 iffe.sh: sort => LC_ALL=C sort
+07-01-01 C+probe: LC_ALL=C
+06-12-22 make.probe: lean on gcc -v for stdlib, but preserve /usr/local!
+06-11-23 package.sh: *.md5 are not tarballs -- doh
+06-11-23 iffe.sh: add -F, --features=feature-test-header
+06-11-11 make.probe: favor lib64 over lib for hosttype==*64
+06-10-31 make.probe: add "-ignore-source-dir -iquote" test
+06-10-31 iffe.sh: add status{...} code block
+06-10-11 regress.sh: fix DO to handle {...} (time for regress.tst?)
+06-10-11 package.sh: handle already gunzip'd *.tgz
+06-10-06 iffe.sh: add reference for header content tests
+06-09-27 regress.sh: fix UMASK to do DO too (duh)
+06-09-22 iffe.sh: drop -O for npt tests (for msvc intrinsics)
+06-09-14 cc.darwin: drop -O until gcc 4.* gets its act together
+06-09-11 package.sh: { cc ld ldd } intercepts check ${HOSTTYPE%.*} too
+06-09-08 regress.sh: add PIPE INPUT|OUTPUT for pipe io
+06-09-05 C+probe: add { probe_version version_stamp version_string }
+06-09-05 make.probe: add version stamp comment, CC.VERSION[.STRING]
+06-08-27 regress.sh,mktest.sh: add UMASK
+06-08-25 regress.sh: add -b,--ignore-space,IGNORESPACE
+06-08-25 mktest.sh: add IGNORESPACE
+06-08-24 mktest.sh: handle \000 in data
+06-08-24 regress.sh: handle -f* for INPUT|OUTPUT|ERROR
+06-08-16 package.sh: fix 'install flat' logic
+06-08-11 rt.sh: handle style=shell %K date format
+06-07-17 ratz.c: fix __MVS__ FAR definition
+06-07-17 iffe.sh: "header x.h" -- deprecate "include x.h" for .SCAN.iffe
+06-07-17 package.sh: differentiate urls vs. assignments
+06-06-27 rt.sh: add --failed, --heading
+06-06-27 C+probe,TEST.mk,make.probe,mktest.sh,regress.sh: 'ulimit -c 0'
+06-06-26 cc.darwin.ppc: handle -lcc_dynamic disappearance
+06-06-25 mktest.sh: implement PROG
+06-06-11 Makefile: add -ldbm :MAPLIB:, provide public MAPLIB.mk
+06-05-06 package.sh: add PACKAGE_admin_tail_timeout
+06-05-22 ratz.c: upgrade to zlib-1.2.3
+06-05-09 package.sh: fix admin.db docs
+06-03-11 package.sh: fix `package use - command ...'
+06-03-05 make.probe: work around pedantic bash 3.1 mismatched " in `.`
 06-02-14 package.sh: "results failed test" == "results test failed"
 	 cc.sgi.*: add _AST_cc_OPTIONS parameterization, -OPT:Olimit=0
 	 cc.linux.ia64-icc: add for intel cc
