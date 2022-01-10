@@ -32,6 +32,9 @@
 #include <ast.h>
 #include <ctype.h>
 #include <ls.h>
+#ifdef __linux__
+#include <sys/sysmacros.h>
+#endif
 
 char*
 fmtdev(struct stat* st)
