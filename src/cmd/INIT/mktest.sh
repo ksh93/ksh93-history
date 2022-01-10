@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2006 AT&T                     #
+#                     Copyright (c) 1994-2007 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -31,7 +31,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2005-10-09 $
+@(#)$Id: mktest (AT&T Labs Research) 2006-08-27 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -55,7 +55,8 @@ unit.rt [ unit [ arg ... ] ]
         [+DATA \afile\a [ - | [ options ]] data]]?Create input data
             \afile\a that is empty (-) or contains \adata\a subject to
             \bprint\b(1) \aoptions\a or that is a copy of the DATA command
-            standard input.]
+            standard input. Set \afile\a to \b-\b to name the standard
+            input.]
         [+EXEC [ \aarg\a ... ]]?Run the command under test with
             optional arguments. If the standard input is not specified then
             the standard input of the previous EXEC is used. The standard
@@ -63,14 +64,19 @@ unit.rt [ unit [ arg ... ] ]
             file.]
         [+EXPORT \aname\a=\avalue\a ...?Export list for subsequent
             commands in the TEST group.]
-        [+KEEP \apattern\a ...?File matych patterns of files to retain
+        [+IGNORESPACE [ 0 | 1 ]
+            ?Ignore space differences when comparing expected output.]
+        [+KEEP \apattern\a ...?File match patterns of files to retain
             between TEST groups.]
         [+NOTE \acomment\a?\acomment\a is added to the current test
             script.]
-        [+PROG \acommand\a [ \aarg\a ... ]]?\acommand\a is run with
+        [+PROG \acommand\a [ \aarg\a ... ]]?Run \acommand\a with
             optional arguments.]
         [+TEST [ \anumber\a ]] [ \adescription\a ... ]]?Define a new
             test group with optional \anumber\a and \adescripion\a.]
+        [+UMASK [ \amask\a ]]?Run subsequent tests with \bumask\b(1)
+            \amask\a. If \amask\a is omitted then the original \bumask\b is
+            used.]
         [+UNIT \acommand\a [ \aarg\a ... ]]?Define the command and
             optional default arguments to be tested. \bUNIT\b explicitly
             overrides the default command name derived from the test script
@@ -86,11 +92,11 @@ unit.rt [ unit [ arg ... ] ]
 	;;
 esac
 
-typeset ARG SCRIPT UNIT TEMP=${TMPDIR:-/tmp}/$command.$$.tmp
+typeset ARG SCRIPT UNIT TEMP=${TMPDIR:-/tmp}/$command.$$.tmp WORK
 typeset IO INPUT OUTPUT ERROR KEEP
 typeset SINGLE= WIDTH=80 quote='%${SINGLE}..${WIDTH}q'
-typeset -A DATA RESET REMOVE
-integer SCRIPT_UNIT=0 TEST=0 CODE=0 EXIT=0 ACCEPT=0 code
+typeset -A DATA RESET REMOVE FORMAT
+integer KEEP_UNIT=0 SCRIPT_UNIT=0 TEST=0 CODE=0 EXIT=0 ACCEPT=0 code
 
 while	getopts $ARGV0 "$USAGE" OPT
 do	case $OPT in
@@ -125,11 +131,16 @@ if	[[ ! -r $SCRIPT ]]
 then	print -u2 -r -- $command: $SCRIPT: cannot read
 	exit 1
 fi
+(ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0
 if	(( $# ))
 then	set -A UNIT -- "$@"
+	KEEP_UNIT=1
 else	ARG=${SCRIPT##*/}
 	set -A UNIT -- "${ARG%.*}"
 fi
+WORK=${UNIT[0]}.tmp
+rm -rf $WORK
+mkdir $WORK || exit
 
 function LINE
 {
@@ -151,7 +162,7 @@ function NOTE
 
 function UNIT
 {
-	set -A UNIT -- "$@"
+	(( KEEP_UNIT )) || set -A UNIT -- "$@"
 	case $STYLE in
 	regress)LINE
 		print -u$stdout -r -f $'UNIT'
@@ -197,6 +208,7 @@ function TEST
 		do	unset REMOVE[$i]
 		done
 	fi
+	rm -rf $WORK/*
 	if	[[ $1 == +([0-9]) ]]
 	then	TEST=${1##0}
 		shift
@@ -213,12 +225,17 @@ function TEST
 	INPUT=
 	OUTPUT=
 	ERROR=
+	UMASK=$UMASK_ORIG
+	UMASK_DONE=$UMASK
+	CODE=0
 }
 
-function EXEC
+function RUN
 {
-	typeset i n output=1 error=1 exitcode=1
+	typeset i n p op unit sep output=1 error=1 exitcode=1
 	integer z
+	op=$1
+	shift
 	while	:
 	do	case $1 in
 		++NOOUTPUT)	output= ;;
@@ -229,42 +246,78 @@ function EXEC
 		esac
 		shift
 	done
-	if	(( ! ${#UNIT[@]} ))
+	if	[[ $op == PROG ]]
+	then	unit=$1
+		shift
+	elif	(( ! ${#UNIT[@]} ))
 	then	print -u2 -r -- $command: $SCRIPT: UNIT statement or operand expected
 		exit 1
 	fi
 	LINE
 	case $STYLE in
-	regress)print -u$stdout -r -f $'\tEXEC\t'
+	regress)if	[[ $op == PROG ]]
+		then	print -u$stdout -r -f $'\t'"$op"$'\t'"$unit"
+			sep=$' '
+		else	print -u$stdout -r -f $'\t'"$op"
+			sep=$'\t'
+		fi
 		for ARG in "$@"
-		do	print -u$stdout -r -f " $QUOTE" -- "$ARG"
+		do	print -u$stdout -r -f "$sep$QUOTE" -- "$ARG"
+			sep=$' '
 		done
 		print -u$stdout
-		[[ /dev/fd/0 -ef /dev/fd/$stdin ]] || cat > $TEMP.in
+		[[ ${DATA[-]} || /dev/fd/0 -ef /dev/fd/$stdin ]] || cat > $TEMP.in
 		IO=$(<$TEMP.in)
 		(( z = $(wc -c < $TEMP.in) ))
 		if	(( z && z == ${#IO} ))
 		then	n=-n
 		else	n=
 		fi
-		"${UNIT[@]}" "$@" < $TEMP.in > $TEMP.out 2> $TEMP.err
-		code=$?
+		{
+			[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK
+			cd $WORK
+			if	[[ $op == PROG ]]
+			then	"$unit" "$@"
+				code=$?
+			else	"${UNIT[@]}" "$@"
+				code=$?
+			fi
+			cd ..
+			[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
+		} < $TEMP.in > $TEMP.out 2> $TEMP.err
 		if	[[ $IO != "$INPUT" ]]
 		then	INPUT=$IO
-			print -u$stdout -n -r -- $'\t\tINPUT' $n -
-			[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+			if	[[ ${FORMAT[-]} ]]
+			then	print -u$stdout -n -r -- $'\t\tINPUT'
+				print -u$stdout -r -f " $QUOTE" -- "${FORMAT[-]}"
+				print -u$stdout -r -f " $QUOTE" -- -
+				unset FORMAT[-]
+			else	print -u$stdout -n -r -- $'\t\tINPUT' $n -
+				[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+			fi
 			print -u$stdout
+			unset DATA[-]
 		fi
 		for i in ${!DATA[@]}
-		do	IO=$(<$i)
-			(( z = $(wc -c < $i) ))
-			if	(( z && z == ${#IO} ))
-			then	n=-n
-			else	n=
+		do	if	[[ ${FORMAT[$i]} ]]
+			then	print -u$stdout -n -r -- $'\t\tINPUT'
+				print -u$stdout -r -f " $QUOTE" -- "${FORMAT[$i]}"
+				print -u$stdout -r -f " $QUOTE" -- "$i"
+				unset FORMAT[$i]
+			else	case $i in
+				-)	p=$TEMP.in ;;
+				*)	p=$WORK/$i ;;
+				esac
+				IO=$(<$p)
+				(( z = $(wc -c < $p) ))
+				if	(( z && z == ${#IO} ))
+				then	n=-n
+				else	n=
+				fi
+				print -u$stdout -n -r -- $'\t\tINPUT' $n
+				print -u$stdout -r -f " $QUOTE" -- "$i"
+				[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
 			fi
-			print -u$stdout -n -r -- $'\t\tINPUT' $n
-			print -u$stdout -r -f " $QUOTE" -- "$i"
-			[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
 			print -u$stdout
 			unset DATA[$i]
 		done
@@ -277,12 +330,19 @@ function EXEC
 		if	[[ $IO != "$OUTPUT" ]]
 		then	OUTPUT=$IO
 			if	[[ $output ]]
-			then	print -u$stdout -n -r -- $'\t\tOUTPUT' $n -
-				[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+			then	if	[[ ! -s $TEMP.out ]]
+				then	print -u$stdout -n -r -- $'\t\tOUTPUT' -
+				elif	cmp -s $TEMP.in $TEMP.out
+				then	OUTPUT=not-$OUTPUT
+					print -u$stdout -n -r -- $'\t\tSAME OUTPUT INPUT'
+				else	print -u$stdout -n -r -- $'\t\tOUTPUT' $n -
+					[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+				fi
 				print -u$stdout
 			fi
 		fi
 		IO=$(<$TEMP.err)
+		IO=${IO//$command\[*([0-9])\]:\ .\[*([0-9])\]:\ @(EXEC|PROG)\[*([0-9])\]:\ /}
 		(( z = $(wc -c < $TEMP.err) ))
 		if	(( z && z == ${#IO} ))
 		then	n=-n
@@ -308,6 +368,10 @@ function EXEC
 			print -u$stdout -r -- $'\t\tIGNORE ERROR'
 			;;
 		esac
+		if	[[ $UMASK_DONE != $UMASK ]]
+		then	UMASK_DONE=$UMASK
+			print -u$stdout -r -f $'\t\tUMASK %s\n' $UMASK
+		fi
 		if	(( code != CODE ))
 		then	(( CODE=code ))
 			if	[[ $exitcode ]]
@@ -315,10 +379,15 @@ function EXEC
 			fi
 		fi
 		;;
-	shell)	print -u$stdout -r -f $'"$@"'
+	shell)	[[ $UMASK != $UMASK_ORIG ]] && print -u$stdout -r -f "{ umask $UMASK; "
+		if	[[ $op == PROG ]]
+		then	print -u$stdout -r -f $'"'"$unit"$'"'
+		else	print -u$stdout -r -f $'"$@"'
+		fi
 		for ARG in "$@"
 		do	print -u$stdout -r -f " $QUOTE" -- "$ARG"
 		done
+		[[ $UMASK != $UMASK_ORIG ]] && print -u$stdout -r -f "umask $UMASK_ORIG; } "
 		if	[[ ! $output ]]
 		then	print -u$stdout -r -f " >/dev/null"
 		fi
@@ -342,23 +411,37 @@ function EXEC
 	esac
 }
 
+function EXEC
+{
+	RUN EXEC "$@"
+}
+
 function DATA
 {
-	typeset f=$1 o=
+	typeset f p o
+	f=$1
 	shift
+	case $f in
+	-)	p=$TEMP.in ;;
+	*)	p=$WORK/$f ;;
+	esac
 	case $1 in
 	'')	cat ;;
 	-)	;;
 	*)	print -r "$@" ;;
-	esac > $f
+	esac > $p
 	DATA[$f]=1
+	if	(( $# == 1 )) && [[ $1 == -?* ]]
+	then	FORMAT[$f]=$1
+	else	FORMAT[$f]=
+	fi
 	if	[[ $f != $KEEP ]]
 	then	REMOVE[$f]=1
 	fi
 	if	[[ $STYLE == shell ]]
 	then	{
 		print -r -f "cat > $QUOTE <<'!TEST-INPUT!'"$'\n' -- "$f"
-		cat "$f"
+		cat "$p"
 		print -r -- !TEST-INPUT!
 		} >&$stdout
 	fi
@@ -395,7 +478,7 @@ function EXPORT
 
 function PROG
 {
-	print -u2 -r -- $command: $0: not implemented
+	RUN PROG "$@"
 }
 
 function WIDTH
@@ -404,8 +487,24 @@ function WIDTH
 	eval QUOTE='"'$quote'"'
 }
 
-trap 'CODE=$?; rm -f $TEMP.*; exit $CODE' 0 1 2 3 15
+function IGNORESPACE
+{
+	IGNORESPACE=-b
+	LINE
+	print -u$stdout -r IGNORESPACE
+}
 
+function UMASK # [ mask ]
+{
+	[[ $UMASK_ORIG ]] || UMASK_ORIG=$(umask)
+	UMASK=$1
+	[[ $UMASK ]] || UMASK=$UMASK_ORIG
+}
+
+trap 'CODE=$?; rm -rf $TEMP.* $WORK; exit $CODE' 0 1 2 3 15
+
+typeset IGNORESPACE UMASK UMASK_ORIG UMASK_DONE
+UMASK_ORIG=$(umask)
 IFS=$IFS$'\n'
 
 print -u$stdout -r "# : : generated from $SCRIPT by $command : : #"
@@ -469,7 +568,7 @@ case \$ACCEPT in
 	then	echo ${UNIT[0]} tests PASSED
 		rm -f $PREFIX${UNIT[0]}.tmp
 	else	echo ${UNIT[0]} tests FAILED
-		diff $PREFIX${UNIT[0]}.tmp $PREFIX${UNIT[0]}.out
+		diff $IGNORESPACE $PREFIX${UNIT[0]}.tmp $PREFIX${UNIT[0]}.out
 	fi
 	;;
 

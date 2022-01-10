@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2006 AT&T                     #
+#                     Copyright (c) 1994-2007 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -21,13 +21,15 @@
 
 command=rt
 flags='--silent --keepgoing'
+failed=0
+heading=1
 verbose=0
 
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: rt (AT&T Research) 2005-04-15 $
+@(#)$Id: rt (AT&T Research) 2006-08-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?rt - run "nmake test" and filter output]
@@ -37,6 +39,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	specified then the \afile\a operands, or the standard input
 	if no \afile\a operands are specified, are filtered instead
 	of the output from \bnmake\b.]
+[f:failed?Only list failed test results.]
+[h!:heading?Enable per-file heading when more than one \afile\a operand
+	follows \b-\b.]
 [v:verbose?Run with \vREGRESSFLAGS=-v\v.]
 
 [ test ... | - [ file ... ] ]
@@ -47,7 +52,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 '
 	;;
 *)	ARGV0=""
-	USAGE="fv"
+	USAGE="fhv"
 	;;
 esac
 
@@ -60,6 +65,8 @@ function usage
 
 while	getopts $ARGV0 "$USAGE" OPT
 do	case $OPT in
+	f)	failed=$OPTARG ;;
+	h)	heading=$OPTARG ;;
 	v)	(( verbose=$OPTARG )) && flags="$flags REGRESSFLAGS=-v" ;;
 	esac
 done
@@ -78,26 +85,31 @@ function results # tests errors
 {
 	typeset label note
 	if	[[ $style != unknown ]] && (( errors >= 0 ))
-	then	if	(( $1 >= 0 ))
-		then	if	(( $1 == 1))
-			then	label="test "
-			else	label=tests
+	then	style=unknown
+		if	(( !failed || errors ))
+		then	if	(( failed ))
+			then	print -r -n -- "$unit"
 			fi
-			printf $'%s%5d %s' "$prefix" "$1" "$label"
-			prefix=
-		else	prefix="$prefix..........."
+			if	(( $1 >= 0 ))
+			then	if	(( $1 == 1))
+				then	label="test "
+				else	label=tests
+				fi
+				printf $'%s%5d %s' "$prefix" "$1" "$label"
+				prefix=
+			else	prefix="$prefix..........."
+			fi
+			if	(( $2 == 1))
+			then	label=error
+			else	label=errors
+			fi
+			if	(( $2 == 1 ))
+			then	note=" $bad"
+			elif	(( $2 > 1 ))
+			then	note=$bad
+			fi
+			printf $'%s%5d %s%s\n' "$prefix" "$2" "$label" "$note"
 		fi
-		if	(( $2 == 1))
-		then	label=error
-		else	label=errors
-		fi
-		if	(( $2 == 1 ))
-		then	note=" $bad"
-		elif	(( $2 > 1 ))
-		then	note=$bad
-		fi
-		printf $'%s%5d %s%s\n' "$prefix" "$2" "$label" "$note"
-		style=unknown
 	fi
 }
 
@@ -117,12 +129,23 @@ function unit
 	if	[[ $1 ]]
 	then	unit="$unit..........."
 	fi
-	print -r -n -- "$unit"
+	if	(( ! failed ))
+	then	print -r -n -- "$unit"
+	fi
 }
 
 if	[[ $1 == - ]]
 then	shift
-	cat "$@"
+	if	(( $# <= 1 ))
+	then	heading=0
+	fi
+	if	(( heading ))
+	then	for i
+		do	print test heading $i
+			cat -- "$i"
+		done
+	else	cat "$@"
+	fi
 else	(( $# )) || set test
 	nmake "$@" $flags 2>&1
 fi |
@@ -179,7 +202,19 @@ do	set '' $line
 		style=script
 		continue
 		;;
-	'test '*' begins at '*' '*' '*' '*' '*)
+	'test heading '*)
+		if	(( heading ))
+		then	if	(( heading > 1 ))
+			then	print
+			else	heading=2
+			fi
+			set '' $line
+			shift 3
+			print -r -- "==> $* <=="
+		fi
+		continue
+		;;
+	'test '*' begins at '????-??-??+??:??:??|'test '*' begins at '*' '*' '*' '*' '*)
 		results $tests $errors
 		unit=${2##*/}
 		unit=${unit%.sh}
@@ -190,7 +225,7 @@ do	set '' $line
 		style=shell
 		continue
 		;;
-	'test '*' at '*' '*' '*' '*' '*)
+	'test '*' at '????-??-??+??:??:??' [ '*' ]'|'test '*' at '*' '*' '*' '*' '*)
 		case $line in
 		*' [ '*test*error*' ]')
 			while	:
