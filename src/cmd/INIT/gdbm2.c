@@ -18,16 +18,18 @@
 *                                                                      *
 ***********************************************************************/
 /*
- * small test for -lnsl
+ * small test for -lgdbm
  */
 
-#ifndef socket
-#include <sys/types.h>
-#include <sys/socket.h>
+#define _hdr_ndbm	1
+
+#if _hdr_ndbm
+#include <ndbm.h>
 #endif
 
 int
 main()
 {
-	return socket(0, 0, 0) < 0;
+	dbm_open();
+	return 0;
 }
