@@ -1740,7 +1740,7 @@ TEST 16 '{ define extern include print }'
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'
 print	/* test header */
-include	stdio.h
+header	stdio.h
 define	EOF	-1
 define	FoobaR	(a,b)	((a)+(b))
 define	FoomaC	-1
