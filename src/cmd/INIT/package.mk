@@ -115,7 +115,7 @@ package.readme = $(@.package.readme.)
 	$()
 		bin/package
 	$()
-	Binary files me be in this directory or in the install root directory
+	Binary files may be in this directory or in the install root directory
 	$()
 		INSTALLROOT=$PACKAGEROOT/arch/`bin/package`
 	$()
