@@ -45,6 +45,10 @@ __STDPP__directive pragma pp:nohide tmpnam
 
 #include <ast_map.h>
 
+#if ~(~L_tmpnam+0) == 0 && ~(~L_tmpnam+1) == 1
+/* Defined with no value */
+#undef L_tmpnam
+#endif
 #ifndef L_tmpnam
 #define L_tmpnam	25
 #endif
