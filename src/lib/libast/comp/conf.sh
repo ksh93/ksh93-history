@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2006-11-15
+# @(#)conf.sh (AT&T Research) 2006-12-11
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -1387,11 +1387,11 @@ cat <<!
 
 int	conf_elements = (int)sizeof(conf) / (int)sizeof(conf[0]);
 !
-} > $tmp.2
-proto < $tmp.2 > $tmp.3
+} > $tmp.3
+proto < $tmp.3 > $tmp.4
 case $debug in
--d7)	echo $command: $tmp.3 ${base}.c ;;
-*)	cmp -s $tmp.3 ${base}.c 2>/dev/null || mv $tmp.3 ${base}.c ;;
+-d7)	echo $command: $tmp.4 ${base}.c ;;
+*)	cmp -s $tmp.4 ${base}.c 2>/dev/null || mv $tmp.4 ${base}.c ;;
 esac
 
 # limits.h generation code
