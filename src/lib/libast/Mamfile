@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-08-11
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-12-12
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -58,7 +58,21 @@ make features/common
 done features/common
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/common
 done FEATURE/common generated
-make ast_map.h
+make FEATURE/param
+meta FEATURE/param features/%.sh>FEATURE/% features/param.sh param
+make features/param.sh
+done features/param.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/param.sh
+make std/endian.h implicit
+make std/bytesex.h implicit
+make ast_common.h implicit
+prev FEATURE/common
+exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ast_common.h
+exec - fi
+make ast_map.h implicit
 make FEATURE/map
 meta FEATURE/map features/%.c>FEATURE/% features/map.c map
 make features/map.c
@@ -80,7 +94,12 @@ done features/map.c
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/map.c
 done FEATURE/map generated
 exec - cmp 2>/dev/null -s FEATURE/map ast_map.h || { rm -f ast_map.h; silent test -d . || mkdir .; ${STDCP} FEATURE/map ast_map.h; }
-done ast_map.h generated
+done ast_map.h dontcare generated
+done ast_common.h dontcare generated
+done std/bytesex.h dontcare
+done std/endian.h dontcare
+done FEATURE/param generated
+prev ast_map.h
 make ast_limits.h
 make FEATURE/limits
 meta FEATURE/limits features/%.c>FEATURE/% features/limits.c limits
@@ -133,16 +152,7 @@ done conftab.h generated
 make conftab.c
 done conftab.c generated
 done joint.conflim.h virtual
-make FEATURE/param implicit
-meta FEATURE/param features/%.sh>FEATURE/% features/param.sh param
-make features/param.sh
-done features/param.sh
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/param.sh
-make error?--?old?ethernet?address?at?wrong?offset implicit
-done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
-done FEATURE/param generated
-make comp/re_comp.h implicit
-done comp/re_comp.h dontcare
+prev FEATURE/param implicit
 make comp/getopt.h implicit
 make include/ast_getopt.h implicit
 done include/ast_getopt.h dontcare
@@ -151,7 +161,7 @@ prev FEATURE/common implicit
 prev FEATURE/lib implicit
 prev FEATURE/standards implicit
 done features/limits.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/limits.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/limits.c
 done FEATURE/limits generated
 exec - cmp 2>/dev/null -s FEATURE/limits ast_limits.h || { rm -f ast_limits.h; silent test -d . || mkdir .; ${STDCP} FEATURE/limits ast_limits.h; }
 done ast_limits.h generated
@@ -165,15 +175,7 @@ make include/sfio_s.h implicit
 done include/sfio_s.h dontcare
 make include/ast_std.h implicit
 make include/regex.h implicit
-make ast_common.h implicit
-prev FEATURE/common
-exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ast_common.h
-exec - fi
-prev ast_map.h implicit
-done ast_common.h dontcare generated
+prev ast_common.h implicit
 done include/regex.h dontcare
 prev ast_map.h implicit
 make ast_botch.h implicit
@@ -186,7 +188,7 @@ exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '
 done FEATURE/types generated
 prev FEATURE/lib implicit
 done features/botch.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/botch.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  ${LDFLAGS} '   run features/botch.c
 done FEATURE/botch generated
 exec - cmp 2>/dev/null -s FEATURE/botch ast_botch.h || { rm -f ast_botch.h; silent test -d . || mkdir .; ${STDCP} FEATURE/botch ast_botch.h; }
 done ast_botch.h dontcare generated
@@ -209,7 +211,7 @@ exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '
 done FEATURE/fs generated
 prev FEATURE/lib implicit
 done features/fcntl.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/fcntl.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/fcntl.c
 make ast_fs.h implicit
 prev FEATURE/fs
 exec - cmp 2>/dev/null -s FEATURE/fs ast_fs.h || { rm -f ast_fs.h; silent test -d . || mkdir .; ${STDCP} FEATURE/fs ast_fs.h; }
@@ -225,10 +227,8 @@ meta FEATURE/sys features/%>FEATURE/% features/sys sys
 make features/sys
 done features/sys
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sys
-make std/stdio.h implicit
-prev ast_stdio.h implicit
-done std/stdio.h dontcare
-prev comp/getopt.h implicit
+prev std/endian.h implicit
+prev std/endian.h implicit
 done FEATURE/sys generated
 exec - cmp 2>/dev/null -s FEATURE/sys ast_sys.h || { rm -f ast_sys.h; silent test -d . || mkdir .; ${STDCP} FEATURE/sys ast_sys.h; }
 done ast_sys.h dontcare generated
@@ -242,7 +242,7 @@ done FEATURE/stdio generated
 exec - cmp 2>/dev/null -s FEATURE/stdio ast_stdio.h || { rm -f ast_stdio.h; silent test -d . || mkdir .; ${STDCP} FEATURE/stdio ast_stdio.h; }
 prev include/sfio_s.h implicit
 prev include/ast_std.h implicit
-done ast_stdio.h dontcare generated
+done ast_stdio.h generated
 make ast_nl_types.h
 make FEATURE/nl_types
 meta FEATURE/nl_types features/%>FEATURE/% features/nl_types nl_types
@@ -258,7 +258,10 @@ meta FEATURE/wchar features/%>FEATURE/% features/wchar wchar
 make features/wchar
 done features/wchar
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wchar
-prev std/stdio.h implicit
+prev std/endian.h implicit
+make std/stdio.h implicit
+prev ast_stdio.h implicit
+done std/stdio.h dontcare
 prev std/stdio.h implicit
 prev ast_common.h implicit
 done FEATURE/wchar generated
@@ -298,12 +301,14 @@ exec - } > ast.req
 exec - rm -f 1.${COTEMP}.*
 make astmath.exe
 make port/astmath.c
+prev std/endian.h implicit
+prev std/endian.h implicit
 done port/astmath.c
 exec - X=1
 exec - for N in 1 2 3 4 5 6
-exec - do	if	${CC} -DN=$N -DIS ${mam_cc_FLAGS} ${CCFLAGS}   -o astmath.exe port/astmath.c 2>/dev/null
+exec - do	if	${CC} -DN=$N -DIS ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -o astmath.exe port/astmath.c 2>/dev/null
 exec - 	then	: implicit math function N=$N :
-exec - 	elif	${CC} -DN=$N -DIS ${mam_cc_FLAGS} ${CCFLAGS}   -o astmath.exe port/astmath.c -lm 2>/dev/null
+exec - 	elif	${CC} -DN=$N -DIS ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -o astmath.exe port/astmath.c -lm 2>/dev/null
 exec - 	then	: math function N=$N requires -lm :
 exec - 		X=0
 exec - 		break
@@ -313,7 +318,7 @@ exec - case $X in
 exec - 0)	rm -f astmath.exe ;;
 exec - *)	touch astmath.exe ;;
 exec - esac
-exec - rm -f astmath.o
+exec - rm -f astmath
 done astmath.exe dontcare generated
 exec - if	test -f astmath.exe
 exec - then	touch ast.req
@@ -359,8 +364,6 @@ make ast_param.h implicit
 prev FEATURE/param
 exec - cmp 2>/dev/null -s FEATURE/param ast_param.h || { rm -f ast_param.h; silent test -d . || mkdir .; ${STDCP} FEATURE/param ast_param.h; }
 done ast_param.h dontcare generated
-make ndir.h implicit
-done ndir.h dontcare virtual
 make std/dirent.h implicit
 make ast_dirent.h implicit
 make FEATURE/dirent
@@ -375,6 +378,9 @@ exec - cmp 2>/dev/null -s FEATURE/dirent ast_dirent.h || { rm -f ast_dirent.h; s
 prev include/ast_std.h implicit
 done ast_dirent.h dontcare generated
 done std/dirent.h dontcare
+make ndir.h implicit
+done ndir.h dontcare virtual
+prev std/dirent.h implicit
 make include/ls.h implicit
 make ast_mode.h implicit
 make FEATURE/mode
@@ -385,7 +391,7 @@ done include/modecanon.h
 prev FEATURE/param implicit
 done features/mode.c
 prev ast.req
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude  ${LDFLAGS} '   run features/mode.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} '   run features/mode.c
 done FEATURE/mode generated
 exec - cmp 2>/dev/null -s FEATURE/mode ast_mode.h || { rm -f ast_mode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/mode ast_mode.h; }
 done ast_mode.h dontcare generated
@@ -462,6 +468,7 @@ prev include/vmalloc.h implicit
 prev include/regex.h implicit
 prev include/ls.h implicit
 prev include/error.h implicit
+prev std/endian.h implicit
 make include/cdt.h implicit
 prev ast_common.h implicit
 prev include/ast_std.h implicit
@@ -911,7 +918,7 @@ done lcgen generated
 make port/lc.tab
 done port/lc.tab
 exec - ./lcgen ${COTEMP}.1 ${COTEMP}.2 < port/lc.tab
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ${COTEMP}.1 > ${COTEMP}.3
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ${COTEMP}.1  > ${COTEMP}.3
 exec - rm -f ${COTEMP}.1
 exec - if	cmp 2>/dev/null -s ${COTEMP}.3 lc.h
 exec - then	rm ${COTEMP}.3
@@ -1403,8 +1410,6 @@ make sfio/sfhdr.h implicit
 prev port/lclib.h implicit
 make vfork.h implicit
 done vfork.h dontcare virtual
-make cell_sys_headers.h implicit
-done cell_sys_headers.h dontcare virtual
 make std/wchar.h implicit
 prev ast_wchar.h implicit
 done std/wchar.h dontcare
@@ -2759,8 +2764,6 @@ make process.h implicit
 done process.h dontcare virtual
 prev include/wait.h implicit
 prev include/error.h implicit
-make spawn.h implicit
-done spawn.h dontcare virtual
 prev include/ast.h implicit
 done comp/spawnveg.c
 meta spawnveg.o %.c>%.o comp/spawnveg.c spawnveg
@@ -2879,6 +2882,8 @@ done eaccess.o generated
 make gross.o
 make comp/gross.c
 make comp/gross_sgi.h implicit
+make locale_attr.h implicit
+done locale_attr.h dontcare virtual
 done comp/gross_sgi.h dontcare
 make FEATURE/hack implicit
 meta FEATURE/hack features/%>FEATURE/% features/hack hack
@@ -2941,7 +2946,7 @@ prev ast_common.h implicit
 done comp/getpgrp.c
 meta getpgrp.o %.c>%.o comp/getpgrp.c getpgrp
 prev comp/getpgrp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  -c comp/getpgrp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c comp/getpgrp.c
 done getpgrp.o generated
 make setpgid.o
 make comp/setpgid.c
@@ -3264,7 +3269,7 @@ prev ast_common.h implicit
 done comp/basename.c
 meta basename.o %.c>%.o comp/basename.c basename
 prev comp/basename.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  -c comp/basename.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c comp/basename.c
 done basename.o generated
 make closelog.o
 make comp/closelog.c
@@ -3285,7 +3290,7 @@ prev ast_common.h implicit
 done comp/dirname.c
 meta dirname.o %.c>%.o comp/dirname.c dirname
 prev comp/dirname.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  -c comp/dirname.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c comp/dirname.c
 done dirname.o generated
 make fmtmsglib.o
 make comp/fmtmsglib.c
@@ -3379,7 +3384,8 @@ done openlog.o generated
 make re_comp.o
 make comp/re_comp.c
 prev include/regex.h implicit
-prev comp/re_comp.h implicit
+make comp/re_comp.h implicit
+done comp/re_comp.h
 prev include/ast.h implicit
 done comp/re_comp.c
 meta re_comp.o %.c>%.o comp/re_comp.c re_comp
@@ -3469,7 +3475,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done swab.o generated
 make syslog.o
 make comp/syslog.c
-prev std/stdio.h implicit
+prev std/endian.h implicit
 prev include/ls.h implicit
 prev include/tm.h implicit
 prev include/error.h implicit
@@ -4203,7 +4209,7 @@ prev FEATURE/float implicit
 prev FEATURE/common implicit
 done features/sfinit.c
 prev ast.req
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/sfinit.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  ${LDFLAGS} '   run features/sfinit.c
 done FEATURE/sfinit generated
 prev FEATURE/float implicit
 prev sfio/sfhdr.h implicit
@@ -5260,8 +5266,6 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done astcopy.o generated
 make astconf.o
 make port/astconf.c
-make sys.s implicit
-done sys.s dontcare virtual
 make FEATURE/libpath implicit
 meta FEATURE/libpath features/%.sh>FEATURE/% features/libpath.sh libpath
 make features/libpath.sh
@@ -5330,7 +5334,7 @@ prev FEATURE/standards implicit
 done conftab.c
 meta conftab.o %.c>%.o conftab.c conftab
 prev conftab.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  -c conftab.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  -c conftab.c
 done conftab.o generated
 make aststatic.o
 make port/aststatic.c
@@ -5532,7 +5536,6 @@ done vmmopen.o generated
 make malloc.o
 make vmalloc/malloc.c
 prev include/ast_windows.h implicit
-prev std/stdio.h implicit
 prev vmalloc/vmhdr.h implicit
 done vmalloc/malloc.c
 meta malloc.o %.c>%.o vmalloc/malloc.c malloc
@@ -5553,7 +5556,7 @@ prev FEATURE/uwin implicit
 done uwin/a64l.c
 meta a64l.o %.c>%.o uwin/a64l.c a64l
 prev uwin/a64l.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  -c uwin/a64l.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c uwin/a64l.c
 done a64l.o generated
 make acosh.o
 make uwin/acosh.c
@@ -5563,7 +5566,7 @@ prev FEATURE/uwin implicit
 done uwin/acosh.c
 meta acosh.o %.c>%.o uwin/acosh.c acosh
 prev uwin/acosh.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/acosh.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/acosh.c
 done acosh.o generated
 make asinh.o
 make uwin/asinh.c
@@ -5572,7 +5575,7 @@ prev FEATURE/uwin implicit
 done uwin/asinh.c
 meta asinh.o %.c>%.o uwin/asinh.c asinh
 prev uwin/asinh.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/asinh.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/asinh.c
 done asinh.o generated
 make atanh.o
 make uwin/atanh.c
@@ -5581,7 +5584,7 @@ prev FEATURE/uwin implicit
 done uwin/atanh.c
 meta atanh.o %.c>%.o uwin/atanh.c atanh
 prev uwin/atanh.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/atanh.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/atanh.c
 done atanh.o generated
 make cbrt.o
 make uwin/cbrt.c
@@ -5590,7 +5593,7 @@ prev FEATURE/uwin implicit
 done uwin/cbrt.c
 meta cbrt.o %.c>%.o uwin/cbrt.c cbrt
 prev uwin/cbrt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/cbrt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/cbrt.c
 done cbrt.o generated
 make crypt.o
 make uwin/crypt.c
@@ -5610,7 +5613,7 @@ prev FEATURE/uwin implicit
 done uwin/erf.c
 meta erf.o %.c>%.o uwin/erf.c erf
 prev uwin/erf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/erf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/erf.c
 done erf.o generated
 make err.o
 make uwin/err.c
@@ -5630,7 +5633,7 @@ prev FEATURE/uwin implicit
 done uwin/exp.c
 meta exp.o %.c>%.o uwin/exp.c exp
 prev uwin/exp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/exp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/exp.c
 done exp.o generated
 make exp__E.o
 make uwin/exp__E.c
@@ -5639,7 +5642,7 @@ prev FEATURE/uwin implicit
 done uwin/exp__E.c
 meta exp__E.o %.c>%.o uwin/exp__E.c exp__E
 prev uwin/exp__E.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/exp__E.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/exp__E.c
 done exp__E.o generated
 make expm1.o
 make uwin/expm1.c
@@ -5648,7 +5651,7 @@ prev FEATURE/uwin implicit
 done uwin/expm1.c
 meta expm1.o %.c>%.o uwin/expm1.c expm1
 prev uwin/expm1.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/expm1.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/expm1.c
 done expm1.o generated
 make gamma.o
 make uwin/gamma.c
@@ -5657,7 +5660,7 @@ prev FEATURE/uwin implicit
 done uwin/gamma.c
 meta gamma.o %.c>%.o uwin/gamma.c gamma
 prev uwin/gamma.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/gamma.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/gamma.c
 done gamma.o generated
 make getpass.o
 make uwin/getpass.c
@@ -5675,7 +5678,7 @@ prev FEATURE/uwin implicit
 done uwin/lgamma.c
 meta lgamma.o %.c>%.o uwin/lgamma.c lgamma
 prev uwin/lgamma.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/lgamma.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/lgamma.c
 done lgamma.o generated
 make log.o
 make uwin/log.c
@@ -5684,7 +5687,7 @@ prev FEATURE/uwin implicit
 done uwin/log.c
 meta log.o %.c>%.o uwin/log.c log
 prev uwin/log.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/log.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/log.c
 done log.o generated
 make log1p.o
 make uwin/log1p.c
@@ -5693,7 +5696,7 @@ prev FEATURE/uwin implicit
 done uwin/log1p.c
 meta log1p.o %.c>%.o uwin/log1p.c log1p
 prev uwin/log1p.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/log1p.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/log1p.c
 done log1p.o generated
 make log__L.o
 make uwin/log__L.c
@@ -5702,7 +5705,7 @@ prev FEATURE/uwin implicit
 done uwin/log__L.c
 meta log__L.o %.c>%.o uwin/log__L.c log__L
 prev uwin/log__L.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/log__L.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/log__L.c
 done log__L.o generated
 make rand48.o
 make uwin/rand48.c
@@ -5710,7 +5713,7 @@ prev FEATURE/uwin implicit
 done uwin/rand48.c
 meta rand48.o %.c>%.o uwin/rand48.c rand48
 prev uwin/rand48.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  -c uwin/rand48.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c uwin/rand48.c
 done rand48.o generated
 make random.o
 make uwin/random.c
@@ -5718,18 +5721,14 @@ prev FEATURE/uwin implicit
 done uwin/random.c
 meta random.o %.c>%.o uwin/random.c random
 prev uwin/random.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  -c uwin/random.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c uwin/random.c
 done random.o generated
 make rcmd.o
 make uwin/rcmd.c
 prev std/nl_types.h implicit
 make uwin/rlib.h implicit
+prev std/endian.h implicit
 prev std/stdio.h implicit
-make std/endian.h implicit
-make std/bytesex.h implicit
-prev ast_common.h implicit
-done std/bytesex.h dontcare
-done std/endian.h dontcare
 prev std/stdio.h implicit
 prev include/ast_std.h implicit
 done uwin/rlib.h dontcare
@@ -5745,7 +5744,7 @@ prev FEATURE/uwin implicit
 done uwin/rint.c
 meta rint.o %.c>%.o uwin/rint.c rint
 prev uwin/rint.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  -c uwin/rint.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  -c uwin/rint.c
 done rint.o generated
 make support.o
 make uwin/support.c
@@ -5754,7 +5753,7 @@ prev FEATURE/uwin implicit
 done uwin/support.c
 meta support.o %.c>%.o uwin/support.c support
 prev uwin/support.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/support.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin -Istd  -c uwin/support.c
 done support.o generated
 make sfstrtmp.o
 make disc/sfstrtmp.c
@@ -6879,18 +6878,17 @@ make misc/magic.tab
 done misc/magic.tab
 exec - test '' = 'misc/magic.tab' || ${STDCMP} 2>/dev/null -s misc/magic.tab ${INSTALLROOT}/lib/file/magic || { ${STDMV} ${INSTALLROOT}/lib/file/magic ${INSTALLROOT}/lib/file/magic.old 2>/dev/null || true; ${STDCP} misc/magic.tab ${INSTALLROOT}/lib/file/magic  		    		    ;}
 done ${INSTALLROOT}/lib/file/magic generated
-make ${INSTALLROOT}/include/ast/fmtmsg.h
 prev comp/fmtmsg.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
-exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h  > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
 exec - 	fi
 exec - 	;;
 exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fmtmsg' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h  > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
@@ -6898,20 +6896,17 @@ exec - 	fi
 exec - 	}
 exec - 	;;
 exec - esac
-prev ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/ast/fmtmsg.h generated
-make ${INSTALLROOT}/include/ast/libgen.h
 prev comp/libgen.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
-exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h  > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
 exec - 	fi
 exec - 	;;
 exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_libgen' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h  > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
@@ -6919,20 +6914,17 @@ exec - 	fi
 exec - 	}
 exec - 	;;
 exec - esac
-prev ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/ast/libgen.h generated
-make ${INSTALLROOT}/include/ast/syslog.h
 prev comp/syslog.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
-exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h  > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h
 exec - 	fi
 exec - 	;;
 exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_syslog' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h  > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h
@@ -6940,9 +6932,6 @@ exec - 	fi
 exec - 	}
 exec - 	;;
 exec - esac
-prev include/namval.h implicit
-prev ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/ast/syslog.h generated
 make ${INSTALLROOT}/include/ast/prototyped.h
 prev ${INSTALLROOT}/include/ast
 exec - echo "#include <../prototyped.h>" > 1.${COTEMP}.x
