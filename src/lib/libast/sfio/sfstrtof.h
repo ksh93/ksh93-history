@@ -53,7 +53,8 @@
 
 #if !defined(S2F_function)
 #define S2F_function	_sfdscan
-#define S2F_static	1
+/*#define S2F_static	1*/
+#undef S2F_static
 #define S2F_type	2
 #define S2F_scan	1
 #ifndef elementsof
