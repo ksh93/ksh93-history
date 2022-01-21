@@ -366,6 +366,13 @@ exec - cmp 2>/dev/null -s FEATURE/types ast_types.h || { rm -f ast_types.h; sile
 done ast_types.h dontcare generated
 make ast_map.h implicit
 make FEATURE/map
+make FEATURE/mmap implicit
+meta FEATURE/mmap features/%>FEATURE/% features/mmap mmap
+make features/mmap
+done features/mmap
+prev ast.req
+exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
+done FEATURE/mmap dontcare generated
 meta FEATURE/map features/%.c>FEATURE/% features/map.c map
 make features/map.c
 make FEATURE/vmalloc implicit
@@ -1494,13 +1501,7 @@ make include/sfio_t.h implicit
 prev include/sfio.h implicit
 done include/sfio_t.h dontcare
 prev FEATURE/common implicit
-make FEATURE/mmap implicit
-meta FEATURE/mmap features/%>FEATURE/% features/mmap mmap
-make features/mmap
-done features/mmap
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
-done FEATURE/mmap dontcare generated
+prev FEATURE/mmap implicit
 make FEATURE/sfio implicit
 meta FEATURE/sfio features/%>FEATURE/% features/sfio sfio
 make features/sfio
