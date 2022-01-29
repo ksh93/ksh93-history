@@ -2532,7 +2532,7 @@ static char *oldgetenv(const char *string)
 /*
  * This version of getenv uses the hash storage to access environment values
  */
-char *getenv(const char *name)
+char *sh_getenv(const char *name)
 /*@
 	assume name!=0;
 @*/ 

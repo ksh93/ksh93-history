@@ -193,6 +193,7 @@ extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
 extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 extern Namfun_t		*nv_isvtree(Namval_t*);
+extern char		*sh_getenv(const char*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern char		nv_local;
