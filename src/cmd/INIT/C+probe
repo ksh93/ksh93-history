@@ -156,7 +156,7 @@ fi
 mkdir suffix
 cd suffix
 for src in $probe_src
-do	echo "main(){return 0;}" > ../test.$src
+do	echo "int main(){return 0;}" > ../test.$src
 	rm -f test*
 	if	$cc -c ../test.$src
 	then	set test.*
@@ -188,6 +188,7 @@ cd ..
 case $src in
 c)	;;
 *)	echo '// (
+int
 main()
 {
 	class { public: int i; } j;
@@ -255,7 +256,7 @@ case $hosttype in
 esac
 
 echo '#include <stdio.h>
-main(){printf("hello");return(0);}' > dynamic.$src
+int main(){printf("hello");return 0;}' > dynamic.$src
 echo 'extern int sfclose() { return 0; }' > fun.$src
 if	$cc -c dynamic.$src && $cc -c fun.$src
 then	eval set x $probe_so
@@ -372,7 +373,7 @@ then	eval set x $probe_so
 	fi
 fi
 
-echo 'main(){return(0);}' > hosted.$src
+echo 'int main(){return 0;}' > hosted.$src
 $cc -o hosted.$exe hosted.$src && ./hosted.$exe && hosted=1
 
 echo '#!'$sh'

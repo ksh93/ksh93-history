@@ -17,7 +17,20 @@
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                                                                      *
 ***********************************************************************/
-#ifndef printf
-#include <stdio.h>
-#endif
-int main() { int new = 0; printf("hello world\n"); return new;}
+/*
+ * -lm test #2
+ */
+
+#include <math.h>
+
+int
+main()
+{
+	double	value = 0;
+	int	exp = 0;
+	int	r = 0;
+
+	r |= ldexp(value, exp) != 0;
+	r |= frexp(value, &exp) != 0;
+	return r;
+}

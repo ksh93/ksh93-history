@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2003-03-11
+ * @(#)TEST.mk (AT&T Labs Research) 2004-08-11
  *
  * test management is still in the design phase
  */
@@ -9,10 +9,12 @@
 /*
  * three forms for :TEST:
  *
- *	:TEST: xxx yyy ...
+ *	:TEST: [--] xxx yyy ...
  *
  *		$(REGRESS) $(REGRESSFLAGS) xxx.tst xxx
  *		$(REGRESS) $(REGRESSFLAGS) yyy.tst yyy
+ *
+ *		-- disables .c .sh search
  *
  *	:TEST: xxx.tst yyy ...
  *
@@ -25,7 +27,7 @@
  */
 
 ":TEST:" : .MAKE .OPERATOR
-	local B P S T
+	local B G P S T
 	test : .INSERT .TESTINIT
 	P := $(>:O=1)
 	if "$(P:N=*.tst)" && ! "$(@:V)"
@@ -62,19 +64,27 @@
 			end
 		end
 	elif ! "$(<:V)"
+		G = 1
 		for B $(>)
-			if ! "$(B:A=.TARGET)"
-				for S .c .sh
-					if "$(B:B:S=$(S):T=F)"
-						:INSTALLDIR: $(B)
-						$(B) :: $(B:B:S=$(S))
-						break
+			if B == "-|--"
+				let G = !G
+			else
+				if ! G
+					T =
+				elif ! ( T = "$(B:A=.TARGET)" )
+					for S .c .sh
+						if "$(B:B:S=$(S):T=F)"
+							:INSTALLDIR: $(B)
+							$(B) :: $(B:B:S=$(S))
+							T := $(B)
+							break
+						end
 					end
 				end
+				test : - test.$(B)
+				test.$(B) : $(B).tst $(T)
+					$(REGRESS) $(REGRESSFLAGS) $(*)
 			end
-			test : - test.$(B)
-			test.$(B) : $(B).tst $(B:A=.TARGET)
-				$(REGRESS) $(REGRESSFLAGS) $(*)
 		end
 	else
 		if "$(>:V)" || "$(@:V)"
@@ -113,3 +123,9 @@
 		exit 0
 	end
 	set keepgoing
+
+.SCAN.tst : .SCAN
+	$(@.SCAN.sh)
+	I| INCLUDE@ % |
+
+.ATTRIBUTE.%.tst : .SCAN.tst

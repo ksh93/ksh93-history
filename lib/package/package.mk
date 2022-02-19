@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2004-04-15
+ * @(#)package.mk (AT&T Research) 2004-10-22
  *
  * usage:
  *
@@ -16,6 +16,8 @@
  *			$(PACKAGEDIR)/name.version.release.suffix
  *		binary	build binary archive, generates
  *			$(PACKAGEDIR)/name.version.hosttype.release.suffix
+ *		runtime	build binary archive, generates
+ *			$(PACKAGEDIR)/name-run.version.hosttype.release.suffix
  *
  * NOTE: $(PACKAGEDIR) is in the lowest view and is shared among all views
  *
@@ -24,6 +26,8 @@
  * main assertions:
  *
  *	NAME [ name=value ] :PACKAGE: component ...
+ *	:OMIT: component ...
+ *	:LICENSE: license-class-pattern
  *	:CATEGORY: category-id ...
  *	:COVERS: package ...
  *	:REQURES: package ...
@@ -47,6 +51,9 @@
  *
  *	release=YYYY-MM-DD
  *		package delta release (overrides current date)
+ *
+ *	license=type.class
+ *		:LICENSE: type.class pattern override
  *
  *	strip=0
  *		don't strip non-lcl binary package members
@@ -78,6 +85,7 @@ format = tgz
 incremental =
 index =
 init = INIT
+license =
 licenses = $(org)
 mamfile = 1
 opt =
@@ -103,7 +111,7 @@ package.readme = $(@.package.readme.)
 	$()
 		bin/package
 	$()
-	Binary package files are in the install root directory
+	Binary files me be in this directory or in the install root directory
 	$()
 		INSTALLROOT=$PACKAGEROOT/arch/`bin/package`
 	$()
@@ -111,9 +119,12 @@ package.readme = $(@.package.readme.)
 	$()
 		bin/package help
 	$()
+	Many of the packaged commands self-document via the --man and --html
+	options; those that do have no separate man page.
+	$()
 	Each package has its own license file
 	$()
-		lib/package/LICENSES/<prefix>
+		$(PACKAGELIB)/LICENSES/<prefix>
 	$()
 	where <prefix> is the longest matching prefix of the package name.
 	At the top of each license file is a URL; the license covers all
@@ -123,10 +134,13 @@ package.readme = $(@.package.readme.)
 	$()
 	A component within a package may have its own license file
 	$()
-		lib/package/LICENSES/<prefix>-<component>
+		$(PACKAGELIB)/LICENSES/<prefix>-<component>
 	$()
 	or it may have a separate license detailed in the component
 	source directory.
+	$()
+	Many of the commands self-document via the --man and --html
+	options; those that do have no separate man page.
 	$()
 	Any archives, distributions or packages made from source or
 	binaries covered by license(s) must contain the corresponding
@@ -149,6 +163,34 @@ package.readme = $(@.package.readme.)
 	end
 	return $(R)
 
+/*
+ * glob(3) doesn't handle / in alternation -- should it?
+ */
+
+.package.glob. : .FUNCTION
+	local A D I P S
+	for I $(%)
+		if I == "*/*"
+			D := $(I:C,/.*,,)
+			if ! "$(A:N=$(D))"
+				local S.$(D)
+				A += $(D)
+			end
+			S.$(D) += $(I:C,[^/]*/,,)
+		else
+			P := $(P)$(S)$(I)
+		end
+		S = |
+	end
+	if P == "*\|*"
+		P := ($(P))
+	end
+	for I $(A)
+		P += $(I)/$(.package.glob. $(S.$(I)))
+	end
+	return $(P)
+
+
 .MAKEINIT : .package.init
 
 .package.init : .MAKE .VIRTUAL .FORCE
@@ -160,19 +202,24 @@ package.readme = $(@.package.readme.)
 	V += $(INSTALLROOT) $(PACKAGEROOT)
 	PACKAGEVIEW := $(V:U)
 	INSTALLOFFSET := $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
+	if license
+		license := $(license)|none.none
+	end
 
-PACKAGESRC = $(PACKAGEROOT)/lib/package
-PACKAGEBIN = $(INSTALLROOT)/lib/package
+PACKAGELIB = lib/package
+PACKAGESRC = $(PACKAGEROOT)/$(PACKAGELIB)
+PACKAGEBIN = $(INSTALLROOT)/$(PACKAGELIB)
 PACKAGEDIR = $(PACKAGESRC)/$(style)
 INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
 package.omit = -|*/$(init)
 package.glob.all = $(INSTALLROOT)/src/*/*/($(MAKEFILES:/:/|/G))
 package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(PACKAGEVIEW:C,.*,C;^&/;;,:/ /:/G):U)
-package.glob.pkg = $(INSTALLROOT)/src/*/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G)) $(~$(name):N=$(name):?$$(INSTALLROOT)/src/$$(name)/($$(MAKEFILES:/:/|/G))??)
+package.glob.pkg = $(.package.glob. $(~$(name):P=U):C%.*%$(INSTALLROOT)/src/*/&/($(MAKEFILES:/:/|/G))%) $(~$(name):P=U:N=$(name):?$$(INSTALLROOT)/src/$$(name)/($$(MAKEFILES:/:/|/G))??)
 package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(PACKAGEVIEW:C,.*,C;^&/;;,:/ /:/G):U)
-package.closure = $(closure:?$(package.all)?$(package.pkg)?)
+package.closure = $(closure:?$$(package.all)?$$(package.pkg)?)
 
+package.init = $(.package.glob. $("$(init)$(name)":P=U):C%.*%$(INSTALLROOT)/src/*/&/($(MAKEFILES:/:/|/G))%:P=G:T=F:D::B)
 package.ini = ignore mamprobe manmake package silent
 package.src.pat = $(PACKAGESRC)/($(name).(ini|lic|pkg))
 package.src = $(package.src.pat:P=G) $(.package.licenses. $(name))
@@ -182,69 +229,83 @@ op = current
 stamp = [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]
 source = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(suffix)
 binary = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(CC.HOSTTYPE).$(suffix)
+runtime = $(PACKAGEDIR)/$(name)-run.$(version)$(release:?.$(release)??).$(CC.HOSTTYPE).$(suffix)
 old.new.source = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(suffix)
 old.new.binary = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(CC.HOSTTYPE).$(suffix)
+old.new.runtime = $(PACKAGEDIR)/$(name)-run.$(version).$(old.version).$(CC.HOSTTYPE).$(suffix)
 
 source.list = $("$(PACKAGEDIR)/$(name).*$(stamp).$(suffix)":P=G:H>)
 binary.list = $("$(PACKAGEDIR)/$(name).*$(stamp).$(CC.HOSTTYPE).$(suffix)":P=G:H>)
+runtime.list = $("$(PACKAGEDIR)/$(name)-run.*$(stamp).$(CC.HOSTTYPE).$(suffix)":P=G:H>)
 
 source.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz.c":T=F)
 binary.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz":T=F)
 
 $(init) : .VIRTUAL $(init)
 
+package.requires = 0
+
 ":package:" : .MAKE .OPERATOR
 	local P I J R V
 	P := $(<:O=1)
 	$(P) : $(>:V)
-	if ! name
-		name := $(P)
-		.PACKAGE. := $(P)
-		if name == "$(init)"
-			package.omit = -
-			package.src += $(package.ini:C,^,$(PACKAGEROOT)/bin/,) $(PACKAGESRC)/package.mk
-		end
-		for I $(<:O>1)
-			if I == "*=*"
-				eval
-				$(I)
-				end
+	if ! package.requires
+		if ! name
+			name := $(P)
+			.PACKAGE. := $(P)
+			if name == "$(init)"
+				package.omit = -
+				package.src += $(package.ini:C,^,$(PACKAGEROOT)/bin/,) $(PACKAGESRC)/package.mk
 			else
-				version := $(I)
+				$(P) : $(package.init)
 			end
-		end
-		if name == "*-*"
-			J := $(name:/[^-]*-//) $(name) $(name:/-[^-]*$//)
-		else
-			J := $(name)
-		end
-		for I $(J)
-			while 1
-				LICENSEFILE := $(LICENSEFILE):$(I:D=$(PACKAGEROOT)/lib/package:B:S=.lic)
-				if I != "*-*"
-					break
+			for I $(<:O>1)
+				if I == "*=*"
+					eval
+					$(I)
+					end
+				else
+					version := $(I)
 				end
-				I := $(I:/-[^-]*$//)
+			end
+			if name == "*-*"
+				J := $(name:/[^-]*-//) $(name) $(name:/-[^-]*$//)
+			else
+				J := $(name)
+			end
+			for I $(J)
+				while 1
+					LICENSEFILE := $(LICENSEFILE):$(I:D=$(PACKAGEROOT)/$(PACKAGELIB):B:S=.lic)
+					if I != "*-*"
+						break
+					end
+					I := $(I:/-[^-]*$//)
+				end
+			end
+			export LICENSEFILE
+		end
+		if "$(>)"
+			for I $(>:V)
+				$(I) : .VIRTUAL
+				if I == "/*"
+					package.dir += $(I:V)
+				end
 			end
 		end
-		export LICENSEFILE
-	end
-	if "$(>)"
-		for I $(>:V)
-			$(I) : .VIRTUAL
-			if I == "/*"
-				package.dir += $(I:V)
-			end
+		if "$(@)"
+			$(P).README := $(@)
+		else
+			$(P).README := This is the $(P) package.
 		end
-	end
-	if "$(@)"
-		$(P).txt := $(@)
-	else
-		$(P).txt := This is the $(P) package.
 	end
 
+":AUXILIARY:" : .MAKE .OPERATOR
+	package.auxiliary.$(style) += $(>:N=/*:T=F) $(>:N!=/*:C%^%$(INSTALLROOT)/%:T=F)
+
 ":CATEGORY:" : .MAKE .OPERATOR
-	category := $(>)
+	if ! package.requires
+		category := $(>)
+	end
 
 .covers. : .FUNCTION
 	local I C D F K=0 L
@@ -272,76 +333,95 @@ $(init) : .VIRTUAL $(init)
 	end
 
 ":COVERS:" : .MAKE .OPERATOR
-	: $(.covers. $(>))
+	if ! package.requires
+		: $(.covers. $(>))
+	end
 
 ":DESCRIPTION:" : .MAKE .OPERATOR
-	$(name).txt := $(@:V)
-
-":INDEX:" : .MAKE .OPERATOR
-	index := $(>)
+	if ! package.requires
+		$(name).README := $(@:V)
+	end
 
 ":DETAILS:" : .MAKE .OPERATOR
-	details.$(>:O=1) := $(@:V)
-
-":README:" : .MAKE .OPERATOR
-	readme.$(style) := $(@:V)
+	if ! package.requires
+		details.$(>:O=1) := $(@:V)
+	end
 
 ":EXPORT:" : .MAKE .OPERATOR
-	export.$(style) := $(@:/$$("\n")/ /G)
+	if ! package.requires
+		export.$(style) := $(@:/$$("\n")/ /G)
+	end
+
+":INDEX:" : .MAKE .OPERATOR
+	if ! package.requires
+		index := $(>)
+	end
 
 ":INSTALL:" : .MAKE .OPERATOR
-	local T S F X
-	S := $(>)
-	T := $(<)
-	if "$(exe.$(style))" && "$(T)" == "bin/*([!./])"
-		T := $(T).exe
+	if ! package.requires
+		local T S F X
+		S := $(>)
+		T := $(<)
+		if "$(exe.$(style))" && "$(T)" == "bin/*([!./])"
+			T := $(T).exe
+		end
+		if ! "$(S)"
+			S := $(T)
+		elif "$(exe.$(style))" && "$(S)" == "bin/*([!./])"
+			S := $(S).exe
+		end
+		install.$(style) := $(install.$(style):V)$("\n")install : $$(ROOT)/$(T)$("\n")$$(ROOT)/$(T) : $$(ARCH)/$(S)$("\n\t")cp $< $@
+		if strip && "$(T:N=*.exe)"
+			install.$(style) := $(install.$(style):V)$("\n\t")strip $@ 2>/dev/null
+		end
+		X := $(PACKAGEROOT)/arch/$(CC.HOSTTYPE)/$(S)
+		if strip && "$(X:T=Y)" == "*/?(x-)(dll|exe)"
+			F := filter $(STRIP) $(STRIPFLAGS) $(X)
+		end
+		if "$(filter.$(style):V)"
+			filter.$(style) := $(filter.$(style):V)$$("\n")
+		end
+		filter.$(style) := $(filter.$(style):V);;$(F);$(X);usr/$(T)
 	end
-	if ! "$(S)"
-		S := $(T)
-	elif "$(exe.$(style))" && "$(S)" == "bin/*([!./])"
-		S := $(S).exe
+
+":LICENSE:" : .MAKE .OPERATOR
+	if ! package.requires && ! license
+		license := $(>)
 	end
-	install.$(style) := $(install.$(style):V)$("\n")install : $$(ROOT)/$(T)$("\n")$$(ROOT)/$(T) : $$(ARCH)/$(S)$("\n\t")cp $< $@
-	if strip && "$(T:N=*.exe)"
-		install.$(style) := $(install.$(style):V)$("\n\t")strip $@ 2>/dev/null
+
+":OMIT:" : .MAKE .OPERATOR
+	if ! package.requires
+		package.omit := $(package.omit)|$(>:C,^,*/,:/ /|/G)
 	end
-	X := $(PACKAGEROOT)/arch/$(CC.HOSTTYPE)/$(S)
-	if strip && "$(X:T=Y)" == "*/?(x-)(dll|exe)"
-		F := filter $(STRIP) $(STRIPFLAGS) $(X)
+
+":POSTINSTALL:" : .MAKE .OPERATOR
+	if ! package.requires
+		postinstall.$(style) := $(@:V)
 	end
-	if "$(filter.$(style):V)"
-		filter.$(style) := $(filter.$(style):V)$$("\n")
+
+":README:" : .MAKE .OPERATOR
+	if ! package.requires
+		readme.$(style) := $(@:V)
 	end
-	filter.$(style) := $(filter.$(style):V);;$(F);$(X);usr/$(T)
 
 .requires. : .FUNCTION
-	local I C D F K=0 L V
+	local I C D F K=0 L V T M=0
 	for I $(%)
 		if ! "$(~requires:N=$(I:B))"
 			if F = "$(I:D:B:S=.pkg:T=F)"
-				if D = "$(F:T=I)"
-					if I == "$(init)"
-						package.omit = -
-					else
-						requires : $(I:B)
-					end
-					if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
-						req : $(I:B)
-					else
-						error $(--exec:?3?1?) package $(I) must be written before $(P)
-					end
-					for L $(D)
-						if L == ":REQUIRES:"
-							K = 1
-						elif L == ":*:"
-							if K
-								break
-							end
-						elif K
-							: $(.requires. $(L))
-						end
-					end
+				if I == "$(init)"
+					package.omit = -
+				else
+					requires : $(I:B)
 				end
+				if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
+					req : $(I:B)
+				else
+					error $(--exec:?3?1?) package $(I) must be written before $(P)
+				end
+				let package.requires = package.requires + 1
+				include "$(F)"
+				let package.requires = package.requires - 1
 			else
 				error $(--exec:?3?1?) $(I): unknown package $(I)
 			end
@@ -352,18 +432,17 @@ $(init) : .VIRTUAL $(init)
 	: $(.requires. $(>))
 
 ":TEST:" : .MAKE .OPERATOR
-	local T
-	T := $(>)
-	if "$(T)" == "bin/*([!./])"
-		if "$(exe.$(style))"
-			T := $(T).exe
+	if ! package.requires
+		local T
+		T := $(>)
+		if "$(T)" == "bin/*([!./])"
+			if "$(exe.$(style))"
+				T := $(T).exe
+			end
+			T := $$(PWD)/$$(ARCH)/$(T)
 		end
-		T := $$(PWD)/$$(ARCH)/$(T)
+		test.$(style) := $(test.$(style):V)$("\n")test : $(T:V)$("\n\t")$(@)
 	end
-	test.$(style) := $(test.$(style):V)$("\n")test : $(T:V)$("\n\t")$(@)
-
-":POSTINSTALL:" : .MAKE .OPERATOR
-	postinstall.$(style) := $(@:V)
 
 base delta : .MAKE .VIRTUAL .FORCE
 	op := $(<)
@@ -508,13 +587,7 @@ vendor.cyg = gnu
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
-			integer m
-			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
-			cat > $tmp/README <<'!'
-	$(package.readme)
-	!
-			echo ";;;$tmp/README;README"
+			integer m=0 o
 			cat > $tmp/configure <<'!'
 	echo "you didn't have to do that"
 	!
@@ -573,7 +646,7 @@ vendor.cyg = gnu
 	category: $(category:/\(.\).*/\1/U)$(category:/.\(.*\)/\1/L)
 	requires: cygwin
 	sdesc: "$(index)"
-	ldesc: "$($(name.original).txt)"
+	ldesc: "$($(name.original).README)"
 	!
 			echo ";;;$(source:/-src.$(suffix)//).setup.hint;CYGWIN-PATCHES/setup.hint"
 			echo ";;;$(BINPACKAGE);bin/package"
@@ -611,11 +684,30 @@ vendor.cyg = gnu
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				if	test '1' = '$(mamfile)'
-				then	s=$( $(MAKE) --noexec recurse=list recurse 2>/dev/null )
-					if	test "" != "$s"
-					then	(( m++ ))
-						cat > $tmp/$m.mam <<'!'
+				if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
+				then	if	test '1' = '$(mamfile)'
+					then	(( o=m ))
+						s=$( $(MAKE) --noexec --recurse=list recurse 2>/dev/null )
+						if	test "" != "$s"
+						then	
+							for j in $s
+							do	if	test -d $j
+								then	cd $j
+									if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
+									then	(( m++ ))
+										$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+										echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
+									fi
+									cd $(INSTALLROOT)/$i
+								fi
+							done
+						else	(( m++ ))
+							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+							echo ";;;$tmp/$m.mam;$i/Mamfile"
+						fi
+						if	(( o != m ))
+						then	(( m++ ))
+							cat > $tmp/$m.mam <<'!'
 	info mam static
 	note subcomponent level :MAKE: equivalent
 	make install
@@ -624,27 +716,26 @@ vendor.cyg = gnu
 	done all virtual
 	done install virtual
 	!
-						echo ";;;$tmp/$m.mam;$i/Mamfile"
-						for j in $s
-						do	if	test -d $j
-							then	cd $j
-								(( m++ ))
-								$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-								echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
-								cd $(INSTALLROOT)/$i
-							fi
-						done
-					else	(( m++ ))
-						$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-						echo ";;;$tmp/$m.mam;$i/Mamfile"
+							echo ";;;$tmp/$m.mam;$i/Mamfile"
+						fi
 					fi
+					$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) package.license.class=$(license:Q)
 				fi
-				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
 			set -- $(package.dir:P=G)
 			for i
 			do	tw -d $i -e "action:printf(';;;%s\n',path);"
 			done
+		} |
+		sort -u |
+		{
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
+	!
+			echo ";;;$tmp/README;README"
+			cat
 			: > $tmp/TAIL
 			echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
@@ -664,7 +755,7 @@ vendor.cyg = gnu
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
-			integer m
+			integer m=0 o
 			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
 			set -- $(package.closure)
 			for i
@@ -690,13 +781,7 @@ vendor.cyg = gnu
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
-			integer m=0
-			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
-			cat > $tmp/README <<'!'
-	$(package.readme)
-	!
-			echo ";;;$tmp/README;README"
+			integer m=0 o
 			if	test '$(init)' = '$(name)'
 			then	cat > $tmp/Makefile <<'!'
 	:MAKE:
@@ -728,25 +813,25 @@ vendor.cyg = gnu
 					echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
 				fi
 			fi
-			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:T=F:C%^$(PACKAGEROOT)/%%:C%.*%echo ";;;$(PACKAGEROOT)/&;&"$("\n")%)
 			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
-			echo ";;;$(PACKAGEGEN)/$(name).ver"
+			echo ";;;$(PACKAGEGEN)/$(name).ver;$(PACKAGELIB)/$(name).ver"
 			if	test '' != '$(~covers)'
 			then	for i in $(~covers)
 				do	for j in pkg lic
 					do	if	test -f $(PACKAGESRC)/$i.$j
-						then	echo ";;;$(PACKAGESRC)/$i.$j"
+						then	echo ";;;$(PACKAGESRC)/$i.$j;$(PACKAGELIB)/$i.$j"
 						fi
 					done
 					for j in ver req
 					do	if	test -f $(PACKAGEGEN)/$i.$j
-						then	echo ";;;$(PACKAGEGEN)/$i.$j"
+						then	echo ";;;$(PACKAGEGEN)/$i.$j;$(PACKAGELIB)/$i.$j"
 						fi
 					done
 				done
 			fi
 			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
-			echo ";;;$(PACKAGEGEN)/$(name).req"
+			echo ";;;$(PACKAGEGEN)/$(name).req;$(PACKAGELIB)/$(name).req"
 			{
 				echo "name='$(name)'"
 				echo "index='$(index)'"
@@ -755,7 +840,7 @@ vendor.cyg = gnu
 			} > $(PACKAGEGEN)/$(name).inx
 			{
 				{
-				echo '$($(name).txt)'
+				echo '$($(name).README)'
 				if	test '' != '$(~covers)'
 				then	echo "This package is a superset of the following package$(~covers:O=2:?s??): $(~covers); you won't need $(~covers:O=2:?these?this?) if you download $(name)."
 				fi
@@ -765,8 +850,8 @@ vendor.cyg = gnu
 				} | fmt
 				package help source
 				package release $(name)
-			} > $(PACKAGEGEN)/$(name).txt
-			echo ";;;$(PACKAGEGEN)/$(name).txt"
+			} > $(PACKAGEGEN)/$(name).README
+			echo ";;;$(PACKAGEGEN)/$(name).README;$(PACKAGELIB)/$(name).README"
 			{
 				echo '.xx title="$(name) package"'
 				echo '.xx meta.description="$(name) package"'
@@ -775,7 +860,7 @@ vendor.cyg = gnu
 				echo '.TL'
 				echo '$(name) package'
 				echo '.H 1 "$(name) package"'
-				echo '$($(name).txt)'
+				echo '$($(name).README)'
 				set -- $(package.closure:C,.*,$(INSTALLROOT)/&/PROMO.mm,:T=F:D::B)
 				hot=
 				for i
@@ -846,7 +931,7 @@ vendor.cyg = gnu
 	w
 	q
 	!
-			echo ";;;$(PACKAGEGEN)/$(name).html"
+			echo ";;;$(PACKAGEGEN)/$(name).html;$(PACKAGELIB)/$(name).html"
 			if	test '' != '$(deltasince)'
 			then	{
 				echo '.xx title="$(name) package"'
@@ -862,16 +947,30 @@ vendor.cyg = gnu
 				echo '.fi'
 				} |
 				$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).$(release).html
-				echo ";;;$(PACKAGEGEN)/$(name).$(release).html"
+				echo ";;;$(PACKAGEGEN)/$(name).$(release).html;$(PACKAGELIB)/$(name).$(release).html"
 			fi
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				if	test '1' = '$(mamfile)'
-				then	s=$( $(MAKE) --noexec recurse=list recurse 2>/dev/null )
-					if	test "" != "$s"
-					then	(( m++ ))
-						cat > $tmp/$m.mam <<'!'
+				if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
+				then	if	test '1' = '$(mamfile)'
+					then	(( o=m ))
+						s=$( $(MAKE) --noexec --recurse=list recurse 2>/dev/null )
+						if	test "" != "$s"
+						then	for j in $s
+							do	if	test -d $j
+								then	cd $j
+									if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
+									then	(( m++ ))
+										$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+										echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
+									fi
+									cd $(INSTALLROOT)/$i
+								fi
+							done
+							if	(( o != m ))
+							then	(( m++ ))
+								cat > $tmp/$m.mam <<'!'
 	info mam static
 	note subcomponent level :MAKE: equivalent
 	make install
@@ -880,27 +979,30 @@ vendor.cyg = gnu
 	done all virtual
 	done install virtual
 	!
-						echo ";;;$tmp/$m.mam;$i/Mamfile"
-						for j in $s
-						do	if	test -d $j
-							then	cd $j
-								(( m++ ))
-								$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-								echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
-								cd $(INSTALLROOT)/$i
+								echo ";;;$tmp/$m.mam;$i/Mamfile"
 							fi
-						done
-					else	(( m++ ))
-						$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-						echo ";;;$tmp/$m.mam;$i/Mamfile"
+						else	(( m++ ))
+							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+							echo ";;;$tmp/$m.mam;$i/Mamfile"
+						fi
 					fi
+					$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) package.license.class=$(license:Q)
 				fi
-				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
 			set -- $(package.dir:P=G)
 			for i
 			do	tw -d $i -e "action:printf(';;;%s\n',path);"
 			done
+		} |
+		sort -u |
+		{
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
+	!
+			echo ";;;$tmp/README;README"
+			cat
 			: > $tmp/TAIL
 			echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
@@ -936,14 +1038,14 @@ vendor.cyg = gnu
 				echo '.TL'
 				echo '$(name) package'
 				echo '.H 1'
-				echo '$($(name).txt)'
+				echo '$($(name).README)'
 			} |
 			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
 			if	test '' != '$(source.$(name))'
 			then	{
-					echo '$($(name).txt)'
+					echo '$($(name).README)'
 					package help source
-				} > $(PACKAGEGEN)/$(name).txt
+				} > $(PACKAGEGEN)/$(name).README
 				cp $(source.$(name)) $(source)
 				$(SUM) -x $(checksum) < $(source) > $(source:D:B:S=.$(checksum))
 			fi
@@ -1018,18 +1120,16 @@ binary : .binary.init .binary.gen .binary.$$(style)
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
-			integer m
-			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;usr/doc/$(opt)$(package.notice)"
+			integer m=0 o
 			{
-				echo '$($(name.original).txt)' | fmt
+				echo '$($(name.original).README)' | fmt
 				cat <<'!'
 	$(readme.$(style):@?$$("\n")$$(readme.$$(style))??)
 	!
 			} > $tmp/README1
 			echo ";;;$tmp/README1;usr/doc/Cygwin/$(opt:/.$//).README"
 			{
-				echo '$($(name.original).txt)' | fmt
+				echo '$($(name.original).README)' | fmt
 				cat <<'!'
 	$()
 	The remainder of this file is the README from the source package
@@ -1046,7 +1146,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 	category: $(category:/\(.\).*/\1/U)$(category:/.\(.*\)/\1/L)
 	requires:
 	sdesc: "$(index)"
-	ldesc: "$($(name.original).txt)"
+	ldesc: "$($(name.original).README)"
 	!
 			set -- $(.package.licenses. $(name.original):N!=*.lic)
 			for i
@@ -1062,8 +1162,14 @@ binary : .binary.init .binary.gen .binary.$$(style)
 	!
 				echo ";;;$tmp/postinstall;etc/postinstall/$(name).sh"
 			fi
+		} |
+		sort -u |
+		{
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;usr/doc/$(opt)$(package.notice)"
+			echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
@@ -1084,10 +1190,9 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) variants=$(variants:Q) cc-
+				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) package.license.class=$(license:Q) variants=$(variants:Q) cc-
 			done
 		} |
-		sort -u |
 		$(PAX)	--filter=- \
 			--to=ascii \
 			$(op:N=delta:??--format=$(format)?) \
@@ -1114,27 +1219,27 @@ binary : .binary.init .binary.gen .binary.$$(style)
 					fi
 				done
 			fi
-			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
-			$(package.src:U:T=F:N=*/LICENSES/*:B:C,.*,echo ";;;$(PACKAGESRC)/LICENSES/&;$(PACKAGEBIN)/LICENSES/&"$("\n"),)
-			$(package.bin:U:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:T=F:C%^$(PACKAGEROOT)/%%:C%.*%echo ";;;$(PACKAGEROOT)/&;&"$("\n")%)
+			$(package.bin:U:T=F:C%^$(INSTALLROOT)/%%:C%.*%echo ";;;$(INSTALLROOT)/&;&"$("\n")%)
+			$(package.auxiliary.$(style):U:T=F:C%^$(INSTALLROOT)/%%:C%.*%echo ";;;$(INSTALLROOT)/&;&"$("\n")%)
 			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
-			echo ";;;$(PACKAGEGEN)/$(name).ver"
+			echo ";;;$(PACKAGEGEN)/$(name).ver;$(PACKAGELIB)/$(name).ver"
 			if	test '' != '$(~covers)'
 			then	for i in $(~covers)
 				do	for j in pkg lic
 					do	if	test -f $(PACKAGESRC)/$i.$j
-						then	echo ";;;$(PACKAGESRC)/$i.$j"
+						then	echo ";;;$(PACKAGESRC)/$i.$j;$(PACKAGELIB)/$i.$j"
 						fi
 					done
 					for j in ver req
 					do	if	test -f $(PACKAGEGEN)/$i.$j
-						then	echo ";;;$(PACKAGEGEN)/$i.$j"
+						then	echo ";;;$(PACKAGEGEN)/$i.$j;$(PACKAGELIB)/$i.$j"
 						fi
 					done
 				done
 			fi
 			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
-			echo ";;;$(PACKAGEGEN)/$(name).req"
+			echo ";;;$(PACKAGEGEN)/$(name).req;$(PACKAGELIB)/$(name).req"
 			{
 				echo "name='$(name)'"
 				echo "index='$(index)'"
@@ -1143,7 +1248,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			} > $(PACKAGEGEN)/$(name).inx
 			{
 				{
-				echo '$($(name).txt)'
+				echo '$($(name).README)'
 				if	test '' != '$(~covers)'
 				then	echo "This package is a superset of the following package$(~covers:O=2:?s??): $(~covers); you won't need $(~covers:O=2:?these?this?) if you download $(name)."
 				fi
@@ -1153,15 +1258,16 @@ binary : .binary.init .binary.gen .binary.$$(style)
 				} | fmt
 				package help binary
 				package release $(name)
-			} > $(PACKAGEGEN)/$(name).txt
-			echo ";;;$(PACKAGEGEN)/$(name).txt"
+			} > $(PACKAGEGEN)/$(name).README
+			echo ";;;$(PACKAGEGEN)/$(name).README;$(PACKAGELIB)/$(name).README"
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) package.strip=$(strip) recurse list.package.$(type) variants=$(variants:Q) cc-
+				$(MAKE) --noexec $(-) $(=) package.strip=$(strip) recurse list.package.$(type) package.license.class=$(license:Q) variants=$(variants:Q) cc-
 			done
 		} |
-		sort -u | {
+		sort -u |
+		{
 			: > $tmp/HEAD
 			echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
@@ -1204,9 +1310,9 @@ binary : .binary.init .binary.gen .binary.$$(style)
 				echo "requires='$(~req)'"
 			} > $(PACKAGEGEN)/$(name).inx
 			{
-				echo '$($(name).txt)'
+				echo '$($(name).README)'
 				package help binary
-			} > $(PACKAGEGEN)/$(name).txt
+			} > $(PACKAGEGEN)/$(name).README
 			case "$(binary)" in
 			*.gz)	gzip < $exe > $(binary) ;;
 			*)	cp $exe $(binary) ;;
@@ -1214,6 +1320,165 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			$(SUM) -x $(checksum) < $(binary) > $(binary:D:B:S=.$(checksum))
 			echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
 		fi
+	fi
+
+runtime : .runtime.init .runtime.gen .runtime.$$(style)
+
+.runtime.init : .MAKE
+	local A B D I P V
+	type := runtime
+	if ! "$(incremental)"
+		incremental = 0
+	end
+	if ! "$(~$(name))"
+		if name == "ratz"
+			suffix = exe
+		else
+			suffix = gz
+		end
+	end
+	: $(.init.$(style)) :
+	: $(details.$(style):V:R) :
+	A := $(runtime.list)
+	B := $(A:N=*.$(stamp).$(CC.HOSTTYPE).$(suffix):N!=*.$(stamp).$(stamp).*:O=1:T=F)
+	P := $(A:N=*.$(stamp).$(CC.HOSTTYPE).$(suffix):N!=*.$(stamp).$(stamp).*:O=2:T=F)
+	D := $(A:N=*.$(stamp).$(stamp).$(CC.HOSTTYPE).$(suffix):O=1:T=F)
+	if op == "delta"
+		if ! B
+			error 3 delta requires a base archive
+		end
+		base := -z $(B)
+		if "$(release)" != "$(stamp)"
+			release := $("":T=R%Y-%m-%d)
+		end
+		runtime := $(B:/$(CC.HOSTTYPE).$(suffix)$/$(release).&/)
+		version := $(runtime:B:B:/$(name).//)
+	elif B || op == "base"
+		if op == "base"
+			for I $(B) $(P)
+				V := $(I:B:/$(name)-run\.\([^.]*\).*/\1/)
+				if V == "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" && V != "$(version)"
+					old.version := $(V)
+					old.runtime := $(I)
+					if "$(old.version)" >= "$(version)"
+						error 3 $(name): previous base $(old.version) is newer than $(version)
+					end
+					break
+				end
+			end
+		else
+			runtime := $(B)
+		end
+		if B == "$(runtime)"
+			if "$(B:D:B)" == "$(D:D:B)" && "$(B:S)" != "$(D:S)"
+				error 3 $(B:B:S): base overwrite would invalidate delta $(D:B:S)
+			end
+			error 1 $(B:B:S): replacing current base
+		end
+		version := $(runtime:B:/$(name)-run.//:/\..*//)
+	end
+	PACKAGEGEN := $(PACKAGESRC)/gen
+
+.runtime.gen : $$(PACKAGEDIR) $$(PACKAGEGEN)
+
+.runtime.cyg .runtime.exp .runtime.lcl .runtime.pkg .runtime.rpm : .MAKE
+	error 3 $(style): runtime package style not supported yet
+
+.runtime.tgz :
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
+		mkdir $tmp
+		{
+			if	test '$(init)' = '$(name)'
+			then	for i in lib32 lib64
+				do	if	test -d $(INSTALLROOT)/$i
+					then	echo ";physical;;$(INSTALLROOT)/$i"
+					fi
+				done
+			fi
+			$(package.src:U:T=F:C%^$(PACKAGEROOT)/%%:C%.*%echo ";;;$(PACKAGEROOT)/&;&"$("\n")%)
+			$(package.bin:U:T=F:C%^$(INSTALLROOT)/%%:C%.*%echo ";;;$(INSTALLROOT)/&;&"$("\n")%)
+			$(package.auxiliary.$(style):U:T=F:C%^$(INSTALLROOT)/%%:C%.*%echo ";;;$(INSTALLROOT)/&;&"$("\n")%)
+			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
+			echo ";;;$(PACKAGEGEN)/$(name).ver;$(PACKAGELIB)/$(name).ver"
+			if	test '' != '$(~covers)'
+			then	for i in $(~covers)
+				do	for j in pkg lic
+					do	if	test -f $(PACKAGESRC)/$i.$j
+						then	echo ";;;$(PACKAGESRC)/$i.$j;$(PACKAGELIB)/$i.$j"
+						fi
+					done
+					for j in ver req
+					do	if	test -f $(PACKAGEGEN)/$i.$j
+						then	echo ";;;$(PACKAGEGEN)/$i.$j;$(PACKAGELIB)/$i.$j"
+						fi
+					done
+				done
+			fi
+			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
+			echo ";;;$(PACKAGEGEN)/$(name).req;$(PACKAGELIB)/$(name).req"
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
+			{
+				{
+				echo '$($(name).README)'
+				if	test '' != '$(~covers)'
+				then	echo
+					echo "This package is a superset of the following package$(~covers:O=2:?s??): $(~covers); you won't need $(~covers:O=2:?these?this?) if you download $(name)."
+				fi
+				if	test '' != '$(~requires)'
+				then	echo
+					echo 'It requires the following package$(~requires:O=2:?s??): $(~requires).'
+				fi
+				echo
+				echo "To install this $(type) package read the tarball into a directory"
+				echo "suitable for containing bin and lib subdirectories, and run the"
+				echo "$(PACKAGELIB)/gen/$(name)-run.ins script to fix up permissions."
+				echo
+				echo "To use the package export the bin directory in PATH. The commands and"
+				echo "libraries use \$PATH to locate dynamic libraries and related data files."
+				echo
+				} | fmt
+			} > $(PACKAGEGEN)/$(name)-run.README
+			echo ";;;$(PACKAGEGEN)/$(name)-run.README;$(PACKAGELIB)/$(name)-run.README"
+			set -- $(package.closure)
+			for i
+			do	cd $(INSTALLROOT)/$i
+				$(MAKE) --noexec $(-) $(=) package.strip=$(strip) recurse list.package.$(type) package.license.class=$(license:Q) variants=$(variants:Q) cc-
+			done
+		} |
+		sort -u |
+		{
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
+	!
+			echo ";;;$tmp/README;README"
+			cat
+			: > $tmp/TAIL
+			echo ";;;$tmp/TAIL;$(package.notice)"
+		} |
+		$(PAX)	--filter=- \
+			--to=ascii \
+			$(op:N=delta:??--format=$(format)?) \
+			--local \
+			--checksum=md5:$(PACKAGEGEN)/$(name)-run.sum \
+			--install=$(PACKAGEGEN)/$(name)-run.ins \
+			-wvf $(runtime) $(base) \
+			-s",^$tmp/,$(INSTALLOFFSET)/," \
+			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
+		$(SUM) -x $(checksum) < $(runtime) > $(runtime:D:B:S=.$(checksum))
+		echo local > $(runtime:D:B=$(name)-run:S=.$(CC.HOSTTYPE).tim)
+		if test '1' = '$(incremental)' -a '' != '$(old.runtime)'
+		then	$(PAX) -rf $(runtime) -wvf $(old.new.runtime) -z $(old.runtime)
+			$(SUM) -x $(checksum) < $(old.new.runtime) > $(old.new.runtime:D:B:S=.$(checksum))
+		fi
+		rm -rf $tmp
 	fi
 
 list.installed list.manifest :
