@@ -1,8 +1,10 @@
 ## Notice
 
-<details open>
+This repo was last updated on 2022-05-14 to fix a build error on Fedora 36 and newer.
 
-<summary>This repo was last updated on 2022-02-18 with a few minor changes:</summary>
+<details>
+
+<summary>Previous 2022-02-18 changelog</summary>
 
 - All versions of ksh from 2004-10-11 93p+ and up now build when using both glibc 2.35 and tcc.
 - Added recovered INIT source code from complete source tarballs for the following versions:
